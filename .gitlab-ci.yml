@@ -1,0 +1,54 @@
+stages:
+  - maker
+  - build
+  - test
+
+dind-make:
+  stage: build
+  when: manual
+  image: docker:19.03
+  services: ['docker:dind']
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - docker pull alpine:3.16
+    - docker run -it --detach --name maker docker
+    - docker exec maker apt add make
+    - docker commit maker $CI_REGISTRY_IMAGE:maker
+    - docker push $CI_REGISTRY_IMAGE:maker
+
+build-docker:
+  stage: build
+  image: $CI_REGISTRY_IMAGE:maker
+  services: ['docker:dind']
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - docker pull $CI_REGISTRY_IMAGE:test || true
+    - docker build --cache-from $CI_REGISTRY_IMAGE:test --tag $CI_REGISTRY_IMAGE:test .
+    - docker push $CI_REGISTRY_IMAGE:test
+  rules:
+    - changes:
+        - .gitlab-ci.yml
+        - tests/Dockerfile.dev
+        - tests/.dockerignore
+        - setup.py
+
+build-dist:
+  stage: build
+  image: python:3.11-alpine
+  script:
+    - python setup.py sdist
+  artifacts:
+    paths:
+      - dist
+
+test:
+  stage: test
+  image: $CI_REGISTRY_IMAGE:maker
+  before_script:
+    - pip install dist/*.tar.gz
+    - ls -A | grep -v -E 'Makefile|tests' | xargs -r -I% rm -rf %
+  script:
+    - make tests
+  coverage: '/TOTAL .+ (\d+\.\d+)%/'

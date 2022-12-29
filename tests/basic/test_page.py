@@ -1,0 +1,46 @@
+from asyncio import create_task, sleep
+from pathlib import Path
+from tempfile import NamedTemporaryFile, TemporaryDirectory
+from textwrap import dedent
+from unittest import IsolatedAsyncioTestCase, main
+
+from sobiraka.models import Book, Page
+
+
+class TestPageBuildOrder(IsolatedAsyncioTestCase):
+    async def asyncSetUp(self):
+        temp_dir: str = self.enterContext(TemporaryDirectory(prefix='sobiraka-test-'))
+        self.dir: Path = Path(temp_dir)
+
+        self.book = Book('test-book', self.dir, 'Test Book')
+
+        page_path = self.dir / 'page.md'
+        page_path.touch()
+        self.page = Page(self.book, self.dir / 'page.md')
+
+        self.order: list[str] = []
+
+    async def test_page_build_order(self):
+        create_task(self.wait_until_loaded(self.page))
+        create_task(self.wait_until_processed1(self.page))
+        create_task(self.wait_until_processed2(self.page))
+
+        await self.page.processed2.wait()
+        await sleep(0)
+        self.assertSequenceEqual(self.order, ('loaded', 'processed1', 'processed2'))
+
+    async def wait_until_loaded(self, page: Page):
+        await page.loaded.wait()
+        self.order.append('loaded')
+
+    async def wait_until_processed1(self, page: Page):
+        await page.processed1.wait()
+        self.order.append('processed1')
+
+    async def wait_until_processed2(self, page: Page):
+        await page.processed2.wait()
+        self.order.append('processed2')
+
+
+if __name__ == '__main__':
+    main()

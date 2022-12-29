@@ -1,0 +1,22 @@
+.PHONY: *
+
+IMAGE ?= sobiraka-dev
+
+DOCKER_RUN = \
+	docker run --rm -it \
+	--user $$(id -u):$$(id -g) \
+	--volume $$(pwd):/WORKDIR \
+	${IMAGE}
+
+docker:
+	@echo Preparing Docker image
+	@DOCKER_BUILDKIT=1 docker build . \
+		--file Dockerfile.dev \
+		--tag ${IMAGE} \
+		--build-arg UID=$$(id -u) \
+		--build-arg GID=$$(id -g)
+
+tests:
+	@rm -f .coverage
+	@(cd tests && PYTHONPATH=../src python -m coverage run --source=sobiraka -m unittest discover --start-directory=. --verbose)
+	@(cd tests && python -m coverage report --precision=1 --skip-empty --show-missing --fail-under=100)
