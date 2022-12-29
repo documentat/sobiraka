@@ -32,8 +32,8 @@ build-tester:
   rules:
     - changes:
         - .gitlab-ci.yml
-        - tests/Dockerfile.dev
-        - tests/.dockerignore
+        - .dockerignore
+        - Dockerfile.dev
         - setup.py
 
 build-dist:
