@@ -20,7 +20,7 @@ build-maker:
     - docker push $CI_REGISTRY_IMAGE:maker
 
 build-tester:
-  stage: maker
+  stage: build
   when: manual
   image: docker
   services: ['docker:dind']
@@ -28,20 +28,8 @@ build-tester:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
     - docker pull $CI_REGISTRY_IMAGE:tester
-    - docker build --file Dockerfile.dev --cache-from $CI_REGISTRY_IMAGE:test --tag $CI_REGISTRY_IMAGE:test .
+    - docker build --file Dockerfile.dev --cache-from $CI_REGISTRY_IMAGE:tester --tag $CI_REGISTRY_IMAGE:tester .
     - docker push $CI_REGISTRY_IMAGE:tester
-
-build-docker:
-  stage: build
-  dependencies: [build-maker]
-  image: $CI_REGISTRY_IMAGE:maker
-  services: ['docker:dind']
-  before_script:
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-  script:
-    - docker pull $CI_REGISTRY_IMAGE:test || true
-    - docker build --file Dockerfile.dev --cache-from $CI_REGISTRY_IMAGE:test --tag $CI_REGISTRY_IMAGE:test .
-    - docker push $CI_REGISTRY_IMAGE:test
   rules:
     - changes:
         - .gitlab-ci.yml
