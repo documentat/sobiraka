@@ -8,6 +8,8 @@ build-maker:
   when: manual
   image: docker:19.03
   services: ['docker:dind']
+  variables:
+    GIT_STRATEGY: none
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
@@ -20,8 +22,10 @@ build-maker:
 build-tester:
   stage: maker
   when: manual
-  image: docker:19.03
+  image: docker
   services: ['docker:dind']
+  variables:
+    GIT_STRATEGY: none
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
@@ -34,6 +38,7 @@ build-tester:
 
 build-docker:
   stage: build
+  dependencies: [build-maker]
   image: $CI_REGISTRY_IMAGE:maker
   services: ['docker:dind']
   before_script:
@@ -64,7 +69,7 @@ test:
   before_script:
     - pip install dist/*.tar.gz
     - ls -A | grep -v -E 'Makefile|tests' | xargs -r -I% rm -rf %
+    - ls -lAh
   script:
-    - python -m coverage run --source=sobiraka -m unittest discover --start-directory=. --verbose
-    - python -m coverage report --precision=1 --skip-empty --show-missing --fail-under=100
+    - make tests
   coverage: '/TOTAL .+ (\d+\.\d+)%/'
