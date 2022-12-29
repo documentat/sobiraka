@@ -25,7 +25,7 @@ build-docker:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
     - docker pull $CI_REGISTRY_IMAGE:test || true
-    - docker build --cache-from $CI_REGISTRY_IMAGE:test --tag $CI_REGISTRY_IMAGE:test .
+    - docker build --file Dockerfile.dev --cache-from $CI_REGISTRY_IMAGE:test --tag $CI_REGISTRY_IMAGE:test .
     - docker push $CI_REGISTRY_IMAGE:test
   rules:
     - changes:
