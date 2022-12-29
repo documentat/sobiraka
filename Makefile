@@ -20,3 +20,6 @@ tests:
 	@rm -f .coverage
 	@(cd tests && PYTHONPATH=../src python -m coverage run --source=sobiraka -m unittest discover --start-directory=. --verbose)
 	@(cd tests && python -m coverage report --precision=1 --skip-empty --show-missing --fail-under=100)
+
+tests-in-docker:
+	@docker run --rm -it -v ${PWD}:/WORKDIR ${IMAGE} make tests
