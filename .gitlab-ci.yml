@@ -17,6 +17,21 @@ build-maker:
     - docker commit maker $CI_REGISTRY_IMAGE:maker
     - docker push $CI_REGISTRY_IMAGE:maker
 
+build-tester:
+  stage: maker
+  when: manual
+  image: docker:19.03
+  services: ['docker:dind']
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - docker pull alpine:3.16
+    - docker run -it --detach --name tester python:3.11-alpine
+    - docker exec tester apk add make
+    - docker exec tester pip install coverage
+    - docker commit tester $CI_REGISTRY_IMAGE:tester
+    - docker push $CI_REGISTRY_IMAGE:tester
+
 build-docker:
   stage: build
   image: $CI_REGISTRY_IMAGE:maker
@@ -45,7 +60,7 @@ build-dist:
 
 test:
   stage: test
-  image: python:3.11
+  image: $CI_REGISTRY_IMAGE:tester
   before_script:
     - pip install dist/*.tar.gz
     - ls -A | grep -v -E 'Makefile|tests' | xargs -r -I% rm -rf %
