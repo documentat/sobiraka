@@ -21,7 +21,6 @@ build-maker:
 
 build-tester:
   stage: build
-  when: manual
   image: docker
   services: ['docker:dind']
   before_script:
