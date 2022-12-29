@@ -13,7 +13,7 @@ build-maker:
   script:
     - docker pull alpine:3.16
     - docker run -it --detach --name maker docker
-    - docker exec maker apt add make
+    - docker exec maker apk add make
     - docker commit maker $CI_REGISTRY_IMAGE:maker
     - docker push $CI_REGISTRY_IMAGE:maker
 
