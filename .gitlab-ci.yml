@@ -13,7 +13,7 @@ build-maker:
   script:
     - docker pull alpine:3.16
     - docker run -it --detach --name maker docker
-    - docker exec maker apk add make
+    - docker exec maker apk add make py3-pip
     - docker commit maker $CI_REGISTRY_IMAGE:maker
     - docker push $CI_REGISTRY_IMAGE:maker
 
@@ -45,10 +45,11 @@ build-dist:
 
 test:
   stage: test
-  image: $CI_REGISTRY_IMAGE:maker
+  image: python:3.11
   before_script:
     - pip install dist/*.tar.gz
     - ls -A | grep -v -E 'Makefile|tests' | xargs -r -I% rm -rf %
   script:
-    - make tests
+    - python -m coverage run --source=sobiraka -m unittest discover --start-directory=. --verbose
+    - python -m coverage report --precision=1 --skip-empty --show-missing --fail-under=100
   coverage: '/TOTAL .+ (\d+\.\d+)%/'
