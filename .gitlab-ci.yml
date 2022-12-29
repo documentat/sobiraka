@@ -3,8 +3,8 @@ stages:
   - build
   - test
 
-dind-make:
-  stage: build
+build-maker:
+  stage: maker
   when: manual
   image: docker:19.03
   services: ['docker:dind']
