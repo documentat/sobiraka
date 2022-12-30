@@ -62,11 +62,11 @@ get-tester:
   script:
     - wget https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/jobs/artifacts/CI_COMMIT_BRANCH/raw/tester.tar.gz?job=build-tester -O tester.tar.gz
   except:
-    - changes:
-        - .gitlab-ci.yml
-        - .dockerignore
-        - Dockerfile.ci
-        - setup.py
+    changes:
+      - .gitlab-ci.yml
+      - .dockerignore
+      - Dockerfile.ci
+      - setup.py
   artifacts:
     paths:
       - tester.tar.gz
