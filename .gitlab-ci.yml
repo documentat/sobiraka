@@ -48,11 +48,12 @@ build-dist:
 test:
   stage: test
   image: $CI_REGISTRY_IMAGE:tester
+  variables:
+    GIT_STRATEGY: none
   before_script:
     - pip install dist/*.tar.gz
-    - ls -A | grep -v -E 'Makefile|tests' | xargs -r -I% rm -rf %
+    - git checkout -- tests Makefile
     - ls -lAh
   script:
-    - cd tests && PYTHONPATH=../src python -m coverage run --source=sobiraka -m unittest discover --start-directory=. --verbose
-    - cd tests && python -m coverage report --precision=1 --skip-empty --show-missing --fail-under=100
+    - make tests
   coverage: '/TOTAL .+ (\d+\.\d+)%/'
