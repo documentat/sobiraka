@@ -1,26 +1,10 @@
 stages:
-  - prepare
   - build
   - test
 
-build-ci-env:
-  stage: prepare
-  when: manual
-  image: docker:19.03
-  services: ['docker:dind']
-  variables:
-    GIT_STRATEGY: none
-  before_script:
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-  script:
-    - docker run -it --detach --name ci-env docker:20.10.16
-    - docker exec ci-env apk add git make pigz py3-pip
-    - docker commit ci-env $CI_REGISTRY_IMAGE/ci-env
-    - docker push $CI_REGISTRY_IMAGE/ci-env
-
 build-tester:
   stage: build
-  image: $CI_REGISTRY_IMAGE/ci-env
+  image: docker
   services: ['docker:dind']
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
@@ -29,7 +13,7 @@ build-tester:
     - docker pull $CI_REGISTRY_IMAGE/tester:$CI_COMMIT_BEFORE_SHA || true
     - docker pull $CI_REGISTRY_IMAGE/tester:$CI_COMMIT_BRANCH || true
     - >
-      docker build
+      docker build .
       --file Dockerfile.ci
       --cache-from $CI_REGISTRY_IMAGE/tester:$CI_COMMIT_SHA
       --cache-from $CI_REGISTRY_IMAGE/tester:$CI_COMMIT_BEFORE_SHA
@@ -37,33 +21,9 @@ build-tester:
       --tag $CI_REGISTRY_IMAGE/tester:$CI_COMMIT_SHA
       --tag $CI_REGISTRY_IMAGE/tester:$CI_COMMIT_BRANCH
       --tag tester
-      .
     - docker push $CI_REGISTRY_IMAGE/tester:$CI_COMMIT_SHA
     - docker push $CI_REGISTRY_IMAGE/tester:$CI_COMMIT_BRANCH
     - docker save tester | pigz > tester.tar.gz
-  rules:
-    - changes:
-        - .dockerignore
-        - .gitlab-ci.yml
-        - Dockerfile.ci
-    - when: manual
-  artifacts:
-    paths:
-      - tester.tar.gz
-
-get-tester:
-  stage: build
-  image: $CI_REGISTRY_IMAGE/ci-env
-  services: ['docker:dind']
-  before_script:
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-  script:
-    - wget https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/jobs/artifacts/$CI_COMMIT_BRANCH/raw/tester.tar.gz?job=build-tester -O tester.tar.gz
-  except:
-    changes:
-      - .dockerignore
-      - .gitlab-ci.yml
-      - Dockerfile.ci
   artifacts:
     paths:
       - tester.tar.gz
@@ -80,7 +40,7 @@ build-dist:
 test:
   stage: test
   image: docker:20.10.16
-  services: ['docker:20.10.16-dind']
+  services: ['docker:dind']
   before_script:
     - docker load < tester.tar.gz
     - docker run --detach --name tester -v $PWD:/PRJ tester cat /dev/zero
