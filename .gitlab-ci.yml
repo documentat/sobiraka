@@ -1,10 +1,10 @@
 stages:
-  - maker
+  - prepare
   - build
   - test
 
 build-ci-env:
-  stage: maker
+  stage: prepare
   when: manual
   image: docker:19.03
   services: ['docker:dind']
@@ -14,8 +14,8 @@ build-ci-env:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
     - docker run -it --detach --name ci-env docker
-    - docker exec maker apk add git make pigz py3-pip
-    - docker commit maker $CI_REGISTRY_IMAGE/ci-env
+    - docker exec env apk add git make pigz py3-pip
+    - docker commit ci-env $CI_REGISTRY_IMAGE/ci-env
     - docker push $CI_REGISTRY_IMAGE/ci-env
 
 build-tester:
