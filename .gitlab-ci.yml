@@ -83,9 +83,9 @@ test:
   services: ['docker:20.10.16-dind']
   before_script:
     - docker load < tester.tar.gz
-    - ls -A | grep -v -E 'Makefile|tests' | xargs -r -I% rm -rf %
     - docker run --detach --name tester -v $PWD:/PRJ tester cat /dev/zero
     - docker exec tester pip install dist/*.tar.gz
+    - ls -A | grep -v -E 'Makefile|tests' | xargs -r -I% rm -rf %
   script:
     - docker exec tester make tests
   coverage: '/TOTAL .+ (\d+\.\d+)%/'
