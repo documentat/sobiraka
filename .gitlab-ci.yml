@@ -48,11 +48,9 @@ build-dist:
 test:
   stage: test
   image: $CI_REGISTRY_IMAGE:tester
-  variables:
-    GIT_STRATEGY: none
   before_script:
     - pip install dist/*.tar.gz
-    - git checkout -- tests Makefile
+    - git sparse-checkout set Makefile tests
     - ls -lAh
   script:
     - make tests
