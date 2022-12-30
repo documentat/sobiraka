@@ -41,7 +41,7 @@ build-tester:
       .
     - docker push $CI_REGISTRY_IMAGE/tester:$CI_COMMIT_SHA
     - docker push $CI_REGISTRY_IMAGE/tester:$CI_COMMIT_BRANCH
-    - docker save tester | pigz > tester.tar.gz
+    - docker save tester | gzip > tester.tar.gz
   rules:
     - changes:
         - .gitlab-ci.yml
@@ -83,7 +83,7 @@ test:
   image: $CI_REGISTRY_IMAGE/ci-env
   services: ['docker:20.10.16-dind']
   before_script:
-    - gunzip tester.tar.gz | docker load
+    - docker import tester.tar.gz tester
     - ls -A | grep -v -E 'Makefile|tests' | xargs -r -I% rm -rf %
     - docker run -it --name tester -v $PWD:/PRJ tester
     - docker exec tester pip install dist/*.tar.gz
