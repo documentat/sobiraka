@@ -13,7 +13,7 @@ build-ci-env:
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
-    - docker run -it --detach --name ci-env docker
+    - docker run -it --detach --name ci-env docker:19.03
     - docker exec ci-env apk add git make pigz py3-pip
     - docker commit ci-env $CI_REGISTRY_IMAGE/ci-env
     - docker push $CI_REGISTRY_IMAGE/ci-env
