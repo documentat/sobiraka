@@ -17,7 +17,7 @@ build-maker:
     - docker run -it --detach --name maker docker
     - docker exec maker apk add make py3-pip
     - docker commit maker $CI_REGISTRY_IMAGE:maker
-    - docker push $CI_REGISTRY_IMAGE:maker
+    - docker push $CI_REGISTRY_IMAGE/maker
 
 build-tester:
   stage: build
@@ -32,13 +32,17 @@ build-tester:
     - >
       docker build
       --file Dockerfile.ci
-      --cache-from $CI_REGISTRY_IMAGE:tester
+      --cache-from $CI_REGISTRY_IMAGE/tester:$CI_COMMIT_SHA
+      --cache-from $CI_REGISTRY_IMAGE/tester:$CI_COMMIT_BEFORE_SHA
+      --cache-from $CI_REGISTRY_IMAGE/tester:$CI_COMMIT_BRANCH
       --tag $CI_REGISTRY_IMAGE/tester:$CI_COMMIT_SHA
+      --tag $CI_REGISTRY_IMAGE/tester:$CI_COMMIT_BEFORE_SHA
       --tag $CI_REGISTRY_IMAGE/tester:$CI_COMMIT_BRANCH
+      --tag tester
       .
     - docker push $CI_REGISTRY_IMAGE/tester:$CI_COMMIT_SHA
     - docker push $CI_REGISTRY_IMAGE/tester:$CI_COMMIT_BRANCH
-    - docker save $CI_REGISTRY_IMAGE/tester:$CI_COMMIT_SHA --output tester.tar
+    - docker save tester | gzip > tester.tar.gz
   rules:
     - changes:
         - .gitlab-ci.yml
@@ -47,7 +51,7 @@ build-tester:
         - setup.py
   artifacts:
     paths:
-      - tester.tar
+      - tester.tar.gz
 
 build-dist:
   stage: build
@@ -60,11 +64,15 @@ build-dist:
 
 test:
   stage: test
-  image: $CI_REGISTRY_IMAGE:tester
+  image: docker
+  services: ['docker:dind']
   before_script:
-    - wget https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/jobs/artifacts/main/download?job=build-dist
-    - pip install dist/*.tar.gz
     - git sparse-checkout set Makefile tests
+    - wget https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/jobs/artifacts/main/download?job=build-dist
+    - wget https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/jobs/artifacts/main/download?job=build-tester
+    - gunzip tester.tar.gz | docker load
+    - docker run -it --detach --name tester -v $PWD:/PRJ tester
+    - docker exec tester pip install dist/*.tar.gz
   script:
-    - make tests
+    - docker exec tester make tests
   coverage: '/TOTAL .+ (\d+\.\d+)%/'

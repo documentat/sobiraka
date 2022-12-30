@@ -22,4 +22,4 @@ tests:
 	@(cd tests && python -m coverage report --precision=1 --skip-empty --show-missing --fail-under=100)
 
 tests-in-docker:
-	@docker run --rm -it -v ${PWD}:/PROJECT ${IMAGE} make tests
+	@docker run --rm -it -v ${PWD}:/PRJ ${IMAGE} make tests

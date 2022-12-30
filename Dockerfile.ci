@@ -20,5 +20,5 @@ ARG GID=1000
 RUN addgroup --gid $GID user
 RUN adduser --uid $UID --gid $GID user
 
-WORKDIR /PROJECT
+WORKDIR /PRJ
 CMD python src/main.py
