@@ -44,6 +44,12 @@ build-dist:
   artifacts:
     paths:
       - dist
+  rules:
+    - changes:
+        - src
+        - header.sty
+        - README.md
+        - setup.py
 
 test:
   stage: test
