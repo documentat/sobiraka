@@ -3,7 +3,7 @@ stages:
   - build
   - test
 
-build-maker:
+build-ci-env:
   stage: maker
   when: manual
   image: docker:19.03
@@ -13,14 +13,14 @@ build-maker:
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
-    - docker run -it --detach --name maker docker
-    - docker exec maker apk add make pigz py3-pip
-    - docker commit maker $CI_REGISTRY_IMAGE/maker
-    - docker push $CI_REGISTRY_IMAGE/maker
+    - docker run -it --detach --name ci-env docker
+    - docker exec maker apk add git make pigz py3-pip
+    - docker commit maker $CI_REGISTRY_IMAGE/ci-env
+    - docker push $CI_REGISTRY_IMAGE/ci-env
 
 build-tester:
   stage: build
-  image: $CI_REGISTRY_IMAGE/maker
+  image: $CI_REGISTRY_IMAGE/ci-env
   services: ['docker:dind']
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
@@ -41,8 +41,27 @@ build-tester:
       .
     - docker push $CI_REGISTRY_IMAGE/tester:$CI_COMMIT_SHA
     - docker push $CI_REGISTRY_IMAGE/tester:$CI_COMMIT_BRANCH
-    - docker save tester | gzip > tester.tar.gz
+    - docker save tester | pigz > tester.tar.gz
   rules:
+    - changes:
+        - .gitlab-ci.yml
+        - .dockerignore
+        - Dockerfile.ci
+        - setup.py
+    - when: manual
+  artifacts:
+    paths:
+      - tester.tar.gz
+
+get-tester:
+  stage: build
+  image: $CI_REGISTRY_IMAGE/ci-env
+  services: ['docker:dind']
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - wget https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/jobs/artifacts/CI_COMMIT_BRANCH/raw/tester.tar.gz?job=build-tester -O tester.tar.gz
+  except:
     - changes:
         - .gitlab-ci.yml
         - .dockerignore
@@ -63,13 +82,13 @@ build-dist:
 
 test:
   stage: test
-  image: $CI_REGISTRY_IMAGE/maker
+  image: $CI_REGISTRY_IMAGE/ci-env
   services: ['docker:dind']
   before_script:
     - git sparse-checkout set Makefile tests
     - wget https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/jobs/artifacts/main/download?job=build-dist
     - wget https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/jobs/artifacts/main/download?job=build-tester
-    - gunzip tester.tar.gz | docker load
+    - unpigz tester.tar.gz | docker load
     - docker run -it --detach --name tester -v $PWD:/PRJ tester
     - docker exec tester pip install dist/*.tar.gz
   script:
