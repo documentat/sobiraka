@@ -82,7 +82,7 @@ test:
   image: $CI_REGISTRY_IMAGE/ci-env
   services: ['docker:20.10.16-dind']
   before_script:
-    - docker import tester.tar.gz
+    - gunzip tester.tar.gz | docker import tester
     - ls -A | grep -v -E 'Makefile|tests' | xargs -r -I% rm -rf %
     - docker run -it --name tester -v $PWD:/PRJ tester
     - docker exec tester pip install dist/*.tar.gz
