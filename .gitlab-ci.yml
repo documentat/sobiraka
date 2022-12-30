@@ -84,7 +84,7 @@ test:
   before_script:
     - docker load < tester.tar.gz
     - ls -A | grep -v -E 'Makefile|tests' | xargs -r -I% rm -rf %
-    - docker run --detach --name tester -v $PWD:/PRJ tester sh
+    - docker run --detach --name tester -v $PWD:/PRJ tester cat /dev/zero
     - docker exec tester pip install dist/*.tar.gz
   script:
     - docker exec tester make tests
