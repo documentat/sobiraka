@@ -26,15 +26,28 @@ build-tester:
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
-    - docker pull $CI_REGISTRY_IMAGE:tester
-    - docker build --file Dockerfile.dev --cache-from $CI_REGISTRY_IMAGE:tester --tag $CI_REGISTRY_IMAGE:tester .
-    - docker push $CI_REGISTRY_IMAGE:tester
+    - docker pull $CI_REGISTRY_IMAGE/tester:$CI_COMMIT_SHA || true
+    - docker pull $CI_REGISTRY_IMAGE/tester:$CI_COMMIT_BEFORE_SHA || true
+    - docker pull $CI_REGISTRY_IMAGE/tester:$CI_COMMIT_BRANCH || true
+    - >
+      docker build
+      --file Dockerfile.ci
+      --cache-from $CI_REGISTRY_IMAGE:tester
+      --tag $CI_REGISTRY_IMAGE/tester:$CI_COMMIT_SHA
+      --tag $CI_REGISTRY_IMAGE/tester:$CI_COMMIT_BRANCH
+      .
+    - docker push $CI_REGISTRY_IMAGE/tester:$CI_COMMIT_SHA
+    - docker push $CI_REGISTRY_IMAGE/tester:$CI_COMMIT_BRANCH
+    - docker save $CI_REGISTRY_IMAGE/tester:$CI_COMMIT_SHA --output tester.tar
   rules:
     - changes:
         - .gitlab-ci.yml
         - .dockerignore
-        - Dockerfile.dev
+        - Dockerfile.ci
         - setup.py
+  artifacts:
+    paths:
+      - tester.tar
 
 build-dist:
   stage: build
@@ -44,17 +57,12 @@ build-dist:
   artifacts:
     paths:
       - dist
-  rules:
-    - changes:
-        - src
-        - header.sty
-        - README.md
-        - setup.py
 
 test:
   stage: test
   image: $CI_REGISTRY_IMAGE:tester
   before_script:
+    - wget https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/jobs/artifacts/main/download?job=build-dist
     - pip install dist/*.tar.gz
     - git sparse-checkout set Makefile tests
   script:

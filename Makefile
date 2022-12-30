@@ -11,7 +11,7 @@ DOCKER_RUN = \
 docker:
 	@echo Preparing Docker image
 	@DOCKER_BUILDKIT=1 docker build . \
-		--file Dockerfile.dev \
+		--file Dockerfile.ci \
 		--tag ${IMAGE} \
 		--build-arg UID=$$(id -u) \
 		--build-arg GID=$$(id -g)

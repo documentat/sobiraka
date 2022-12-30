@@ -9,7 +9,7 @@ RUN pip install --no-cache-dir pyyaml~=5.3.1 panflute~=2.2.3 coverage~=7.0.1
 FROM python:3.11-slim-bullseye AS sobiraka
 
 RUN apt update
-RUN apt install -y git make
+RUN apt install -y git make wget
 
 COPY --from=get-pandoc /tmp/pandoc /usr/local
 COPY --from=get-dependencies-pip /usr/local /usr/local
