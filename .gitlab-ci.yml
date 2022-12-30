@@ -43,7 +43,6 @@ build-tester:
     - docker save tester | gzip > tester.tar.gz
   rules:
     - changes:
-        - .gitlab-ci.yml
         - .dockerignore
         - Dockerfile.ci
     - when: manual
@@ -61,7 +60,6 @@ get-tester:
     - wget https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/jobs/artifacts/CI_COMMIT_BRANCH/raw/tester.tar.gz?job=build-tester -O tester.tar.gz
   except:
     changes:
-      - .gitlab-ci.yml
       - .dockerignore
       - Dockerfile.ci
   artifacts:
