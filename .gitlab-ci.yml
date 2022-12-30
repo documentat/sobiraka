@@ -6,6 +6,7 @@ stages:
 build-maker:
   stage: maker
   when: manual
+  allow_failure: false
   image: docker:19.03
   services: ['docker:dind']
   variables:
