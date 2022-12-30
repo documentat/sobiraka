@@ -9,20 +9,21 @@ build-tester:
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
-    - docker pull $CI_REGISTRY_IMAGE/tester:$CI_COMMIT_SHA || true
-    - docker pull $CI_REGISTRY_IMAGE/tester:$CI_COMMIT_BEFORE_SHA || true
-    - docker pull $CI_REGISTRY_IMAGE/tester:$CI_COMMIT_BRANCH || true
+    - docker pull $CI_REGISTRY_IMAGE:master || true
+    - docker pull $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_NAME || true
+    - docker pull $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA || true
+    - docker pull $CI_REGISTRY_IMAGE:$CI_COMMIT_BEFORE_SHA || true
     - >
       docker build .
       --file Dockerfile.ci
-      --cache-from $CI_REGISTRY_IMAGE/tester:$CI_COMMIT_SHA
-      --cache-from $CI_REGISTRY_IMAGE/tester:$CI_COMMIT_BEFORE_SHA
-      --cache-from $CI_REGISTRY_IMAGE/tester:$CI_COMMIT_BRANCH
-      --tag $CI_REGISTRY_IMAGE/tester:$CI_COMMIT_SHA
-      --tag $CI_REGISTRY_IMAGE/tester:$CI_COMMIT_BRANCH
-      --tag tester
-    - docker push $CI_REGISTRY_IMAGE/tester:$CI_COMMIT_SHA
-    - docker push $CI_REGISTRY_IMAGE/tester:$CI_COMMIT_BRANCH
+      --cache-from $CI_REGISTRY_IMAGE:master
+      --cache-from $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_NAME
+      --cache-from $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+      --cache-from $CI_REGISTRY_IMAGE:$CI_COMMIT_BEFORE_SHA
+      --tag $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_NAME
+      --tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+    - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_NAME
+    - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
     - docker save tester | gzip > tester.tar.gz
   artifacts:
     paths:
