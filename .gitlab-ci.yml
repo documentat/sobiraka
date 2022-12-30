@@ -47,7 +47,6 @@ build-tester:
         - .gitlab-ci.yml
         - .dockerignore
         - Dockerfile.ci
-        - setup.py
     - when: manual
   artifacts:
     paths:
@@ -66,7 +65,6 @@ get-tester:
       - .gitlab-ci.yml
       - .dockerignore
       - Dockerfile.ci
-      - setup.py
   artifacts:
     paths:
       - tester.tar.gz
@@ -86,8 +84,6 @@ test:
   services: ['docker:dind']
   before_script:
     - ls -A | grep -v -E 'Makefile|tests' | xargs -r -I% rm -rf %
-    - wget https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/jobs/artifacts/main/download?job=build-dist
-    - wget https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/jobs/artifacts/main/download?job=build-tester
     - unpigz tester.tar.gz | docker load
     - docker run -it --detach --name tester -v $PWD:/PRJ tester
     - docker exec tester pip install dist/*.tar.gz
