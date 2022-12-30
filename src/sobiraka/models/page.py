@@ -1,17 +1,15 @@
 from __future__ import annotations
 
 import re
-from asyncio import create_task, Event, Task
+from asyncio import create_task, Task
 from functools import cached_property
 from pathlib import Path
-from typing import Awaitable, Callable
+from typing import Awaitable, Callable, Coroutine
 
 from panflute import Doc
 
-from . import PageHref, UnknownPageHref
 from .book import Book
 from .error import ProcessingError
-from .href import Href
 
 
 class Page:
@@ -33,10 +31,10 @@ class Page:
         from ..building.processing1 import process1
         from ..building.processing2 import process2
         from ..building.rendering import generate_latex
-        self.loaded = _TriggerableEvent(lambda: load_page(self))
-        self.processed1 = _TriggerableEvent(lambda: process1(self))
-        self.processed2 = _TriggerableEvent(lambda: process2(self))
-        self.latex_generated = _TriggerableEvent(lambda: generate_latex(self))
+        self.loaded = _TriggerableAction(lambda: load_page(self))
+        self.processed1 = _TriggerableAction(lambda: process1(self))
+        self.processed2 = _TriggerableAction(lambda: process2(self))
+        self.latex_generated = _TriggerableAction(lambda: generate_latex(self))
 
     def __repr__(self):
         return f'<Page: {str(self.relative_path)!r}>'
@@ -66,20 +64,15 @@ class Page:
         return self.book.max_level - self.level + 1
 
 
-class _TriggerableEvent(Event):
-    def __init__(self, action: Callable[[], Awaitable]):
-        super().__init__()
-        self.action: Callable[[], Awaitable] = action
+class _TriggerableAction:
+    def __init__(self, action: Callable[[], Coroutine]):
+        self.action: Callable[[], Coroutine] = action
         self.task: Task | None = None
 
-    async def perform_action(self):
-        await self.action()
-
     def start(self):
-        if not self.task:
-            self.task = create_task(self.perform_action())
+        if self.task is None:
+            self.task = create_task(self.action())
 
     async def wait(self):
         self.start()
         await self.task
-        self.set()

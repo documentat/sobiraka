@@ -5,7 +5,7 @@ from pathlib import Path
 from panflute import Element, Header, Image, Link, ListContainer, stringify
 
 from sobiraka.building.processing2 import process2_link
-from sobiraka.models import Book, PageHref, Href, Page, UrlHref
+from sobiraka.models import Book, Href, Page, UrlHref
 from sobiraka.models.error import BadLinkError
 from sobiraka.models.href import PageHref, UnknownPageHref
 from sobiraka.utils import LatexBlock, save_debug_json
@@ -13,12 +13,12 @@ from sobiraka.utils import LatexBlock, save_debug_json
 
 async def process1(page: Page):
     await page.loaded.wait()
-    _process_element(page.doc, page, page.book)
+    await _process_element(page.doc, page, page.book)
     save_debug_json('s1', page)
 
 
 @singledispatch
-def _process_element(elem: Element, page: Page, book: Book) -> None | Element | tuple[Element, ...]:
+async def _process_element(elem: Element, page: Page, book: Book) -> None | Element | tuple[Element, ...]:
     try:
         assert isinstance(elem.content, ListContainer)
     except (AttributeError, AssertionError):
@@ -26,7 +26,7 @@ def _process_element(elem: Element, page: Page, book: Book) -> None | Element | 
 
     i = 0
     while i < len(elem.content):
-        result = _process_element(elem.content[i], page, book)
+        result = await _process_element(elem.content[i], page, book)
         match result:
             case None:
                 pass
@@ -42,7 +42,7 @@ def _process_element(elem: Element, page: Page, book: Book) -> None | Element | 
 
 
 @_process_element.register
-def _(header: Header, page: Page, _: Book):
+async def _(header: Header, page: Page, _: Book):
     nodes = [header]
 
     if not header.identifier:
@@ -71,12 +71,12 @@ def _(header: Header, page: Page, _: Book):
 
 
 @_process_element.register
-def _(image: Image, _: Page, book: Book):
+async def _(image: Image, _: Page, book: Book):
     image.url = str(book.root / '_images' / image.url)
 
 
 @_process_element.register
-def _(link: Link, page: Page, book: Book):
+async def _(link: Link, page: Page, book: Book):
     href: Href
 
     if re.match(r'^\w+:', link.url):
