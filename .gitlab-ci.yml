@@ -41,8 +41,6 @@ test:
   stage: test
   image: docker:20.10.16
   services: ['docker:dind']
-  variables:
-    PYTHONASYNCIODEBUG: ''
   before_script:
     - docker load < tester.tar.gz
     - docker run --detach --name tester -v $PWD:/PRJ tester cat /dev/zero
