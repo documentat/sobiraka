@@ -3,19 +3,16 @@ WORKDIR /tmp/pandoc
 RUN arch=$(arch | sed s:aarch64:arm64: | sed s:x86_64:amd64:) \
     && wget https://github.com/jgm/pandoc/releases/download/2.18/pandoc-2.18-linux-$arch.tar.gz -O- | tar -xz --strip-components=1
 
-FROM alpine:3.16 AS get-dependencies-deb
-RUN arch=$(arch | sed s:aarch64:arm64: | sed s:x86_64:amd64:) \
-    && wget http://ftp.de.debian.org/debian/pool/main/m/make-dfsg/make_4.3-4.1_$arch.deb -O /tmp/make.deb
-
 FROM python:3.11-slim-bullseye AS get-dependencies-pip
 RUN pip install --no-cache-dir pyyaml~=5.3.1 panflute~=2.2.3 coverage~=7.0.1
 
 FROM python:3.11-slim-bullseye AS sobiraka
 
+RUN apt update
+RUN apt install -y git make
+
 COPY --from=get-pandoc /tmp/pandoc /usr/local
 COPY --from=get-dependencies-pip /usr/local /usr/local
-COPY --from=get-dependencies-deb /tmp/make.deb /tmp
-RUN dpkg -i /tmp/make.deb && rm /tmp/make.deb
 
 # Create user identical to the host user
 ARG UID=1000
