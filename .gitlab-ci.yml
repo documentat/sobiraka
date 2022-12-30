@@ -57,7 +57,7 @@ get-tester:
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
-    - wget https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/jobs/artifacts/CI_COMMIT_BRANCH/raw/tester.tar.gz?job=build-tester -O tester.tar.gz
+    - wget https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/jobs/artifacts/$CI_COMMIT_BRANCH/raw/tester.tar.gz?job=build-tester -O tester.tar.gz
   except:
     changes:
       - .dockerignore
