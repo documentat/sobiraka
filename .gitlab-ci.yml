@@ -23,7 +23,7 @@ build-tester:
       --tag tester
     - docker push $CI_REGISTRY_IMAGE/tester:$CI_COMMIT_SHA
     - docker push $CI_REGISTRY_IMAGE/tester:$CI_COMMIT_BRANCH
-    - docker save tester | pigz > tester.tar.gz
+    - docker save tester | gzip > tester.tar.gz
   artifacts:
     paths:
       - tester.tar.gz
