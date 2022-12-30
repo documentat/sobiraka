@@ -51,7 +51,6 @@ test:
   before_script:
     - pip install dist/*.tar.gz
     - git sparse-checkout set Makefile tests
-    - ls -lAh
   script:
     - make tests
   coverage: '/TOTAL .+ (\d+\.\d+)%/'
