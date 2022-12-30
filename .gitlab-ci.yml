@@ -85,7 +85,7 @@ test:
   image: $CI_REGISTRY_IMAGE/ci-env
   services: ['docker:dind']
   before_script:
-    - git sparse-checkout set Makefile tests
+    - ls -A | grep -v -E 'Makefile|tests' | xargs -r -I% rm -rf %
     - wget https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/jobs/artifacts/main/download?job=build-dist
     - wget https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/jobs/artifacts/main/download?job=build-tester
     - unpigz tester.tar.gz | docker load
