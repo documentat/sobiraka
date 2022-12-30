@@ -40,7 +40,7 @@ build-tester:
       .
     - docker push $CI_REGISTRY_IMAGE/tester:$CI_COMMIT_SHA
     - docker push $CI_REGISTRY_IMAGE/tester:$CI_COMMIT_BRANCH
-    - docker save tester | gzip > tester.tar.gz
+    - docker save tester | pigz > tester.tar.gz
   rules:
     - changes:
         - .dockerignore
@@ -84,7 +84,7 @@ test:
   before_script:
     - docker load < tester.tar.gz
     - ls -A | grep -v -E 'Makefile|tests' | xargs -r -I% rm -rf %
-    - docker run --name tester -v $PWD:/PRJ tester sh
+    - docker run --detached --name tester -v $PWD:/PRJ tester sh
     - docker exec tester pip install dist/*.tar.gz
   script:
     - docker exec tester make tests
