@@ -44,6 +44,7 @@ build-tester:
   rules:
     - changes:
         - .dockerignore
+        - .gitlab-ci.yml
         - Dockerfile.ci
     - when: manual
   artifacts:
@@ -61,6 +62,7 @@ get-tester:
   except:
     changes:
       - .dockerignore
+      - .gitlab-ci.yml
       - Dockerfile.ci
   artifacts:
     paths:
