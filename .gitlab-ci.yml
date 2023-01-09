@@ -60,7 +60,7 @@ build-dist:
       --cache-to type=registry,mode=max,ref=$CI_REGISTRY_IMAGE/cache/$IMAGE:$CI_COMMIT_SHA
       --tag $IMAGE
 
-    - echo docker tag $IMAGE $CI_REGISTRY_IMAGE/cache/$IMAGE:$CI_COMMIT_REF_NAME
+    - docker images
     - docker tag $IMAGE $CI_REGISTRY_IMAGE/cache/$IMAGE:$CI_COMMIT_REF_NAME
     - docker push $CI_REGISTRY_IMAGE/cache/$IMAGE:$CI_COMMIT_REF_NAME
 
