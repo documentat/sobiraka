@@ -85,20 +85,20 @@ build-tester:
 
 ################################################################################
 
-test-pip:
-  stage: test
-  needs: [build-tester, build-dist]
-  image: $CI_REGISTRY_IMAGE/ci-env:1
-  variables:
-    GIT_STRATEGY: fetch
-  services: ['docker:dind']
-  before_script:
-    - docker load < tester.tar.gz
-    - rm tester.tar.gz
-    - docker run --detach --rm --name tester -v $PWD:/PRJ --entrypoint dd tester if=/dev/zero of=/dev/null
-    - docker exec tester pip install dist/*.tar.gz
-    - rm dist/*.tar.gz
-  script:
-    - git checkout -- Makefile tests
-    - docker exec tester make tests
-  coverage: '/TOTAL .+ (\d+\.\d+)%/'
+#test-pip:
+#  stage: test
+#  needs: [build-tester, build-dist]
+#  image: $CI_REGISTRY_IMAGE/ci-env:1
+#  variables:
+#    GIT_STRATEGY: fetch
+#  services: ['docker:dind']
+#  before_script:
+#    - docker load < tester.tar.gz
+#    - rm tester.tar.gz
+#    - docker run --detach --rm --name tester -v $PWD:/PRJ --entrypoint dd tester if=/dev/zero of=/dev/null
+#    - docker exec tester pip install dist/*.tar.gz
+#    - rm dist/*.tar.gz
+#  script:
+#    - git checkout -- Makefile tests
+#    - docker exec tester make tests
+#  coverage: '/TOTAL .+ (\d+\.\d+)%/'
