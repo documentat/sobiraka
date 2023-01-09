@@ -48,14 +48,14 @@ build-dist:
     - docker pull $CI_REGISTRY_IMAGE/$IMAGE:$CI_COMMIT_SHA || true
     - docker pull $CI_REGISTRY_IMAGE/$IMAGE:$CI_COMMIT_BEFORE_SHA || true
     - >
-      docker build .
+      docker buildx .
       --file Dockerfile.$IMAGE
       --build-arg BUILDKIT_INLINE_CACHE=1
-      --import-cache type=registry,ref=$CI_REGISTRY_IMAGE/$IMAGE/buildcache:$CI_COMMIT_BEFORE_SHA
-      --import-cache type=registry,ref=$CI_REGISTRY_IMAGE/$IMAGE/buildcache:$CI_COMMIT_SHA
-      --import-cache type=registry,ref=$CI_REGISTRY_IMAGE/$IMAGE/buildcache:$CI_COMMIT_REF_NAME
-      --export-cache type=registry,ref=$CI_REGISTRY_IMAGE/$IMAGE/buildcache:$CI_COMMIT_SHA
-      --export-cache type=registry,ref=$CI_REGISTRY_IMAGE/$IMAGE/buildcache:$CI_COMMIT_REF_NAME
+      --cache-from type=registry,ref=$CI_REGISTRY_IMAGE/$IMAGE/buildcache:$CI_COMMIT_BEFORE_SHA
+      --cache-from type=registry,ref=$CI_REGISTRY_IMAGE/$IMAGE/buildcache:$CI_COMMIT_SHA
+      --cache-from type=registry,ref=$CI_REGISTRY_IMAGE/$IMAGE/buildcache:$CI_COMMIT_REF_NAME
+      --cache-to type=registry,ref=$CI_REGISTRY_IMAGE/$IMAGE/buildcache:$CI_COMMIT_SHA
+      --cache-to type=registry,ref=$CI_REGISTRY_IMAGE/$IMAGE/buildcache:$CI_COMMIT_REF_NAME
       --output type=image,name=$CI_REGISTRY_IMAGE/$IMAGE:$CI_COMMIT_SHA,push=true
       --output type=image,name=$CI_REGISTRY_IMAGE/$IMAGE:$CI_COMMIT_REF_NAME,push=true
       --output type=image,name=$IMAGE
