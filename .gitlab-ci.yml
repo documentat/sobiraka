@@ -23,14 +23,14 @@ build-ci-env:
 
 ################################################################################
 
-build-dist:
-  stage: build
-  image: python:3.11-slim-bullseye
-  script:
-    - python setup.py sdist
-  artifacts:
-    paths:
-      - dist
+#build-dist:
+#  stage: build
+#  image: python:3.11-slim-bullseye
+#  script:
+#    - python setup.py sdist
+#  artifacts:
+#    paths:
+#      - dist
 
 ################################################################################
 
@@ -53,16 +53,21 @@ build-dist:
       docker buildx build .
       --file Dockerfile.$IMAGE
       --target sobiraka
+      --cache-from type=registry,ref=$CI_REGISTRY_IMAGE/cache/$IMAGE:master
+      --cache-from type=registry,ref=$CI_REGISTRY_IMAGE/cache/$IMAGE:$CI_COMMIT_REF_NAME
+      --cache-from type=registry,ref=$CI_REGISTRY_IMAGE/cache/$IMAGE:$CI_COMMIT_SHA
+      --cache-from type=registry,ref=$CI_REGISTRY_IMAGE/cache/$IMAGE:$CI_COMMIT_BEFORE_SHA
+      --cache-to type=registry,mode=max,ref=$CI_REGISTRY_IMAGE/cache/$IMAGE:$CI_COMMIT_SHA
+    - >
+      docker build .
+      --file Dockerfile.$IMAGE
+      --target sobiraka
       --tag $CI_REGISTRY_IMAGE/cache/$IMAGE:$CI_COMMIT_SHA
-
+      --tag $CI_REGISTRY_IMAGE/cache/$IMAGE:$CI_COMMIT_REF_NAME
     - docker images
 
-    - docker tag $IMAGE $CI_REGISTRY_IMAGE/cache/$IMAGE:$CI_COMMIT_SHA
     - docker push $CI_REGISTRY_IMAGE/cache/$IMAGE:$CI_COMMIT_SHA
-
-    - docker tag $CI_REGISTRY_IMAGE/cache/$IMAGE:$CI_COMMIT_SHA $CI_REGISTRY_IMAGE/cache/$IMAGE:$CI_COMMIT_REF_NAME
     - docker push $CI_REGISTRY_IMAGE/cache/$IMAGE:$CI_COMMIT_REF_NAME
-
     - docker save $CI_REGISTRY_IMAGE/cache/$IMAGE:$CI_COMMIT_SHA | pigz > $IMAGE.tar.gz
   artifacts:
     paths:
@@ -73,10 +78,10 @@ build-tester:
   variables:
     IMAGE: tester
 
-build-release:
-  extends: .build-docker
-  variables:
-    IMAGE: release
+#build-release:
+#  extends: .build-docker
+#  variables:
+#    IMAGE: release
 
 ################################################################################
 
