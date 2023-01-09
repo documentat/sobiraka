@@ -58,7 +58,6 @@ build-ci-env:
       --cache-from type=registry,ref=$CI_REGISTRY_IMAGE/cache/$IMAGE:$CI_COMMIT_SHA
       --cache-from type=registry,ref=$CI_REGISTRY_IMAGE/cache/$IMAGE:$CI_COMMIT_BEFORE_SHA
       --cache-to type=registry,mode=max,ref=$CI_REGISTRY_IMAGE/cache/$IMAGE:$CI_COMMIT_SHA
-      --output type=image,ref=$CI_REGISTRY_IMAGE/cache/$IMAGE:$CI_COMMIT_SHA
       --output type=image,name=$CI_REGISTRY_IMAGE/cache/$IMAGE:$CI_COMMIT_SHA
     - docker images
 
