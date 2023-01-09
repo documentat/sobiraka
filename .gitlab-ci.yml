@@ -66,23 +66,20 @@ build-release:
 
 test-pip:
   extends: .test-docker
-  dependencies: [build-tester]
+  needs: [build-tester, build-dist]
   variables:
     IMAGE: tester
-    GIT_STRATEGY: fetch
   script:
-    - git checkout -- makefile tests
-    - ls -lAh
+    - ls -A | grep -v -E 'Makefile|tests' | xargs -r -I% rm -rf %
     - docker exec tester pip install dist/*.tar.gz
     - docker exec tester make tests
   coverage: '/TOTAL .+ (\d+\.\d+)%/'
 
 test-release:
   extends: .test-docker
-  dependencies: [build-release]
+  needs: [build-release]
   variables:
     IMAGE: tester
-    GIT_STRATEGY: fetch
   script:
-    - git checkout -- makefile tests
-    - ls -lAh
+    - ls -A | grep -v -E 'Makefile|tests' | xargs -r -I% rm -rf %
+    - docker exec tester make tests
