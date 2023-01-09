@@ -52,18 +52,18 @@ build-dist:
         docker pull $CI_REGISTRY_IMAGE/$IMAGE-buildcache/$CI_COMMIT_SHA-$STAGE || true;
         docker pull $CI_REGISTRY_IMAGE/$IMAGE-buildcache/$CI_COMMIT_BEFORE_SHA-$STAGE || true;
 
-        docker build . --file Dockerfile.$IMAGE --target $STAGE --tag RESULT;
+        docker build . --file Dockerfile.$IMAGE --target $STAGE --tag result;
 
-        docker tag RESULT $CI_REGISTRY_IMAGE/$IMAGE-buildcache/$CI_COMMIT_REF_NAME;
+        docker tag result $CI_REGISTRY_IMAGE/$IMAGE-buildcache/$CI_COMMIT_REF_NAME;
         docker push $CI_REGISTRY_IMAGE/$IMAGE-buildcache/$CI_COMMIT_REF_NAME;
 
-        docker tag RESULT $CI_REGISTRY_IMAGE/$IMAGE-buildcache/$CI_COMMIT_SHA;
+        docker tag result $CI_REGISTRY_IMAGE/$IMAGE-buildcache/$CI_COMMIT_SHA;
         docker push $CI_REGISTRY_IMAGE/$IMAGE-buildcache/$CI_COMMIT_SHA;
 
-        docker tag RESULT $CI_REGISTRY_IMAGE/$IMAGE-buildcache/$CI_COMMIT_BEFORE_SHA;
+        docker tag result $CI_REGISTRY_IMAGE/$IMAGE-buildcache/$CI_COMMIT_BEFORE_SHA;
         docker push $CI_REGISTRY_IMAGE/$IMAGE-buildcache/$CI_COMMIT_BEFORE_SHA;
 
-        docker save RESULT | pigz > $IMAGE.tar.gz;
+        docker save result | pigz > $IMAGE.tar.gz;
       done
   artifacts:
     paths:
