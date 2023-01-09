@@ -54,9 +54,11 @@ build-dist:
       --cache-from type=registry,ref=$CI_REGISTRY_IMAGE/$IMAGE/buildcache:$CI_COMMIT_REF_NAME
       --cache-to type=registry,ref=$CI_REGISTRY_IMAGE/$IMAGE/buildcache:$CI_COMMIT_SHA
       --cache-to type=registry,ref=$CI_REGISTRY_IMAGE/$IMAGE/buildcache:$CI_COMMIT_REF_NAME
-      --output type=image,name=$CI_REGISTRY_IMAGE/$IMAGE:$CI_COMMIT_SHA,push=true
-      --output type=image,name=$CI_REGISTRY_IMAGE/$IMAGE:$CI_COMMIT_REF_NAME,push=true
-      --output type=image,name=$IMAGE
+      --tag $IMAGE
+    - docker tag $IMAGE $CI_REGISTRY_IMAGE/$IMAGE:$CI_COMMIT_REF_NAME
+    - docker tag $IMAGE $CI_REGISTRY_IMAGE/$IMAGE:$CI_COMMIT_SHA
+    - docker push $CI_REGISTRY_IMAGE/$IMAGE:$CI_COMMIT_REF_NAME
+    - docker push $CI_REGISTRY_IMAGE/$IMAGE:$CI_COMMIT_SHA
     - docker save $IMAGE | pigz > $IMAGE.tar.gz
   artifacts:
     paths:
