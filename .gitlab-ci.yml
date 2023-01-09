@@ -95,7 +95,7 @@ test-pip:
   script:
     - docker exec $IMAGE pip install dist/*.tar.gz
     - rm dist/*.tar.gz
-    - git fetch -- Makefile tests
+    - git checkout -- Makefile tests
     - docker exec $IMAGE make tests
   coverage: '/TOTAL .+ (\d+\.\d+)%/'
 
@@ -105,5 +105,5 @@ test-release:
   variables:
     IMAGE: release
   script:
-    - git fetch -- Makefile tests
+    - git checkout -- Makefile tests
     - docker exec $IMAGE make tests
