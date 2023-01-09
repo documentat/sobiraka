@@ -1,6 +1,25 @@
 stages:
+  - manual
   - build
   - test
+
+################################################################################
+
+build-ci-env:
+  stage: manual
+  when: manual
+  image: docker
+  services: ['docker:dind']
+  variables:
+    GIT_STRATEGY: none
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - docker run -it --detach --name ci-env docker
+    - docker exec ci-env apk add git make pigz py3-pip
+    - docker commit ci-env $CI_REGISTRY_IMAGE/ci-env
+    - docker push $CI_REGISTRY_IMAGE/ci-env
+
 
 ################################################################################
 
@@ -17,7 +36,7 @@ build-dist:
 
 .build-docker:
   stage: build
-  image: docker
+  image: $CI_REGISTRY_IMAGE/ci-env
   services: ['docker:dind']
   variables:
     DOCKER_BUILDKIT: 1
@@ -40,7 +59,7 @@ build-dist:
       --tag $IMAGE
     - docker push $CI_REGISTRY_IMAGE/$IMAGE:$CI_COMMIT_REF_NAME
     - docker push $CI_REGISTRY_IMAGE/$IMAGE:$CI_COMMIT_SHA
-    - docker save $IMAGE | gzip > $IMAGE.tar.gz
+    - docker save $IMAGE | pigz > $IMAGE.tar.gz
   artifacts:
     paths:
       - $IMAGE.tar.gz
@@ -59,7 +78,9 @@ build-release:
 
 .test-docker:
   stage: test
-  image: docker
+  image: $CI_REGISTRY_IMAGE/ci-env
+  variables:
+    GIT_STRATEGY: fetch
   services: ['docker:dind']
   before_script:
     - docker load < $IMAGE.tar.gz
@@ -73,7 +94,8 @@ test-pip:
     IMAGE: tester
   script:
     - docker exec $IMAGE pip install dist/*.tar.gz
-    - ls -A | grep -v -E 'Makefile|tests' | xargs -r -I% rm -rf %
+    - rm dist/*.tar.gz
+    - git fetch -- Makefile tests
     - docker exec $IMAGE make tests
   coverage: '/TOTAL .+ (\d+\.\d+)%/'
 
@@ -83,5 +105,5 @@ test-release:
   variables:
     IMAGE: release
   script:
-    - ls -A | grep -v -E 'Makefile|tests' | xargs -r -I% rm -rf %
+    - git fetch -- Makefile tests
     - docker exec $IMAGE make tests
