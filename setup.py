@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 
-from distutils.core import setup
-
-from setuptools import find_packages
+from setuptools import find_packages, setup
 
 setup(
     name='sobiraka',
@@ -10,14 +8,14 @@ setup(
     author='Max Alibaev',
     python_requires='~=3.11',
     install_requires=[
-        'panflute>=2.2.3,<2.3'
-        'pyyaml>=5.3.1<5.4',
+        'panflute~=2.2.3',
+        'pyyaml~=6.0',
     ],
     packages=find_packages(where='src'),
     package_dir={
         '': 'src',
     },
     entry_points={
-        'sobiraka': ['christ=sobiraka:main'],
+        'console_scripts': ['sobiraka=sobiraka.main:main'],
     },
 )
