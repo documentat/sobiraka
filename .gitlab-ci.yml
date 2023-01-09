@@ -43,21 +43,18 @@ build-ci-env:
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
-#    - docker pull $CI_REGISTRY_IMAGE/cache/$IMAGE:master || true
-#    - docker pull $CI_REGISTRY_IMAGE/cache/$IMAGE:$CI_COMMIT_REF_NAME || true
-#    - docker pull $CI_REGISTRY_IMAGE/cache/$IMAGE:$CI_COMMIT_SHA || true
-#    - docker pull $CI_REGISTRY_IMAGE/cache/$IMAGE:$CI_COMMIT_BEFORE_SHA || true
-
     - docker buildx create --use
     - docker buildx install
     - >
       docker build .
       --file Dockerfile.$IMAGE
       --cache-from type=registry,ref=$CI_REGISTRY_IMAGE/cache/$IMAGE:master
-      --cache-from type=registry,ref=$CI_REGISTRY_IMAGE/cache/$IMAGE:$CI_COMMIT_REF_NAME
       --cache-from type=registry,ref=$CI_REGISTRY_IMAGE/cache/$IMAGE:$CI_COMMIT_SHA
       --cache-from type=registry,ref=$CI_REGISTRY_IMAGE/cache/$IMAGE:$CI_COMMIT_BEFORE_SHA
+      --cache-from type=registry,ref=$CI_REGISTRY_IMAGE/cache/$IMAGE:$CI_COMMIT_REF_NAME
       --cache-to type=registry,mode=max,ref=$CI_REGISTRY_IMAGE/cache/$IMAGE:$CI_COMMIT_SHA
+      --tag $CI_REGISTRY_IMAGE/cache/$IMAGE:$CI_COMMIT_SHA
+      --tag $CI_REGISTRY_IMAGE/cache/$IMAGE:$CI_COMMIT_REF_NAME
       --output type=docker,dest=$IMAGE.tar
     - docker images
     - docker load < $IMAGE.tar
