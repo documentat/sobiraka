@@ -50,6 +50,7 @@ build-dist:
     - >
       docker build .
       --file Dockerfile.$IMAGE
+      --build-arg BUILDKIT_INLINE_CACHE=1
       --import-cache type=registry,ref=$CI_REGISTRY_IMAGE/$IMAGE/buildcache:$CI_COMMIT_BEFORE_SHA
       --import-cache type=registry,ref=$CI_REGISTRY_IMAGE/$IMAGE/buildcache:$CI_COMMIT_SHA
       --import-cache type=registry,ref=$CI_REGISTRY_IMAGE/$IMAGE/buildcache:$CI_COMMIT_REF_NAME
