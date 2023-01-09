@@ -44,7 +44,7 @@ build-dist:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
     - >
-      for STAGE in $(cat Dockerfile.$IMAGE | grep -P 'FROM \S+ AS \S+' | cut -d' ' -f4);
+      for STAGE in $(cat Dockerfile.$IMAGE | grep -E 'FROM \S+ AS \S+' | cut -d' ' -f4);
       do
         docker pull $CI_REGISTRY_IMAGE/$IMAGE-buildcache:master || true;
         docker pull $CI_REGISTRY_IMAGE/$IMAGE-buildcache/master-$STAGE || true;
