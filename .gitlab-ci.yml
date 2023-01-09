@@ -40,35 +40,28 @@ build-dist:
   services: ['docker:dind']
   variables:
     DOCKER_BUILDKIT: 1
+    CACHE_FALLBACK_KEY: master
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
-    - docker pull $CI_REGISTRY_IMAGE/cache/$IMAGE:master || true
-    - docker pull $CI_REGISTRY_IMAGE/cache/$IMAGE:$CI_COMMIT_REF_NAME || true
-    - docker pull $CI_REGISTRY_IMAGE/cache/$IMAGE:$CI_COMMIT_SHA || true
-    - docker pull $CI_REGISTRY_IMAGE/cache/$IMAGE:$CI_COMMIT_BEFORE_SHA || true
-
-    - docker buildx create --use
-    - docker buildx install
     - >
-      docker build .
-      --file Dockerfile.$IMAGE
-      --cache-from type=registry,ref=$CI_REGISTRY_IMAGE/cache/$IMAGE:master
-      --cache-from type=registry,ref=$CI_REGISTRY_IMAGE/cache/$IMAGE:$CI_COMMIT_SHA
-      --cache-from type=registry,ref=$CI_REGISTRY_IMAGE/cache/$IMAGE:$CI_COMMIT_BEFORE_SHA
-      --cache-from type=registry,ref=$CI_REGISTRY_IMAGE/cache/$IMAGE:$CI_COMMIT_REF_NAME
-      --cache-to type=registry,mode=max,ref=$CI_REGISTRY_IMAGE/cache/$IMAGE:$CI_COMMIT_SHA
-      --tag $CI_REGISTRY_IMAGE/cache/$IMAGE:$CI_COMMIT_SHA
-      --tag $CI_REGISTRY_IMAGE/cache/$IMAGE:$CI_COMMIT_REF_NAME
-      --output type=docker,dest=$IMAGE.tar
-    - docker load < $IMAGE.tar
+      for STAGE in $(cat Dockerfile.$IMAGE | grep -E 'FROM \S+ AS \S+' | cut -d' ' -f4);
+      do
+        docker pull $CI_REGISTRY_IMAGE/cache/$IMAGE:branch-master-$STAGE || true;
+        docker pull $CI_REGISTRY_IMAGE/cache/$IMAGE:branch-$CI_COMMIT_REF_NAME-$STAGE || true;
+        docker pull $CI_REGISTRY_IMAGE/cache/$IMAGE:commit-$CI_COMMIT_SHA-$STAGE || true;
+        docker pull $CI_REGISTRY_IMAGE/cache/$IMAGE:commit-$CI_COMMIT_BEFORE_SHA-$STAGE || true;
 
-    - docker push $CI_REGISTRY_IMAGE/cache/$IMAGE:$CI_COMMIT_SHA
+        docker build . --file Dockerfile.$IMAGE --target $STAGE --tag $IMAGE;
 
-    - docker tag $CI_REGISTRY_IMAGE/cache/$IMAGE:$CI_COMMIT_SHA $CI_REGISTRY_IMAGE/cache/$IMAGE:$CI_COMMIT_REF_NAME
-    - docker push $CI_REGISTRY_IMAGE/cache/$IMAGE:$CI_COMMIT_REF_NAME
+        docker tag $IMAGE $CI_REGISTRY_IMAGE/cache/$IMAGE:branch-$CI_COMMIT_REF_NAME-$STAGE;
+        docker push $CI_REGISTRY_IMAGE/cache/$IMAGE:branch-$CI_COMMIT_REF_NAME-$STAGE;
 
-    - pigz $IMAGE.tar
+        docker tag $IMAGE $CI_REGISTRY_IMAGE/cache/$IMAGE:commit-$CI_COMMIT_SHA-$STAGE;
+        docker push $CI_REGISTRY_IMAGE/cache/$IMAGE:commit-$CI_COMMIT_SHA-$STAGE;
+      done
+      
+      docker save $IMAGE-sobiraka | pigz > $IMAGE.tar.gz;
   artifacts:
     paths:
       - $IMAGE.tar.gz
