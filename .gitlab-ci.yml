@@ -58,7 +58,9 @@ build-ci-env:
       --cache-from type=registry,ref=$CI_REGISTRY_IMAGE/cache/$IMAGE:$CI_COMMIT_SHA
       --cache-from type=registry,ref=$CI_REGISTRY_IMAGE/cache/$IMAGE:$CI_COMMIT_BEFORE_SHA
       --cache-to type=registry,mode=max,ref=$CI_REGISTRY_IMAGE/cache/$IMAGE:$CI_COMMIT_SHA
-      --output type=image,name=$CI_REGISTRY_IMAGE/cache/$IMAGE:$CI_COMMIT_SHA
+      --output type=docker,dest=$IMAGE.tar
+    - docker images
+    - docker load < $IMAGE.tar
     - docker images
 
     - docker push $CI_REGISTRY_IMAGE/cache/$IMAGE:$CI_COMMIT_SHA
@@ -66,7 +68,7 @@ build-ci-env:
     - docker tag $CI_REGISTRY_IMAGE/cache/$IMAGE:$CI_COMMIT_SHA $CI_REGISTRY_IMAGE/cache/$IMAGE:$CI_COMMIT_REF_NAME
     - docker push $CI_REGISTRY_IMAGE/cache/$IMAGE:$CI_COMMIT_REF_NAME
 
-    - docker save $CI_REGISTRY_IMAGE/cache/$IMAGE:$CI_COMMIT_SHA | pigz > $IMAGE.tar.gz
+    - pigz $IMAGE.tar
   artifacts:
     paths:
       - $IMAGE.tar.gz
