@@ -64,7 +64,7 @@ build-release:
   before_script:
     - docker load < $IMAGE.tar.gz
     - rm $IMAGE.tar.gz
-    - docker run --detach --name $IMAGE -v $PWD:/PRJ $IMAGE cat /dev/zero
+    - docker run --detach --rm --name $IMAGE -v $PWD:/PRJ --entrypoint dd $IMAGE if=/dev/zero of=/dev/null
 
 test-pip:
   extends: .test-docker
