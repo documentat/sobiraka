@@ -53,7 +53,6 @@ build-ci-env:
     - >
       docker build .
       --file Dockerfile.$IMAGE
-      --target sobiraka
       --cache-from type=registry,ref=$CI_REGISTRY_IMAGE/cache/$IMAGE:master
       --cache-from type=registry,ref=$CI_REGISTRY_IMAGE/cache/$IMAGE:$CI_COMMIT_REF_NAME
       --cache-from type=registry,ref=$CI_REGISTRY_IMAGE/cache/$IMAGE:$CI_COMMIT_SHA
@@ -64,7 +63,6 @@ build-ci-env:
     - >
       docker build .
       --file Dockerfile.$IMAGE
-      --target sobiraka
       --cache-from type=registry,ref=$CI_REGISTRY_IMAGE/cache/$IMAGE:master
       --cache-from type=registry,ref=$CI_REGISTRY_IMAGE/cache/$IMAGE:$CI_COMMIT_REF_NAME
       --cache-from type=registry,ref=$CI_REGISTRY_IMAGE/cache/$IMAGE:$CI_COMMIT_SHA
