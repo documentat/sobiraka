@@ -2,6 +2,7 @@ stages:
   - manual
   - build
   - test
+  - publish
 
 ################################################################################
 
@@ -59,7 +60,6 @@ build-dist:
         docker tag $IMAGE:$STAGE $CI_REGISTRY_IMAGE/cache/$IMAGE:commit-$CI_COMMIT_SHA-$STAGE;
         docker push $CI_REGISTRY_IMAGE/cache/$IMAGE:commit-$CI_COMMIT_SHA-$STAGE;
       done
-      
       docker save $IMAGE:sobiraka | pigz > $IMAGE.tar.gz;
   artifacts:
     paths:
@@ -81,9 +81,9 @@ test-pip:
   stage: test
   needs: [build-tester, build-dist]
   image: $CI_REGISTRY_IMAGE/ci-env:1
+  services: ['docker:dind']
   variables:
     GIT_STRATEGY: fetch
-  services: ['docker:dind']
   before_script:
     - docker load < tester.tar.gz
     - rm tester.tar.gz
@@ -94,3 +94,37 @@ test-pip:
     - git checkout -- Makefile tests
     - docker exec tester make tests
   coverage: '/TOTAL .+ (\d+\.\d+)%/'
+
+test-src:
+  stage: test
+  needs: [build-tester]
+  image: $CI_REGISTRY_IMAGE/ci-env:1
+  services: ['docker:dind']
+  before_script:
+    - docker load < tester.tar.gz
+    - rm tester.tar.gz
+    - docker run --detach --rm --name tester -v $PWD:/PRJ --entrypoint dd tester if=/dev/zero of=/dev/null
+  script:
+    - docker exec tester make tests
+
+################################################################################
+
+publish:
+  stage: publish
+  needs:
+    - job: build-release
+      artifacts: true
+    - job: test-pip
+      artifacts: false
+    - job: test-src
+      artifacts: false
+  image: $CI_REGISTRY_IMAGE/ci-env:1
+  services: ['docker:dind']
+  variables:
+    GIT_STRATEGY: none
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - docker load < release.tar.gz
+    - docker tag release-sobiraka $CI_REGISTRY_IMAGE/sobiraka:$CI_COMMIT_SHA
+    - docker push $CI_REGISTRY_IMAGE/sobiraka:$CI_COMMIT_SHA
