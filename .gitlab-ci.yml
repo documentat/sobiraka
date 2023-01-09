@@ -40,6 +40,7 @@ build-dist:
   services: ['docker:dind']
   variables:
     DOCKER_BUILDKIT: 1
+    BUILDKIT_PROGRESS: plain
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
@@ -50,10 +51,6 @@ build-dist:
     - >
       docker build .
       --file Dockerfile.$IMAGE
-      --cache-from $CI_REGISTRY_IMAGE/$IMAGE:master
-      --cache-from $CI_REGISTRY_IMAGE/$IMAGE:$CI_COMMIT_REF_NAME
-      --cache-from $CI_REGISTRY_IMAGE/$IMAGE:$CI_COMMIT_SHA
-      --cache-from $CI_REGISTRY_IMAGE/$IMAGE:$CI_COMMIT_BEFORE_SHA
       --tag $CI_REGISTRY_IMAGE/$IMAGE:$CI_COMMIT_REF_NAME
       --tag $CI_REGISTRY_IMAGE/$IMAGE:$CI_COMMIT_SHA
       --tag $IMAGE
@@ -76,34 +73,20 @@ build-release:
 
 ################################################################################
 
-.test-docker:
+test-pip:
   stage: test
+  needs: [build-tester, build-dist]
   image: $CI_REGISTRY_IMAGE/ci-env
   variables:
     GIT_STRATEGY: fetch
   services: ['docker:dind']
   before_script:
-    - docker load < $IMAGE.tar.gz
-    - rm $IMAGE.tar.gz
-    - docker run --detach --rm --name $IMAGE -v $PWD:/PRJ --entrypoint dd $IMAGE if=/dev/zero of=/dev/null
-
-test-pip:
-  extends: .test-docker
-  needs: [build-tester, build-dist]
-  variables:
-    IMAGE: tester
-  script:
-    - docker exec $IMAGE pip install dist/*.tar.gz
+    - docker load < tester.tar.gz
+    - rm tester.tar.gz
+    - docker run --detach --rm --name tester -v $PWD:/PRJ --entrypoint dd tester if=/dev/zero of=/dev/null
+    - docker exec tester pip install dist/*.tar.gz
     - rm dist/*.tar.gz
-    - git checkout -- Makefile tests
-    - docker exec $IMAGE make tests
-  coverage: '/TOTAL .+ (\d+\.\d+)%/'
-
-test-release:
-  extends: .test-docker
-  needs: [build-release]
-  variables:
-    IMAGE: release
   script:
     - git checkout -- Makefile tests
-    - docker exec $IMAGE make tests
+    - docker exec tester make tests
+  coverage: '/TOTAL .+ (\d+\.\d+)%/'
