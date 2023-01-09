@@ -40,7 +40,6 @@ build-dist:
   services: ['docker:dind']
   variables:
     DOCKER_BUILDKIT: 1
-    BUILDKIT_PROGRESS: plain
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
@@ -51,6 +50,7 @@ build-dist:
     - >
       docker build .
       --file Dockerfile.$IMAGE
+      --progress plain
       --tag $CI_REGISTRY_IMAGE/$IMAGE:$CI_COMMIT_REF_NAME
       --tag $CI_REGISTRY_IMAGE/$IMAGE:$CI_COMMIT_SHA
       --tag $IMAGE
