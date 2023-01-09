@@ -49,15 +49,10 @@ build-dist:
     - docker pull $CI_REGISTRY_IMAGE/cache/$IMAGE:$CI_COMMIT_BEFORE_SHA || true
 
     - docker buildx create --use
-    - |
+    - >
       docker buildx build .
       --file Dockerfile.$IMAGE
       --target sobiraka
-#      --cache-from type=registry,ref=$CI_REGISTRY_IMAGE/cache/$IMAGE:master
-#      --cache-from type=registry,ref=$CI_REGISTRY_IMAGE/cache/$IMAGE:$CI_COMMIT_REF_NAME
-#      --cache-from type=registry,ref=$CI_REGISTRY_IMAGE/cache/$IMAGE:$CI_COMMIT_SHA
-#      --cache-from type=registry,ref=$CI_REGISTRY_IMAGE/cache/$IMAGE:$CI_COMMIT_BEFORE_SHA
-#      --cache-to type=registry,mode=max,ref=$CI_REGISTRY_IMAGE/cache/$IMAGE:$CI_COMMIT_SHA
       --tag $CI_REGISTRY_IMAGE/cache/$IMAGE:$CI_COMMIT_SHA
 
     - docker images
