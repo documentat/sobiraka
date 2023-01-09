@@ -1,10 +1,11 @@
 stages:
-  - build-dist
-  - build-docker
+  - build
   - test
 
+################################################################################
+
 build-dist:
-  stage: build-dist
+  stage: build
   image: python:3.11-alpine
   script:
     - python setup.py sdist
@@ -15,8 +16,7 @@ build-dist:
 ################################################################################
 
 .build-docker:
-  stage: build-docker
-  dependencies: []
+  stage: build
   image: docker
   services: ['docker:dind']
   before_script:
