@@ -70,7 +70,7 @@ test-pip:
   variables:
     IMAGE: tester
   script:
-    - docker exec tester pip install dist/*.tar.gz
+    - docker exec $IMAGE pip install dist/*.tar.gz
     - ls -A | grep -v -E 'Makefile|tests' | xargs -r -I% rm -rf %
     - docker exec tester make tests
   coverage: '/TOTAL .+ (\d+\.\d+)%/'
@@ -79,7 +79,7 @@ test-release:
   extends: .test-docker
   needs: [build-release]
   variables:
-    IMAGE: tester
+    IMAGE: release
   script:
     - ls -A | grep -v -E 'Makefile|tests' | xargs -r -I% rm -rf %
-    - docker exec tester make tests
+    - docker exec $IMAGE make tests
