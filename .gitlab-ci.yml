@@ -6,7 +6,7 @@ stages:
 
 build-dist:
   stage: build
-  image: python:3.11-alpine
+  image: python:3.11-slim-bullseye
   script:
     - python setup.py sdist
   artifacts:
@@ -70,8 +70,8 @@ test-pip:
   variables:
     IMAGE: tester
   script:
-    - ls -A | grep -v -E 'Makefile|tests' | xargs -r -I% rm -rf %
     - docker exec tester pip install dist/*.tar.gz
+    - ls -A | grep -v -E 'Makefile|tests' | xargs -r -I% rm -rf %
     - docker exec tester make tests
   coverage: '/TOTAL .+ (\d+\.\d+)%/'
 
