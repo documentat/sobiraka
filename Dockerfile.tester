@@ -6,7 +6,7 @@ RUN arch=$(arch | sed s:aarch64:arm64: | sed s:x86_64:amd64:) \
 FROM python:3.11-slim-bullseye AS get-dependencies-pip
 RUN pip install --no-cache-dir pyyaml~=5.3.1 panflute~=2.2.3 coverage~=7.0.1
 
-FROM python:3.11-slim-bullseye AS sobiraka
+FROM python:3.11-slim-bullseye AS final
 
 RUN apt update
 RUN apt install -y git make wget
