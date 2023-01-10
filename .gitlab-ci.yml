@@ -24,22 +24,29 @@ build-dist:
     DOCKER_BUILDKIT: 1
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-  script: >
-    for STAGE in $(cat Dockerfile.$IMAGE | grep -E 'FROM \S+ AS \S+' | cut -d' ' -f4);
+  script: |
+    for STAGE in $(cat Dockerfile.$IMAGE | grep -E 'FROM \S+ AS \S+' | cut -d' ' -f4)
     do
-      docker pull $CI_REGISTRY_IMAGE/cache/$IMAGE:branch-master-$STAGE || true;
-      docker pull $CI_REGISTRY_IMAGE/cache/$IMAGE:branch-$CI_COMMIT_REF_NAME-$STAGE || true;
-      docker pull $CI_REGISTRY_IMAGE/cache/$IMAGE:commit-$CI_COMMIT_SHA-$STAGE || true;
-      docker pull $CI_REGISTRY_IMAGE/cache/$IMAGE:commit-$CI_COMMIT_BEFORE_SHA-$STAGE || true;
+      docker pull $CI_REGISTRY_IMAGE/cache/$IMAGE:branch-master-$STAGE || true
+      docker pull $CI_REGISTRY_IMAGE/cache/$IMAGE:branch-$CI_COMMIT_REF_NAME-$STAGE || true
+      docker pull $CI_REGISTRY_IMAGE/cache/$IMAGE:commit-$CI_COMMIT_SHA-$STAGE || true
+      docker pull $CI_REGISTRY_IMAGE/cache/$IMAGE:commit-$CI_COMMIT_BEFORE_SHA-$STAGE || true
 
-      docker build . --file Dockerfile.$IMAGE --target $STAGE --tag $IMAGE:$STAGE;
+      docker build . \
+        --file Dockerfile.$IMAGE \
+        --target $STAGE \
+        --cache-from $CI_REGISTRY_IMAGE/cache/$IMAGE:branch-master-$STAGE \
+        --cache-from $CI_REGISTRY_IMAGE/cache/$IMAGE:branch-$CI_COMMIT_REF_NAME-$STAGE \
+        --cache-from $CI_REGISTRY_IMAGE/cache/$IMAGE:commit-$CI_COMMIT_SHA-$STAGE \
+        --cache-from $CI_REGISTRY_IMAGE/cache/$IMAGE:commit-$CI_COMMIT_BEFORE_SHA-$STAGE \
+        --tag $IMAGE:$STAGE
 
-      docker tag $IMAGE:$STAGE $CI_REGISTRY_IMAGE/cache/$IMAGE:branch-$CI_COMMIT_REF_NAME-$STAGE;
-      docker push $CI_REGISTRY_IMAGE/cache/$IMAGE:branch-$CI_COMMIT_REF_NAME-$STAGE;
+      docker tag $IMAGE:$STAGE $CI_REGISTRY_IMAGE/cache/$IMAGE:branch-$CI_COMMIT_REF_NAME-$STAGE
+      docker push $CI_REGISTRY_IMAGE/cache/$IMAGE:branch-$CI_COMMIT_REF_NAME-$STAGE
 
-      docker tag $IMAGE:$STAGE $CI_REGISTRY_IMAGE/cache/$IMAGE:commit-$CI_COMMIT_SHA-$STAGE;
-      docker push $CI_REGISTRY_IMAGE/cache/$IMAGE:commit-$CI_COMMIT_SHA-$STAGE;
-    done;
+      docker tag $IMAGE:$STAGE $CI_REGISTRY_IMAGE/cache/$IMAGE:commit-$CI_COMMIT_SHA-$STAGE
+      docker push $CI_REGISTRY_IMAGE/cache/$IMAGE:commit-$CI_COMMIT_SHA-$STAGE
+    done
 
 build-tester:
   extends: .build-docker
