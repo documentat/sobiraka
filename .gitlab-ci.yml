@@ -37,10 +37,6 @@ build-dist:
       docker build . \
         --file Dockerfile.$IMAGE \
         --target $STAGE \
-        --cache-from $CI_REGISTRY_IMAGE/cache/$IMAGE:branch-master-$STAGE \
-        --cache-from $CI_REGISTRY_IMAGE/cache/$IMAGE:branch-$CI_COMMIT_REF_NAME-$STAGE \
-        --cache-from $CI_REGISTRY_IMAGE/cache/$IMAGE:commit-$CI_COMMIT_SHA-$STAGE \
-        --cache-from $CI_REGISTRY_IMAGE/cache/$IMAGE:commit-$CI_COMMIT_BEFORE_SHA-$STAGE \
         --tag $IMAGE:$STAGE
 
       echo -e "###############################\nPushing image for stage $STAGE..."
