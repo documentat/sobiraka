@@ -8,6 +8,7 @@ from typing import Awaitable, Callable, Coroutine
 
 from panflute import Doc
 
+from . import Href
 from .book import Book
 from .error import ProcessingError
 
@@ -19,7 +20,7 @@ class Page:
 
         self.doc: Doc | None = None
         self.title: str | None = None
-        # self.links: set[PageHref | UnknownPageHref] = set()
+        self.links: list[Href] = []
         self.anchors: dict[str, list[str]] = {}
         self.latex: bytes | None = None
 

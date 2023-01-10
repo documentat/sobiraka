@@ -24,5 +24,4 @@ async def process2_link(page: Page, link: Link, href: PageHref):
             link.url += '--' + href.anchor
             link.title = href.target.anchors[href.anchor]
         except KeyError:
-            href = BadLinkError(f'{href.target.relative_path}#{href.anchor}')
-            page.errors.add(href)
+            page.errors.add(BadLinkError(f'{href.target.relative_path}#{href.anchor}'))

@@ -99,5 +99,6 @@ async def _(link: Link, page: Page, book: Book):
                 href = UnknownPageHref(target, anchor)
                 page.errors.add(BadLinkError(target))
 
+    page.links.append(href)
     if isinstance(href, PageHref):
         page.process2_tasks.append(process2_link(page, link, href))

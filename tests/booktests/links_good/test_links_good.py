@@ -1,11 +1,7 @@
-from functools import cached_property
-from itertools import product
-from pathlib import Path
-from textwrap import dedent
 from unittest import main
 
 from booktestcase import BookTestCase
-from sobiraka.models import Page, PageHref, Href
+from sobiraka.models import Href, Page, PageHref, UrlHref
 
 
 class TestLinks(BookTestCase):
@@ -23,47 +19,47 @@ class TestLinks(BookTestCase):
             'sub--subsub--subsubsub--document4',
         ))
 
-    # def test_links(self):
-    #     data: dict[Page, tuple[Href, ...]] = {
-    #         self.document0: (
-    #             PageHref(self.document1),
-    #             PageHref(self.document2),
-    #             PageHref(self.document3),
-    #             PageHref(self.document3, 'sect1'),
-    #             PageHref(self.document3, 'section-2'),
-    #             PageHref(self.document4),
-    #         ),
-    #         self.document1: (
-    #             PageHref(self.document0),
-    #             PageHref(self.document2),
-    #             PageHref(self.document3),
-    #             PageHref(self.document4),
-    #         ),
-    #         self.document2: (
-    #             PageHref(self.document0),
-    #             PageHref(self.document1),
-    #             PageHref(self.document3),
-    #             PageHref(self.document4),
-    #         ),
-    #         self.document3: (
-    #             PageHref(self.document0),
-    #             PageHref(self.document1),
-    #             PageHref(self.document2),
-    #             PageHref(self.document3, 'sect1'),
-    #             PageHref(self.document3, 'section-2'),
-    #             PageHref(self.document4),
-    #         ),
-    #         self.document4: (
-    #             PageHref(self.document0),
-    #             PageHref(self.document1),
-    #             PageHref(self.document2),
-    #             PageHref(self.document3),
-    #         ),
-    #     }
-    #     for page, expected_links in data.items():
-    #         with self.subTest(page.relative_path.with_suffix('')):
-    #             links = sorted(page.links, key=lambda href: (href.__class__.__name__, str(href)))
-    #             self.assertSequenceEqual(links, expected_links)
+    def test_links(self):
+        data: dict[Page, tuple[Href, ...]] = {
+            self.document0: (
+                PageHref(self.document1),
+                PageHref(self.document2),
+                PageHref(self.document3),
+                PageHref(self.document3, 'sect1'),
+                PageHref(self.document3, 'section-2'),
+                PageHref(self.document4),
+                UrlHref('https://example.com/'),
+            ),
+            self.document1: (
+                PageHref(self.document0),
+                PageHref(self.document2),
+                PageHref(self.document3),
+                PageHref(self.document4),
+            ),
+            self.document2: (
+                PageHref(self.document0),
+                PageHref(self.document1),
+                PageHref(self.document3),
+                PageHref(self.document4),
+            ),
+            self.document3: (
+                PageHref(self.document0),
+                PageHref(self.document1),
+                PageHref(self.document2),
+                PageHref(self.document4),
+                PageHref(self.document3, 'section-2'),
+                PageHref(self.document3, 'sect1'),
+            ),
+            self.document4: (
+                PageHref(self.document0),
+                PageHref(self.document1),
+                PageHref(self.document2),
+                PageHref(self.document3),
+            ),
+        }
+        for page, expected_links in data.items():
+            with self.subTest(page.relative_path.with_suffix('')):
+                self.assertSequenceEqual(tuple(page.links), expected_links)
 
 
 del BookTestCase

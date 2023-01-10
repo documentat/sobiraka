@@ -1,3 +1,6 @@
+Document 3
+==========
+
 - `Document 0 <../../document0.rst>`__
 - `Document 1 <../document1.rst>`__
 - `Document 2 <document2.rst>`__
