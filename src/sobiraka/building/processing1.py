@@ -35,7 +35,7 @@ async def _process_element(elem: Element, page: Page, book: Book) -> None | Elem
             case tuple():
                 elem.content[i:i + 1] = result
                 i += len(result) - 1
-            case _:
+            case _:  # pragma: no cover
                 raise TypeError(result)
         i += 1
     return elem

@@ -7,7 +7,7 @@ from sobiraka.models.book import Book
 from sobiraka.runtime import RT
 
 
-async def async_main():
+async def main():  # pragma: no cover
     parser = ArgumentParser()
     parser.add_argument('source', type=Path)
     parser.add_argument('--docx', type=Path)
@@ -27,9 +27,5 @@ async def async_main():
             tasks.create_task(render_pdf(book, args.pdf))
 
 
-def main():
-    run(async_main())
-
-
 if __name__ == '__main__':
-    main()
+    run(main())

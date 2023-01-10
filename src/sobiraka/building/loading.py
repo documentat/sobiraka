@@ -15,7 +15,7 @@ async def load_page(page: Page):
             syntax = 'markdown'
         case '.rst':
             syntax = 'rst-auto_identifiers'
-        case _:
+        case _:  # pragma: no cover
             raise NotImplementedError(page.path.suffix)
 
     pandoc = await create_subprocess_exec(

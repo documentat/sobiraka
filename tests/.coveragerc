@@ -1,3 +1,7 @@
 [report]
 exclude_lines =
+    pragma: no cover
     def __repr__
+    if __name__ == '__main__':
+    ^from \S+ import \S+
+    ^import \S+
