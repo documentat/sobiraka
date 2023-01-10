@@ -8,5 +8,5 @@ publish:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
     - docker pull $CI_REGISTRY_IMAGE/cache/release:commit-$CI_COMMIT_SHA-final
-    - docker tag release-sobiraka $CI_REGISTRY_IMAGE/sobiraka:$CI_COMMIT_SHA
+    - docker tag $CI_REGISTRY_IMAGE/cache/release:commit-$CI_COMMIT_SHA-final $CI_REGISTRY_IMAGE/sobiraka:$CI_COMMIT_SHA
     - docker push $CI_REGISTRY_IMAGE/sobiraka:$CI_COMMIT_SHA
