@@ -2,22 +2,25 @@ FROM alpine:3.16 AS get-fonts
 RUN wget http://rus.paratype.ru/system/attachments/631/original/ptmono.zip -O ptmono.zip && unzip ptmono.zip -d /tmp/fonts && rm ptmono.zip
 RUN wget https://fonts.google.com/download?family=Lato -O lato.zip && unzip lato.zip -d /tmp/fonts && rm lato.zip
 
-FROM python:3.11-slim-bullseye AS build-package
-WORKDIR /PRJ
-COPY setup.py setup.py
+FROM python:3.11-slim AS build-package
+COPY setup.py .
 COPY src src
 RUN python setup.py sdist
 
-FROM pandoc/latex:2.18 AS final
+FROM python:3.11-slim AS install-packages
+WORKDIR /PRJ
+COPY setup.py .
+RUN python setup.py egg_info
+RUN pip install --prefix /prefix --requirement sobiraka.egg-info/requires.txt
+COPY --from=build-package /dist/*.tar.gz .
+RUN pip install --prefix /prefix *.tar.gz
 
+FROM pandoc/latex:2.18 AS final
 RUN apk add python3~=3.11 --repository=http://dl-cdn.alpinelinux.org/alpine/edge/main/
-RUN apk add py3-pip --repository=http://dl-cdn.alpinelinux.org/alpine/edge/community/
+RUN ln -s /usr/bin/python /usr/local/bin/python
 
 COPY --from=get-fonts /tmp/fonts /usr/share/fonts/truetype
-
-COPY --from=build-package /PRJ/dist/*.tar.gz .
-RUN pip install --prefix=/usr/local *.tar.gz
-RUN rm *.tar.gz
+COPY --from=install-packages /prefix /usr
 
 WORKDIR /W
 ENTRYPOINT ["sobiraka"]

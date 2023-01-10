@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 from setuptools import find_packages, setup
 
 setup(
@@ -11,10 +9,8 @@ setup(
         'panflute~=2.2.3',
         'pyyaml~=6.0',
     ],
-    packages=find_packages(where='src'),
-    package_dir={
-        '': 'src',
-    },
+    packages=find_packages('src'),
+    package_dir={'sobiraka': 'src/sobiraka'},
     entry_points={
         'console_scripts': ['sobiraka=sobiraka.main:main'],
     },
