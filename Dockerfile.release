@@ -23,4 +23,4 @@ COPY --from=get-fonts /tmp/fonts /usr/share/fonts/truetype
 COPY --from=install-packages /prefix /usr
 
 WORKDIR /W
-ENTRYPOINT ["sobiraka"]
+ENTRYPOINT ["sh"]
