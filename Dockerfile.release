@@ -1,3 +1,8 @@
+FROM alpine:3.16 AS get-pandoc
+WORKDIR /tmp/pandoc
+RUN arch=$(arch | sed s:aarch64:arm64: | sed s:x86_64:amd64:) \
+    && wget https://github.com/jgm/pandoc/releases/download/2.18/pandoc-2.18-linux-$arch.tar.gz -O- | tar -xz --strip-components=1
+
 FROM alpine:3.16 AS get-fonts
 RUN wget http://rus.paratype.ru/system/attachments/631/original/ptmono.zip -O ptmono.zip && unzip ptmono.zip -d /tmp/fonts && rm ptmono.zip
 RUN wget https://fonts.google.com/download?family=Lato -O lato.zip && unzip lato.zip -d /tmp/fonts && rm lato.zip
@@ -8,19 +13,14 @@ COPY src src
 RUN python setup.py sdist
 
 FROM python:3.11-slim AS install-packages
-WORKDIR /PRJ
-COPY setup.py .
-RUN python setup.py egg_info
-RUN pip install --prefix /prefix --requirement sobiraka.egg-info/requires.txt
+COPY --from=build-package /sobiraka.egg-info/requires.txt .
+RUN pip install --prefix /prefix --requirement requires.txt
 COPY --from=build-package /dist/*.tar.gz .
 RUN pip install --prefix /prefix *.tar.gz
 
-FROM pandoc/latex:2.18 AS final
-RUN apk add python3~=3.11 --repository=http://dl-cdn.alpinelinux.org/alpine/edge/main/
-RUN ln -s /usr/bin/python /usr/local/bin/python
-
+FROM python:3.11-slim AS final
+COPY --from=get-pandoc /tmp/pandoc /usr/local
 COPY --from=get-fonts /tmp/fonts /usr/share/fonts/truetype
-COPY --from=install-packages /prefix /usr
-
+COPY --from=install-packages /prefix /usr/local
 WORKDIR /W
 ENTRYPOINT [""]
