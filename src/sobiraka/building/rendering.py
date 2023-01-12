@@ -107,7 +107,8 @@ async def render_pdf(book: Awaitable[Book], output: Path):
     xelatex_workdir = RT.TMP / f'tex-{book.id}'
     xelatex_workdir.mkdir(parents=True, exist_ok=True)
     with open(xelatex_workdir / 'build.tex', 'wb') as latex_output:
-        latex_output.write(Path('header.sty').read_bytes())
+        header_path = RT.FILES / 'header.sty'
+        latex_output.write(header_path.read_bytes())
         latex_output.write(b'\n\n\\begin{document}\n\\begin{sloppypar}')
 
         for page in book.pages:

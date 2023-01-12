@@ -12,7 +12,7 @@ if TYPE_CHECKING: from .page import Page
 class Book:
     def __init__(self, id: str, root: Path, title: str):
         self.id: str = id
-        self.root: Path = root
+        self.root: Path = root.resolve()
         self.title: str = title
 
         self.pages_by_path: dict[Path, Page] = {}
@@ -34,6 +34,7 @@ class Book:
             paths |= set(book.root.glob(pattern))
         for pattern in manifest.get('exclude', ()):
             paths -= set(book.root.glob(pattern))
+
         for path in list(sorted(paths)):
             book.pages_by_path[path] = Page(book, path)
 

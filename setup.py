@@ -11,6 +11,7 @@ setup(
     ],
     packages=find_packages('src'),
     package_dir={'sobiraka': 'src/sobiraka'},
+    package_data={'sobiraka': ['files/header.sty']},
     entry_points={
         'console_scripts': ['sobiraka=sobiraka.__main__:main'],
     },
