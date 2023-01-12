@@ -12,15 +12,23 @@ COPY setup.py .
 COPY src src
 RUN python setup.py sdist
 
-FROM python:3.11-slim AS install-packages
-COPY --from=build-package /sobiraka.egg-info/requires.txt .
-RUN pip install --prefix /prefix --requirement requires.txt
-COPY --from=build-package /dist/*.tar.gz .
-RUN pip install --prefix /prefix *.tar.gz
+FROM pandoc/latex:2.19-ubuntu AS final
+RUN apt update \
+    && apt install --yes software-properties-common \
+    && add-apt-repository ppa:deadsnakes/ppa
+RUN ln -sf /usr/share/zoneinfo/Europe/Moscow /etc/localtime
+RUN apt install --yes python3.11 python3-pip \
+    && apt clean
+RUN ln -fs /usr/bin/python3.11 /usr/bin/python
+RUN ln -fs /usr/bin/python3.11 /usr/bin/python3
 
-FROM python:3.11-slim AS final
 COPY --from=get-pandoc /tmp/pandoc /usr/local
 COPY --from=get-fonts /tmp/fonts /usr/share/fonts/truetype
-COPY --from=install-packages /prefix /usr/local
+
+COPY --from=build-package /sobiraka.egg-info/requires.txt .
+RUN pip install --requirement requires.txt
+COPY --from=build-package /dist/*.tar.gz .
+RUN pip install *.tar.gz
+
 WORKDIR /W
 ENTRYPOINT [""]
