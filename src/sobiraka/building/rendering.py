@@ -112,8 +112,12 @@ async def render_pdf(book: Awaitable[Book], output: Path):
         else:
             item.unlink()
     with open(xelatex_workdir / 'build.tex', 'wb') as latex_output:
-        header_path = RT.FILES / 'header.sty'
-        latex_output.write(header_path.read_bytes())
+        latex_output.write((RT.FILES / 'base.sty').read_bytes())
+        latex_output.write(b'\n\n' + (80 * b'%'))
+        if book.header:
+            latex_output.write(b'\n\n')
+            latex_output.write(book.header.read_bytes())
+            latex_output.write(b'\n\n' + (80 * b'%'))
         latex_output.write(b'\n\n\\begin{document}\n\\begin{sloppypar}')
 
         for page in book.pages:
