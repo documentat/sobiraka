@@ -5,30 +5,31 @@ RUN arch=$(arch | sed s:aarch64:arm64: | sed s:x86_64:amd64:) \
 
 FROM alpine:3.16 AS get-fonts
 RUN wget http://rus.paratype.ru/system/attachments/631/original/ptmono.zip -O ptmono.zip && unzip ptmono.zip -d /tmp/fonts && rm ptmono.zip
-RUN wget https://fonts.google.com/download?family=Lato -O lato.zip && unzip lato.zip -d /tmp/fonts && rm lato.zip
+RUN wget https://www.latofonts.com/download/lato2ofl-zip/ -O lato.zip && unzip lato.zip -d /tmp/fonts && rm lato.zip
 
-FROM python:3.11-slim AS build-package
+FROM python:3.11-alpine3.16 AS build-package
 COPY setup.py .
 COPY src src
 RUN python setup.py sdist
 
-FROM pandoc/latex:2.19-ubuntu AS final
-RUN apt update \
-    && apt install --yes software-properties-common \
-    && add-apt-repository ppa:deadsnakes/ppa
-RUN ln -sf /usr/share/zoneinfo/Europe/Moscow /etc/localtime
-RUN apt install --yes python3.11 python3-pip \
-    && apt clean
-RUN ln -fs /usr/bin/python3.11 /usr/bin/python
-RUN ln -fs /usr/bin/python3.11 /usr/bin/python3
+FROM python:3.11-alpine3.16 AS install-packages
+RUN ln -s /usr/local/bin/python /usr/bin/python
+COPY --from=build-package /sobiraka.egg-info/requires.txt .
+RUN /usr/bin/python -m pip install --prefix /prefix --requirement requires.txt
+COPY --from=build-package /dist/*.tar.gz .
+RUN /usr/bin/python -m pip install --prefix /prefix *.tar.gz
+
+FROM pandoc/latex:2.19 AS final
+RUN apk add --no-cache python3~=3.11 --repository=http://dl-cdn.alpinelinux.org/alpine/edge/main/
+RUN apk add --no-cache py3-pip --repository=http://dl-cdn.alpinelinux.org/alpine/edge/community/
+
+RUN tlmgr install koma-script ragged2e
+
 
 COPY --from=get-pandoc /tmp/pandoc /usr/local
 COPY --from=get-fonts /tmp/fonts /usr/share/fonts/truetype
+COPY --from=install-packages /prefix /usr
 
-COPY --from=build-package /sobiraka.egg-info/requires.txt .
-RUN pip install --requirement requires.txt
-COPY --from=build-package /dist/*.tar.gz .
-RUN pip install *.tar.gz
-
+RUN chmod 777 /var/cache/fontconfig
 WORKDIR /W
 ENTRYPOINT [""]

@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Self, TYPE_CHECKING
 
 import yaml
+from schema import Optional, Schema
 
 if TYPE_CHECKING: from .page import Page
 
@@ -21,13 +22,18 @@ class Book:
     async def from_manifest(cls, manifest_path: Path) -> Self:
         from .page import Page
 
+        schema = Schema({
+            Optional('id', default=manifest_path.parent.stem): str,
+            Optional('title', default=manifest_path.parent.stem): str,
+            Optional('include', default=['**/*']): [str],
+            Optional('exclude', default=[]): [str],
+        })
+
         with manifest_path.open() as manifest_file:
             manifest: dict = yaml.load(manifest_file, yaml.SafeLoader) or {}
+        manifest = schema.validate(manifest)
 
-        book_id = manifest.get('id', manifest_path.parent.stem)
-        book_root = manifest_path.parent
-        book_title = manifest.get('title', book_id)
-        book = cls(id=book_id, root=book_root, title=book_title)
+        book = cls(id=manifest['id'], root=manifest_path.parent, title=manifest['title'])
 
         paths: set[Path] = set()
         for pattern in manifest.get('include', ('**/*',)):

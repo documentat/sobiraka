@@ -8,6 +8,7 @@ setup(
     install_requires=[
         'panflute~=2.2.3',
         'pyyaml~=6.0',
+        'schema~=0.7.5',
     ],
     packages=find_packages('src'),
     package_dir={'sobiraka': 'src/sobiraka'},
