@@ -133,5 +133,23 @@ async def render_pdf(book: Awaitable[Book], output: Path):
         stdin=DEVNULL,
         stdout=DEVNULL)
     await xelatex.wait()
-    assert xelatex.returncode == 0
+    if xelatex.returncode != 0:
+        print_xelatex_error(xelatex_workdir / 'build.log')
+        exit(1)
     copyfile(xelatex_workdir / 'build.pdf', output)
+
+
+def print_xelatex_error(log_path: Path):
+    with log_path.open() as file:
+        print('\033[1;31m', end='', file=sys.stderr)
+        for line in file:
+            line = line.rstrip()
+            if line.startswith('! '):
+                print(line, file=sys.stderr)
+                break
+        for line in file:
+            line = line.rstrip()
+            if line == 'End of file on the terminal!':
+                break
+            print(line, file=sys.stderr)
+        print('\033[0m', end='', file=sys.stderr)

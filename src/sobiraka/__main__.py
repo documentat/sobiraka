@@ -1,5 +1,6 @@
 from argparse import ArgumentParser
 from asyncio import run, TaskGroup
+from contextlib import suppress
 from pathlib import Path
 
 from sobiraka.building.rendering import render_docx, render_pdf
@@ -18,13 +19,14 @@ async def async_main():  # pragma: no cover
     source: Path = args.source
     RT.TMP = args.tmpdir
 
-    async with TaskGroup() as tasks:
-        if args.docx:
-            book = Book.from_manifest(source)
-            tasks.create_task(render_docx(book, args.docx))
-        if args.pdf:
-            book = Book.from_manifest(source)
-            tasks.create_task(render_pdf(book, args.pdf))
+    with suppress(SystemExit):
+        async with TaskGroup() as tasks:
+            if args.docx:
+                book = Book.from_manifest(source)
+                tasks.create_task(render_docx(book, args.docx))
+            if args.pdf:
+                book = Book.from_manifest(source)
+                tasks.create_task(render_pdf(book, args.pdf))
 
 
 def main():
