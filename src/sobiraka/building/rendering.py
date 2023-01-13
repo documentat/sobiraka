@@ -106,6 +106,11 @@ async def render_pdf(book: Awaitable[Book], output: Path):
 
     xelatex_workdir = RT.TMP / f'tex-{book.id}'
     xelatex_workdir.mkdir(parents=True, exist_ok=True)
+    for item in xelatex_workdir.iterdir():
+        if item.is_dir():
+            item.rmdir()
+        else:
+            item.unlink()
     with open(xelatex_workdir / 'build.tex', 'wb') as latex_output:
         header_path = RT.FILES / 'header.sty'
         latex_output.write(header_path.read_bytes())
