@@ -25,26 +25,15 @@ build-dist:
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script: |
-    for STAGE in $(cat Dockerfile.$IMAGE | grep -E 'FROM \S+ AS \S+' | cut -d' ' -f4)
-    do
-      echo -e "###############################\nPulling cache images for stage $STAGE..."
-      docker pull $CI_REGISTRY_IMAGE/cache/$IMAGE:branch-master-$STAGE || true
-      docker pull $CI_REGISTRY_IMAGE/cache/$IMAGE:branch-$CI_COMMIT_REF_NAME-$STAGE || true
-      docker pull $CI_REGISTRY_IMAGE/cache/$IMAGE:commit-$CI_COMMIT_SHA-$STAGE || true
-      docker pull $CI_REGISTRY_IMAGE/cache/$IMAGE:commit-$CI_COMMIT_BEFORE_SHA-$STAGE || true
-
-      echo -e "###############################\nBuilding image for stage $STAGE..."
-      docker build . \
-        --file Dockerfile.$IMAGE \
-        --target $STAGE \
-        --tag $IMAGE:$STAGE
-
-      echo -e "###############################\nPushing image for stage $STAGE..."
-      docker tag $IMAGE:$STAGE $CI_REGISTRY_IMAGE/cache/$IMAGE:branch-$CI_COMMIT_REF_NAME-$STAGE
-      docker tag $IMAGE:$STAGE $CI_REGISTRY_IMAGE/cache/$IMAGE:commit-$CI_COMMIT_SHA-$STAGE
-      docker push $CI_REGISTRY_IMAGE/cache/$IMAGE:branch-$CI_COMMIT_REF_NAME-$STAGE
-      docker push $CI_REGISTRY_IMAGE/cache/$IMAGE:commit-$CI_COMMIT_SHA-$STAGE
-    done
+    cp Dockerfile.$IMAGE.dockerignore .dockerignore
+    CONTEXT=$(echo -e 'FROM scratch\nADD * .' | docker build . --file - 2>&1 | grep 'writing image' | cut -d: -f2 | cut -d' ' -f1)
+    docker pull $CI_REGISTRY_IMAGE/cache-$IMAGE/by-context:$CONTEXT || true
+    docker build . \
+      --file Dockerfile.$IMAGE \
+      --tag $CI_REGISTRY_IMAGE/cache-$IMAGE/by-context:$CONTEXT \
+      --tag $CI_REGISTRY_IMAGE/cache-$IMAGE/by-commit:$CI_COMMIT_SHA
+    docker push $CI_REGISTRY_IMAGE/cache-$IMAGE/by-context:$CONTEXT
+    docker push $CI_REGISTRY_IMAGE/cache-$IMAGE/by-commit:$CI_COMMIT_SHA
 
 build-tester:
   extends: .build-docker
@@ -61,7 +50,7 @@ build-release:
 test-pip:
   stage: test
   needs: [build-tester, build-dist]
-  image: $CI_REGISTRY_IMAGE/cache/tester:commit-$CI_COMMIT_SHA-final
+  image: $CI_REGISTRY_IMAGE/cache-tester/by-commit:$CI_COMMIT_SHA
   services: ['docker:dind']
   variables:
     GIT_STRATEGY: fetch
@@ -76,7 +65,7 @@ test-pip:
 test-src:
   stage: test
   needs: [build-tester]
-  image: $CI_REGISTRY_IMAGE/cache/tester:commit-$CI_COMMIT_SHA-final
+  image: $CI_REGISTRY_IMAGE/cache-tester/by-commit:$CI_COMMIT_SHA
   services: ['docker:dind']
   script:
     - make tests
