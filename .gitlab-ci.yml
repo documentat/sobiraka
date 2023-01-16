@@ -30,7 +30,7 @@ build-dist:
     echo -e 'FROM docker\nWORKDIR /W\nADD * .' | docker build . --file - --tag context
     CONTEXT=$(docker run --rm context sh -c 'ls | sort | xargs tar c create --to-stdout | md5sum | cut -d" " -f1')
     docker pull $CI_REGISTRY_IMAGE/cache/$VARIANT:by-context-$CONTEXT || true
-    if $(docker images --format "{{.Repository}}:{{.Tag}}" | grep $CI_REGISTRY_IMAGE/cache/$VARIANT:by-context-$CONTEXT)
+    if docker images --format "{{.Repository}}:{{.Tag}}" | grep $CI_REGISTRY_IMAGE/cache/$VARIANT:by-context-$CONTEXT
     then
       echo -e "###############################\nPushing image for context..."
       docker tag $CI_REGISTRY_IMAGE/cache/$VARIANT:by-context-$CONTEXT $CI_REGISTRY_IMAGE/cache/$VARIANT:by-commit-$CI_COMMIT_SHA
