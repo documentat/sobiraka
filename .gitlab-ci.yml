@@ -35,25 +35,25 @@ build-dist:
       docker tag $CI_REGISTRY_IMAGE/cache/$VARIANT:by-context-$CONTEXT $CI_REGISTRY_IMAGE/cache/$VARIANT:by-commit-$CI_COMMIT_SHA
       docker push $CI_REGISTRY_IMAGE/cache/$VARIANT:by-commit-$CI_COMMIT_SHA
     else
-      for STAGE in $(cat Dockerfile.$IMAGE | grep -E 'FROM \S+ AS \S+' | cut -d' ' -f4)
+      for STAGE in $(cat Dockerfile.$VARIANT | grep -E 'FROM \S+ AS \S+' | cut -d' ' -f4)
       do
         echo -e "###############################\nPulling cache images for stage $STAGE..."
-        docker pull $CI_REGISTRY_IMAGE/cache/$IMAGE:branch-master-$STAGE || true
-        docker pull $CI_REGISTRY_IMAGE/cache/$IMAGE:branch-$CI_COMMIT_REF_NAME-$STAGE || true
-        docker pull $CI_REGISTRY_IMAGE/cache/$IMAGE:commit-$CI_COMMIT_SHA-$STAGE || true
-        docker pull $CI_REGISTRY_IMAGE/cache/$IMAGE:commit-$CI_COMMIT_BEFORE_SHA-$STAGE || true
+        docker pull $CI_REGISTRY_IMAGE/cache/$VARIANT:branch-master-$STAGE || true
+        docker pull $CI_REGISTRY_IMAGE/cache/$VARIANT:branch-$CI_COMMIT_REF_NAME-$STAGE || true
+        docker pull $CI_REGISTRY_IMAGE/cache/$VARIANT:commit-$CI_COMMIT_SHA-$STAGE || true
+        docker pull $CI_REGISTRY_IMAGE/cache/$VARIANT:commit-$CI_COMMIT_BEFORE_SHA-$STAGE || true
   
         echo -e "###############################\nBuilding image for stage $STAGE..."
         docker build . \
-          --file Dockerfile.$IMAGE \
+          --file Dockerfile.$VARIANT \
           --target $STAGE \
-          --tag $IMAGE:$STAGE
+          --tag $VARIANT:$STAGE
   
         echo -e "###############################\nPushing image for stage $STAGE..."
-        docker tag $IMAGE:$STAGE $CI_REGISTRY_IMAGE/cache/$IMAGE:branch-$CI_COMMIT_REF_NAME-$STAGE
-        docker tag $IMAGE:$STAGE $CI_REGISTRY_IMAGE/cache/$IMAGE:commit-$CI_COMMIT_SHA-$STAGE
-        docker push $CI_REGISTRY_IMAGE/cache/$IMAGE:branch-$CI_COMMIT_REF_NAME-$STAGE
-        docker push $CI_REGISTRY_IMAGE/cache/$IMAGE:commit-$CI_COMMIT_SHA-$STAGE
+        docker tag $VARIANT:$STAGE $CI_REGISTRY_IMAGE/cache/$VARIANT:branch-$CI_COMMIT_REF_NAME-$STAGE
+        docker tag $VARIANT:$STAGE $CI_REGISTRY_IMAGE/cache/$VARIANT:commit-$CI_COMMIT_SHA-$STAGE
+        docker push $CI_REGISTRY_IMAGE/cache/$VARIANT:branch-$CI_COMMIT_REF_NAME-$STAGE
+        docker push $CI_REGISTRY_IMAGE/cache/$VARIANT:commit-$CI_COMMIT_SHA-$STAGE
       done
     fi
 
