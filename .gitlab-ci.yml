@@ -52,7 +52,7 @@ build-dist:
   
         echo -e "###############################\nPushing image for stage $STAGE..."
         docker push $CI_REGISTRY_IMAGE/cache/$VARIANT:by-branch-$CI_COMMIT_REF_NAME-stage-$STAGE
-        docker push $CI_REGISTRY_IMAGE/cache/$VARIANT:by-commit-$CI_COMMIT_SHA-$STAGE-stage-$STAGE
+        docker push $CI_REGISTRY_IMAGE/cache/$VARIANT:by-commit-$CI_COMMIT_SHA-stage-$STAGE
       done
       docker tag $CI_REGISTRY_IMAGE/cache/$VARIANT:by-commit-$CI_COMMIT_SHA-stage-final $CI_REGISTRY_IMAGE/cache/$VARIANT:by-commit-$CI_COMMIT_SHA
       docker push $CI_REGISTRY_IMAGE/cache/$VARIANT:by-commit-$CI_COMMIT_SHA
