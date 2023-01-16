@@ -78,7 +78,7 @@ build-release:
 
 ################################################################################
 
-test-pip:
+test-dist:
   stage: test
   needs: [build-tester, build-dist]
   image: $CI_REGISTRY_IMAGE/cache/tester:by-commit-$CI_COMMIT_SHA

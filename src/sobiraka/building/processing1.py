@@ -1,5 +1,4 @@
 import re
-from functools import singledispatch
 from pathlib import Path
 
 from panflute import Element, Header, Image, Link, ListContainer, stringify
@@ -12,21 +11,42 @@ from sobiraka.utils import LatexBlock, save_debug_json
 
 
 async def process1(page: Page):
+    """
+    Run first pass of page processing.
+
+    Internally, this function runs :func:`process_element()` on the :obj:`.Page.doc` root.
+
+    This method is called by :obj:`.Page.processed1`.
+    """
     await page.loaded.wait()
-    await _process_element(page.doc, page, page.book)
+    await process_element(page.doc, page, page.book)
     save_debug_json('s1', page)
 
 
-@singledispatch
-async def _process_element(elem: Element, page: Page, book: Book) -> None | Element | tuple[Element, ...]:
+async def process_element(elem: Element, page: Page, book: Book) -> None | Element | tuple[Element, ...]:
+    """
+    Process the `elem` and modify it, if necessary.
+    """
     try:
         assert isinstance(elem.content, ListContainer)
     except (AttributeError, AssertionError):
         return
 
-    i = 0
-    while i < len(elem.content):
-        result = await _process_element(elem.content[i], page, book)
+    i = -1
+    while i < len(elem.content) - 1:
+        i += 1
+        subelem = elem.content[i]
+
+        function = {
+            Header: process_header,
+            Image: process_image,
+            Link: process_link,
+        }.get(
+            type(subelem),
+            process_element
+        )
+        result = await function(subelem, page, book)
+
         match result:
             case None:
                 pass
@@ -37,12 +57,11 @@ async def _process_element(elem: Element, page: Page, book: Book) -> None | Elem
                 i += len(result) - 1
             case _:  # pragma: no cover
                 raise TypeError(result)
-        i += 1
+
     return elem
 
 
-@_process_element.register
-async def _(header: Header, page: Page, _: Book):
+async def process_header(header: Header, page: Page, _: Book):
     nodes = [header]
 
     if not header.identifier:
@@ -70,13 +89,11 @@ async def _(header: Header, page: Page, _: Book):
     return tuple(nodes)
 
 
-@_process_element.register
-async def _(image: Image, _: Page, book: Book):
+async def process_image(image: Image, _: Page, book: Book):
     image.url = str(book.root / '_images' / image.url)
 
 
-@_process_element.register
-async def _(link: Link, page: Page, book: Book):
+async def process_link(link: Link, page: Page, book: Book):
     href: Href
 
     if re.match(r'^\w+:', link.url):

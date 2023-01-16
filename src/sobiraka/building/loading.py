@@ -9,7 +9,11 @@ from sobiraka.utils import save_debug_json
 
 
 async def load_page(page: Page):
+    """
+    Parse syntax tree with Pandoc and save its syntax tree into :obj:`.Page.doc`.
 
+    This method is called by :obj:`.Page.loaded`.
+    """
     match page.path.suffix:
         case '.md':
             syntax = 'markdown'

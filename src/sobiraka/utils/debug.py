@@ -6,6 +6,10 @@ from sobiraka.runtime import RT
 
 
 def save_debug_json(suffix: str, page: Page):
+    """
+    Save :data:`.Page.doc` into a JSON file with given `suffix` (e.g., ``s0``).
+    The JSON file will be prettified.
+    """
     if RT.TMP is None:
         return
 

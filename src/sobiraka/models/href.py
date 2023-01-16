@@ -13,17 +13,6 @@ class Href(ABC):
     @abstractmethod
     def __str__(self): ...
 
-    # @staticmethod
-    # def from_string(target: str, *, base: Page = None) -> Href:
-    #     if re.match(r'^\w+:', target):
-    #         return UrlHref(target)
-    #
-    #     m = re.match(r'^ ([^\#]+)? (?: \#(.+) )?', target, flags=re.VERBOSE)
-    #     target, anchor = m.groups()
-    #     target = base.path / Path(target) if target is not None else None
-    #     anchor = anchor if anchor else None
-    #     return DocHref(target, anchor)
-
 
 @dataclass(frozen=True)
 class UrlHref(Href):
