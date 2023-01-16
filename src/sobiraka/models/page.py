@@ -86,7 +86,7 @@ class Page:
         self.processed2 = ActionOnDemand(lambda: process2(self))
         """An :class:`ActionOnDemand` that runs :func:`.process2()`."""
 
-        from ..building.rendering import generate_latex
+        from ..building.rendering.pdf import generate_latex
         self.latex_generated = ActionOnDemand(lambda: generate_latex(self))
         """An :class:`ActionOnDemand` that runs :func:`.generate_latex()`."""
 
