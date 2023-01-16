@@ -47,7 +47,7 @@ build-dist:
         docker build . \
           --file Dockerfile.$VARIANT \
           --target $STAGE \
-          --tag $CI_REGISTRY_IMAGE/cache/$VARIANT:by-branch-$CI_COMMIT_REF_NAME-stage-$STAGE
+          --tag $CI_REGISTRY_IMAGE/cache/$VARIANT:by-branch-$CI_COMMIT_REF_NAME-stage-$STAGE \
           --tag $CI_REGISTRY_IMAGE/cache/$VARIANT:by-commit-$CI_COMMIT_SHA-stage-$STAGE
   
         echo -e "###############################\nPushing image for stage $STAGE..."
