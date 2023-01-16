@@ -28,7 +28,8 @@ build-dist:
     echo -e "###############################\nPulling cache for context..."
     cp Dockerfile.$VARIANT.dockerignore .dockerignore
     CONTEXT=$(echo -e 'FROM scratch\nADD * .' | docker build . --file - 2>&1 | grep 'writing image' | cut -d: -f2 | cut -d' ' -f1)
-    if `docker pull $CI_REGISTRY_IMAGE/cache/$VARIANT:by-context-$CONTEXT`
+    docker pull $CI_REGISTRY_IMAGE/cache/$VARIANT:by-context-$CONTEXT || true
+    if `docker images --format "{{.Repository}}:{{.Tag}}" | grep $CI_REGISTRY_IMAGE/cache/$VARIANT:by-context-$CONTEXT`
     then
       echo -e "###############################\nPushing cache images for stage $STAGE..."
       docker tag $CI_REGISTRY_IMAGE/cache/$VARIANT:by-context-$CONTEXT $CI_REGISTRY_IMAGE/cache/$VARIANT:by-commit-$CI_COMMIT_SHA
