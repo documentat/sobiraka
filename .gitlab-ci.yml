@@ -25,17 +25,36 @@ build-dist:
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script: |
+    echo -e "###############################\nPulling cache for context..."
     cp Dockerfile.$VARIANT.dockerignore .dockerignore
     CONTEXT=$(echo -e 'FROM scratch\nADD * .' | docker build . --file - 2>&1 | grep 'writing image' | cut -d: -f2 | cut -d' ' -f1)
-    docker pull $CI_REGISTRY_IMAGE/cache/$VARIANT:by-context-$CONTEXT || true
-    docker build . \
-      --file Dockerfile.$VARIANT \
-      --cache-from $CI_REGISTRY_IMAGE/cache/$VARIANT:by-context-$CONTEXT \
-      --cache-from $CI_REGISTRY_IMAGE/cache/$VARIANT:by-commit-$CI_COMMIT_SHA \
-      --tag $CI_REGISTRY_IMAGE/cache/$VARIANT:by-context-$CONTEXT \
-      --tag $CI_REGISTRY_IMAGE/cache/$VARIANT:by-commit-$CI_COMMIT_SHA
-    docker push $CI_REGISTRY_IMAGE/cache/$VARIANT:by-context-$CONTEXT
-    docker push $CI_REGISTRY_IMAGE/cache/$VARIANT:by-commit-$CI_COMMIT_SHA
+    if `docker pull $CI_REGISTRY_IMAGE/cache/$VARIANT:by-context-$CONTEXT`
+    then
+      echo -e "###############################\nPushing cache images for stage $STAGE..."
+      docker tag $CI_REGISTRY_IMAGE/cache/$VARIANT:by-context-$CONTEXT $CI_REGISTRY_IMAGE/cache/$VARIANT:by-commit-$CI_COMMIT_SHA
+      docker push $CI_REGISTRY_IMAGE/cache/$VARIANT:by-commit-$CI_COMMIT_SHA
+    else
+      for STAGE in $(cat Dockerfile.$IMAGE | grep -E 'FROM \S+ AS \S+' | cut -d' ' -f4)
+      do
+        echo -e "###############################\nPulling cache images for stage $STAGE..."
+        docker pull $CI_REGISTRY_IMAGE/cache/$IMAGE:branch-master-$STAGE || true
+        docker pull $CI_REGISTRY_IMAGE/cache/$IMAGE:branch-$CI_COMMIT_REF_NAME-$STAGE || true
+        docker pull $CI_REGISTRY_IMAGE/cache/$IMAGE:commit-$CI_COMMIT_SHA-$STAGE || true
+        docker pull $CI_REGISTRY_IMAGE/cache/$IMAGE:commit-$CI_COMMIT_BEFORE_SHA-$STAGE || true
+  
+        echo -e "###############################\nBuilding image for stage $STAGE..."
+        docker build . \
+          --file Dockerfile.$IMAGE \
+          --target $STAGE \
+          --tag $IMAGE:$STAGE
+  
+        echo -e "###############################\nPushing image for stage $STAGE..."
+        docker tag $IMAGE:$STAGE $CI_REGISTRY_IMAGE/cache/$IMAGE:branch-$CI_COMMIT_REF_NAME-$STAGE
+        docker tag $IMAGE:$STAGE $CI_REGISTRY_IMAGE/cache/$IMAGE:commit-$CI_COMMIT_SHA-$STAGE
+        docker push $CI_REGISTRY_IMAGE/cache/$IMAGE:branch-$CI_COMMIT_REF_NAME-$STAGE
+        docker push $CI_REGISTRY_IMAGE/cache/$IMAGE:commit-$CI_COMMIT_SHA-$STAGE
+      done
+    fi
 
 build-tester:
   extends: .build-docker
