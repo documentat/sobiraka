@@ -3,7 +3,7 @@ from inspect import getfile
 from pathlib import Path
 from unittest import IsolatedAsyncioTestCase
 
-from sobiraka.builders import PdfBuilder
+from sobiraka.processors import PdfBuilder
 from sobiraka.models import Book
 
 

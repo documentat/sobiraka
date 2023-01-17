@@ -1,2 +1,0 @@
-[sobiraka]
-christ = sobiraka:main

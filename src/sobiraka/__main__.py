@@ -3,7 +3,7 @@ from asyncio import gather, run
 from pathlib import Path
 from typing import Awaitable
 
-from sobiraka.builders import DocxBuilder, PdfBuilder
+from sobiraka.processors import DocxBuilder, PdfBuilder
 from sobiraka.models.book import Book
 from sobiraka.runtime import RT
 
