@@ -6,15 +6,16 @@ from pathlib import Path
 from subprocess import PIPE
 
 import panflute
-from panflute import Element, Header, Image, Link, ListContainer, stringify
+from panflute import Header, Image, Link, stringify
 
+from sobiraka.building.dispatch_elements import DispatchElementsTrait
 from sobiraka.models import Book, Href, Page, UrlHref
 from sobiraka.models.error import BadLinkError
 from sobiraka.models.href import PageHref, UnknownPageHref
 from sobiraka.utils import LatexBlock, on_demand, save_debug_json
 
 
-class Processor(metaclass=ABCMeta):
+class Processor(DispatchElementsTrait, metaclass=ABCMeta):
 
     def __init__(self, book: Book):
         self.book: Book = book
@@ -58,43 +59,6 @@ class Processor(metaclass=ABCMeta):
         await self.load_page(page)
         await self.process_element(page.doc, page)
         save_debug_json('s1', page)
-
-    async def process_element(self, elem: Element, page: Page) -> None | Element | tuple[Element, ...]:
-        """
-        Process the `elem` and modify it, if necessary.
-        """
-        try:
-            assert isinstance(elem.content, ListContainer)
-        except (AttributeError, AssertionError):
-            return
-
-        i = -1
-        while i < len(elem.content) - 1:
-            i += 1
-            subelem = elem.content[i]
-
-            match subelem:
-                case Header():
-                    result = await self.process_header(subelem, page)
-                case Image():
-                    result = await self.process_image(subelem, page)
-                case Link():
-                    result = await self.process_link(subelem, page)
-                case _:
-                    result = await self.process_element(subelem, page)
-
-            match result:
-                case None:
-                    pass
-                case Element():
-                    elem.content[i] = result
-                case tuple():
-                    elem.content[i:i + 1] = result
-                    i += len(result) - 1
-                case _:  # pragma: no cover
-                    raise TypeError(result)
-
-        return elem
 
     async def process_header(self, header: Header, page: Page):
         nodes = [header]
