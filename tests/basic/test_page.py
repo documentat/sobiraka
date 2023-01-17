@@ -1,9 +1,9 @@
 from asyncio import create_task, sleep
 from pathlib import Path
-from tempfile import NamedTemporaryFile, TemporaryDirectory
-from textwrap import dedent
+from tempfile import TemporaryDirectory
 from unittest import IsolatedAsyncioTestCase, main
 
+from sobiraka.builders import PdfBuilder
 from sobiraka.models import Book, Page
 
 
@@ -18,6 +18,8 @@ class TestPageBuildOrder(IsolatedAsyncioTestCase):
         page_path.touch()
         self.page = Page(self.book, self.dir / 'page.md')
 
+        self.processor = PdfBuilder(self.book)  # TODO make a simpler processor
+
         self.order: list[str] = []
 
     async def test_page_build_order(self):
@@ -25,20 +27,20 @@ class TestPageBuildOrder(IsolatedAsyncioTestCase):
         create_task(self.wait_until_processed1(self.page))
         create_task(self.wait_until_processed2(self.page))
 
-        await self.page.processed2.wait()
+        await self.processor.process2(self.page)
         await sleep(0)
         self.assertSequenceEqual(self.order, ('loaded', 'processed1', 'processed2'))
 
     async def wait_until_loaded(self, page: Page):
-        await page.loaded.wait()
+        await self.processor.load_page(page)
         self.order.append('loaded')
 
     async def wait_until_processed1(self, page: Page):
-        await page.processed1.wait()
+        await self.processor.process1(page)
         self.order.append('processed1')
 
     async def wait_until_processed2(self, page: Page):
-        await page.processed2.wait()
+        await self.processor.process2(page)
         self.order.append('processed2')
 
 

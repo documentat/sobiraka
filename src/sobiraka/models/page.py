@@ -1,10 +1,9 @@
 from __future__ import annotations
 
 import re
-from asyncio import create_task, Task
 from functools import cached_property
 from pathlib import Path
-from typing import Awaitable, Callable, Coroutine
+from typing import Awaitable
 
 from panflute import Doc
 
@@ -72,24 +71,6 @@ class Page:
         self.process2_tasks: list[Awaitable] = []
         """:meta private:"""
 
-        ################################################################################
-
-        from ..building.loading import load_page
-        self.loaded = ActionOnDemand(lambda: load_page(self))
-        """An :class:`ActionOnDemand` that runs :func:`.load_page()`."""
-
-        from ..building.processing1 import process1
-        self.processed1 = ActionOnDemand(lambda: process1(self))
-        """An :class:`ActionOnDemand` that runs :func:`.process1()`."""
-
-        from ..building.processing2 import process2
-        self.processed2 = ActionOnDemand(lambda: process2(self))
-        """An :class:`ActionOnDemand` that runs :func:`.process2()`."""
-
-        from ..building.rendering.pdf import generate_latex
-        self.latex_generated = ActionOnDemand(lambda: generate_latex(self))
-        """An :class:`ActionOnDemand` that runs :func:`.generate_latex()`."""
-
     def __repr__(self):
         return f'<Page: {str(self.relative_path)!r}>'
 
@@ -143,31 +124,3 @@ class Page:
             their corresponding antilevels will be `3`, `2`, `1`.
         """
         return self.book.max_level - self.level + 1
-
-
-class ActionOnDemand:
-    """
-    Given a `function`, runs it in an asynchronous task once as soon as either :meth:`start()` or :meth:`wait()` is called.
-
-    After the function finished running once, any subsequant :meth:`wait()` calls will return immediately.
-
-    The API is inspired by :py:class:`asyncio.Event`.
-    """
-    def __init__(self, function: Callable[[], Coroutine]):
-        """:meta private:"""
-        self._function: Callable[[], Coroutine] = function
-        self._task: Task | None = None
-
-    def start(self):
-        """
-        Start the function (if not yet started).
-        """
-        if self._task is None:
-            self._task = create_task(self._function())
-
-    async def wait(self):
-        """
-        Start the function (if not yet started) and wait for it to finish.
-        """
-        self.start()
-        await self._task

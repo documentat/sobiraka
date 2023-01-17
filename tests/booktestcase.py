@@ -1,8 +1,9 @@
 from asyncio import gather
 from inspect import getfile
 from pathlib import Path
-from unittest import IsolatedAsyncioTestCase, load_tests, TestLoader, TestSuite
+from unittest import IsolatedAsyncioTestCase
 
+from sobiraka.builders import PdfBuilder
 from sobiraka.models import Book
 
 
@@ -16,7 +17,9 @@ class BookTestCase(IsolatedAsyncioTestCase):
         book_yaml = self.dir / f'{filepath.stem}.yaml'
         self.book = await Book.from_manifest(book_yaml)
 
-        awaitables = tuple(page.processed2.wait() for page in self.book.pages)
+        self.processor = PdfBuilder(self.book)  # TODO make a simpler processor
+
+        awaitables = tuple(self.processor.process2(page) for page in self.book.pages)
         await gather(*awaitables)
 
     def test_errors(self):
