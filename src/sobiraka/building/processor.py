@@ -48,7 +48,7 @@ class Processor(DispatchElementsTrait, metaclass=ABCMeta):
         save_debug_json('s0', page)
 
     @on_demand
-    async def process1(self, page: Page):
+    async def process1(self, page: Page) -> Page:
         """
         Run first pass of page processing.
 
@@ -59,26 +59,27 @@ class Processor(DispatchElementsTrait, metaclass=ABCMeta):
         await self.load_page(page)
         await self.process_element(page.doc, page)
         save_debug_json('s1', page)
+        return page
 
-    async def process_header(self, header: Header, page: Page):
-        nodes = [header]
+    async def process_header(self, elem: Header, page: Page):
+        nodes = [elem]
 
-        if not header.identifier:
-            header.identifier = stringify(header).lower().replace(' ', '-')
+        if not elem.identifier:
+            elem.identifier = stringify(elem).lower().replace(' ', '-')
 
-        page.anchors.setdefault(header.identifier, []).append(stringify(header))
+        page.anchors.setdefault(elem.identifier, []).append(stringify(elem))
 
-        if header.level == 1:
+        if elem.level == 1:
             full_id = page.id
         else:
-            full_id = page.id + '--' + header.identifier
+            full_id = page.id + '--' + elem.identifier
 
-        if header.level == 1 and page.title is None:
-            page.title = stringify(header)
+        if elem.level == 1 and page.title is None:
+            page.title = stringify(elem)
 
         nodes.insert(0, LatexBlock(fr'''
             \hypertarget{{{full_id}}}{{}}
-            \bookmark[level={page.level},dest={full_id}]{{{stringify(header)}}}
+            \bookmark[level={page.level},dest={full_id}]{{{stringify(elem)}}}
         '''))
 
         if page.antilevel > 1:
@@ -87,17 +88,17 @@ class Processor(DispatchElementsTrait, metaclass=ABCMeta):
 
         return tuple(nodes)
 
-    async def process_image(self, image: Image, page: Page):
-        image.url = str(self.book.root / '_images' / image.url)
+    async def process_image(self, elem: Image, page: Page):
+        elem.url = str(self.book.root / '_images' / elem.url)
 
-    async def process_link(self, link: Link, page: Page):
+    async def process_link(self, elem: Link, page: Page):
         href: Href
 
-        if re.match(r'^\w+:', link.url):
-            href = UrlHref(link.url)
+        if re.match(r'^\w+:', elem.url):
+            href = UrlHref(elem.url)
 
         else:
-            m = re.match(r'^ ([^\#]+)? (?: \#(.+) )?', link.url, flags=re.VERBOSE)
+            m = re.match(r'^ ([^\#]+)? (?: \#(.+) )?', elem.url, flags=re.VERBOSE)
             target, anchor = m.groups()
             target = target or None
             anchor = anchor or None
@@ -115,7 +116,7 @@ class Processor(DispatchElementsTrait, metaclass=ABCMeta):
 
         page.links.append(href)
         if isinstance(href, PageHref):
-            page.process2_tasks.append(self.process2_link(page, link, href))
+            page.process2_tasks.append(self.process2_link(page, elem, href))
 
     @on_demand
     async def process2(self, page: Page):
@@ -123,19 +124,19 @@ class Processor(DispatchElementsTrait, metaclass=ABCMeta):
         await gather(*page.process2_tasks)
         save_debug_json('s2', page)
 
-    async def process2_link(self, page: Page, link: Link, href: PageHref):
+    async def process2_link(self, page: Page, elem: Link, href: PageHref):
         await self.process1(href.target)
 
-        link.url = '#' + href.target.id
-        link.title = href.target.title
+        elem.url = '#' + href.target.id
+        elem.title = href.target.title
 
         if href.anchor:
             try:
-                link.url += '--' + href.anchor
-                link.title = href.target.anchors[href.anchor]
+                elem.url += '--' + href.anchor
+                elem.title = href.target.anchors[href.anchor]
             except KeyError:
                 page.errors.add(BadLinkError(f'{href.target.relative_path}#{href.anchor}'))
 
     @abstractmethod
-    async def build(self, output: Path):
+    async def run(self, output: Path) -> int | None:
         ...

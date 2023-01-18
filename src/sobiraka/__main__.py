@@ -1,33 +1,42 @@
 from argparse import ArgumentParser
-from asyncio import gather, run
+from asyncio import run
 from pathlib import Path
-from typing import Awaitable
 
-from sobiraka.processors import DocxBuilder, PdfBuilder
 from sobiraka.models.book import Book
+from sobiraka.processors import DocxBuilder, PdfBuilder, SpellChecker
 from sobiraka.runtime import RT
 
 
 async def async_main():  # pragma: no cover
     parser = ArgumentParser()
-    parser.add_argument('source', type=Path)
-    parser.add_argument('--docx', type=Path)
-    parser.add_argument('--pdf', type=Path)
     parser.add_argument('--tmpdir', type=Path, default=Path('build'))
-    args = parser.parse_args()
 
-    source: Path = args.source
+    commands = parser.add_subparsers(title='commands', dest='command')
+
+    parser_docx = commands.add_parser('docx', help='Build DOCX file.')
+    parser_docx.add_argument('source', type=Path)
+    parser_docx.add_argument('PATH', type=Path)
+
+    parser_pdf = commands.add_parser('pdf', help='Build PDF file.')
+    parser_pdf.add_argument('source', type=Path)
+    parser_pdf.add_argument('PATH', type=Path)
+
+    parser_spellcheck = commands.add_parser('spellcheck', help='Check spelling with Hunspell.')
+    parser_spellcheck.add_argument('source', type=Path)
+
+    args = parser.parse_args()
     RT.TMP = args.tmpdir
 
+    source: Path = args.source
     book = await Book.from_manifest(source)
 
-    tasks: list[Awaitable] = []
-    if args.docx:
-        tasks.append(DocxBuilder(book).build(args.docx))
-    if args.pdf:
-        tasks.append(PdfBuilder(book).build(args.pdf))
-
-    await gather(*tasks)
+    match args.command:
+        case 'pdf':
+            await PdfBuilder(book).run(args.pdf)
+        case 'docx':
+            await DocxBuilder(book).run(args.docx)
+        case 'spellcheck':
+            await SpellChecker(book).run()
 
 
 def main():

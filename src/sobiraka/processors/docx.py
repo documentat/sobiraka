@@ -12,7 +12,7 @@ from sobiraka.utils import print_errors
 
 class DocxBuilder(Processor):
 
-    async def build(self, output: Path):
+    async def run(self, output: Path):
         output.parent.mkdir(parents=True, exist_ok=True)
 
         for page in self.book.pages:

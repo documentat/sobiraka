@@ -19,6 +19,9 @@ class DispatchElementsTrait:
             i += 1
             subelem = elem.content[i]
 
+            if subelem is None:
+                continue
+
             function = {
                 BlockQuote: self.process_block_quote,
                 BulletList: self.process_bullet_list,
@@ -67,7 +70,7 @@ class DispatchElementsTrait:
                 Underline: self.process_underline,
             }[type(subelem)]
 
-            result  = await function(subelem, page)
+            result = await function(subelem, page)
 
             match result:
                 case None:

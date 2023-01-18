@@ -16,8 +16,7 @@ from sobiraka.utils import on_demand, print_errors
 
 class PdfBuilder(Processor):
 
-    @on_demand
-    async def build(self, output: Path):
+    async def run(self, output: Path):
         output.parent.mkdir(parents=True, exist_ok=True)
 
         for page in self.book.pages:
