@@ -28,15 +28,18 @@ async def async_main():  # pragma: no cover
     RT.TMP = args.tmpdir
 
     source: Path = args.source
-    book = await Book.from_manifest(source)
+    book = Book(source)
 
     match args.command:
         case 'pdf':
-            await PdfBuilder(book).run(args.pdf)
+            exit_code = await PdfBuilder(book).run(args.pdf)
         case 'docx':
-            await DocxBuilder(book).run(args.docx)
+            exit_code = await DocxBuilder(book).run(args.docx)
         case 'spellcheck':
-            await SpellChecker(book).run()
+            exit_code = await SpellChecker(book).run()
+        case _:
+            raise NotImplementedError(args.command)
+    exit(exit_code or 0)
 
 
 def main():

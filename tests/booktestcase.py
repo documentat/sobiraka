@@ -15,7 +15,7 @@ class BookTestCase(IsolatedAsyncioTestCase):
         self.dir: Path = filepath.parent
 
         book_yaml = self.dir / f'{filepath.stem}.yaml'
-        self.book = await Book.from_manifest(book_yaml)
+        self.book = Book.from_manifest(book_yaml)
 
         self.processor = PdfBuilder(self.book)  # TODO make a simpler processor
 

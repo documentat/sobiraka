@@ -15,7 +15,7 @@ from sobiraka.models.href import PageHref, UnknownPageHref
 from sobiraka.utils import LatexBlock, on_demand, save_debug_json
 
 
-class Processor(DispatchElementsTrait, metaclass=ABCMeta):
+class Processor(DispatchElementsTrait):
 
     def __init__(self, book: Book):
         self.book: Book = book
@@ -136,7 +136,3 @@ class Processor(DispatchElementsTrait, metaclass=ABCMeta):
                 elem.title = href.target.anchors[href.anchor]
             except KeyError:
                 page.errors.add(BadLinkError(f'{href.target.relative_path}#{href.anchor}'))
-
-    @abstractmethod
-    async def run(self, output: Path) -> int | None:
-        ...

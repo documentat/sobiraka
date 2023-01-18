@@ -12,7 +12,7 @@ class TestPageBuildOrder(IsolatedAsyncioTestCase):
         temp_dir: str = self.enterContext(TemporaryDirectory(prefix='sobiraka-test-'))
         self.dir: Path = Path(temp_dir)
 
-        self.book = Book('test-book', self.dir, 'Test Book')
+        self.book = Book(self.dir, 'test-book', 'Test Book')
 
         page_path = self.dir / 'page.md'
         page_path.touch()

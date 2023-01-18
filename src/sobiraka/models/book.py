@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+from dataclasses import dataclass, field, KW_ONLY
 from functools import cached_property
 from pathlib import Path
-from typing import Self, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 import yaml
 from schema import Optional, Schema, Use
@@ -10,6 +11,25 @@ from schema import Optional, Schema, Use
 if TYPE_CHECKING: from .page import Page
 
 
+@dataclass
+class BookConfig_Paths:
+    include: list[str] = field(default_factory=list)
+    exclude: list[str] = field(default_factory=list)
+
+
+@dataclass
+class BookConfig_Latex:
+    header: Path | None = None
+    """Path to the file containing LaTeX header directives for the book, if provided."""
+
+
+@dataclass
+class BookConfig_SpellCheck:
+    dictionaries: list[str] = field(default_factory=list)
+    """List of Hunspell dictionaries to use for spellchecking."""
+
+
+@dataclass
 class Book:
     """
     A single documentation project that needs to be processed and rendered.
@@ -18,54 +38,67 @@ class Book:
         Note that because each :class:`.Page`'s data is modified during processing, a book must not be used for more than one rendering.
         Doing so will lead to unexpected behavior, as data loaded with different parameters do not necessarily co-exist nnicely.
     """
-    def __init__(self, id: str, root: Path, title: str):
-        self.id: str = id
-        """Alphanumerical identifier of the book."""
 
-        self.root: Path = root.resolve()
-        """Absolute path to the root directory of the book."""
+    root: Path
+    """Absolute path to the root directory of the book."""
 
-        self.title: str = title
-        """Boook title. May be used when rendering output files."""
+    id: str = field(default='')
+    """Alphanumerical identifier of the book."""
 
-        self.header: Path | None = None
-        """Path to the file containing LaTeX header directives for the book, if provided."""
+    title: str = field(default='')
+    """Book title. May be used when rendering output files."""
 
-        self.pages_by_path: dict[Path, Page] = {}
-        """All pages in the book, sorted and indexed by :data:`.Page.relative_path`."""
+    paths: BookConfig_Paths = field(default_factory=BookConfig_Paths, kw_only=True)
+    latex: BookConfig_Latex = field(default_factory=BookConfig_Latex, kw_only=True)
+    spellcheck: BookConfig_SpellCheck = field(default_factory=BookConfig_SpellCheck, kw_only=True)
 
     @classmethod
-    async def from_manifest(cls, manifest_path: Path) -> Self:
-        """
-        Create a :class:`Book` object using parameters from given `manifest_path`.
-        """
-        from .page import Page
+    def from_manifest(cls, manifest_path: Path) -> Book:
 
         schema = Schema({
             Optional('id', default=manifest_path.parent.stem): str,
             Optional('title', default=manifest_path.parent.stem): str,
-            Optional('include', default=['**/*']): [str],
-            Optional('exclude', default=[]): [str],
-            Optional('header', default=None): Use(lambda x: manifest_path.parent / x),
+            'paths': {
+                'include': [str],
+                Optional('exclude', default=[]): [str],
+            },
+            Optional('latex', default={}): {
+                Optional('header', default=None): Use(lambda x: manifest_path.parent / x),
+            },
+            Optional('spellcheck', default={}): {
+                Optional('dictionaries'): [str],
+            },
         })
 
         with manifest_path.open() as manifest_file:
             manifest: dict = yaml.load(manifest_file, yaml.SafeLoader) or {}
         manifest = schema.validate(manifest)
 
-        book = cls(id=manifest['id'], root=manifest_path.parent, title=manifest['title'])
-        book.header = manifest['header']
+        book = Book(
+            manifest_path.parent,
+            id=manifest['id'],
+            title=manifest['title'],
+            paths=BookConfig_Paths(**manifest['paths']),
+            latex=BookConfig_Latex(**manifest['latex']),
+            spellcheck=BookConfig_SpellCheck(**manifest['spellcheck']),
+        )
+        return book
+
+    @cached_property
+    def pages_by_path(self) -> dict[Path, Page]:
+        from .page import Page
 
         paths: set[Path] = set()
-        for pattern in manifest.get('include', ('**/*',)):
-            paths |= set(book.root.glob(pattern))
-        for pattern in manifest.get('exclude', ()):
-            paths -= set(book.root.glob(pattern))
+        for pattern in self.paths.include:
+            paths |= set(self.root.glob(pattern))
+        for pattern in self.paths.exclude:
+            paths -= set(self.root.glob(pattern))
 
+        pages_by_path: dict[Path, Page] = {}
         for path in list(sorted(paths)):
-            book.pages_by_path[path] = Page(book, path)
+            pages_by_path[path] = Page(self, path)
 
-        return book
+        return pages_by_path
 
     @property
     def pages(self) -> list[Page]:

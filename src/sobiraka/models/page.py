@@ -74,6 +74,10 @@ class Page:
     def __repr__(self):
         return f'<Page: {str(self.relative_path)!r}>'
 
+    def __lt__(self, other):
+        assert isinstance(other, Page)
+        return self.relative_path < other.relative_path
+
     @cached_property
     def relative_path(self) -> Path:
         """Path to the page source, relative to :data:`.Book.root`."""

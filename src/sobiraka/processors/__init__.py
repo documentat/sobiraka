@@ -1,2 +1,3 @@
-from sobiraka.processors.docx import DocxBuilder
-from sobiraka.processors.pdf import PdfBuilder
+from .docx import DocxBuilder
+from .pdf import PdfBuilder
+from .spellchecker import SpellChecker

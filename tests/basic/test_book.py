@@ -32,7 +32,7 @@ class TestBook(IsolatedAsyncioTestCase):
     async def book_from_manifest(self, manifest_str: str) -> Book:
         manifest_path = self.dir / 'book.yaml'
         manifest_path.write_text(dedent(manifest_str))
-        return await Book.from_manifest(manifest_path)
+        return Book.from_manifest(manifest_path)
 
     def assertPagePaths(self, book: Book, expected_paths: tuple[Path, ...]):
         actual_paths = tuple(p.path for p in book.pages)
@@ -43,7 +43,8 @@ class TestBook(IsolatedAsyncioTestCase):
     async def test_empty(self):
         book = await self.book_from_manifest('''
             title: Example book
-            include: []
+            paths:
+              include: []
         ''')
         self.assertEqual(book.title, 'Example book')
         self.assertEqual(book.max_level, 0)
@@ -51,7 +52,8 @@ class TestBook(IsolatedAsyncioTestCase):
 
     async def test_empty_with_auto_title(self):
         book = await self.book_from_manifest('''
-            include: []
+            paths:
+                include: []
         ''')
         self.assertEqual(book.title, self.dir.name)
         self.assertEqual(book.max_level, 0)
@@ -60,7 +62,8 @@ class TestBook(IsolatedAsyncioTestCase):
     async def test_include_all_files(self):
         book = await self.book_from_manifest('''
             title: Example book
-            include: ['**/*.md']
+            paths:
+              include: ['**/*.md']
         ''')
         self.assertEqual(book.title, 'Example book')
         self.assertEqual(book.max_level, 3)
@@ -69,7 +72,8 @@ class TestBook(IsolatedAsyncioTestCase):
     async def test_include_only_top_level(self):
         book = await self.book_from_manifest('''
             title: Example book
-            include: ['*.md']
+            paths:
+              include: ['*.md']
         ''')
         self.assertEqual(book.title, 'Example book')
         self.assertEqual(book.max_level, 1)
@@ -81,7 +85,8 @@ class TestBook(IsolatedAsyncioTestCase):
     async def test_include_only_part2(self):
         book = await self.book_from_manifest('''
             title: Example book
-            include: ['part2/*.md']
+            paths:
+              include: ['part2/*.md']
         ''')
         self.assertEqual(book.title, 'Example book')
         self.assertEqual(book.max_level, 2)
@@ -94,7 +99,8 @@ class TestBook(IsolatedAsyncioTestCase):
     async def test_include_only_chapters3(self):
         book = await self.book_from_manifest('''
             title: Example book
-            include: ['**/chapter3.md']
+            paths:
+                  include: ['**/chapter3.md']
         ''')
         self.assertEqual(book.title, 'Example book')
         self.assertEqual(book.max_level, 3)
@@ -107,8 +113,9 @@ class TestBook(IsolatedAsyncioTestCase):
     async def test_include_all_except_part2(self):
         book = await self.book_from_manifest('''
             title: Example book
-            include: ['**/*.md']
-            exclude: ['**/part2/*.md']
+            paths:
+              include: ['**/*.md']
+              exclude: ['**/part2/*.md']
         ''')
         self.assertEqual(book.title, 'Example book')
         self.assertEqual(book.max_level, 3)
@@ -126,8 +133,9 @@ class TestBook(IsolatedAsyncioTestCase):
     async def test_include_all_except_chapters3(self):
         book = await self.book_from_manifest('''
             title: Example book
-            include: ['**/*.md']
-            exclude: ['**/chapter3.md']
+            paths:
+              include: ['**/*.md']
+              exclude: ['**/chapter3.md']
         ''')
         self.assertEqual(book.title, 'Example book')
         self.assertEqual(book.max_level, 3)
