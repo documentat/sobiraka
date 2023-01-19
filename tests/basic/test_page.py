@@ -3,6 +3,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest import IsolatedAsyncioTestCase, main
 
+from sobiraka.models.book import BookConfig_Paths
 from sobiraka.processors import PdfBuilder
 from sobiraka.models import Book, Page
 
@@ -12,7 +13,9 @@ class TestPageBuildOrder(IsolatedAsyncioTestCase):
         temp_dir: str = self.enterContext(TemporaryDirectory(prefix='sobiraka-test-'))
         self.dir: Path = Path(temp_dir)
 
-        self.book = Book(self.dir, 'test-book', 'Test Book')
+        self.book = Book(id='test-book',
+                         title='Test Book',
+                         paths=BookConfig_Paths(root=self.dir))
 
         page_path = self.dir / 'page.md'
         page_path.touch()
