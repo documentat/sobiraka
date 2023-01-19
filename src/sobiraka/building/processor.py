@@ -106,7 +106,7 @@ class Processor(DispatchElementsTrait):
             if target is None:
                 href = PageHref(page, anchor)
             else:
-                target_path = (page.path.parent / Path(target)).resolve()
+                target_path = (page.path.parent / Path(target)).resolve().relative_to(self.book.root)
                 try:
                     target_page = self.book.pages_by_path[target_path]
                     href = PageHref(target_page, anchor)

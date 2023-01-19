@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field, KW_ONLY
+from dataclasses import dataclass, field
 from functools import cached_property
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -13,6 +13,7 @@ if TYPE_CHECKING: from .page import Page
 
 @dataclass
 class BookConfig_Paths:
+    root: Path
     include: list[str] = field(default_factory=list)
     exclude: list[str] = field(default_factory=list)
 
@@ -29,7 +30,7 @@ class BookConfig_SpellCheck:
     """List of Hunspell dictionaries to use for spellchecking."""
 
 
-@dataclass
+@dataclass(kw_only=True)
 class Book:
     """
     A single documentation project that needs to be processed and rendered.
@@ -38,9 +39,6 @@ class Book:
         Note that because each :class:`.Page`'s data is modified during processing, a book must not be used for more than one rendering.
         Doing so will lead to unexpected behavior, as data loaded with different parameters do not necessarily co-exist nnicely.
     """
-
-    root: Path
-    """Absolute path to the root directory of the book."""
 
     id: str = field(default='')
     """Alphanumerical identifier of the book."""
@@ -52,14 +50,18 @@ class Book:
     latex: BookConfig_Latex = field(default_factory=BookConfig_Latex, kw_only=True)
     spellcheck: BookConfig_SpellCheck = field(default_factory=BookConfig_SpellCheck, kw_only=True)
 
+    def __repr__(self):
+        return f'<{self.__class__.__name__}: {repr(str(self.paths.root))}>'
+
     @classmethod
     def from_manifest(cls, manifest_path: Path) -> Book:
 
         schema = Schema({
             Optional('id', default=manifest_path.parent.stem): str,
             Optional('title', default=manifest_path.parent.stem): str,
-            'paths': {
-                'include': [str],
+            Optional('paths', default={}): {
+                Optional('root', default=manifest_path.parent): Use(lambda x: Path(x).resolve()),
+                Optional('include', default=['**/*']): [str],
                 Optional('exclude', default=[]): [str],
             },
             Optional('latex', default={}): {
@@ -70,12 +72,12 @@ class Book:
             },
         })
 
+        manifest_path = manifest_path.resolve()
         with manifest_path.open() as manifest_file:
             manifest: dict = yaml.load(manifest_file, yaml.SafeLoader) or {}
         manifest = schema.validate(manifest)
 
         book = Book(
-            manifest_path.parent,
             id=manifest['id'],
             title=manifest['title'],
             paths=BookConfig_Paths(**manifest['paths']),
@@ -83,6 +85,11 @@ class Book:
             spellcheck=BookConfig_SpellCheck(**manifest['spellcheck']),
         )
         return book
+
+    @property
+    def root(self) -> Path:
+        """Absolute path to the root directory of the book."""
+        return self.paths.root
 
     @cached_property
     def pages_by_path(self) -> dict[Path, Page]:
@@ -96,7 +103,9 @@ class Book:
 
         pages_by_path: dict[Path, Page] = {}
         for path in list(sorted(paths)):
-            pages_by_path[path] = Page(self, path)
+            relative_path = path.relative_to(self.root)
+            absolute_path = path.resolve()
+            pages_by_path[relative_path] = Page(self, absolute_path)
 
         return pages_by_path
 
