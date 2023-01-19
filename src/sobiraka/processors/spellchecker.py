@@ -1,3 +1,4 @@
+import os
 import re
 import sys
 from asyncio import as_completed, create_subprocess_exec, create_task, gather, Queue, Task
@@ -11,7 +12,7 @@ from sobiraka.models import Book, Page
 from sobiraka.runtime import RT
 
 _NUM_WORKERS = 4
-_SEPARATOR = 'Goo6zee0iechahCh7Aithibai5phew8Foh8eichu'
+_SEPARATOR = 'JJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ'
 
 
 class SpellChecker(Processor):
@@ -20,9 +21,7 @@ class SpellChecker(Processor):
         super().__init__(book)
 
         self.running: bool = True
-
         self.lines: dict[Page, list[str]] = {}
-
         self.queue: Queue[Page | None] = Queue()
         self.misspelled_words: dict[Page, set[str]] = {}
 
@@ -52,16 +51,15 @@ class SpellChecker(Processor):
         return 0
 
     async def worker(self):
-        hunspell = await create_subprocess_exec(
-            'hunspell',
-            env={
-                'DICPATH': RT.FILES / 'spellcheck',
-                'DICTIONARY': 'en_US,ru_RU,sobiraka',
-            },
-            stdin=PIPE, stdout=PIPE)
+        environ = os.environ
+        if self.book.spellcheck.dictionaries:
+            environ = environ.copy()
+            environ['DICPATH'] = str(RT.FILES / 'dictionaries') + ':' + str(self.book.root)
+            environ['DICTIONARY'] = ','.join(self.book.spellcheck.dictionaries)
+        hunspell = await create_subprocess_exec('hunspell', '-i', 'utf-8', env=environ, stdin=PIPE, stdout=PIPE)
 
         hunspell_version = await hunspell.stdout.readline()
-        assert hunspell_version == b'Hunspell 1.7.0\n'
+        assert re.match(br'Hunspell 1\..+\n', hunspell_version), hunspell_version
 
         while self.running:
             page = await self.queue.get()

@@ -9,7 +9,7 @@ RUN pip install --no-cache-dir pyyaml~=5.3.1 panflute~=2.2.3 schema~=0.7.5 cover
 FROM python:3.11-slim-bullseye AS final
 
 RUN apt update
-RUN apt install -y git make wget
+RUN apt install -y git make wget hunspell
 
 COPY --from=get-pandoc /tmp/pandoc /usr/local
 COPY --from=get-dependencies-pip /usr/local /usr/local

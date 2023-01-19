@@ -12,7 +12,7 @@ setup(
     ],
     packages=find_packages('src'),
     package_dir={'sobiraka': 'src/sobiraka'},
-    package_data={'sobiraka': ['files/base.sty']},
+    package_data={'sobiraka': ['files/**']},
     entry_points={
         'console_scripts': ['sobiraka=sobiraka.__main__:main'],
     },

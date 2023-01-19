@@ -5,6 +5,7 @@ from pathlib import Path
 from sobiraka.models.book import Book
 from sobiraka.processors import DocxBuilder, PdfBuilder, SpellChecker
 from sobiraka.runtime import RT
+from sobiraka.utils import validate_dictionary
 
 
 async def async_main():  # pragma: no cover
@@ -13,30 +14,43 @@ async def async_main():  # pragma: no cover
 
     commands = parser.add_subparsers(title='commands', dest='command')
 
-    parser_docx = commands.add_parser('docx', help='Build DOCX file.')
-    parser_docx.add_argument('source', type=Path)
-    parser_docx.add_argument('PATH', type=Path)
+    cmd_docx = commands.add_parser('docx', help='Build DOCX file.')
+    cmd_docx.add_argument('source', type=Path)
+    cmd_docx.add_argument('target', type=Path)
 
-    parser_pdf = commands.add_parser('pdf', help='Build PDF file.')
-    parser_pdf.add_argument('source', type=Path)
-    parser_pdf.add_argument('PATH', type=Path)
+    cmd_pdf = commands.add_parser('pdf', help='Build PDF file.')
+    cmd_pdf.add_argument('source', type=Path)
+    cmd_pdf.add_argument('target', type=Path)
 
-    parser_spellcheck = commands.add_parser('spellcheck', help='Check spelling with Hunspell.')
-    parser_spellcheck.add_argument('source', type=Path)
+    cmd_spellcheck = commands.add_parser('spellcheck', help='Check spelling with Hunspell.')
+    cmd_spellcheck.add_argument('source', type=Path)
+
+    cmd_validate_dictionary = commands.add_parser('validate_dictionary', help='Validate and fix Hunspell dictionary.')
+    cmd_validate_dictionary.add_argument('dic', type=Path)
+    cmd_validate_dictionary.add_argument('--autofix', action='store_true')
 
     args = parser.parse_args()
     RT.TMP = args.tmpdir
 
-    source: Path = args.source
-    book = Book(source)
-
     match args.command:
         case 'pdf':
-            exit_code = await PdfBuilder(book).run(args.pdf)
+            book = Book.from_manifest(args.source)
+            builder = PdfBuilder(book)
+            exit_code = await builder.run(args.target)
+
         case 'docx':
-            exit_code = await DocxBuilder(book).run(args.docx)
+            book = Book.from_manifest(args.source)
+            builder = DocxBuilder(book)
+            exit_code = await builder.run(args.target)
+
         case 'spellcheck':
-            exit_code = await SpellChecker(book).run()
+            book = Book.from_manifest(args.source)
+            checker = SpellChecker(book)
+            exit_code = await checker.run()
+
+        case 'validate_dictionary':
+            exit_code = validate_dictionary(args.dic, autofix=args.autofix)
+
         case _:
             raise NotImplementedError(args.command)
     exit(exit_code or 0)

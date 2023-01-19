@@ -22,9 +22,9 @@ RUN /usr/bin/python -m pip install --prefix /prefix *.tar.gz
 FROM pandoc/latex:2.19 AS final
 RUN apk add --no-cache python3~=3.11 --repository=http://dl-cdn.alpinelinux.org/alpine/edge/main/
 RUN apk add --no-cache py3-pip --repository=http://dl-cdn.alpinelinux.org/alpine/edge/community/
+RUN apk add hunspell
 
 RUN tlmgr install koma-script ragged2e
-
 
 COPY --from=get-pandoc /tmp/pandoc /usr/local
 COPY --from=get-fonts /tmp/fonts /usr/share/fonts/truetype
