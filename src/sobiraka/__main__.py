@@ -3,7 +3,7 @@ from asyncio import run
 from pathlib import Path
 
 from sobiraka.models import Book
-from sobiraka.processors import DocxBuilder, PdfBuilder, SpellChecker
+from sobiraka.processing import DocxBuilder, PdfBuilder, SpellChecker, TxtBuilder
 from sobiraka.runtime import RT
 from sobiraka.utils import validate_dictionary
 
@@ -21,6 +21,10 @@ async def async_main():  # pragma: no cover
     cmd_pdf = commands.add_parser('pdf', help='Build PDF file.')
     cmd_pdf.add_argument('source', type=Path)
     cmd_pdf.add_argument('target', type=Path)
+
+    cmd_txt = commands.add_parser('txt', help='Build TXT files.')
+    cmd_txt.add_argument('source', type=Path)
+    cmd_txt.add_argument('target', type=Path)
 
     cmd_spellcheck = commands.add_parser('spellcheck', help='Check spelling with Hunspell.')
     cmd_spellcheck.add_argument('source', type=Path)
@@ -40,6 +44,10 @@ async def async_main():  # pragma: no cover
         case 'pdf':
             book = Book.from_manifest(args.source)
             exit_code = await PdfBuilder(book).run(args.target)
+
+        case 'txt':
+            book = Book.from_manifest(args.source)
+            exit_code = await TxtBuilder(book).run(args.target)
 
         case 'spellcheck':
             book = Book.from_manifest(args.source)

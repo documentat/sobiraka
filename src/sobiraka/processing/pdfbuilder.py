@@ -1,6 +1,5 @@
 import sys
 from asyncio import create_subprocess_exec
-from io import StringIO
 from pathlib import Path
 from shutil import copyfile
 from subprocess import DEVNULL, PIPE
@@ -9,7 +8,7 @@ from panflute import Doc
 
 from sobiraka.models import Page
 from sobiraka.runtime import RT
-from sobiraka.utils import on_demand, print_errors
+from sobiraka.utils import on_demand, panflute_to_bytes, print_errors
 from .abstract import Processor
 
 
@@ -76,10 +75,6 @@ class PdfBuilder(Processor):
             page.latex = b''
 
         else:
-            with StringIO() as stringio:
-                panflute.dump(page.doc, stringio)
-                json_bytes = stringio.getvalue().encode('utf-8')
-
             pandoc = await create_subprocess_exec(
                 'pandoc',
                 '--from', 'json',
@@ -88,7 +83,7 @@ class PdfBuilder(Processor):
                 '--wrap', 'none',
                 stdin=PIPE,
                 stdout=PIPE)
-            pandoc.stdin.write(json_bytes)
+            pandoc.stdin.write(panflute_to_bytes(page.doc))
             pandoc.stdin.close()
             await pandoc.wait()
             assert pandoc.returncode == 0
