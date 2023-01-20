@@ -2,7 +2,7 @@ from argparse import ArgumentParser
 from asyncio import run
 from pathlib import Path
 
-from sobiraka.models.book import Book
+from sobiraka.models import Book
 from sobiraka.processors import DocxBuilder, PdfBuilder, SpellChecker
 from sobiraka.runtime import RT
 from sobiraka.utils import validate_dictionary

@@ -15,7 +15,10 @@ class TestPageBuildOrder(IsolatedAsyncioTestCase):
 
         self.book = Book(id='test-book',
                          title='Test Book',
-                         paths=BookConfig_Paths(root=self.dir))
+                         paths=BookConfig_Paths(
+                             root=self.dir,
+                             manifest_path=self.dir,
+                         ))
 
         page_path = self.dir / 'page.md'
         page_path.touch()

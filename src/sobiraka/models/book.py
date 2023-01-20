@@ -13,6 +13,7 @@ if TYPE_CHECKING: from .page import Page
 
 @dataclass
 class BookConfig_Paths:
+    manifest_path: Path
     root: Path
     include: list[str] = field(default_factory=list)
     exclude: list[str] = field(default_factory=list)
@@ -60,7 +61,7 @@ class Book:
             Optional('id', default=manifest_path.parent.stem): str,
             Optional('title', default=manifest_path.parent.stem): str,
             Optional('paths', default={}): {
-                Optional('root', default=manifest_path.parent): Use(lambda x: Path(x).resolve()),
+                Optional('root', default=manifest_path.parent): Use(lambda x: (manifest_path.parent / x).resolve()),
                 Optional('include', default=['**/*']): [str],
                 Optional('exclude', default=[]): [str],
             },
@@ -80,7 +81,7 @@ class Book:
         book = Book(
             id=manifest['id'],
             title=manifest['title'],
-            paths=BookConfig_Paths(**manifest['paths']),
+            paths=BookConfig_Paths(**manifest['paths'], manifest_path=manifest_path),
             latex=BookConfig_Latex(**manifest['latex']),
             spellcheck=BookConfig_SpellCheck(**manifest['spellcheck']),
         )

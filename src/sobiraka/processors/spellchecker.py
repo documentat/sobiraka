@@ -54,9 +54,11 @@ class SpellChecker(Processor):
         environ = os.environ
         if self.book.spellcheck.dictionaries:
             environ = environ.copy()
-            environ['DICPATH'] = str(RT.FILES / 'dictionaries') + ':' + str(self.book.root)
+            environ['DICPATH'] \
+                = str(RT.FILES / 'dictionaries') \
+                + ':' + str(self.book.paths.manifest_path.parent)
             environ['DICTIONARY'] = ','.join(self.book.spellcheck.dictionaries)
-        hunspell = await create_subprocess_exec('hunspell', '-i', 'utf-8', env=environ, stdin=PIPE, stdout=PIPE)
+        hunspell = await create_subprocess_exec('hunspell', env=environ, stdin=PIPE, stdout=PIPE)
 
         hunspell_version = await hunspell.stdout.readline()
         assert re.match(br'Hunspell 1\..+\n', hunspell_version), hunspell_version
