@@ -2,6 +2,7 @@ import os
 import re
 import sys
 from asyncio import create_subprocess_exec, gather
+from collections import defaultdict
 from subprocess import PIPE
 from typing import Awaitable
 
@@ -15,7 +16,7 @@ class SpellChecker(Plainifier):
     def __init__(self, book: Book):
         super().__init__(book)
 
-        self.misspelled_words: dict[Page, set[str]] = {}
+        self.misspelled_words: dict[Page, list[str]] = defaultdict(list)
 
         self.environ = os.environ
         if self.book.spellcheck.dictionaries:
@@ -33,7 +34,7 @@ class SpellChecker(Plainifier):
 
         if self.misspelled_words:
             for page, words in sorted(self.misspelled_words.items()):
-                print(f'Misspelled words in {page.relative_path}: {", ".join(sorted(words))}', file=sys.stderr)
+                print(f'Misspelled words in {page.relative_path}: {", ".join(words)}', file=sys.stderr)
             return 1
 
         return 0
@@ -57,11 +58,13 @@ class SpellChecker(Plainifier):
 
             if m := re.fullmatch('& (\S+) (\d+) (\d+): (.+)', line):
                 misspelled_word, near_misses_count, position, near_misses = m.groups()
-                self.misspelled_words.setdefault(page, set()).add(misspelled_word)
+                if misspelled_word not in self.misspelled_words[page]:
+                    self.misspelled_words[page].append(misspelled_word)
 
             elif m := re.fullmatch('# (\S+) (\d+)', line):
                 misspelled_word, position = m.groups()
-                self.misspelled_words.setdefault(page, set()).add(misspelled_word)
+                if misspelled_word not in self.misspelled_words[page]:
+                    self.misspelled_words[page].append(misspelled_word)
 
             elif m := re.fullmatch('\+ (\w+)', line):
                 continue
