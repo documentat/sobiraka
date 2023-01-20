@@ -33,20 +33,17 @@ async def async_main():  # pragma: no cover
     RT.TMP = args.tmpdir
 
     match args.command:
-        case 'pdf':
-            book = Book.from_manifest(args.source)
-            builder = PdfBuilder(book)
-            exit_code = await builder.run(args.target)
-
         case 'docx':
             book = Book.from_manifest(args.source)
-            builder = DocxBuilder(book)
-            exit_code = await builder.run(args.target)
+            exit_code = await DocxBuilder(book).run(args.target)
+
+        case 'pdf':
+            book = Book.from_manifest(args.source)
+            exit_code = await PdfBuilder(book).run(args.target)
 
         case 'spellcheck':
             book = Book.from_manifest(args.source)
-            checker = SpellChecker(book)
-            exit_code = await checker.run()
+            exit_code = await SpellChecker(book).run()
 
         case 'validate_dictionary':
             exit_code = validate_dictionary(args.dic, autofix=args.autofix)

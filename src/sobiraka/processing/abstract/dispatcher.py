@@ -3,7 +3,7 @@ from panflute import BlockQuote, BulletList, Caption, Citation, Cite, Code, Code
 from sobiraka.models import Page
 
 
-class DispatchElementsTrait:
+class Dispatcher:
 
     async def process_element(self, elem: Element, page: Page) -> None | Element | tuple[Element, ...]:
         """

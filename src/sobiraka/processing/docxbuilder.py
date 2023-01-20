@@ -6,8 +6,8 @@ from subprocess import PIPE
 import panflute
 from panflute import Doc
 
-from sobiraka.building.processor import Processor
 from sobiraka.utils import print_errors
+from .abstract import Processor
 
 
 class DocxBuilder(Processor):

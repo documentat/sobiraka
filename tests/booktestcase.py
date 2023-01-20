@@ -3,8 +3,8 @@ from inspect import getfile
 from pathlib import Path
 from unittest import IsolatedAsyncioTestCase
 
-from sobiraka.processors import PdfBuilder
 from sobiraka.models import Book
+from sobiraka.processing import PdfBuilder
 
 
 class BookTestCase(IsolatedAsyncioTestCase):

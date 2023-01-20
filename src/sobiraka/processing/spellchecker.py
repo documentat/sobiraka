@@ -7,9 +7,9 @@ from typing import Awaitable
 
 from panflute import Link, Para, Str, stringify
 
-from sobiraka.building.processor import Processor
 from sobiraka.models import Book, Page
 from sobiraka.runtime import RT
+from .abstract import Processor
 
 _NUM_WORKERS = 4
 _SEPARATOR = 'JJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ'

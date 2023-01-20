@@ -1,5 +1,4 @@
 import re
-from abc import ABCMeta, abstractmethod
 from asyncio import create_subprocess_exec, gather
 from io import BytesIO
 from pathlib import Path
@@ -8,14 +7,14 @@ from subprocess import PIPE
 import panflute
 from panflute import Header, Image, Link, stringify
 
-from sobiraka.building.dispatch_elements import DispatchElementsTrait
 from sobiraka.models import Book, Href, Page, UrlHref
 from sobiraka.models.error import BadLinkError
 from sobiraka.models.href import PageHref, UnknownPageHref
 from sobiraka.utils import LatexBlock, on_demand, save_debug_json
+from .dispatcher import Dispatcher
 
 
-class Processor(DispatchElementsTrait):
+class Processor(Dispatcher):
 
     def __init__(self, book: Book):
         self.book: Book = book

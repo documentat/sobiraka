@@ -5,13 +5,12 @@ from pathlib import Path
 from shutil import copyfile
 from subprocess import DEVNULL, PIPE
 
-import panflute
 from panflute import Doc
 
-from sobiraka.building.processor import Processor
 from sobiraka.models import Page
 from sobiraka.runtime import RT
 from sobiraka.utils import on_demand, print_errors
+from .abstract import Processor
 
 
 class PdfBuilder(Processor):
