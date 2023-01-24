@@ -1,0 +1,8 @@
+paths:
+  include: ['src/**/*.rst']
+
+spellcheck:
+  dictionaries:
+    - dictionary
+  exceptions:
+    - exceptions.regexp

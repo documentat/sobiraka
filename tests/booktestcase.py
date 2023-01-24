@@ -1,13 +1,16 @@
 from asyncio import gather
+from functools import cached_property
 from inspect import getfile
 from pathlib import Path
+from typing import Any, Generic, TypeVar
 from unittest import IsolatedAsyncioTestCase
 
-from sobiraka.models import Book
-from sobiraka.processing import PdfBuilder
+from sobiraka.models import Book, Page
+from sobiraka.processing.abstract import Plainifier, Processor
 
+T = TypeVar('T', bound=Processor)
 
-class BookTestCase(IsolatedAsyncioTestCase):
+class BookTestCase(IsolatedAsyncioTestCase, Generic[T]):
     maxDiff = None
 
     async def asyncSetUp(self):
@@ -17,12 +20,21 @@ class BookTestCase(IsolatedAsyncioTestCase):
         book_yaml = self.dir / f'{filepath.stem}.yaml'
         self.book = Book.from_manifest(book_yaml)
 
-        self.processor = PdfBuilder(self.book)  # TODO make a simpler processor
-
         awaitables = tuple(self.processor.process2(page) for page in self.book.pages)
         await gather(*awaitables)
 
+    @cached_property
+    def processor(self) -> T:
+        return Plainifier(self.book)
+
+    def subTest(self, msg: Any = ..., **params: Any):
+        match msg:
+            case Page() as page:
+                return super().subTest(page.relative_path.with_suffix(''))
+            case _:
+                return super().subTest(msg)
+
     def test_errors(self):
         for page in self.book.pages:
-            with self.subTest(page.relative_path.with_suffix('')):
+            with self.subTest(page):
                 self.assertEqual(page.errors, set())

@@ -58,7 +58,7 @@ class TestLinksGood(BookTestCase):
             ),
         }
         for page, expected_links in data.items():
-            with self.subTest(page.relative_path.with_suffix('')):
+            with self.subTest(page):
                 self.assertSequenceEqual(tuple(page.links), expected_links)
 
 

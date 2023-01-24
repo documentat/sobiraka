@@ -36,7 +36,7 @@ class TestLinksBad(BookTestCase):
             self.document4: (),
         }
         for page, expected_errors in data.items():
-            with self.subTest(page.relative_path.with_suffix('')):
+            with self.subTest(page):
                 self.assertEqual(page.errors, set(expected_errors))
 
     def test_links(self):
@@ -78,7 +78,7 @@ class TestLinksBad(BookTestCase):
             ),
         }
         for page, expected_links in data.items():
-            with self.subTest(page.relative_path.with_suffix('')):
+            with self.subTest(page):
                 self.assertSequenceEqual(expected_links, tuple(page.links))
 
 

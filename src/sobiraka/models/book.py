@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import yaml
-from schema import Optional, Schema, Use
+from schema import And, Optional, Schema, Use
 
 if TYPE_CHECKING: from .page import Page
 
@@ -29,6 +29,8 @@ class BookConfig_Latex:
 class BookConfig_SpellCheck:
     dictionaries: list[str] = field(default_factory=list)
     """List of Hunspell dictionaries to use for spellchecking."""
+
+    exceptions: list[Path] = field(default_factory=list)
 
 
 @dataclass(kw_only=True)
@@ -61,15 +63,16 @@ class Book:
             Optional('id', default=manifest_path.parent.stem): str,
             Optional('title', default=manifest_path.parent.stem): str,
             Optional('paths', default={}): {
-                Optional('root', default=manifest_path.parent): Use(lambda x: (manifest_path.parent / x).resolve()),
+                Optional('root', default=manifest_path.parent): And(str, Use(lambda x: (manifest_path.parent / x).resolve())),
                 Optional('include', default=['**/*']): [str],
                 Optional('exclude', default=[]): [str],
             },
             Optional('latex', default={}): {
-                Optional('header', default=None): Use(lambda x: manifest_path.parent / x),
+                Optional('header', default=None): And(str, Use(lambda x: manifest_path.parent / x)),
             },
             Optional('spellcheck', default={}): {
                 Optional('dictionaries'): [str],
+                Optional('exceptions'): [And(str, Use(lambda x: (manifest_path.parent / x).resolve()))],
             },
         })
 

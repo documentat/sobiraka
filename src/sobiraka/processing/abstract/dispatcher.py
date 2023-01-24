@@ -93,48 +93,48 @@ class Dispatcher:
 
         return elem
 
-    async def process_block_quote(self, elem: BlockQuote, page: Page):          return await self.process_container(elem, page)
-    async def process_bullet_list(self, elem: BulletList, page: Page):          return await self.process_container(elem, page)
-    async def process_caption(self, elem: Caption, page: Page):                 return await self.process_container(elem, page)
-    async def process_citation(self, elem: Citation, page: Page):               return await self.process_container(elem, page)
-    async def process_cite(self, elem: Cite, page: Page):                       return await self.process_container(elem, page)
-    async def process_code(self, elem: Code, page: Page):                       return await self.process_container(elem, page)
-    async def process_code_block(self, elem: CodeBlock, page: Page):            return await self.process_container(elem, page)
-    async def process_definition(self, elem: Definition, page: Page):           return await self.process_container(elem, page)
-    async def process_definition_item(self, elem: DefinitionItem, page: Page):  return await self.process_container(elem, page)
-    async def process_definition_list(self, elem: DefinitionList, page: Page):  return await self.process_container(elem, page)
-    async def process_div(self, elem: Div, page: Page):                         return await self.process_container(elem, page)
-    async def process_emph(self, elem: Emph, page: Page):                       return await self.process_container(elem, page)
-    async def process_header(self, elem: Header, page: Page):                   return await self.process_container(elem, page)
-    async def process_horizontal_rule(self, elem: HorizontalRule, page: Page):  return await self.process_container(elem, page)
-    async def process_image(self, elem: Image, page: Page):                     return await self.process_container(elem, page)
-    async def process_line_block(self, elem: LineBlock, page: Page):            return await self.process_container(elem, page)
-    async def process_line_break(self, elem: LineBreak, page: Page):            return await self.process_container(elem, page)
-    async def process_line_item(self, elem: LineItem, page: Page):              return await self.process_container(elem, page)
-    async def process_link(self, elem: Link, page: Page):                       return await self.process_container(elem, page)
-    async def process_list_item(self, elem: ListItem, page: Page):              return await self.process_container(elem, page)
-    async def process_math(self, elem: Math, page: Page):                       return await self.process_container(elem, page)
-    async def process_note(self, elem: Note, page: Page):                       return await self.process_container(elem, page)
-    async def process_null(self, elem: Null, page: Page):                       return await self.process_container(elem, page)
-    async def process_ordered_list(self, elem: OrderedList, page: Page):        return await self.process_container(elem, page)
-    async def process_para(self, elem: Para, page: Page):                       return await self.process_container(elem, page)
-    async def process_plain(self, elem: Plain, page: Page):                     return await self.process_container(elem, page)
-    async def process_quoted(self, elem: Quoted, page: Page):                   return await self.process_container(elem, page)
-    async def process_raw_block(self, elem: RawBlock, page: Page):              return await self.process_container(elem, page)
-    async def process_raw_inline(self, elem: RawInline, page: Page):            return await self.process_container(elem, page)
-    async def process_small_caps(self, elem: SmallCaps, page: Page):            return await self.process_container(elem, page)
-    async def process_soft_break(self, elem: SoftBreak, page: Page):            return await self.process_container(elem, page)
-    async def process_space(self, elem: Space, page: Page):                     return await self.process_container(elem, page)
-    async def process_span(self, elem: Span, page: Page):                       return await self.process_container(elem, page)
-    async def process_str(self, elem: Str, page: Page):                         return await self.process_container(elem, page)
-    async def process_strikeout(self, elem: Strikeout, page: Page):             return await self.process_container(elem, page)
-    async def process_strong(self, elem: Strong, page: Page):                   return await self.process_container(elem, page)
-    async def process_subscript(self, elem: Subscript, page: Page):             return await self.process_container(elem, page)
-    async def process_superscript(self, elem: Superscript, page: Page):         return await self.process_container(elem, page)
-    async def process_table(self, elem: Table, page: Page):                     return await self.process_container(elem, page)
-    async def process_table_body(self, elem: TableBody, page: Page):            return await self.process_container(elem, page)
-    async def process_table_cell(self, elem: TableCell, page: Page):            return await self.process_container(elem, page)
-    async def process_table_foot(self, elem: TableFoot, page: Page):            return await self.process_container(elem, page)
-    async def process_table_head(self, elem: TableHead, page: Page):            return await self.process_container(elem, page)
-    async def process_table_row(self, elem: TableRow, page: Page):              return await self.process_container(elem, page)
-    async def process_underline(self, elem: Underline, page: Page):             return await self.process_container(elem, page)
+    async def process_block_quote(self, elem: BlockQuote, page: Page) -> tuple[Element, ...]:          return await self.process_container(elem, page),
+    async def process_bullet_list(self, elem: BulletList, page: Page) -> tuple[Element, ...]:          return await self.process_container(elem, page),
+    async def process_caption(self, elem: Caption, page: Page) -> tuple[Element, ...]:                 return await self.process_container(elem, page),
+    async def process_citation(self, elem: Citation, page: Page) -> tuple[Element, ...]:               return await self.process_container(elem, page),
+    async def process_cite(self, elem: Cite, page: Page) -> tuple[Element, ...]:                       return await self.process_container(elem, page),
+    async def process_code(self, elem: Code, page: Page) -> tuple[Element, ...]:                       return await self.process_container(elem, page),
+    async def process_code_block(self, elem: CodeBlock, page: Page) -> tuple[Element, ...]:            return await self.process_container(elem, page),
+    async def process_definition(self, elem: Definition, page: Page) -> tuple[Element, ...]:           return await self.process_container(elem, page),
+    async def process_definition_item(self, elem: DefinitionItem, page: Page) -> tuple[Element, ...]:  return await self.process_container(elem, page),
+    async def process_definition_list(self, elem: DefinitionList, page: Page) -> tuple[Element, ...]:  return await self.process_container(elem, page),
+    async def process_div(self, elem: Div, page: Page) -> tuple[Element, ...]:                         return await self.process_container(elem, page),
+    async def process_emph(self, elem: Emph, page: Page) -> tuple[Element, ...]:                       return await self.process_container(elem, page),
+    async def process_header(self, elem: Header, page: Page) -> tuple[Element, ...]:                   return await self.process_container(elem, page),
+    async def process_horizontal_rule(self, elem: HorizontalRule, page: Page) -> tuple[Element, ...]:  return await self.process_container(elem, page),
+    async def process_image(self, elem: Image, page: Page) -> tuple[Element, ...]:                     return await self.process_container(elem, page),
+    async def process_line_block(self, elem: LineBlock, page: Page) -> tuple[Element, ...]:            return await self.process_container(elem, page),
+    async def process_line_break(self, elem: LineBreak, page: Page) -> tuple[Element, ...]:            return await self.process_container(elem, page),
+    async def process_line_item(self, elem: LineItem, page: Page) -> tuple[Element, ...]:              return await self.process_container(elem, page),
+    async def process_link(self, elem: Link, page: Page) -> tuple[Element, ...]:                       return await self.process_container(elem, page),
+    async def process_list_item(self, elem: ListItem, page: Page) -> tuple[Element, ...]:              return await self.process_container(elem, page),
+    async def process_math(self, elem: Math, page: Page) -> tuple[Element, ...]:                       return await self.process_container(elem, page),
+    async def process_note(self, elem: Note, page: Page) -> tuple[Element, ...]:                       return await self.process_container(elem, page),
+    async def process_null(self, elem: Null, page: Page) -> tuple[Element, ...]:                       return await self.process_container(elem, page),
+    async def process_ordered_list(self, elem: OrderedList, page: Page) -> tuple[Element, ...]:        return await self.process_container(elem, page),
+    async def process_para(self, elem: Para, page: Page) -> tuple[Element, ...]:                       return await self.process_container(elem, page),
+    async def process_plain(self, elem: Plain, page: Page) -> tuple[Element, ...]:                     return await self.process_container(elem, page),
+    async def process_quoted(self, elem: Quoted, page: Page) -> tuple[Element, ...]:                   return await self.process_container(elem, page),
+    async def process_raw_block(self, elem: RawBlock, page: Page) -> tuple[Element, ...]:              return await self.process_container(elem, page),
+    async def process_raw_inline(self, elem: RawInline, page: Page) -> tuple[Element, ...]:            return await self.process_container(elem, page),
+    async def process_small_caps(self, elem: SmallCaps, page: Page) -> tuple[Element, ...]:            return await self.process_container(elem, page),
+    async def process_soft_break(self, elem: SoftBreak, page: Page) -> tuple[Element, ...]:            return await self.process_container(elem, page),
+    async def process_space(self, elem: Space, page: Page) -> tuple[Element, ...]:                     return await self.process_container(elem, page),
+    async def process_span(self, elem: Span, page: Page) -> tuple[Element, ...]:                       return await self.process_container(elem, page),
+    async def process_str(self, elem: Str, page: Page) -> tuple[Element, ...]:                         return await self.process_container(elem, page),
+    async def process_strikeout(self, elem: Strikeout, page: Page) -> tuple[Element, ...]:             return await self.process_container(elem, page),
+    async def process_strong(self, elem: Strong, page: Page) -> tuple[Element, ...]:                   return await self.process_container(elem, page),
+    async def process_subscript(self, elem: Subscript, page: Page) -> tuple[Element, ...]:             return await self.process_container(elem, page),
+    async def process_superscript(self, elem: Superscript, page: Page) -> tuple[Element, ...]:         return await self.process_container(elem, page),
+    async def process_table(self, elem: Table, page: Page) -> tuple[Element, ...]:                     return await self.process_container(elem, page),
+    async def process_table_body(self, elem: TableBody, page: Page) -> tuple[Element, ...]:            return await self.process_container(elem, page),
+    async def process_table_cell(self, elem: TableCell, page: Page) -> tuple[Element, ...]:            return await self.process_container(elem, page),
+    async def process_table_foot(self, elem: TableFoot, page: Page) -> tuple[Element, ...]:            return await self.process_container(elem, page),
+    async def process_table_head(self, elem: TableHead, page: Page) -> tuple[Element, ...]:            return await self.process_container(elem, page),
+    async def process_table_row(self, elem: TableRow, page: Page) -> tuple[Element, ...]:              return await self.process_container(elem, page),
+    async def process_underline(self, elem: Underline, page: Page) -> tuple[Element, ...]:             return await self.process_container(elem, page),

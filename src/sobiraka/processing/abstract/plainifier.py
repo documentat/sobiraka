@@ -30,20 +30,23 @@ class Plainifier(Processor):
 
     ################################################################################
 
-    async def process_bullet_list(self, elem: BulletList, page: Page):
+    async def process_bullet_list(self, elem: BulletList, page: Page) -> tuple[Element, ...]:
         result: list[Element] = []
 
         for item in elem.content.list:
             for item_content in item.content.list:
-                result.extend(await self.process_element(item_content, page))
+                match item_content:
+                    case Plain() as plain:
+                        result.extend(await self.process_plain(plain, page))
+                    case BulletList() as sublist:
+                        result.extend(await self.process_bullet_list(sublist, page))
+                    case _:
+                        raise TypeError(type(item_content))
 
         return tuple(result)
 
     async def process_image(self, elem: Image, page: Page):
         return Str(elem.title)
-
-    async def process_plain(self, elem: Plain, page: Page):
-        return await self.process_container(elem.content, page)
 
     async def process_table(self, elem: Table, page: Page):
         result: list[Element] = []
