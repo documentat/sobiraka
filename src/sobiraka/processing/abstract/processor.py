@@ -56,7 +56,7 @@ class Processor(Dispatcher):
         This method is called by :obj:`.Page.processed1`.
         """
         await self.load_page(page)
-        await self.process_element(page.doc, page)
+        await self.process_container(page.doc, page)
         save_debug_json('s1', page)
         return page
 

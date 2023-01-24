@@ -1,7 +1,7 @@
 from asyncio import create_subprocess_exec
 from subprocess import PIPE
 
-from panflute import Element, Image, Str, Table, TableBody, TableCell, TableHead
+from panflute import BulletList, Element, Image, Plain, Str, Table, TableBody, TableCell, TableHead
 
 from sobiraka.models import Page
 from sobiraka.utils import panflute_to_bytes
@@ -28,8 +28,22 @@ class Plainifier(Processor):
         result = await pandoc.stdout.read()
         return result.decode('utf-8')
 
+    ################################################################################
+
+    async def process_bullet_list(self, elem: BulletList, page: Page):
+        result: list[Element] = []
+
+        for item in elem.content.list:
+            for item_content in item.content.list:
+                result.extend(await self.process_element(item_content, page))
+
+        return tuple(result)
+
     async def process_image(self, elem: Image, page: Page):
         return Str(elem.title)
+
+    async def process_plain(self, elem: Plain, page: Page):
+        return await self.process_container(elem.content, page)
 
     async def process_table(self, elem: Table, page: Page):
         result: list[Element] = []
