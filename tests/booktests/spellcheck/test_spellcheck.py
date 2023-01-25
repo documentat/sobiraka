@@ -5,7 +5,7 @@ from sobiraka.models import Page
 from sobiraka.processing import SpellChecker
 
 
-class TestSpellCheck(BookTestCase[SpellChecker]):
+class TestSpellCheck(BookTestCase.Base[SpellChecker]):
     async def asyncSetUp(self):
         await super().asyncSetUp()
         self.page1, = self.book.pages

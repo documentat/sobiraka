@@ -4,7 +4,7 @@ from unittest import main
 from booktestcase import BookTestCase
 
 
-class TestLevels(BookTestCase):
+class TestLevels(BookTestCase.Base):
     def test_ids(self):
         ids = tuple(page.id for page in self.book.pages)
         self.assertSequenceEqual(ids, (

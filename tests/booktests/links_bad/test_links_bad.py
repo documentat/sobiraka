@@ -6,7 +6,7 @@ from sobiraka.models import Href, Page, PageHref, UnknownPageHref, UrlHref
 from sobiraka.models.error import BadLinkError, ProcessingError
 
 
-class TestLinksBad(BookTestCase):
+class TestLinksBad(BookTestCase.Base):
     async def asyncSetUp(self):
         await super().asyncSetUp()
         self.document0, self.document1, self.document2, self.document3, self.document4 = self.book.pages

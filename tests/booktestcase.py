@@ -10,31 +10,33 @@ from sobiraka.processing.abstract import Plainifier, Processor
 
 T = TypeVar('T', bound=Processor)
 
-class BookTestCase(IsolatedAsyncioTestCase, Generic[T]):
-    maxDiff = None
 
-    async def asyncSetUp(self):
-        filepath = Path(getfile(self.__class__))
-        self.dir: Path = filepath.parent
+class BookTestCase:
+    class Base(IsolatedAsyncioTestCase, Generic[T]):
+        maxDiff = None
 
-        book_yaml = self.dir / f'{filepath.stem}.yaml'
-        self.book = Book.from_manifest(book_yaml)
+        async def asyncSetUp(self):
+            filepath = Path(getfile(self.__class__))
+            self.dir: Path = filepath.parent
 
-        awaitables = tuple(self.processor.process2(page) for page in self.book.pages)
-        await gather(*awaitables)
+            book_yaml = self.dir / f'{filepath.stem}.yaml'
+            self.book = Book.from_manifest(book_yaml)
 
-    @cached_property
-    def processor(self) -> T:
-        return Plainifier(self.book)
+            awaitables = tuple(self.processor.process2(page) for page in self.book.pages)
+            await gather(*awaitables)
 
-    def subTest(self, msg: Any = ..., **params: Any):
-        match msg:
-            case Page() as page:
-                return super().subTest(page.relative_path.with_suffix(''))
-            case _:
-                return super().subTest(msg)
+        @cached_property
+        def processor(self) -> T:
+            return Plainifier(self.book)
 
-    def test_errors(self):
-        for page in self.book.pages:
-            with self.subTest(page):
-                self.assertEqual(page.errors, set())
+        def subTest(self, msg: Any = ..., **params: Any):
+            match msg:
+                case Page() as page:
+                    return super().subTest(page.relative_path.with_suffix(''))
+                case _:
+                    return super().subTest(msg)
+
+        def test_errors(self):
+            for page in self.book.pages:
+                with self.subTest(page):
+                    self.assertEqual(page.errors, set())
