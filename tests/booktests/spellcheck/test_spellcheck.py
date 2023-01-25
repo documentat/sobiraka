@@ -5,7 +5,7 @@ from sobiraka.models import Page
 from sobiraka.processing import SpellChecker
 
 
-class TestSpellCheck(BookTestCase.Base[SpellChecker]):
+class TestSpellCheck(BookTestCase[SpellChecker]):
     async def asyncSetUp(self):
         await super().asyncSetUp()
         self.page1, = self.book.pages
@@ -38,3 +38,6 @@ class TestSpellCheck(BookTestCase.Base[SpellChecker]):
             with self.subTest(page):
                 actual = self.processor.misspelled_words[page]
                 self.assertEqual(actual, expected)
+
+
+del BookTestCase

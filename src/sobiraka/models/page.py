@@ -109,9 +109,9 @@ class Page:
         """
         The depth of the page's location within its :class:`.Book`.
 
-        Equals to number of parts in the :data:`id`.
+        Equals to number of parts in the :data:`id` plus 1.
         """
-        level = len(self.relative_path.parts)
+        level = len(self.relative_path.parts) + 1
         if self.path.stem == '0' or self.path.stem.startswith('0-'):
             level -= 1
         return level
