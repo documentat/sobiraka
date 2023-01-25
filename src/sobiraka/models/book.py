@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from functools import cached_property
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 
 import yaml
 from schema import And, Optional, Schema, Use
@@ -52,6 +52,7 @@ class Book:
     paths: BookConfig_Paths = field(default_factory=BookConfig_Paths, kw_only=True)
     latex: BookConfig_Latex = field(default_factory=BookConfig_Latex, kw_only=True)
     spellcheck: BookConfig_SpellCheck = field(default_factory=BookConfig_SpellCheck, kw_only=True)
+    variables: dict[str, Any] = field(default_factory=dict)
 
     def __repr__(self):
         return f'<{self.__class__.__name__}: {repr(str(self.paths.root))}>'
@@ -74,6 +75,7 @@ class Book:
                 Optional('dictionaries'): [str],
                 Optional('exceptions'): [And(str, Use(lambda x: (manifest_path.parent / x).resolve()))],
             },
+            Optional('variables', default={}): dict,
         })
 
         manifest_path = manifest_path.resolve()
@@ -87,6 +89,7 @@ class Book:
             paths=BookConfig_Paths(**manifest['paths'], manifest_path=manifest_path),
             latex=BookConfig_Latex(**manifest['latex']),
             spellcheck=BookConfig_SpellCheck(**manifest['spellcheck']),
+            variables=manifest['variables'],
         )
         return book
 

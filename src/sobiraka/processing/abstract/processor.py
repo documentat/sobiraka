@@ -4,6 +4,7 @@ from io import BytesIO
 from pathlib import Path
 from subprocess import PIPE
 
+import jinja2
 import panflute
 from panflute import Header, Image, Link, stringify
 
@@ -19,6 +20,20 @@ class Processor(Dispatcher):
     def __init__(self, book: Book):
         self.book: Book = book
 
+        self.jinja = jinja2.Environment(
+            comment_start_string='{{#',
+            comment_end_string='#}}',
+            enable_async=True)
+
+    def get_syntax(self, suffix: str) -> str:
+        match suffix:
+            case '.md':
+                return 'markdown'
+            case '.rst':
+                return 'rst-auto_identifiers'
+            case _:  # pragma: no cover
+                raise NotImplementedError(suffix)
+
     @on_demand
     async def load_page(self, page: Page):
         """
@@ -26,21 +41,16 @@ class Processor(Dispatcher):
 
         This method is called by :obj:`.Page.loaded`.
         """
-        match page.path.suffix:
-            case '.md':
-                syntax = 'markdown'
-            case '.rst':
-                syntax = 'rst-auto_identifiers'
-            case _:  # pragma: no cover
-                raise NotImplementedError(page.path.suffix)
+        page_text = page.path.read_text('utf-8')
+        page_text = await self.jinja.from_string(page_text).render_async(self.book.variables)
 
         pandoc = await create_subprocess_exec(
             'pandoc',
-            '--from', syntax,
+            '--from', self.get_syntax(page.path.suffix),
             '--to', 'json',
             stdin=PIPE,
             stdout=PIPE)
-        json_bytes, _ = await pandoc.communicate(page.path.read_bytes())
+        json_bytes, _ = await pandoc.communicate(page_text.encode('utf-8'))
         assert pandoc.returncode == 0
 
         page.doc = panflute.load(BytesIO(json_bytes))

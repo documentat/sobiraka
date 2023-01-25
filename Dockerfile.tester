@@ -4,7 +4,7 @@ RUN arch=$(arch | sed s:aarch64:arm64: | sed s:x86_64:amd64:) \
     && wget https://github.com/jgm/pandoc/releases/download/2.18/pandoc-2.18-linux-$arch.tar.gz -O- | tar -xz --strip-components=1
 
 FROM python:3.11-slim-bullseye AS get-dependencies-pip
-RUN pip install --no-cache-dir more-itertools~=9.0.0 pyyaml~=5.3.1 panflute~=2.2.3 schema~=0.7.5 coverage~=7.0.0
+RUN pip install --no-cache-dir jinja2~=3.1.2 more-itertools~=9.0.0 pyyaml~=5.3.1 panflute~=2.2.3 schema~=0.7.5 coverage~=7.0.0
 
 FROM python:3.11-slim-bullseye AS final
 
