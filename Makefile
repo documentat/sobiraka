@@ -1,25 +1,25 @@
 .PHONY: *
 
-IMAGE ?= sobiraka-dev
+build-docker-release:
+	@DOCKER_BUILDKIT=1 \
+		docker build . \
+		--tag sobiraka:release
 
-DOCKER_RUN = \
-	docker run --rm -it \
-	--user $$(id -u):$$(id -g) \
-	--volume $$(pwd):/WORKDIR \
-	${IMAGE}
-
-docker:
-	@echo Preparing Docker image
-	@DOCKER_BUILDKIT=1 docker build . \
-		--file Dockerfile.ci \
-		--tag ${IMAGE} \
+build-docker-tester:
+	@DOCKER_BUILDKIT=1 \
+		docker build . \
+		--target tester \
 		--build-arg UID=$$(id -u) \
-		--build-arg GID=$$(id -g)
+		--build-arg GID=$$(id -g) \
+		--tag sobiraka:tester
 
 tests:
 	@rm -f .coverage
 	@(cd tests && PYTHONPATH=../src python -m coverage run --source=sobiraka -m unittest discover --start-directory=. --verbose)
 	@(cd tests && python -m coverage report --precision=1 --skip-empty --skip-covered --show-missing)
 
-tests-in-docker:
-	@docker run --rm -it -v ${PWD}:/PRJ ${IMAGE} make tests
+docs:
+	@rm -rf docs/modules
+	@rm -rf build/docs/*
+	@SPHINX_APIDOC_OPTIONS=members sphinx-apidoc src/sobiraka --force --separate --output-dir docs/modules
+	@sphinx-build -a -j auto docs build/docs

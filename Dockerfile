@@ -12,24 +12,32 @@ COPY setup.py .
 COPY src src
 RUN python setup.py sdist
 
-FROM python:3.11-alpine3.16 AS install-packages
+FROM python:3.11-alpine3.16 AS install-dependencies
 RUN ln -s /usr/local/bin/python /usr/bin/python
 COPY --from=build-package /sobiraka.egg-info/requires.txt .
 RUN /usr/bin/python -m pip install --prefix /prefix --requirement requires.txt
+
+FROM install-dependencies AS install-package
 COPY --from=build-package /dist/*.tar.gz .
 RUN /usr/bin/python -m pip install --prefix /prefix *.tar.gz
 
-FROM pandoc/latex:2.19 AS final
+FROM pandoc/latex:2.19 AS common
+RUN chmod 777 /var/cache/fontconfig
 RUN apk add --no-cache python3~=3.11 --repository=http://dl-cdn.alpinelinux.org/alpine/edge/main/
-RUN apk add --no-cache py3-pip --repository=http://dl-cdn.alpinelinux.org/alpine/edge/community/
 RUN apk add hunspell
-
 RUN tlmgr install koma-script ragged2e
-
 COPY --from=get-pandoc /tmp/pandoc /usr/local
 COPY --from=get-fonts /tmp/fonts /usr/share/fonts/truetype
-COPY --from=install-packages /prefix /usr
-
-RUN chmod 777 /var/cache/fontconfig
 WORKDIR /W
 ENTRYPOINT [""]
+
+FROM common AS tester
+RUN apk add --no-cache py3-pip --repository=http://dl-cdn.alpinelinux.org/alpine/edge/community/
+ARG UID=1000
+ARG GID=1000
+RUN addgroup mygroup -g $GID
+RUN adduser myuser -u $UID -G mygroup -D
+CMD "pip install -e . && sobiraka"
+
+FROM common AS release
+COPY --from=install-package /prefix /usr
