@@ -20,7 +20,7 @@ class Plainifier(Processor):
             '--wrap', 'none',
             stdin=PIPE,
             stdout=PIPE)
-        pandoc.stdin.write(panflute_to_bytes(page.doc))
+        pandoc.stdin.write(panflute_to_bytes(self.doc[page]))
         pandoc.stdin.close()
         await pandoc.wait()
         assert pandoc.returncode == 0

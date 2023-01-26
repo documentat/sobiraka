@@ -1,67 +1,27 @@
 from __future__ import annotations
 
 import re
+from dataclasses import dataclass
 from functools import cached_property
 from pathlib import Path
-from typing import Awaitable
 
-from panflute import Doc
-
-from . import Href
 from .book import Book
-from .error import ProcessingError
 
 
+@dataclass(frozen=True)
 class Page:
     """
     Representation of a single source file in the documentation.
 
     During the processing by the :func:`.load_page()`, :func:`.process1()` and :func:`.process2()` functions, some of the page's fields may be altered.
     """
+    book: Book
+    """The :class:`.Book` this page belongs to."""
 
-    def __init__(self, book: Book, path: Path):
-        """
-        :param book: The :class:`.Book` to which this page belongs.
-        :param path: The source path of the page,
-        """
-
-        self.book: Book = book
-        """The :class:`.Book` this page belongs to."""
-
-        self.path: Path = path
-        """Absolute path to the page source, relative to :data:`.Book.root`.
-        
-        :see also: :data:`relative_path`"""
-
-        self.doc: Doc | None = None
-        """The document tree, as parsed by `Pandoc <https://pandoc.org/>`_ and `Panflute <http://scorreia.com/software/panflute/>`_.
-        
-        Do not rely on this value until :data:`loaded` is triggered.
-        """
-
-        self.title: str | None = None
-        """Page title.
-        
-        Do not rely on this value until :data:`processed1` is triggered."""
-
-        self.links: list[Href] = []
-        """All links present on the page, both internal and external.
-        
-        Do not rely on this value until :data:`processed1` is triggered."""
-
-        self.anchors: dict[str, list[str]] = {}
-        """Dictionary containing anchors and corresponding readable titles.
-        
-        Note that sometime a user leaves anchors empty or specifies identical anchors for multiple headers by mistake.
-        However, this is not considered a critical error as long as no page contains links to this anchor.
-        For that reason, all the titles for an anchor are stored as a list (in order of appearance on the page),
-        and it is up to :func:`.process2_link()` to report an error if necessary.
-        """
-
-        self.errors: set[ProcessingError] = set()
-
-        self.process2_tasks: list[Awaitable] = []
-        """:meta private:"""
+    path: Path
+    """Absolute path to the page source, relative to :data:`.Book.root`.
+    
+    :see also: :data:`relative_path`"""
 
     def __repr__(self):
         return f'<Page: {str(self.relative_path)!r}>'

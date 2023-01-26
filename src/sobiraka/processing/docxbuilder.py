@@ -6,7 +6,6 @@ from subprocess import PIPE
 import panflute
 from panflute import Doc
 
-from sobiraka.utils import print_errors
 from .abstract import Processor
 
 

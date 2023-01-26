@@ -14,11 +14,11 @@ class TestLinksBad(BookTestCase):
     def test_ids(self):
         ids = tuple(page.id for page in self.book.pages)
         self.assertSequenceEqual(ids, (
-            'document0',
-            'sub--document1',
-            'sub--subsub--document2',
-            'sub--subsub--document3',
-            'sub--subsub--subsubsub--document4',
+            '--document0',
+            '--sub--document1',
+            '--sub--subsub--document2',
+            '--sub--subsub--document3',
+            '--sub--subsub--subsubsub--document4',
         ))
 
     def test_errors(self):
@@ -37,7 +37,7 @@ class TestLinksBad(BookTestCase):
         }
         for page, expected_errors in data.items():
             with self.subTest(page):
-                self.assertEqual(page.errors, set(expected_errors))
+                self.assertEqual(self.processor.errors[page], set(expected_errors))
 
     def test_links(self):
         data: dict[Page, tuple[Href, ...]] = {
@@ -79,7 +79,7 @@ class TestLinksBad(BookTestCase):
         }
         for page, expected_links in data.items():
             with self.subTest(page):
-                self.assertSequenceEqual(expected_links, tuple(page.links))
+                self.assertSequenceEqual(expected_links, tuple(self.processor.links[page]))
 
 
 del BookTestCase

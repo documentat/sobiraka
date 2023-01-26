@@ -12,11 +12,11 @@ class TestLinksGood(BookTestCase):
     def test_ids(self):
         ids = tuple(page.id for page in self.book.pages)
         self.assertSequenceEqual(ids, (
-            'document0',
-            'sub--document1',
-            'sub--subsub--document2',
-            'sub--subsub--document3',
-            'sub--subsub--subsubsub--document4',
+            '--document0',
+            '--sub--document1',
+            '--sub--subsub--document2',
+            '--sub--subsub--document3',
+            '--sub--subsub--subsubsub--document4',
         ))
 
     def test_links(self):
@@ -59,7 +59,7 @@ class TestLinksGood(BookTestCase):
         }
         for page, expected_links in data.items():
             with self.subTest(page):
-                self.assertSequenceEqual(tuple(page.links), expected_links)
+                self.assertSequenceEqual(tuple(self.processor.links[page]), expected_links)
 
 
 del BookTestCase

@@ -8,7 +8,7 @@ from panflute import Doc
 
 from sobiraka.models import Book, Page
 from sobiraka.runtime import RT
-from sobiraka.utils import on_demand, panflute_to_bytes, print_errors
+from sobiraka.utils import on_demand, panflute_to_bytes
 from .abstract import Processor
 
 
@@ -21,14 +21,15 @@ class PdfBuilder(Processor):
         output.parent.mkdir(parents=True, exist_ok=True)
 
         for page in self.book.pages:
+            hash(page.book)
             self.generate_latex(page).start()
 
         big_doc = Doc()
         for page in self.book.pages:
             await self.generate_latex(page)
-            big_doc.content.extend(page.doc.content)
+            big_doc.content.extend(self.doc[page].content)
 
-        if print_errors(self.book):
+        if self.print_errors():
             raise Exception
 
         xelatex_workdir = RT.TMP / f'tex-{self.book.id}'
@@ -74,7 +75,7 @@ class PdfBuilder(Processor):
     async def generate_latex(self, page: Page):
         await self.process2(page)
 
-        if len(page.doc.content) == 0:
+        if len(self.doc[page].content) == 0:
             self._latex[page] = b''
 
         else:
@@ -86,7 +87,7 @@ class PdfBuilder(Processor):
                 '--wrap', 'none',
                 stdin=PIPE,
                 stdout=PIPE)
-            pandoc.stdin.write(panflute_to_bytes(page.doc))
+            pandoc.stdin.write(panflute_to_bytes(self.doc[page]))
             pandoc.stdin.close()
             await pandoc.wait()
             assert pandoc.returncode == 0

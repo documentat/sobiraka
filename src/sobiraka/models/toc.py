@@ -26,7 +26,7 @@ class TocGenerator:
             if page is not self.page:
                 await self.processor.process1(page)
             prefix = '  ' * page.level
-            text += f'{prefix}- {page.title}: {page.relative_path}\n'
+            text += f'{prefix}- {self.processor.titles[page]}: {page.relative_path}\n'
 
         text = dedent(text)
         return text

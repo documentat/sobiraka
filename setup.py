@@ -6,6 +6,7 @@ setup(
     author='Max Alibaev',
     python_requires='~=3.11',
     install_requires=[
+        'frozendict~=2.3.4',
         'jinja2~=3.1.2',
         'more-itertools~=9.0.0',
         'panflute~=2.2.3',

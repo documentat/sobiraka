@@ -1,15 +1,18 @@
 import re
+import sys
 from asyncio import create_subprocess_exec, gather
+from collections import defaultdict
 from io import BytesIO
 from pathlib import Path
 from subprocess import PIPE
+from typing import Awaitable
 
 import jinja2
 import panflute
-from panflute import Header, Image, Link, stringify
+from panflute import Doc, Header, Image, Link, stringify
 
 from sobiraka.models import Book, Href, Page, UrlHref
-from sobiraka.models.error import BadLinkError
+from sobiraka.models.error import BadLinkError, ProcessingError
 from sobiraka.models.href import PageHref, UnknownPageHref
 from sobiraka.utils import LatexBlock, on_demand, save_debug_json
 from .dispatcher import Dispatcher
@@ -24,6 +27,37 @@ class Processor(Dispatcher):
             comment_start_string='{{#',
             comment_end_string='#}}',
             enable_async=True)
+
+        self.doc: dict[Page, Doc] = {}
+        """The document tree, as parsed by `Pandoc <https://pandoc.org/>`_ and `Panflute <http://scorreia.com/software/panflute/>`_.
+        
+        Do not rely on the value for page here until :func:`load()` is awaited for that page."""
+
+        self.titles: dict[Page, str | None] = {}
+        """Page titles.
+        
+        Do not rely on the value for page here until :func:`process1()` is awaited for that page."""
+
+        self.links: dict[Page, list[Href]] = defaultdict(list)
+        """All links present on the page, both internal and external.-
+        
+        Do not rely on the value for page here until :func:`process1()` is awaited for that page."""
+
+        self.anchors: dict[Page, dict[str, list[str]]] = defaultdict(dict)
+        """Dictionary containing anchors and corresponding readable titles.
+        
+        Do not rely on the value for page here until :func:`process1()` is awaited for that page.
+        
+        Note that sometime a user leaves anchors empty or specifies identical anchors for multiple headers by mistake.
+        However, this is not considered a critical error as long as no page contains links to this anchor.
+        For that reason, all the titles for an anchor are stored as a list (in order of appearance on the page),
+        and it is up to :func:`.process2_link()` to report an error if necessary.
+        """
+
+        self.errors: dict[Page, set[ProcessingError]] = defaultdict(set)
+
+        self.process2_tasks: dict[Page, list[Awaitable]] = defaultdict(list)
+        """:meta private:"""
 
     def get_syntax(self, suffix: str) -> str:
         match suffix:
@@ -58,8 +92,8 @@ class Processor(Dispatcher):
         json_bytes, _ = await pandoc.communicate(page_text.encode('utf-8'))
         assert pandoc.returncode == 0
 
-        page.doc = panflute.load(BytesIO(json_bytes))
-        save_debug_json('s0', page)
+        self.doc[page] = panflute.load(BytesIO(json_bytes))
+        save_debug_json('s0', page, self.doc[page])
 
     @on_demand
     async def process1(self, page: Page) -> Page:
@@ -71,8 +105,8 @@ class Processor(Dispatcher):
         This method is called by :obj:`.Page.processed1`.
         """
         await self.load_page(page)
-        await self.process_container(page.doc, page)
-        save_debug_json('s1', page)
+        await self.process_container(self.doc[page], page)
+        save_debug_json('s1', page, self.doc[page])
         return page
 
     async def process_header(self, elem: Header, page: Page):
@@ -81,15 +115,15 @@ class Processor(Dispatcher):
         if not elem.identifier:
             elem.identifier = stringify(elem).lower().replace(' ', '-')
 
-        page.anchors.setdefault(elem.identifier, []).append(stringify(elem))
+        self.anchors[page].setdefault(elem.identifier, []).append(stringify(elem))
 
         if elem.level == 1:
             full_id = page.id
         else:
             full_id = page.id + '--' + elem.identifier
 
-        if elem.level == 1 and page.title is None:
-            page.title = stringify(elem)
+        if elem.level == 1 and page not in self.titles:
+            self.titles[page] = stringify(elem)
 
         nodes.insert(0, LatexBlock(fr'''
             \hypertarget{{{full_id}}}{{}}
@@ -126,27 +160,40 @@ class Processor(Dispatcher):
                     href = PageHref(target_page, anchor)
                 except (KeyError, ValueError):
                     href = UnknownPageHref(target, anchor)
-                    page.errors.add(BadLinkError(target))
+                    self.errors[page].add(BadLinkError(target))
 
-        page.links.append(href)
+        self.links[page].append(href)
         if isinstance(href, PageHref):
-            page.process2_tasks.append(self.process2_link(page, elem, href))
+            self.process2_tasks[page].append(self.process2_link(page, elem, href))
 
     @on_demand
     async def process2(self, page: Page):
         await self.process1(page)
-        await gather(*page.process2_tasks)
-        save_debug_json('s2', page)
+        await gather(*self.process2_tasks[page])
+        save_debug_json('s2', page, self.doc[page])
 
     async def process2_link(self, page: Page, elem: Link, href: PageHref):
         await self.process1(href.target)
 
         elem.url = '#' + href.target.id
-        elem.title = href.target.title
+        elem.title = self.titles[href.target]
 
         if href.anchor:
             try:
                 elem.url += '--' + href.anchor
-                elem.title = href.target.anchors[href.anchor]
+                elem.title = self.anchors[href.target][href.anchor]
             except KeyError:
-                page.errors.add(BadLinkError(f'{href.target.relative_path}#{href.anchor}'))
+                self.errors[page].add(BadLinkError(f'{href.target.relative_path}#{href.anchor}'))
+
+    def print_errors(self) -> bool:
+        errors_found: bool = False
+        for page in self.book.pages:
+            if self.errors[page]:
+                message = f'Errors in {page.relative_path}:'
+                errors = sorted(self.errors[page], key=lambda e: (e.__class__.__name__, e))
+                for error in errors:
+                    message += f'\n    {error}'
+                message += '\n'
+                print(message, file=sys.stderr)
+                errors_found = True
+        return errors_found
