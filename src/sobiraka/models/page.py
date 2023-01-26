@@ -52,18 +52,10 @@ class Page:
         self.anchors: dict[str, list[str]] = {}
         """Dictionary containing anchors and corresponding readable titles.
         
-        Do not rely on this value until :data:`processed2` is triggered.
-        
         Note that sometime a user leaves anchors empty or specifies identical anchors for multiple headers by mistake.
         However, this is not considered a critical error as long as no page contains links to this anchor.
         For that reason, all the titles for an anchor are stored as a list (in order of appearance on the page),
         and it is up to :func:`.process2_link()` to report an error if necessary.
-        """
-
-        self.latex: bytes | None = None
-        """
-        
-        Do not rely on this value until :data:`latex_generated` is triggered.
         """
 
         self.errors: set[ProcessingError] = set()

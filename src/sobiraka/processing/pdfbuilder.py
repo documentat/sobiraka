@@ -6,13 +6,16 @@ from subprocess import DEVNULL, PIPE
 
 from panflute import Doc
 
-from sobiraka.models import Page
+from sobiraka.models import Book, Page
 from sobiraka.runtime import RT
 from sobiraka.utils import on_demand, panflute_to_bytes, print_errors
 from .abstract import Processor
 
 
 class PdfBuilder(Processor):
+    def __init__(self, book: Book):
+        super().__init__(book)
+        self._latex: dict[Page, bytes] = {}
 
     async def run(self, output: Path):
         output.parent.mkdir(parents=True, exist_ok=True)
@@ -48,7 +51,7 @@ class PdfBuilder(Processor):
                 await self.generate_latex(page)
                 latex_output.write(b'\n\n' + (80 * b'%'))
                 latex_output.write(b'\n\n%%% ' + bytes(page.relative_path) + b'\n')
-                latex_output.write(page.latex)
+                latex_output.write(self._latex[page])
 
             latex_output.write(b'\n\n' + (80 * b'%'))
             latex_output.write(b'\n\n\\end{sloppypar}\n\\end{document}')
@@ -72,7 +75,7 @@ class PdfBuilder(Processor):
         await self.process2(page)
 
         if len(page.doc.content) == 0:
-            page.latex = b''
+            self._latex[page] = b''
 
         else:
             pandoc = await create_subprocess_exec(
@@ -87,10 +90,10 @@ class PdfBuilder(Processor):
             pandoc.stdin.close()
             await pandoc.wait()
             assert pandoc.returncode == 0
-            page.latex = await pandoc.stdout.read()
+            self._latex[page] = await pandoc.stdout.read()
 
         if RT.TMP:
-            (RT.TMP / 'content' / page.relative_path.with_suffix('.tex')).write_bytes(page.latex)
+            (RT.TMP / 'content' / page.relative_path.with_suffix('.tex')).write_bytes(self._latex[page])
 
 
 def print_xelatex_error(log_path: Path):
