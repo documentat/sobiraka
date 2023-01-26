@@ -32,7 +32,9 @@ WORKDIR /W
 ENTRYPOINT [""]
 
 FROM common AS tester
+RUN apk add git make
 RUN apk add --no-cache py3-pip --repository=http://dl-cdn.alpinelinux.org/alpine/edge/community/
+RUN pip install coverage~=7.0.0
 ARG UID=1000
 ARG GID=1000
 RUN addgroup mygroup -g $GID

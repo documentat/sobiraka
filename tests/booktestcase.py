@@ -31,7 +31,10 @@ class BookTestCase(IsolatedAsyncioTestCase, Generic[T]):
     def subTest(self, msg: Any = ..., **params: Any):
         match msg:
             case Page() as page:
-                return super().subTest(page.relative_path.with_suffix(''))
+                if page.relative_path == Path('.'):
+                    return super().subTest('')
+                else:
+                    return super().subTest(page.relative_path.with_suffix(''))
             case _:
                 return super().subTest(msg)
 

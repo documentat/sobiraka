@@ -9,16 +9,20 @@ from sobiraka.models.error import BadLinkError, ProcessingError
 class TestLinksBad(BookTestCase):
     async def asyncSetUp(self):
         await super().asyncSetUp()
-        self.document0, self.document1, self.document2, self.document3, self.document4 = self.book.pages
+        _, self.document0, _, self.document1, _, self.document2, self.document3, _, self.document4 = self.book.pages
 
     def test_ids(self):
         ids = tuple(page.id for page in self.book.pages)
         self.assertSequenceEqual(ids, (
-            '--document0',
-            '--sub--document1',
-            '--sub--subsub--document2',
-            '--sub--subsub--document3',
-            '--sub--subsub--subsubsub--document4',
+            'r',
+            'r--document0',
+            'r--sub',
+            'r--sub--document1',
+            'r--sub--subsub',
+            'r--sub--subsub--document2',
+            'r--sub--subsub--document3',
+            'r--sub--subsub--subsubsub',
+            'r--sub--subsub--subsubsub--document4',
         ))
 
     def test_errors(self):

@@ -1,5 +1,6 @@
 paths:
-  include: ['src/**/*.rst']
+  root: src
+  include: ['**/*.rst']
 
 spellcheck:
   dictionaries:

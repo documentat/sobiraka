@@ -7,6 +7,7 @@ from typing import Any, TYPE_CHECKING
 
 import yaml
 from frozendict import frozendict
+from more_itertools import unique_justseen
 from schema import And, Optional, Schema, Use
 
 if TYPE_CHECKING: from .page import Page
@@ -55,9 +56,6 @@ class Book:
     spellcheck: BookConfig_SpellCheck = field(default_factory=BookConfig_SpellCheck, kw_only=True)
     variables: dict[str, Any] = field(default_factory=frozendict)
 
-    pages: tuple[Page, ...] = field(default_factory=tuple, init=False, hash=False)
-    pages_by_path: dict[Path, Page] = field(default_factory=frozendict, init=False, hash=False)
-
     def __repr__(self):
         return f'<{self.__class__.__name__}: {repr(str(self.paths.root))}>'
 
@@ -99,8 +97,10 @@ class Book:
         )
         return book
 
-    def __post_init__(self):
+    @cached_property
+    def pages_by_path(self) -> dict[Path, Page]:
         from .page import Page
+        from .emptypage import EmptyPage
 
         paths: set[Path] = set()
         for pattern in self.paths.include:
@@ -110,7 +110,9 @@ class Book:
 
         pages: list[Page] = []
         pages_by_path: dict[Path, Page] = {}
-        for path in list(sorted(paths)):
+        expected_paths: set[Path] = set()
+
+        for path in paths:
             relative_path = path.relative_to(self.root)
             absolute_path = path.resolve()
 
@@ -119,9 +121,23 @@ class Book:
             pages_by_path[relative_path] = page
             if page.is_index:
                 pages_by_path[relative_path.parent] = page
+                expected_paths |= set(relative_path.parent.parents)
+            else:
+                expected_paths |= set(relative_path.parents)
 
-        object.__setattr__(self, 'pages', tuple(pages))
-        object.__setattr__(self, 'pages_by_path', frozendict(pages_by_path))
+        for expected_path in expected_paths:
+            if expected_path not in pages_by_path:
+                page = EmptyPage(self, self.root / expected_path)
+                pages.append(page)
+                pages_by_path[expected_path] = page
+
+        return frozendict(sorted(pages_by_path.items()))
+
+    @property
+    def pages(self) -> list[Page]:
+        pages = sorted(self.pages_by_path.values(), key=lambda p: p.path)
+        pages = list(unique_justseen(pages))
+        return pages
 
     @property
     def root(self) -> Path:

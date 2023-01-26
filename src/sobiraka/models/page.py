@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from functools import cached_property
+from functools import cache, cached_property
 from pathlib import Path
 
 from .book import Book
@@ -75,23 +75,23 @@ class Page:
     @cached_property
     def id(self) -> str:
         """
-        Unique identifier of the page within its :class:`.Book`, based on :data:`relative_path`.
-
-        From each part of the path, a numerical prefix is removed. From the last part, the suffix is removed.
-        Additionally, if the very last part had numerical prefix ``0-``, the whole part is removed from the result.
-
-        The path separator is replaced by ``--``.
+        Textual representation of :data:`breadcrumbs`, unique within the :class:`.Book`.
 
         :examples:
-            ``2-company/5-about/0-index.md`` → ``company--about`` \n
-            ``2-company/5-about/1-contacts.md`` → ``company--about--contacts``
+            ``0-main.md`` → ``r`` \n
+            ``2-company/5-about/0-index.md`` → ``r--company--about`` \n
+            ``2-company/5-about/1-contacts.md`` → ``r--company--about--contacts``
         """
-        parts = list(self.relative_path.with_suffix('').parts)
-        if parts[-1] == '0' or parts[-1].startswith('0-'):
-            parts = parts[:-1]
-        for i, part in enumerate(parts):
-            parts[i] = re.sub(r'^(\d+-)?', '', part)
-        return '--' + '--'.join(parts)
+        parts: list[str] = []
+        for page in self.breadcrumbs:
+            path = page.relative_path
+            if page.is_index:
+                path = path.parent
+            if path == Path('.'):
+                parts.append('r')
+            else:
+                parts.append(re.sub(r'^(\d+-)?', '', path.stem))
+        return '--'.join(parts)
 
     @cached_property
     def level(self) -> int:
@@ -117,3 +117,17 @@ class Page:
             their corresponding antilevels will be `3`, `2`, `1`.
         """
         return self.book.max_level - self.level + 1
+
+    @property
+    def syntax(self) -> str:
+        match self.path.suffix:
+            case '.md':
+                return 'markdown'
+            case '.rst':
+                return 'rst-auto_identifiers'
+            case _:  # pragma: no cover
+                raise NotImplementedError(self.path.suffix)
+
+    @cache
+    def raw(self) -> str:
+        return self.path.read_text('utf-8')

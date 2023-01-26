@@ -8,18 +8,18 @@ class TestLevels(BookTestCase):
     def test_ids(self):
         ids = tuple(page.id for page in self.book.pages)
         self.assertSequenceEqual(ids, (
-            '--',
-            '--part1',
-            '--part1--chapter1',
-            '--part1--chapter2',
-            '--part1--chapter3',
-            '--part2',
-            '--part2--chapter1',
-            '--part2--chapter2',
-            '--part2--chapter3',
-            '--part2--chapter3--paragraph1',
-            '--part2--chapter3--paragraph2',
-            '--part2--chapter3--paragraph3',
+            'r',
+            'r--part1',
+            'r--part1--chapter1',
+            'r--part1--chapter2',
+            'r--part1--chapter3',
+            'r--part2',
+            'r--part2--chapter1',
+            'r--part2--chapter2',
+            'r--part2--chapter3',
+            'r--part2--chapter3--paragraph1',
+            'r--part2--chapter3--paragraph2',
+            'r--part2--chapter3--paragraph3',
         ))
 
     def test_max_level(self):

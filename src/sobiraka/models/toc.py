@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, replace
 from textwrap import dedent
+from typing import Callable
 
 from sobiraka.models import Page
 from sobiraka.processing.abstract import Processor
@@ -18,15 +19,18 @@ class TocGenerator:
     def local(self) -> TocGenerator:
         return replace(self, _is_local=True)
 
-    async def rst(self) -> str:
+    async def _plaintext(self, make_line: Callable[[Page], str]) -> str:
         pages = self.page.children_recursive if self._is_local else self.processor.book.pages
-
         text = ''
         for page in pages:
             if page is not self.page:
                 await self.processor.process1(page)
-            prefix = '  ' * page.level
-            text += f'{prefix}- {self.processor.titles[page]}: {page.relative_path}\n'
-
+            text += make_line(page)
         text = dedent(text)
         return text
+
+    async def rst(self) -> str:
+        return await self._plaintext(lambda page: f'{"  " * page.level}- {self.processor.titles[page]}: {page.relative_path}\n')
+
+    async def md(self) -> str:
+        return await self._plaintext(lambda page: f'{"  " * page.level}- {self.processor.titles[page]}: {page.relative_path}\n')

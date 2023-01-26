@@ -10,12 +10,14 @@ md5sum:
   stage: prepare
   image: docker
   script:
+    - echo >> .dockerignore
     - echo '!Dockerfile' >> .dockerignore
     - echo '!.dockerignore' >> .dockerignore
     - echo '!.gitlab-ci.yml' >> .dockerignore
-    - echo -e 'FROM docker\nWORKDIR /W\nADD * .' | docker build . --file - --tag context
-    - docker run --rm context ls -lAh
+    - echo -e 'FROM docker\nWORKDIR /W\nADD . .' | docker build . --file - --tag context
+    - docker run --rm context sh -c 'ls -lAh'
     - docker run --rm context sh -c 'ls | sort | xargs tar c --to-stdout | md5sum | cut -d" " -f1' > context_hash.txt
+    - cat context_hash.txt
   artifacts:
     paths:
       - context_hash.txt

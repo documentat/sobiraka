@@ -67,7 +67,24 @@ class TestBook(IsolatedAsyncioTestCase):
         ''')
         self.assertEqual(book.title, 'Example book')
         self.assertEqual(book.max_level, 4)
-        self.assertPagePaths(book, self.paths)
+        self.assertPagePaths(book, (
+            self.dir,
+            self.dir / 'cover.md',
+            self.dir / 'intro.md',
+            self.dir / 'part1',
+            self.dir / 'part1' / 'chapter1.md',
+            self.dir / 'part1' / 'chapter2.md',
+            self.dir / 'part1' / 'chapter3.md',
+            self.dir / 'part2',
+            self.dir / 'part2' / 'chapter1.md',
+            self.dir / 'part2' / 'chapter2.md',
+            self.dir / 'part2' / 'chapter3.md',
+            self.dir / 'part3',
+            self.dir / 'part3' / 'subdir',
+            self.dir / 'part3' / 'subdir' / 'chapter1.md',
+            self.dir / 'part3' / 'subdir' / 'chapter2.md',
+            self.dir / 'part3' / 'subdir' / 'chapter3.md',
+        ))
 
     async def test_include_only_top_level(self):
         book = await self.book_from_manifest('''
@@ -78,6 +95,7 @@ class TestBook(IsolatedAsyncioTestCase):
         self.assertEqual(book.title, 'Example book')
         self.assertEqual(book.max_level, 2)
         self.assertPagePaths(book, (
+            self.dir,
             self.dir / 'cover.md',
             self.dir / 'intro.md',
         ))
@@ -91,6 +109,8 @@ class TestBook(IsolatedAsyncioTestCase):
         self.assertEqual(book.title, 'Example book')
         self.assertEqual(book.max_level, 3)
         self.assertPagePaths(book, (
+            self.dir,
+            self.dir / 'part2',
             self.dir / 'part2' / 'chapter1.md',
             self.dir / 'part2' / 'chapter2.md',
             self.dir / 'part2' / 'chapter3.md',
@@ -105,8 +125,13 @@ class TestBook(IsolatedAsyncioTestCase):
         self.assertEqual(book.title, 'Example book')
         self.assertEqual(book.max_level, 4)
         self.assertPagePaths(book, (
+            self.dir,
+            self.dir / 'part1',
             self.dir / 'part1' / 'chapter3.md',
+            self.dir / 'part2',
             self.dir / 'part2' / 'chapter3.md',
+            self.dir / 'part3',
+            self.dir / 'part3' / 'subdir',
             self.dir / 'part3' / 'subdir' / 'chapter3.md',
         ))
 
@@ -120,11 +145,15 @@ class TestBook(IsolatedAsyncioTestCase):
         self.assertEqual(book.title, 'Example book')
         self.assertEqual(book.max_level, 4)
         self.assertPagePaths(book, (
+            self.dir,
             self.dir / 'cover.md',
             self.dir / 'intro.md',
+            self.dir / 'part1',
             self.dir / 'part1' / 'chapter1.md',
             self.dir / 'part1' / 'chapter2.md',
             self.dir / 'part1' / 'chapter3.md',
+            self.dir / 'part3',
+            self.dir / 'part3' / 'subdir',
             self.dir / 'part3' / 'subdir' / 'chapter1.md',
             self.dir / 'part3' / 'subdir' / 'chapter2.md',
             self.dir / 'part3' / 'subdir' / 'chapter3.md',
@@ -140,12 +169,17 @@ class TestBook(IsolatedAsyncioTestCase):
         self.assertEqual(book.title, 'Example book')
         self.assertEqual(book.max_level, 4)
         self.assertPagePaths(book, (
+            self.dir,
             self.dir / 'cover.md',
             self.dir / 'intro.md',
+            self.dir / 'part1',
             self.dir / 'part1' / 'chapter1.md',
             self.dir / 'part1' / 'chapter2.md',
+            self.dir / 'part2',
             self.dir / 'part2' / 'chapter1.md',
             self.dir / 'part2' / 'chapter2.md',
+            self.dir / 'part3',
+            self.dir / 'part3' / 'subdir',
             self.dir / 'part3' / 'subdir' / 'chapter1.md',
             self.dir / 'part3' / 'subdir' / 'chapter2.md',
         ))

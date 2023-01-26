@@ -59,15 +59,6 @@ class Processor(Dispatcher):
         self.process2_tasks: dict[Page, list[Awaitable]] = defaultdict(list)
         """:meta private:"""
 
-    def get_syntax(self, suffix: str) -> str:
-        match suffix:
-            case '.md':
-                return 'markdown'
-            case '.rst':
-                return 'rst-auto_identifiers'
-            case _:  # pragma: no cover
-                raise NotImplementedError(suffix)
-
     @on_demand
     async def load_page(self, page: Page):
         """
@@ -77,15 +68,16 @@ class Processor(Dispatcher):
         """
         from ...models.toc import TocGenerator
 
-        page_text = page.path.read_text('utf-8')
         variables = self.book.variables | {
             'toc': TocGenerator(page=page, processor=self),
         }
+
+        page_text = page.raw()
         page_text = await self.jinja.from_string(page_text).render_async(variables)
 
         pandoc = await create_subprocess_exec(
             'pandoc',
-            '--from', self.get_syntax(page.path.suffix),
+            '--from', page.syntax,
             '--to', 'json',
             stdin=PIPE,
             stdout=PIPE)
@@ -106,6 +98,7 @@ class Processor(Dispatcher):
         """
         await self.load_page(page)
         await self.process_container(self.doc[page], page)
+        self.titles.setdefault(page, page.path.stem)
         save_debug_json('s1', page, self.doc[page])
         return page
 
@@ -122,7 +115,7 @@ class Processor(Dispatcher):
         else:
             full_id = page.id + '--' + elem.identifier
 
-        if elem.level == 1 and page not in self.titles:
+        if elem.level == 1:
             self.titles[page] = stringify(elem)
 
         nodes.insert(0, LatexBlock(fr'''
