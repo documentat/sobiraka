@@ -76,6 +76,43 @@ class Page:
         return self.path.relative_to(self.book.root)
 
     @cached_property
+    def is_index(self) -> bool:
+        return bool(re.fullmatch(r'0(-.*)? | (\d+-)?index', self.path.stem, flags=re.X))
+
+    @cached_property
+    def breadcrumbs(self) -> list[Page]:
+        parents: tuple[Path, ...] = *reversed(self.relative_path.parents), self.relative_path
+        if self.is_index:
+            parents = parents[:-1]
+        breadcrumbs: list[Page] = []
+        for parent in parents:
+            breadcrumbs.append(self.book.pages_by_path[parent])
+        return breadcrumbs
+
+    @cached_property
+    def parent(self) -> Page | None:
+        if self.is_index:
+            return self.book.pages_by_path[self.relative_path.parent.parent]
+        else:
+            return self.book.pages_by_path[self.relative_path.parent]
+
+    @cached_property
+    def children(self) -> list[Page]:
+        children: list[Page] = []
+        for page in self.book.pages:
+            if page.parent is self:
+                children.append(page)
+        return children
+
+    @cached_property
+    def children_recursive(self) -> list[Page]:
+        children: list[Page] = []
+        for page in self.book.pages:
+            if page is not self and self in page.breadcrumbs:
+                children.append(page)
+        return children
+
+    @cached_property
     def id(self) -> str:
         """
         Unique identifier of the page within its :class:`.Book`, based on :data:`relative_path`.
@@ -94,7 +131,7 @@ class Page:
             parts = parts[:-1]
         for i, part in enumerate(parts):
             parts[i] = re.sub(r'^(\d+-)?', '', part)
-        return '--'.join(parts)
+        return '--' + '--'.join(parts)
 
     @cached_property
     def level(self) -> int:

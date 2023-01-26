@@ -41,8 +41,13 @@ class Processor(Dispatcher):
 
         This method is called by :obj:`.Page.loaded`.
         """
+        from ...models.toc import TocGenerator
+
         page_text = page.path.read_text('utf-8')
-        page_text = await self.jinja.from_string(page_text).render_async(self.book.variables)
+        variables = self.book.variables | {
+            'toc': TocGenerator(page=page, processor=self),
+        }
+        page_text = await self.jinja.from_string(page_text).render_async(variables)
 
         pandoc = await create_subprocess_exec(
             'pandoc',

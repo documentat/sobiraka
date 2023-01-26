@@ -54,8 +54,30 @@ class Book:
     spellcheck: BookConfig_SpellCheck = field(default_factory=BookConfig_SpellCheck, kw_only=True)
     variables: dict[str, Any] = field(default_factory=dict)
 
+    pages: list[Page] = field(default_factory=list, init=False)
+    pages_by_path: dict[Path, Page] = field(default_factory=dict, init=False)
+
     def __repr__(self):
         return f'<{self.__class__.__name__}: {repr(str(self.paths.root))}>'
+
+    def __post_init__(self):
+        from .page import Page
+
+        paths: set[Path] = set()
+        for pattern in self.paths.include:
+            paths |= set(self.root.glob(pattern))
+        for pattern in self.paths.exclude:
+            paths -= set(self.root.glob(pattern))
+
+        for path in list(sorted(paths)):
+            relative_path = path.relative_to(self.root)
+            absolute_path = path.resolve()
+
+            page = Page(self, absolute_path)
+            self.pages.append(page)
+            self.pages_by_path[relative_path] = page
+            if page.is_index:
+                self.pages_by_path[relative_path.parent] = page
 
     @classmethod
     def from_manifest(cls, manifest_path: Path) -> Book:
@@ -97,29 +119,6 @@ class Book:
     def root(self) -> Path:
         """Absolute path to the root directory of the book."""
         return self.paths.root
-
-    @cached_property
-    def pages_by_path(self) -> dict[Path, Page]:
-        from .page import Page
-
-        paths: set[Path] = set()
-        for pattern in self.paths.include:
-            paths |= set(self.root.glob(pattern))
-        for pattern in self.paths.exclude:
-            paths -= set(self.root.glob(pattern))
-
-        pages_by_path: dict[Path, Page] = {}
-        for path in list(sorted(paths)):
-            relative_path = path.relative_to(self.root)
-            absolute_path = path.resolve()
-            pages_by_path[relative_path] = Page(self, absolute_path)
-
-        return pages_by_path
-
-    @property
-    def pages(self) -> list[Page]:
-        """All pages in the book."""
-        return list(self.pages_by_path.values())
 
     @cached_property
     def max_level(self) -> int:
