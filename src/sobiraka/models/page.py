@@ -41,18 +41,24 @@ class Page:
 
     @cached_property
     def breadcrumbs(self) -> list[Page]:
-        parents: tuple[Path, ...] = *reversed(self.relative_path.parents), self.relative_path
-        if self.is_index:
-            parents = parents[:-1]
-        breadcrumbs: list[Page] = []
-        for parent in parents:
-            breadcrumbs.append(self.book.pages_by_path[parent])
+        breadcrumbs: list[Page] = [self]
+        while breadcrumbs[0].parent is not None:
+            breadcrumbs.insert(0, breadcrumbs[0].parent)
         return breadcrumbs
 
     @cached_property
     def parent(self) -> Page | None:
+        from . import EmptyPage
+
         if self.is_index:
-            return self.book.pages_by_path[self.relative_path.parent.parent]
+            if isinstance(self, EmptyPage):
+                if self.relative_path == Path('.'):
+                    return None
+                return self.book.pages_by_path[self.relative_path.parent]
+            else:
+                if self.relative_path.parent == Path('.'):
+                    return None
+                return self.book.pages_by_path[self.relative_path.parent.parent]
         else:
             return self.book.pages_by_path[self.relative_path.parent]
 
@@ -72,6 +78,14 @@ class Page:
                 children.append(page)
         return children
 
+    def _id_segment(self) -> str:
+        if self.parent is None:
+            return 'r'
+        elif self.is_index:
+            return re.sub(r'^(\d+-)?', '', self.relative_path.parent.stem)
+        else:
+            return re.sub(r'^(\d+-)?', '', self.relative_path.stem)
+
     @cached_property
     def id(self) -> str:
         """
@@ -84,13 +98,7 @@ class Page:
         """
         parts: list[str] = []
         for page in self.breadcrumbs:
-            path = page.relative_path
-            if page.is_index:
-                path = path.parent
-            if path == Path('.'):
-                parts.append('r')
-            else:
-                parts.append(re.sub(r'^(\d+-)?', '', path.stem))
+            parts.append(page._id_segment())
         return '--'.join(parts)
 
     @cached_property
