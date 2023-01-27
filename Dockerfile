@@ -25,7 +25,7 @@ FROM pandoc/latex:2.19 AS common
 RUN chmod 777 /var/cache/fontconfig
 RUN apk add --no-cache python3~=3.11 --repository=http://dl-cdn.alpinelinux.org/alpine/edge/main/
 RUN apk add hunspell
-RUN tlmgr install koma-script ragged2e
+RUN tlmgr install koma-script ragged2e enumitem
 COPY --from=get-pandoc /tmp/pandoc /usr/local
 COPY --from=get-fonts /tmp/fonts /usr/share/fonts/truetype
 WORKDIR /W
