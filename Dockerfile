@@ -31,7 +31,7 @@ COPY --from=get-fonts /tmp/fonts /usr/share/fonts/truetype
 WORKDIR /W
 ENTRYPOINT [""]
 
-FROM common AS tester
+FROM common AS tester-src
 RUN apk add git make
 RUN apk add --no-cache py3-pip --repository=http://dl-cdn.alpinelinux.org/alpine/edge/community/
 RUN pip install coverage~=7.0.0
@@ -39,7 +39,16 @@ ARG UID=1000
 ARG GID=1000
 RUN addgroup mygroup -g $GID
 RUN adduser myuser -u $UID -G mygroup -D
-CMD "pip install -e . && sobiraka"
+USER myuser
+ENV PATH=/home/myuser/.local/bin:$PATH
+COPY --from=install-dependencies /prefix /usr
+CMD make tests
+
+FROM tester-src AS tester-dist
+COPY --from=install-package /prefix /usr
+COPY Makefile .
+COPY tests tests
+CMD make tests
 
 FROM common AS release
 COPY --from=install-package /prefix /usr

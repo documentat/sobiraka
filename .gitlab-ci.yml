@@ -60,10 +60,15 @@ build-dist:
         docker push $CI_REGISTRY_IMAGE/cache/$VARIANT:by-commit-$CI_COMMIT_SHA
     fi
 
-build-tester:
+build-tester-src:
   extends: .build-docker
   variables:
-    VARIANT: tester
+    VARIANT: tester-src
+
+build-tester-dist:
+  extends: .build-docker
+  variables:
+    VARIANT: tester-dist
 
 build-release:
   extends: .build-docker
@@ -72,28 +77,30 @@ build-release:
 
 ################################################################################
 
-test-dist:
+.test:
   stage: test
-  needs: [build-tester, build-dist]
-  image: $CI_REGISTRY_IMAGE/cache/tester:by-commit-$CI_COMMIT_SHA
+  image: $CI_REGISTRY_IMAGE/cache/$VARIANT:by-commit-$CI_COMMIT_SHA
   services: ['docker:dind']
   variables:
     GIT_STRATEGY: fetch
   before_script:
-    - pip install dist/*.tar.gz
-    - rm dist/*.tar.gz
+    - git config --global --add safe.directory $PWD
   script:
     - git checkout -- Makefile tests
     - make tests
+
+test-dist:
+  extends: .test
+  needs: [build-tester-dist]
+  variables:
+    VARIANT: tester-dist
   coverage: '/TOTAL .+ (\d+\.\d+)%/'
 
 test-src:
-  stage: test
-  needs: [build-tester]
-  image: $CI_REGISTRY_IMAGE/cache/tester:by-commit-$CI_COMMIT_SHA
-  services: ['docker:dind']
-  script:
-    - make tests
+  extends: .test
+  needs: [build-tester-dist]
+  variables:
+    VARIANT: tester-src
 
 ################################################################################
 
