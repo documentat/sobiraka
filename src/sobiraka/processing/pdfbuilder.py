@@ -42,9 +42,9 @@ class PdfBuilder(Processor):
         with open(xelatex_workdir / 'build.tex', 'wb') as latex_output:
             latex_output.write((RT.FILES / 'base.sty').read_bytes())
             latex_output.write(b'\n\n' + (80 * b'%'))
-            if self.book.latex.header:
+            if self.book.pdf.header:
                 latex_output.write(b'\n\n')
-                latex_output.write(self.book.latex.header.read_bytes())
+                latex_output.write(self.book.pdf.header.read_bytes())
                 latex_output.write(b'\n\n' + (80 * b'%'))
             latex_output.write(b'\n\n\\begin{document}\n\\begin{sloppypar}')
 

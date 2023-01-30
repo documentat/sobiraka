@@ -22,7 +22,7 @@ class BookConfig_Paths:
 
 
 @dataclass(kw_only=True, frozen=True)
-class BookConfig_Latex:
+class BookConfig_PDF:
     header: Path | None = None
     """Path to the file containing LaTeX header directives for the book, if provided."""
 
@@ -52,7 +52,7 @@ class Book:
     """Book title. May be used when rendering output files."""
 
     paths: BookConfig_Paths = field(default_factory=BookConfig_Paths, kw_only=True)
-    latex: BookConfig_Latex = field(default_factory=BookConfig_Latex, kw_only=True)
+    pdf: BookConfig_PDF = field(default_factory=BookConfig_PDF, kw_only=True)
     spellcheck: BookConfig_SpellCheck = field(default_factory=BookConfig_SpellCheck, kw_only=True)
     variables: dict[str, Any] = field(default_factory=frozendict)
 
@@ -70,7 +70,7 @@ class Book:
                 Optional('include', default=('**/*',)): And([str], Use(tuple)),
                 Optional('exclude', default=()): And([str], Use(tuple)),
             },
-            Optional('latex', default={}): {
+            Optional('pdf', default={}): {
                 Optional('header', default=None): And(str, Use(lambda x: manifest_path.parent / x)),
             },
             Optional('spellcheck', default={}): {
@@ -91,7 +91,7 @@ class Book:
             id=manifest['id'],
             title=manifest['title'],
             paths=BookConfig_Paths(**manifest['paths'], manifest_path=manifest_path),
-            latex=BookConfig_Latex(**manifest['latex']),
+            pdf=BookConfig_PDF(**manifest['pdf']),
             spellcheck=BookConfig_SpellCheck(**manifest['spellcheck']),
             variables=manifest['variables'],
         )
