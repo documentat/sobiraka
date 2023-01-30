@@ -1,3 +1,6 @@
+import re
+from pathlib import Path
+
 from panflute import BlockQuote, BulletList, Caption, Citation, Cite, Code, CodeBlock, Definition, DefinitionItem, DefinitionList, Div, Element, Emph, Header, HorizontalRule, Image, LineBlock, LineBreak, LineItem, Link, ListContainer, ListItem, Math, Note, Null, OrderedList, Para, Plain, Quoted, RawBlock, RawInline, SmallCaps, SoftBreak, Space, Span, Str, Strikeout, Strong, Subscript, Superscript, Table, TableBody, TableCell, TableFoot, TableHead, TableRow, Underline
 
 from sobiraka.models import Page
@@ -6,55 +9,57 @@ from sobiraka.models import Page
 class Dispatcher:
 
     async def process_element(self, elem: Element, page: Page) -> tuple[Element, ...]:
-        functions = {
-            BlockQuote: self.process_block_quote,
-            BulletList: self.process_bullet_list,
-            Caption: self.process_caption,
-            Citation: self.process_citation,
-            Cite: self.process_cite,
-            Code: self.process_code,
-            CodeBlock: self.process_code_block,
-            Definition: self.process_definition,
-            DefinitionItem: self.process_definition_item,
-            DefinitionList: self.process_definition_list,
-            Div: self.process_div,
-            Emph: self.process_emph,
-            Header: self.process_header,
-            HorizontalRule: self.process_horizontal_rule,
-            Image: self.process_image,
-            LineBlock: self.process_line_block,
-            LineBreak: self.process_line_break,
-            LineItem: self.process_line_item,
-            Link: self.process_link,
-            ListItem: self.process_list_item,
-            Math: self.process_math,
-            Note: self.process_note,
-            Null: self.process_null,
-            OrderedList: self.process_ordered_list,
-            Para: self.process_para,
-            Plain: self.process_plain,
-            Quoted: self.process_quoted,
-            RawBlock: self.process_raw_block,
-            RawInline: self.process_raw_inline,
-            SmallCaps: self.process_small_caps,
-            SoftBreak: self.process_soft_break,
-            Space: self.process_space,
-            Span: self.process_span,
-            Str: self.process_str,
-            Strikeout: self.process_strikeout,
-            Strong: self.process_strong,
-            Subscript: self.process_subscript,
-            Superscript: self.process_superscript,
-            Table: self.process_table,
-            TableBody: self.process_table_body,
-            TableCell: self.process_table_cell,
-            TableFoot: self.process_table_foot,
-            TableHead: self.process_table_head,
-            TableRow: self.process_table_row,
-            Underline: self.process_underline,
-        }
-
-        result = await functions[type(elem)](elem, page)
+        match elem:
+            case BlockQuote():      result = await self.process_block_quote(elem, page)
+            case BulletList():      result = await self.process_bullet_list(elem, page)
+            case Caption():         result = await self.process_caption(elem, page)
+            case Citation():        result = await self.process_citation(elem, page)
+            case Cite():            result = await self.process_cite(elem, page)
+            case Code() as code:
+                if page.path.suffix == '.rst' and (role := code.attributes.get('role')):
+                    result = await getattr(self, f'process_role_{role}')(code, page)
+                else:
+                    result = await self.process_code(code, page)
+            case CodeBlock():       result = await self.process_code_block(elem, page)
+            case Definition():      result = await self.process_definition(elem, page)
+            case DefinitionItem():  result = await self.process_definition_item(elem, page)
+            case DefinitionList():  result = await self.process_definition_list(elem, page)
+            case Div():             result = await self.process_div(elem, page)
+            case Emph():            result = await self.process_emph(elem, page)
+            case Header():          result = await self.process_header(elem, page)
+            case HorizontalRule():  result = await self.process_horizontal_rule(elem, page)
+            case Image():           result = await self.process_image(elem, page)
+            case LineBlock():       result = await self.process_line_block(elem, page)
+            case LineBreak():       result = await self.process_line_break(elem, page)
+            case LineItem():        result = await self.process_line_item(elem, page)
+            case Link():            result = await self.process_link(elem, page)
+            case ListItem():        result = await self.process_list_item(elem, page)
+            case Math():            result = await self.process_math(elem, page)
+            case Note():            result = await self.process_note(elem, page)
+            case Null():            result = await self.process_null(elem, page)
+            case OrderedList():     result = await self.process_ordered_list(elem, page)
+            case Para():            result = await self.process_para(elem, page)
+            case Plain():           result = await self.process_plain(elem, page)
+            case Quoted():          result = await self.process_quoted(elem, page)
+            case RawBlock():        result = await self.process_raw_block(elem, page)
+            case RawInline():       result = await self.process_raw_inline(elem, page)
+            case SmallCaps():       result = await self.process_small_caps(elem, page)
+            case SoftBreak():       result = await self.process_soft_break(elem, page)
+            case Space():           result = await self.process_space(elem, page)
+            case Span():            result = await self.process_span(elem, page)
+            case Str():             result = await self.process_str(elem, page)
+            case Strikeout():       result = await self.process_strikeout(elem, page)
+            case Strong():          result = await self.process_strong(elem, page)
+            case Subscript():       result = await self.process_subscript(elem, page)
+            case Superscript():     result = await self.process_superscript(elem, page)
+            case Table():           result = await self.process_table(elem, page)
+            case TableBody():       result = await self.process_table_body(elem, page)
+            case TableCell():       result = await self.process_table_cell(elem, page)
+            case TableFoot():       result = await self.process_table_foot(elem, page)
+            case TableHead():       result = await self.process_table_head(elem, page)
+            case TableRow():        result = await self.process_table_row(elem, page)
+            case Underline():       result = await self.process_underline(elem, page)
+            case _: raise TypeError(type(elem))
 
         match result:
             case None:
@@ -138,3 +143,5 @@ class Dispatcher:
     async def process_table_head(self, elem: TableHead, page: Page) -> tuple[Element, ...]:            return await self.process_container(elem, page),
     async def process_table_row(self, elem: TableRow, page: Page) -> tuple[Element, ...]:              return await self.process_container(elem, page),
     async def process_underline(self, elem: Underline, page: Page) -> tuple[Element, ...]:             return await self.process_container(elem, page),
+
+    async def process_role_doc(self, elem: Code, page: Page) -> tuple[Element, ...]:                   return Emph(Str(elem.text)),

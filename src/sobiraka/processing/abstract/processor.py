@@ -3,17 +3,17 @@ import sys
 from asyncio import create_subprocess_exec, gather
 from collections import defaultdict
 from io import BytesIO
-from pathlib import Path
 from subprocess import PIPE
 from typing import Awaitable
 
 import jinja2
 import panflute
-from panflute import Doc, Header, Image, Link, stringify
+from more_itertools import padded
+from panflute import Code, Doc, Header, Image, Link, Str, stringify
 
 from sobiraka.models import Book, Href, Page, UrlHref
 from sobiraka.models.error import BadLinkError, ProcessingError
-from sobiraka.models.href import PageHref, UnknownPageHref
+from sobiraka.models.href import PageHref
 from sobiraka.utils import LatexBlock, on_demand, save_debug_json
 from .dispatcher import Dispatcher
 
@@ -132,51 +132,11 @@ class Processor(Dispatcher):
     async def process_image(self, elem: Image, page: Page):
         elem.url = str(self.book.root / '_images' / elem.url)
 
-    async def process_link(self, elem: Link, page: Page):
-        href: Href
-
-        if re.match(r'^\w+:', elem.url):
-            href = UrlHref(elem.url)
-
-        else:
-            m = re.match(r'^ ([^\#]+)? (?: \#(.+) )?', elem.url, flags=re.VERBOSE)
-            target, anchor = m.groups()
-            target = target or None
-            anchor = anchor or None
-
-            if target is None:
-                href = PageHref(page, anchor)
-            else:
-                try:
-                    target_path = (page.path.parent / Path(target)).resolve().relative_to(self.book.root)
-                    target_page = self.book.pages_by_path[target_path]
-                    href = PageHref(target_page, anchor)
-                except (KeyError, ValueError):
-                    href = UnknownPageHref(target, anchor)
-                    self.errors[page].add(BadLinkError(target))
-
-        self.links[page].append(href)
-        if isinstance(href, PageHref):
-            self.process2_tasks[page].append(self.process2_link(page, elem, href))
-
     @on_demand
     async def process2(self, page: Page):
         await self.process1(page)
         await gather(*self.process2_tasks[page])
         save_debug_json('s2', page, self.doc[page])
-
-    async def process2_link(self, page: Page, elem: Link, href: PageHref):
-        await self.process1(href.target)
-
-        elem.url = '#' + href.target.id
-        elem.title = self.titles[href.target]
-
-        if href.anchor:
-            try:
-                elem.url += '--' + href.anchor
-                elem.title = self.anchors[href.target][href.anchor]
-            except KeyError:
-                self.errors[page].add(BadLinkError(f'{href.target.relative_path}#{href.anchor}'))
 
     def print_errors(self) -> bool:
         errors_found: bool = False
@@ -190,3 +150,63 @@ class Processor(Dispatcher):
                 print(message, file=sys.stderr)
                 errors_found = True
         return errors_found
+
+    # --------------------------------------------------------------------------------
+    # Internal links
+
+    async def process_link(self, elem: Link, page: Page):
+        if re.match(r'^\w+:', elem.url):
+            self.links[page].append(UrlHref(elem.url))
+        else:
+            if page.path.suffix == '.rst':
+                self.errors[page].add(BadLinkError(elem.url))
+                return
+            await self._process_internal_link(elem, elem.url, page)
+
+    async def process_role_doc(self, elem: Code, page: Page):
+        if m := re.fullmatch(r'(.+) \s* < (.+) >', elem.text, flags=re.X):
+            label, target_text = m.groups()
+        else:
+            label, target_text = None, elem.text
+
+        link = Link(Str(label))
+        await self._process_internal_link(link, target_text, page)
+        return link,
+
+    async def _process_internal_link(self, elem: Link, target_text: str, page: Page):
+        target_path_str, target_anchor = padded(target_text.split('#', maxsplit=1), None, 2)
+        if target_path_str:
+            try:
+                target_path = (page.path.parent / target_path_str).resolve().relative_to(self.book.root)
+                target = self.book.pages_by_path[target_path]
+            except (KeyError, ValueError):
+                self.errors[page].add(BadLinkError(target_text))
+                return
+        else:
+            target = page
+
+        href = PageHref(target, target_anchor)
+        self.links[page].append(href)
+
+        self.process2_tasks[page].append(self.process2_internal_link(elem,
+                                                                     href=href,
+                                                                     target_text=target_text,
+                                                                     page=page))
+
+    async def process2_internal_link(self, elem: Link, *, href: PageHref, target_text: str, page: Page):
+        await self.process1(href.target)
+
+        if href.anchor:
+            try:
+                assert len(self.anchors[href.target][href.anchor]) == 1
+                elem.url = f'#{href.target.id}--{href.anchor}'
+                autolabel = self.anchors[href.target][href.anchor]
+            except (KeyError, AssertionError):
+                self.errors[page].add(BadLinkError(target_text))
+                return
+        else:
+            elem.url = f'#{href.target.id}'
+            autolabel = self.titles[href.target]
+
+        if not elem.content:
+            elem.content = Str(autolabel)

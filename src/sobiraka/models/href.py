@@ -45,23 +45,3 @@ class PageHref(Href):
             text += ', ' + repr(self.anchor)
         text += ')'
         return text
-
-
-@dataclass(frozen=True)
-class UnknownPageHref(Href):
-    target: str
-    anchor: str | None = None
-
-    def __str__(self):
-        text = self.target
-        if self.anchor:
-            text += '#' + self.anchor
-        return text
-
-    def __repr__(self):
-        text = self.__class__.__name__ + '('
-        text += repr(self.target)
-        if self.anchor:
-            text += ', ' + repr(self.anchor)
-        text += ')'
-        return text

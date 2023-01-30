@@ -1,7 +1,0 @@
-Document 4
-==========
-
-- `Document 0 <../../../document0.rst>`__
-- `Document 1 <../../document1.rst>`__
-- `Document 2 <../document2.rst>`__
-- `Document 3 <../document3.rst>`__
