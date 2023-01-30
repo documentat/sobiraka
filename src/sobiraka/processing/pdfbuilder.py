@@ -66,10 +66,9 @@ class PdfBuilder(Processor):
             stdout=DEVNULL)
         await xelatex.wait()
         if xelatex.returncode != 0:
-            print_xelatex_error(xelatex_workdir / 'build.log')
+            self.print_xelatex_error(xelatex_workdir / 'build.log')
             exit(1)
         copyfile(xelatex_workdir / 'build.pdf', output)
-
 
     @on_demand
     async def generate_latex(self, page: Page):
@@ -96,18 +95,18 @@ class PdfBuilder(Processor):
         if RT.TMP:
             (RT.TMP / 'content' / page.relative_path.with_suffix('.tex')).write_bytes(self._latex[page])
 
-
-def print_xelatex_error(log_path: Path):
-    with log_path.open() as file:
-        print('\033[1;31m', end='', file=sys.stderr)
-        for line in file:
-            line = line.rstrip()
-            if line.startswith('! '):
+    @staticmethod
+    def print_xelatex_error(log_path: Path):
+        with log_path.open() as file:
+            print('\033[1;31m', end='', file=sys.stderr)
+            for line in file:
+                line = line.rstrip()
+                if line.startswith('! '):
+                    print(line, file=sys.stderr)
+                    break
+            for line in file:
+                line = line.rstrip()
+                if line == 'End of file on the terminal!':
+                    break
                 print(line, file=sys.stderr)
-                break
-        for line in file:
-            line = line.rstrip()
-            if line == 'End of file on the terminal!':
-                break
-            print(line, file=sys.stderr)
-        print('\033[0m', end='', file=sys.stderr)
+            print('\033[0m', end='', file=sys.stderr)
