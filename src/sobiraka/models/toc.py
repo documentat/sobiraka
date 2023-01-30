@@ -30,7 +30,7 @@ class TocGenerator:
         return text
 
     async def rst(self) -> str:
-        return await self._plaintext(lambda page: f'{"  " * page.level}- {self.processor.titles[page]}: {page.relative_path}\n')
+        return await self._plaintext(lambda page: f'{"  " * page.level}- :doc:`{self.processor.titles[page]} </{page.relative_path}>`\n')
 
     async def md(self) -> str:
-        return await self._plaintext(lambda page: f'{"  " * page.level}- {self.processor.titles[page]}: {page.relative_path}\n')
+        return await self._plaintext(lambda page: f'{"  " * page.level}- [{self.processor.titles[page]}](/{page.relative_path})\n')

@@ -3,6 +3,7 @@ import sys
 from asyncio import create_subprocess_exec, gather
 from collections import defaultdict
 from io import BytesIO
+from pathlib import Path
 from subprocess import PIPE
 from typing import Awaitable
 
@@ -177,7 +178,10 @@ class Processor(Dispatcher):
         target_path_str, target_anchor = padded(target_text.split('#', maxsplit=1), None, 2)
         if target_path_str:
             try:
-                target_path = (page.path.parent / target_path_str).resolve().relative_to(self.book.root)
+                if target_path_str.startswith('/'):
+                    target_path = Path(target_path_str[1:])
+                else:
+                    target_path = (page.path.parent / target_path_str).resolve().relative_to(self.book.root)
                 target = self.book.pages_by_path[target_path]
             except (KeyError, ValueError):
                 self.errors[page].add(BadLinkError(target_text))
