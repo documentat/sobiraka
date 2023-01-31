@@ -1,4 +1,4 @@
-from booktestcase import BookTestCase
+from abstracttests.booktestcase import BookTestCase
 from sobiraka.models import Href, Page, PageHref, UrlHref
 
 

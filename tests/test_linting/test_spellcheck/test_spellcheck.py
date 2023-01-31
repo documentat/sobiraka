@@ -1,6 +1,6 @@
 from functools import cached_property
 
-from booktestcase import BookTestCase
+from abstracttests.booktestcase import BookTestCase
 from sobiraka.models import Page
 from sobiraka.processing import SpellChecker
 

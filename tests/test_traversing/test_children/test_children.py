@@ -1,7 +1,7 @@
 from pathlib import Path
 from unittest import main
 
-from booktestcase import BookTestCase
+from abstracttests.booktestcase import BookTestCase
 from sobiraka.models import EmptyPage, Page
 
 

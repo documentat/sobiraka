@@ -1,6 +1,6 @@
 from unittest import main
 
-from booktestcase import BookTestCase
+from abstracttests.booktestcase import BookTestCase
 from sobiraka.models import Href, Page, PageHref, UrlHref
 from sobiraka.models.error import BadLinkError, ProcessingError
 
