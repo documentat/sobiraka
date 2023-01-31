@@ -1,0 +1,5 @@
+paths:
+  include: ['**/*.md']
+
+pdf:
+  header: header.sty

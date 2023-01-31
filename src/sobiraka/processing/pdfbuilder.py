@@ -3,8 +3,7 @@ from asyncio import create_subprocess_exec
 from pathlib import Path
 from shutil import copyfile
 from subprocess import DEVNULL, PIPE
-
-from panflute import Doc
+from typing import BinaryIO
 
 from sobiraka.models import Book, Page
 from sobiraka.runtime import RT
@@ -20,18 +19,6 @@ class PdfBuilder(Processor):
     async def run(self, output: Path):
         output.parent.mkdir(parents=True, exist_ok=True)
 
-        for page in self.book.pages:
-            hash(page.book)
-            self.generate_latex(page).start()
-
-        big_doc = Doc()
-        for page in self.book.pages:
-            await self.generate_latex(page)
-            big_doc.content.extend(self.doc[page].content)
-
-        if self.print_errors():
-            raise Exception
-
         xelatex_workdir = RT.TMP / f'tex-{self.book.id}'
         xelatex_workdir.mkdir(parents=True, exist_ok=True)
         for item in xelatex_workdir.iterdir():
@@ -39,23 +26,9 @@ class PdfBuilder(Processor):
                 item.rmdir()
             else:
                 item.unlink()
+
         with open(xelatex_workdir / 'build.tex', 'wb') as latex_output:
-            latex_output.write((RT.FILES / 'base.sty').read_bytes())
-            latex_output.write(b'\n\n' + (80 * b'%'))
-            if self.book.pdf.header:
-                latex_output.write(b'\n\n')
-                latex_output.write(self.book.pdf.header.read_bytes())
-                latex_output.write(b'\n\n' + (80 * b'%'))
-            latex_output.write(b'\n\n\\begin{document}\n\\begin{sloppypar}')
-
-            for page in self.book.pages:
-                await self.generate_latex(page)
-                latex_output.write(b'\n\n' + (80 * b'%'))
-                latex_output.write(b'\n\n%%% ' + bytes(page.relative_path) + b'\n')
-                latex_output.write(self._latex[page])
-
-            latex_output.write(b'\n\n' + (80 * b'%'))
-            latex_output.write(b'\n\n\\end{sloppypar}\n\\end{document}')
+            await self.generate_latex(latex_output)
 
         xelatex = await create_subprocess_exec(
             'xelatex',
@@ -70,8 +43,33 @@ class PdfBuilder(Processor):
             exit(1)
         copyfile(xelatex_workdir / 'build.pdf', output)
 
+    async def generate_latex(self, latex_output: BinaryIO):
+        for page in self.book.pages:
+            hash(page.book)
+            self.generate_latex_for_page(page).start()
+
+        if self.print_errors():
+            raise Exception
+
+        latex_output.write((RT.FILES / 'base.sty').read_bytes())
+        latex_output.write(b'\n\n' + (80 * b'%'))
+        if self.book.pdf.header:
+            latex_output.write(b'\n\n')
+            latex_output.write(self.book.pdf.header.read_bytes())
+            latex_output.write(b'\n\n' + (80 * b'%'))
+        latex_output.write(b'\n\n\\begin{document}\n\\begin{sloppypar}')
+
+        for page in self.book.pages:
+            await self.generate_latex_for_page(page)
+            latex_output.write(b'\n\n' + (80 * b'%'))
+            latex_output.write(b'\n\n%%% ' + bytes(page.relative_path) + b'\n')
+            latex_output.write(self._latex[page])
+
+        latex_output.write(b'\n\n' + (80 * b'%'))
+        latex_output.write(b'\n\n\\end{sloppypar}\n\\end{document}')
+
     @on_demand
-    async def generate_latex(self, page: Page):
+    async def generate_latex_for_page(self, page: Page):
         await self.process2(page)
 
         if len(self.doc[page].content) == 0:

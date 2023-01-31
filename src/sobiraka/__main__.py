@@ -10,27 +10,27 @@ from sobiraka.utils import validate_dictionary
 
 async def async_main():  # pragma: no cover
     parser = ArgumentParser()
-    parser.add_argument('--tmpdir', type=Path, default=Path('build'))
+    parser.add_argument('--tmpdir', type=absolute_path, default=absolute_path('build'))
 
     commands = parser.add_subparsers(title='commands', dest='command')
 
     cmd_docx = commands.add_parser('docx', help='Build DOCX file.')
-    cmd_docx.add_argument('source', type=Path)
-    cmd_docx.add_argument('target', type=Path)
+    cmd_docx.add_argument('source', type=absolute_path)
+    cmd_docx.add_argument('target', type=absolute_path)
 
     cmd_pdf = commands.add_parser('pdf', help='Build PDF file.')
-    cmd_pdf.add_argument('source', type=Path)
-    cmd_pdf.add_argument('target', type=Path)
+    cmd_pdf.add_argument('source', type=absolute_path)
+    cmd_pdf.add_argument('target', type=absolute_path)
 
     cmd_txt = commands.add_parser('txt', help='Build TXT files.')
-    cmd_txt.add_argument('source', type=Path)
-    cmd_txt.add_argument('target', type=Path)
+    cmd_txt.add_argument('source', type=absolute_path)
+    cmd_txt.add_argument('target', type=absolute_path)
 
     cmd_spellcheck = commands.add_parser('spellcheck', help='Check spelling with Hunspell.')
-    cmd_spellcheck.add_argument('source', type=Path)
+    cmd_spellcheck.add_argument('source', type=absolute_path)
 
     cmd_validate_dictionary = commands.add_parser('validate_dictionary', help='Validate and fix Hunspell dictionary.')
-    cmd_validate_dictionary.add_argument('dic', type=Path)
+    cmd_validate_dictionary.add_argument('dic', type=absolute_path)
     cmd_validate_dictionary.add_argument('--autofix', action='store_true')
 
     args = parser.parse_args()
@@ -59,6 +59,10 @@ async def async_main():  # pragma: no cover
         case _:
             raise NotImplementedError(args.command)
     exit(exit_code or 0)
+
+
+def absolute_path(path: str) -> Path:
+    return (Path() / path).resolve().absolute()
 
 
 def main():

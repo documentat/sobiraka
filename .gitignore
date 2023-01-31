@@ -1,0 +1,3 @@
+tests/**/actual.pdf
+tests/**/actual-*.png
+tests/**/expected.pdf

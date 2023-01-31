@@ -15,6 +15,8 @@ class BookTestCase(IsolatedAsyncioTestCase, Generic[T]):
     maxDiff = None
 
     async def asyncSetUp(self):
+        await super().asyncSetUp()
+
         filepath = Path(getfile(self.__class__))
         self.dir: Path = filepath.parent
 
