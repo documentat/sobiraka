@@ -5,7 +5,7 @@ from booktestcase import BookTestCase
 from sobiraka.models import EmptyPage, Page
 
 
-class TestTraversing(BookTestCase):
+class TestChildren(BookTestCase):
     async def asyncSetUp(self):
         await super().asyncSetUp()
         self.index_root = self.book.pages_by_path[Path()]

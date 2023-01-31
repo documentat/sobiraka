@@ -1,6 +1,6 @@
 from unittest import main
 
-from booktests.links_bad.abstract_test_links_bad import AbstractTestLinksBad
+from ..abstract_test_links_bad import AbstractTestLinksBad
 
 
 class TestLinksBad_RST(AbstractTestLinksBad):

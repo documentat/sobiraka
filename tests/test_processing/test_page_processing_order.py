@@ -8,7 +8,7 @@ from sobiraka.models.book import BookConfig_Paths
 from sobiraka.processing import PdfBuilder
 
 
-class TestPageBuildOrder(IsolatedAsyncioTestCase):
+class TestPageProcessingOrder(IsolatedAsyncioTestCase):
     async def asyncSetUp(self):
         temp_dir: str = self.enterContext(TemporaryDirectory(prefix='sobiraka-test-'))
         self.dir: Path = Path(temp_dir)
