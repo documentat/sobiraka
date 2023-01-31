@@ -165,10 +165,12 @@ class Processor(Dispatcher):
             await self._process_internal_link(elem, elem.url, page)
 
     async def process_role_doc(self, elem: Code, page: Page):
-        if m := re.fullmatch(r'(.+) \s* < (.+) >', elem.text, flags=re.X):
-            label, target_text = m.groups()
+        if m := re.fullmatch(r'(.+) < (.+) >', elem.text, flags=re.X):
+            label = m.group(1).strip()
+            target_text = m.group(2)
         else:
-            label, target_text = None, elem.text
+            label = None
+            target_text = elem.text
 
         link = Link(Str(label))
         await self._process_internal_link(link, target_text, page)
