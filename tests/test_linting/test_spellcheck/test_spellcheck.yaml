@@ -6,4 +6,4 @@ spellcheck:
   dictionaries:
     - dictionary
   exceptions:
-    - exceptions.regexp
+    - exceptions.txt

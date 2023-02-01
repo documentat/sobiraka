@@ -6,6 +6,8 @@ from sobiraka.processing import SpellChecker
 
 
 class TestSpellCheck(BookTestCase[SpellChecker]):
+    maxDiff = None
+
     async def asyncSetUp(self):
         await super().asyncSetUp()
         _, self.page1 = self.book.pages
@@ -15,14 +17,18 @@ class TestSpellCheck(BookTestCase[SpellChecker]):
         return SpellChecker(self.book)
 
     def test_get_exceptions(self):
-        self.assertSequenceEqual(self.processor.get_exceptions(), [r'B\.O\.O\.K\.'])
+        exception_texts, exception_regexps = self.processor.get_exceptions()
+        with self.subTest('exception_texts'):
+            self.assertSequenceEqual(exception_texts, ('B.O.O.K.',))
+        with self.subTest('exception_regexps'):
+            self.assertSequenceEqual(exception_regexps, ())
 
     async def test_get_phrases(self):
-        expected_phrases: dict[Page, list[str]] = {
-            self.page1: ['Hello wolrd!',
+        expected_phrases: dict[Page, tuple[str, ...]] = {
+            self.page1: ('Hello wolrd!',
                          'Im writing a',
                          'I think it is veri good',
-                         'Do you likee it?'],
+                         'Do you likee it?'),
         }
         for page, expected in expected_phrases.items():
             with self.subTest(page):
