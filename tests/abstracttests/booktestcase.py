@@ -1,9 +1,10 @@
 from asyncio import gather
+from difflib import unified_diff
 from functools import cached_property
 from inspect import getfile
 from pathlib import Path
-from typing import Any, Generic, TypeVar
-from unittest import IsolatedAsyncioTestCase
+from typing import Any, Generic, Iterable, Sequence, TypeVar
+from unittest import IsolatedAsyncioTestCase, SkipTest
 
 from sobiraka.models import Book, Page
 from sobiraka.processing.abstract import Plainifier, Processor
@@ -39,6 +40,25 @@ class BookTestCase(IsolatedAsyncioTestCase, Generic[T]):
                     return super().subTest(page.relative_path.with_suffix(''))
             case _:
                 return super().subTest(msg)
+
+    @staticmethod
+    def assertNoDiff(expected: Sequence[str], actual: Sequence[str]):
+        diff = list(unified_diff(expected, actual, n=1000))
+        if diff:
+            raise AssertionError('\n\n' + '\n'.join(diff[3:]))
+
+    def for_each_expected(self, suffix: str) -> Iterable[tuple[Page, Path]]:
+        ok = True
+        for page in self.book.pages:
+            expected = self.dir / 'expected' / page.relative_path.with_suffix(suffix)
+            if expected.exists():
+                yield page, expected
+            else:
+                ok = False
+                with self.subTest(page):
+                    raise SkipTest
+        if not ok:
+            raise SkipTest
 
     def test_errors(self):
         for page in self.book.pages:

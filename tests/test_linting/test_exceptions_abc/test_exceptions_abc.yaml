@@ -1,0 +1,10 @@
+paths:
+  root: src
+  include: ['**/*.rst']
+
+spellcheck:
+  dictionaries:
+    - en_US
+    - dictionary
+  exceptions:
+    - exceptions.regexp

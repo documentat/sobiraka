@@ -4,6 +4,8 @@ paths:
 
 spellcheck:
   dictionaries:
+    - en_US
     - dictionary
   exceptions:
+    - exceptions.regexp
     - exceptions.txt

@@ -1,0 +1,8 @@
+- EX.CEP.TIO.N. is at the beginning of a phrase.
+- Here EX.CEP.TIO.N. is in the middle of a phrase.
+- This phrase ends with EX.CEP.TIO.N.
+- Some phrase before. EX.CEP.TIO.N. is at the beginning of a phrase. Some phrase after.
+- Some phrase before. Here EX.CEP.TIO.N. is in the middle of a phrase. Some phrase after.
+- Some phrase before. This phrase ends with EX.CEP.TIO.N. Some phrase after.
+- Multiple times EX.CEP.TIO.N. EX.CEP.TIO.N. EX.CEP.TIO.N. in the middle of a phrase.
+- Multiple times EX.CEP.TIO.N.EX.CEP.TIO.N.EX.CEP.TIO.N. in the middle of a phrase.

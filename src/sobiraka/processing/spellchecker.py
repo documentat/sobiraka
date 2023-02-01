@@ -1,10 +1,12 @@
 import os
+import os
 import re
 import sys
 from asyncio import create_subprocess_exec, gather
+from bisect import bisect_left
 from collections import defaultdict
-from functools import cache
-from itertools import chain, pairwise
+from functools import cached_property
+from itertools import pairwise
 from subprocess import PIPE
 from typing import AsyncIterable, Awaitable, Iterable
 
@@ -13,6 +15,9 @@ from more_itertools import unique_everseen
 from sobiraka.models import Book, Page
 from sobiraka.runtime import RT
 from .abstract import Plainifier
+
+SEP = re.compile(r'[?!.]+\s*')
+END = re.compile(r'[?!.]+\s*$')
 
 
 class SpellChecker(Plainifier):
@@ -45,7 +50,7 @@ class SpellChecker(Plainifier):
 
     async def check_page(self, page: Page):
         words: list[str] = []
-        for phrase in await self.get_phrases(page):
+        for phrase in await self.phrases(page, remove_exceptions=True):
             words += phrase.split()
         words = list(unique_everseen(words))
 
@@ -53,8 +58,8 @@ class SpellChecker(Plainifier):
             if misspelled_word not in self.misspelled_words[page]:
                 self.misspelled_words[page].append(misspelled_word)
 
-    @cache
-    def get_exceptions(self) -> tuple[tuple[str, ...], tuple[str, ...]]:
+    @cached_property
+    def exceptions(self) -> tuple[tuple[str, ...], tuple[str, ...]]:
         exception_texts: list[str] = []
         exception_regexps: list[str] = []
 
@@ -67,84 +72,98 @@ class SpellChecker(Plainifier):
 
         return tuple(exception_texts), tuple(exception_regexps)
 
-    async def get_phrases(self, page: Page) -> tuple[str, ...]:
+    @cached_property
+    def exceptions_regexp(self) -> re.Pattern | None:
+        """
+        Prepare a regular expression that matches any exception.
+        If no exceptions are provided, returns `None`.
+        """
+        regexp_parts = list(self.exceptions[1])
+        for exception in self.exceptions[0]:
+            regexp_parts.append(r'\b' + re.escape(exception) + r'\b')
+        return re.compile('|'.join(regexp_parts)) if regexp_parts else None
+
+    async def phrases(self, page: Page, *, remove_exceptions: bool = False) -> tuple[str, ...]:
+        """
+        Normally, a text is split into phrases by periods, exclamation points, etc.
+        However, the 'exceptions' dictionary may contain some words
+        that contain periods in them ('e.g.', 'H.265', 'www.example.com').
+        This function first splits the line into phrases using :meth:`phrase_bounds()`,
+        but then moves their bounds for each exception that was accidentally split.
+
+        If `remove_exceptions=True`, the exceptions will be replaced with spaces in the result.
+        This is used to generate phrases that can be sent to another linter.
+        """
         text = await self.plainify(page)
 
         phrases: list[str] = []
 
-        # Normally, periods preak text into phrases.
-        # However, the 'exceptions' dictionary may contain some words
-        # that contain periods in them (e.g., 'e.g.', 'H.265', 'www.example.com').
-        # Here, we are preparing a regular expression for searching such words.
-        # We precompile it to speed up things.
-        # Also, we skip any exceptions without periods to speed up things.
-        exception_texts, exception_regexps = self.get_exceptions()
-        exception_texts = tuple(filter(lambda x: '.' in x, exception_texts))
-        exception_regexps = tuple(filter(lambda x: '.' in x, exception_regexps))
-        if exception_texts or exception_regexps:
-            regexp = re.compile('|'.join(chain(
-                exception_regexps,
-                map(re.escape, exception_texts),
-            )))
-        else:
-            regexp = None
-
-        # Each phrase can only be on a single line, so first split text into lines
+        # Each phrase can only be on a single line,
+        # so we work with each line separately
         for line in text.splitlines():
-            # The easy way, when there are no exceptions:
-            # split the line by periods, remove empty phrases.
-            if regexp is None:
-                phrases += filter(None, (phrase.strip() for phrase in line.split('.')))
 
-            # The hard way, with exceptions_regexp:
-            # split the line by periods, but then move their bounds if an exception is found.
-            else:
-                # Split the line into phrases by periods.
-                # For each phrase, remember its start and end positions.
-                phrase_bounds: list[tuple[int, int]] = []
-                periods = list(m.start() for m in re.finditer(r'\.+', line))
-                for start, end in pairwise((0, *periods, len(line))):
-                    phrase_bounds.append((start, end))
+            # Split the line into phrases, but then move their bounds
+            # for each exception that was accidentally split.
+            # Example:
+            #     Example Corp. is a company. Visit www.example.com for more info.
+            #   → Example Corp. | is a company. | Visit www. | example. | com for more info.
+            # BTW, if you are debugging this function, here is a useful expression for you:
+            #   list(line[start:end] for start,end in bounds)
+            bounds = self.phrase_bounds(line)
 
-                # Look for exceptions
-                for m in re.finditer(regexp, line):
-                    left, right = None, None
+            # Look for exceptions
+            for m in re.finditer(self.exceptions_regexp, line):
+                exception: str = m.group()
 
-                    # Find the phrase whose end overlaps with the exception
-                    # and move its end so that it doesn't.
-                    # Example:
-                    #     ['Go to www', 'example', 'com for details']
-                    #   → ['Go to', 'example', 'com for details']
-                    for i in range(len(phrase_bounds)):
-                        phrase_start, phrase_end = phrase_bounds[i]
-                        if phrase_end >= m.start():
-                            phrase_bounds[i] = phrase_start, m.start()
-                            left = i
-                            break
+                # Find the phrases overlapping with the exception from left and right.
+                left = bisect_left(bounds, m.start(), key=lambda x: x[1])
+                right = bisect_left(bounds, m.end(), key=lambda x: x[0]) - 1
 
-                    # Find the phrase whose start overlaps with the exception
-                    # and move its start so that it doesn't.
-                    # Example:
-                    #     ['Go to', 'example', 'com for details']
-                    #   → ['Go to', 'example', 'for details']
-                    for i in reversed(range(len(phrase_bounds))):
-                        phrase_start, phrase_end = phrase_bounds[i]
-                        if phrase_start <= m.end():
-                            phrase_bounds[i] = m.end(), phrase_end
-                            right = i
-                            break
+                # If the exception ends like a phrase would, we will merge one more phrase from the right.
+                # Unless, of course, there are no more phrases on the right.
+                if re.search(END, exception):
+                    right = min(right + 1, len(bounds) - 1)
 
-                    # Remove the phrases completely included into the exception, if any.
-                    # Example:
-                    #     ['Go to', 'example', 'for details']
-                    #   → ['Go to', 'for details']
-                    del phrase_bounds[left+1:right]
+                # Merge the left and right phrases into one.
+                # (If left and right are the same phrase, this does nothing.)
+                # Example:
+                #     Example Corp. | is a company. | Visit www. | example. | com for more info.
+                #   → Example Corp. is a company. | Visit www.example.com for more info.
+                bounds[left:right+1] = (bounds[left][0], bounds[right][1]),
 
-                # Finally, add the phrases as strings to the result
-                for start, end in phrase_bounds:
-                    phrases.append(line[start:end].strip(' .'))
+                # Optionally, replace the exception itself with spaces.
+                if remove_exceptions:
+                    line = line[:m.start()] + ' ' * len(m.group()) + line[m.end():]
+
+            # Finally, add the phrases as strings to the result
+            phrases += (line[start:end] for start, end in bounds)
 
         return tuple(filter(None, phrases))
+
+    @staticmethod
+    def phrase_bounds(line: str) -> list[tuple[int, int]]:
+        """
+        Split the line into phrase by pediods, exclamation or question marks or clusters of them.
+        The punctuation marks are included in the phrases, but the spaces after are not.
+
+        Return pairs of numbers representing `start` and `end` of each phrase.
+        The content of each phrase can then be accessed as `line[start:end]`.
+        """
+        phrase_bounds: list[tuple[int, int]] = []
+
+        separators = \
+            re.search('^', line), \
+            *re.finditer(SEP, line), \
+            re.search('$', line)
+
+        for before, after in pairwise(separators):
+            num_spaces = len(re.search(r'\s*$', after.group()).group())
+            phrase_bounds.append((before.end(), after.end() - num_spaces))
+
+        if line[phrase_bounds[-1][0]:phrase_bounds[-1][1]] == '':
+            phrase_bounds.pop()
+
+        return phrase_bounds
 
     async def find_misspelled_words(self, words: Iterable[str]) -> AsyncIterable[str]:
         hunspell = await create_subprocess_exec(
