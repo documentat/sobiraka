@@ -49,7 +49,7 @@ class Linter(Plainifier):
 
     async def check_page(self, page: Page):
         words: list[str] = []
-        for phrase in await self.phrases(page, remove_exceptions=True):
+        async for phrase in self.phrases(page, remove_exceptions=True):
             words += phrase.split()
         words = list(unique_everseen(words))
 
@@ -82,7 +82,7 @@ class Linter(Plainifier):
             regexp_parts.append(r'\b' + re.escape(exception) + r'\b')
         return re.compile('|'.join(regexp_parts)) if regexp_parts else None
 
-    async def phrases(self, page: Page, *, remove_exceptions: bool = False) -> tuple[str, ...]:
+    async def phrases(self, page: Page, *, remove_exceptions: bool = False) -> AsyncIterable[str]:
         """
         Normally, a text is split into phrases by periods, exclamation points, etc.
         However, the 'exceptions' dictionary may contain some words
@@ -94,8 +94,6 @@ class Linter(Plainifier):
         This is used to generate phrases that can be sent to another linter.
         """
         text = await self.plainify(page)
-
-        phrases: list[str] = []
 
         # Each phrase can only be on a single line,
         # so we work with each line separately
@@ -136,9 +134,8 @@ class Linter(Plainifier):
                         line = line[:m.start()] + ' ' * len(m.group()) + line[m.end():]
 
             # Finally, add the phrases as strings to the result
-            phrases += (line[start:end] for start, end in bounds)
-
-        return tuple(filter(None, phrases))
+            for start, end in bounds:
+                yield line[start:end]
 
     @staticmethod
     def phrase_bounds(line: str) -> list[tuple[int, int]]:

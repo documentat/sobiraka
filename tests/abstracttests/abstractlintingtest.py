@@ -23,7 +23,9 @@ class AbstractLintingTest(BookTestCase[Linter]):
         for page, expected in self.for_each_expected('.phrases'):
             with self.subTest(page):
                 expected = expected.read_text().splitlines()
-                actual = await self.processor.phrases(page)
+                actual = []
+                async for phrase in self.processor.phrases(page):
+                    actual.append(phrase)
                 self.assertNoDiff(expected, actual)
 
 
