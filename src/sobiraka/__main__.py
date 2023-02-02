@@ -37,6 +37,10 @@ async def async_main():  # pragma: no cover
     RT.TMP = args.tmpdir
 
     match args.command:
+        case None:
+            parser.print_help()
+            exit_code = 1
+
         case 'docx':
             book = Book.from_manifest(args.source)
             exit_code = await DocxBuilder(book).run(args.target)
