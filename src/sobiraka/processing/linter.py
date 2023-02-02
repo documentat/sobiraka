@@ -111,28 +111,29 @@ class Linter(Plainifier):
             bounds = self.phrase_bounds(line)
 
             # Look for exceptions
-            for m in re.finditer(self.exceptions_regexp, line):
-                exception: str = m.group()
+            if self.exceptions_regexp:
+                for m in re.finditer(self.exceptions_regexp, line):
+                    exception: str = m.group()
 
-                # Find the phrases overlapping with the exception from left and right.
-                left = bisect_left(bounds, m.start(), key=lambda x: x[1])
-                right = bisect_left(bounds, m.end(), key=lambda x: x[0]) - 1
+                    # Find the phrases overlapping with the exception from left and right.
+                    left = bisect_left(bounds, m.start(), key=lambda x: x[1])
+                    right = bisect_left(bounds, m.end(), key=lambda x: x[0]) - 1
 
-                # If the exception ends like a phrase would, we will merge one more phrase from the right.
-                # Unless, of course, there are no more phrases on the right.
-                if re.search(END, exception):
-                    right = min(right + 1, len(bounds) - 1)
+                    # If the exception ends like a phrase would, we will merge one more phrase from the right.
+                    # Unless, of course, there are no more phrases on the right.
+                    if re.search(END, exception):
+                        right = min(right + 1, len(bounds) - 1)
 
-                # Merge the left and right phrases into one.
-                # (If left and right are the same phrase, this does nothing.)
-                # Example:
-                #     Example Corp. | is a company. | Visit www. | example. | com for more info.
-                #   → Example Corp. is a company. | Visit www.example.com for more info.
-                bounds[left:right+1] = (bounds[left][0], bounds[right][1]),
+                    # Merge the left and right phrases into one.
+                    # (If left and right are the same phrase, this does nothing.)
+                    # Example:
+                    #     Example Corp. | is a company. | Visit www. | example. | com for more info.
+                    #   → Example Corp. is a company. | Visit www.example.com for more info.
+                    bounds[left:right+1] = (bounds[left][0], bounds[right][1]),
 
-                # Optionally, replace the exception itself with spaces.
-                if remove_exceptions:
-                    line = line[:m.start()] + ' ' * len(m.group()) + line[m.end():]
+                    # Optionally, replace the exception itself with spaces.
+                    if remove_exceptions:
+                        line = line[:m.start()] + ' ' * len(m.group()) + line[m.end():]
 
             # Finally, add the phrases as strings to the result
             phrases += (line[start:end] for start, end in bounds)
