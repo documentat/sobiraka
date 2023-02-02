@@ -34,7 +34,7 @@ class Linter(Plainifier):
                 str(self.book.paths.manifest_path.parent)))
             self.environ['DICTIONARY'] = ','.join(self.book.lint.dictionaries)
 
-    async def run(self):
+    async def check(self):
         tasks: list[Awaitable] = []
         for page in self.book.pages:
             tasks.append(self.check_page(page))

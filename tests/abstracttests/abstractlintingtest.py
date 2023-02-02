@@ -15,7 +15,7 @@ class AbstractLintingTest(BookTestCase[Linter]):
         for page, expected in self.for_each_expected('.misspelled-words'):
             with self.subTest(page):
                 expected = expected.read_text().splitlines()
-                await self.processor.run()
+                await self.processor.check()
                 actual = self.processor.misspelled_words[page]
                 self.assertNoDiff(expected, actual)
 
