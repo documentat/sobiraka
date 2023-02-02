@@ -4,8 +4,8 @@ from dataclasses import dataclass, replace
 from textwrap import dedent
 from typing import Callable
 
-from sobiraka.models import Page
 from sobiraka.processing.abstract import Processor
+from sobiraka.models import Page
 
 
 @dataclass(kw_only=True)

@@ -67,7 +67,7 @@ class Processor(Dispatcher):
 
         This method is called by :obj:`.Page.loaded`.
         """
-        from ...models.toc import TocGenerator
+        from sobiraka.utils.toc import TocGenerator
 
         variables = self.book.variables | {
             'toc': TocGenerator(page=page, processor=self),
