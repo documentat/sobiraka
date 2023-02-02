@@ -2,7 +2,7 @@ paths:
   root: src
   include: ['**/*.rst']
 
-spellcheck:
+lint:
   dictionaries:
     - en_US
     - dictionary

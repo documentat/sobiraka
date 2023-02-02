@@ -3,7 +3,7 @@ from asyncio import run
 from pathlib import Path
 
 from sobiraka.models import Book
-from sobiraka.processing import DocxBuilder, PdfBuilder, SpellChecker, TxtBuilder
+from sobiraka.processing import DocxBuilder, PdfBuilder, Linter, TxtBuilder
 from sobiraka.runtime import RT
 from sobiraka.utils import validate_dictionary
 
@@ -26,8 +26,8 @@ async def async_main():  # pragma: no cover
     cmd_txt.add_argument('source', type=absolute_path)
     cmd_txt.add_argument('target', type=absolute_path)
 
-    cmd_spellcheck = commands.add_parser('spellcheck', help='Check spelling with Hunspell.')
-    cmd_spellcheck.add_argument('source', type=absolute_path)
+    cmd_lint = commands.add_parser('lint', help='Check book for various issues.')
+    cmd_lint.add_argument('source', type=absolute_path)
 
     cmd_validate_dictionary = commands.add_parser('validate_dictionary', help='Validate and fix Hunspell dictionary.')
     cmd_validate_dictionary.add_argument('dic', type=absolute_path)
@@ -49,9 +49,9 @@ async def async_main():  # pragma: no cover
             book = Book.from_manifest(args.source)
             exit_code = await TxtBuilder(book).run(args.target)
 
-        case 'spellcheck':
+        case 'lint':
             book = Book.from_manifest(args.source)
-            exit_code = await SpellChecker(book).run()
+            exit_code = await Linter(book).run()
 
         case 'validate_dictionary':
             exit_code = validate_dictionary(args.dic, autofix=args.autofix)

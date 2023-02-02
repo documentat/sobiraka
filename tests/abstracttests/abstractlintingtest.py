@@ -1,15 +1,15 @@
 from functools import cached_property
 
 from abstracttests.booktestcase import BookTestCase
-from sobiraka.processing import SpellChecker
+from sobiraka.processing import Linter
 
 
-class AbstractLintingTest(BookTestCase[SpellChecker]):
+class AbstractLintingTest(BookTestCase[Linter]):
     maxDiff = None
 
     @cached_property
-    def processor(self) -> SpellChecker:
-        return SpellChecker(self.book)
+    def processor(self) -> Linter:
+        return Linter(self.book)
 
     async def test_misspelled_words(self):
         for page, expected in self.for_each_expected('.misspelled-words'):

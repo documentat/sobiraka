@@ -1,5 +1,4 @@
 import os
-import os
 import re
 import sys
 from asyncio import create_subprocess_exec, gather
@@ -20,7 +19,7 @@ SEP = re.compile(r'[?!.]+\s*')
 END = re.compile(r'[?!.]+\s*$')
 
 
-class SpellChecker(Plainifier):
+class Linter(Plainifier):
 
     def __init__(self, book: Book):
         super().__init__(book)
@@ -28,12 +27,12 @@ class SpellChecker(Plainifier):
         self.misspelled_words: dict[Page, list[str]] = defaultdict(list)
 
         self.environ = os.environ
-        if self.book.spellcheck.dictionaries:
+        if self.book.lint.dictionaries:
             self.environ = self.environ.copy()
             self.environ['DICPATH'] = ':'.join((
                 str(RT.FILES / 'dictionaries'),
                 str(self.book.paths.manifest_path.parent)))
-            self.environ['DICTIONARY'] = ','.join(self.book.spellcheck.dictionaries)
+            self.environ['DICTIONARY'] = ','.join(self.book.lint.dictionaries)
 
     async def run(self):
         tasks: list[Awaitable] = []
@@ -63,7 +62,7 @@ class SpellChecker(Plainifier):
         exception_texts: list[str] = []
         exception_regexps: list[str] = []
 
-        for exceptions_path in self.book.spellcheck.exceptions:
+        for exceptions_path in self.book.lint.exceptions:
             with exceptions_path.open() as exceptions_file:
                 if exceptions_path.suffix == '.regexp':
                     exception_regexps += (line.strip() for line in exceptions_file)

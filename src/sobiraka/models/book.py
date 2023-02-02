@@ -28,7 +28,7 @@ class BookConfig_PDF:
 
 
 @dataclass(kw_only=True, frozen=True)
-class BookConfig_SpellCheck:
+class BookConfig_Lint:
     dictionaries: tuple[str] = field(default_factory=tuple)
     """List of Hunspell dictionaries to use for spellchecking."""
 
@@ -53,7 +53,7 @@ class Book:
 
     paths: BookConfig_Paths = field(default_factory=BookConfig_Paths, kw_only=True)
     pdf: BookConfig_PDF = field(default_factory=BookConfig_PDF, kw_only=True)
-    spellcheck: BookConfig_SpellCheck = field(default_factory=BookConfig_SpellCheck, kw_only=True)
+    lint: BookConfig_Lint = field(default_factory=BookConfig_Lint, kw_only=True)
     variables: dict[str, Any] = field(default_factory=frozendict)
 
     def __repr__(self):
@@ -73,7 +73,7 @@ class Book:
             Optional('pdf', default={}): {
                 Optional('header', default=None): And(str, Use(lambda x: manifest_path.parent / x)),
             },
-            Optional('spellcheck', default={}): {
+            Optional('lint', default={}): {
                 Optional('dictionaries', default=()): And([str], Use(tuple)),
                 Optional('exceptions', default=()): And([
                     And(str, Use(lambda x: (manifest_path.parent / x).resolve())),
@@ -92,7 +92,7 @@ class Book:
             title=manifest['title'],
             paths=BookConfig_Paths(**manifest['paths'], manifest_path=manifest_path),
             pdf=BookConfig_PDF(**manifest['pdf']),
-            spellcheck=BookConfig_SpellCheck(**manifest['spellcheck']),
+            lint=BookConfig_Lint(**manifest['lint']),
             variables=manifest['variables'],
         )
         return book
