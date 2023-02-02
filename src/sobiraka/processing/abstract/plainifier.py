@@ -1,7 +1,7 @@
 from asyncio import create_subprocess_exec
 from subprocess import PIPE
 
-from panflute import BulletList, Element, Image, Plain, Str, Table, TableBody, TableCell, TableHead
+from panflute import BulletList, Element, Image, Para, Plain, Str, Table, TableBody, TableCell, TableHead
 
 from sobiraka.models import Page
 from sobiraka.utils import panflute_to_bytes
@@ -40,6 +40,8 @@ class Plainifier(Processor):
                         result.extend(await self.process_plain(plain, page))
                     case BulletList() as sublist:
                         result.extend(await self.process_bullet_list(sublist, page))
+                    case Para() as para:
+                        result.extend(await self.process_para(para, page))
                     case _:
                         raise TypeError(type(item_content))
 
