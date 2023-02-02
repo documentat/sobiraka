@@ -35,7 +35,9 @@ class TestPageProcessingOrder(IsolatedAsyncioTestCase):
 
         await self.processor.process2(self.page)
         await sleep(0)
-        self.assertSequenceEqual(self.order, ('loaded', 'processed1', 'processed2'))
+
+        expected_order = 'loaded', 'processed1', 'processed2'
+        self.assertSequenceEqual(expected_order, self.order)
 
     async def wait_until_loaded(self, page: Page):
         await self.processor.load_page(page)

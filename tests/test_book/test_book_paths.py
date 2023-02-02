@@ -56,7 +56,7 @@ class TestBookPaths(IsolatedAsyncioTestCase):
             paths:
               include: []
         ''')
-        self.assertEqual(book.max_level, 0)
+        self.assertEqual(0, book.max_level)
         self.assertPagePaths(book, ())
 
     async def test_include_all(self):
@@ -64,7 +64,7 @@ class TestBookPaths(IsolatedAsyncioTestCase):
             paths:
               include: ['**/*.md']
         ''')
-        # self.assertEqual(book.max_level, 4)
+        self.assertEqual(4, book.max_level)
         self.assertPagePaths(book, (
             self.root,
             self.root / 'intro.md',
@@ -88,7 +88,7 @@ class TestBookPaths(IsolatedAsyncioTestCase):
             paths:
               include: ['*.md']
         ''')
-        self.assertEqual(book.max_level, 2)
+        self.assertEqual(2, book.max_level)
         self.assertPagePaths(book, (
             self.root,
             self.root / 'intro.md',
@@ -99,7 +99,7 @@ class TestBookPaths(IsolatedAsyncioTestCase):
             paths:
               include: ['part2/*.md']
         ''')
-        self.assertEqual(book.max_level, 3)
+        self.assertEqual(3, book.max_level)
         self.assertPagePaths(book, (
             self.root,
             self.root / 'part2',
@@ -113,7 +113,7 @@ class TestBookPaths(IsolatedAsyncioTestCase):
             paths:
               include: ['**/chapter3.md']
         ''')
-        self.assertEqual(book.max_level, 4)
+        self.assertEqual(4, book.max_level)
         self.assertPagePaths(book, (
             self.root,
             self.root / 'part1',
@@ -131,7 +131,7 @@ class TestBookPaths(IsolatedAsyncioTestCase):
               include: ['**/*.md']
               exclude: ['**/part2/*.md']
         ''')
-        self.assertEqual(book.max_level, 4)
+        self.assertEqual(4, book.max_level)
         self.assertPagePaths(book, (
             self.root,
             self.root / 'intro.md',
@@ -152,7 +152,7 @@ class TestBookPaths(IsolatedAsyncioTestCase):
               include: ['**/*.md']
               exclude: ['**/chapter3.md']
         ''')
-        self.assertEqual(book.max_level, 4)
+        self.assertEqual(4, book.max_level)
         self.assertPagePaths(book, (
             self.root,
             self.root / 'intro.md',

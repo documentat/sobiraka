@@ -66,4 +66,4 @@ class BookTestCase(IsolatedAsyncioTestCase, Generic[T]):
     def test_errors(self):
         for page in self.book.pages:
             with self.subTest(page):
-                self.assertEqual(self.processor.errors[page], set())
+                self.assertEqual(set(), self.processor.errors[page])

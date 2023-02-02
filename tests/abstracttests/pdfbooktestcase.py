@@ -21,7 +21,7 @@ class PdfBookTestCase(BookTestCase[PdfBuilder], AbstractTestWithRtTmp):
             latex_output.seek(0)
             latex = latex_output.read().decode('utf-8')
         expected_latex = (self.dir / 'expected' / 'expected.tex').read_text()
-        self.assertEqual(latex, expected_latex)
+        self.assertEqual(expected_latex, latex)
 
     async def test_pdf(self):
         with TemporaryDirectory(prefix='sobiraka-test-') as temp_dir:
@@ -34,7 +34,7 @@ class PdfBookTestCase(BookTestCase[PdfBuilder], AbstractTestWithRtTmp):
 
             expected_count = len(list((self.dir / 'expected').glob('*.png')))
             actual_count = len(list(temp_dir.glob('*.png')))
-            self.assertEqual(actual_count, expected_count)
+            self.assertEqual(expected_count, actual_count)
 
             for p in range(1, expected_count + 1):
                 with self.subTest(f'page-{p}'):
@@ -42,7 +42,7 @@ class PdfBookTestCase(BookTestCase[PdfBuilder], AbstractTestWithRtTmp):
                         expected_sha = hashlib.file_digest(file, 'sha1')
                     with (temp_dir / f'page-{p}.png').open('rb') as file:
                         actual_sha = hashlib.file_digest(file, 'sha1')
-                    self.assertEqual(actual_sha.digest(), expected_sha.digest())
+                    self.assertEqual(expected_sha.hexdigest(), actual_sha.hexdigest())
 
 
 del BookTestCase, AbstractTestWithRtTmp

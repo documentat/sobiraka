@@ -30,7 +30,7 @@ class TestChildren(BookTestCase):
         }
         for page, expected in data.items():
             with self.subTest(page):
-                self.assertEqual(type(page), expected)
+                self.assertEqual(expected, type(page))
 
     def test_is_index(self):
         data: dict[Page, bool] = {
@@ -45,7 +45,7 @@ class TestChildren(BookTestCase):
         }
         for page, expected in data.items():
             with self.subTest(page):
-                self.assertEqual(page.is_index, expected)
+                self.assertEqual(expected, page.is_index)
 
     def test_breadcrumbs(self):
         data: tuple[list[Page], ...] = (
@@ -61,7 +61,7 @@ class TestChildren(BookTestCase):
         for expected in data:
             page = expected[-1]
             with self.subTest(page):
-                self.assertSequenceEqual(page.breadcrumbs, expected)
+                self.assertSequenceEqual(expected, page.breadcrumbs)
 
     def test_parent(self):
         data: dict[Page, Page] = {
@@ -76,7 +76,7 @@ class TestChildren(BookTestCase):
         }
         for page, expected in data.items():
             with self.subTest(page):
-                self.assertEqual(page.parent, expected)
+                self.assertEqual(expected, page.parent)
 
     def test_children(self):
         data: dict[Page, list[Page]] = {
@@ -91,7 +91,7 @@ class TestChildren(BookTestCase):
         }
         for page, expected in data.items():
             with self.subTest(page):
-                self.assertEqual(page.children, expected)
+                self.assertEqual(expected, page.children)
 
     def test_children_recursive(self):
         data: dict[Page, list[Page]] = {
@@ -106,7 +106,7 @@ class TestChildren(BookTestCase):
         }
         for page, expected in data.items():
             with self.subTest(page):
-                self.assertEqual(page.children_recursive, expected)
+                self.assertEqual(expected, page.children_recursive)
 
 
 del BookTestCase
