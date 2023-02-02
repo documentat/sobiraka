@@ -15,14 +15,17 @@ T = TypeVar('T', bound=Processor)
 class BookTestCase(IsolatedAsyncioTestCase, Generic[T]):
     maxDiff = None
 
+    def load_book(self) -> Book:
+        book_yaml = self.dir / 'book.yaml'
+        return Book.from_manifest(book_yaml)
+
     async def asyncSetUp(self):
         await super().asyncSetUp()
 
         filepath = Path(getfile(self.__class__))
         self.dir: Path = filepath.parent
 
-        book_yaml = self.dir / f'{filepath.stem}.yaml'
-        self.book = Book.from_manifest(book_yaml)
+        self.book = self.load_book()
 
         awaitables = tuple(self.processor.process2(page) for page in self.book.pages)
         await gather(*awaitables)
