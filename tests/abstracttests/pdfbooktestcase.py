@@ -4,6 +4,7 @@ from functools import cached_property
 from io import BytesIO
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from unittest import SkipTest
 
 from sobiraka.processing import PdfBuilder
 from .abstracttestwithrttmp import AbstractTestWithRtTmp
@@ -16,11 +17,16 @@ class PdfBookTestCase(BookTestCase[PdfBuilder], AbstractTestWithRtTmp):
         return PdfBuilder(self.book)
 
     async def test_latex(self):
+        try:
+            expected_latex = (self.dir / 'expected' / 'expected.tex').read_text()
+        except FileNotFoundError:
+            raise SkipTest
+
         with BytesIO() as latex_output:
             await self.processor.generate_latex(latex_output)
             latex_output.seek(0)
             latex = latex_output.read().decode('utf-8')
-        expected_latex = (self.dir / 'expected' / 'expected.tex').read_text()
+
         self.assertEqual(expected_latex, latex)
 
     async def test_pdf(self):

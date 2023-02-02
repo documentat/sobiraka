@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from functools import cached_property
 from pathlib import Path
-from typing import Any, TYPE_CHECKING
+from typing import Any, Self, TYPE_CHECKING
 
 import yaml
 from frozendict import frozendict
@@ -17,6 +17,7 @@ if TYPE_CHECKING: from .page import Page
 class BookConfig_Paths:
     manifest_path: Path
     root: Path
+    resources: Path = None
     include: tuple[str] = field(default_factory=tuple)
     exclude: tuple[str] = field(default_factory=tuple)
 
@@ -60,13 +61,14 @@ class Book:
         return f'<{self.__class__.__name__}: {repr(str(self.paths.root))}>'
 
     @classmethod
-    def from_manifest(cls, manifest_path: Path) -> Book:
+    def from_manifest(cls, manifest_path: Path) -> Self:
 
         schema = Schema({
             Optional('id', default=manifest_path.parent.stem): str,
             Optional('title', default=manifest_path.parent.stem): str,
             Optional('paths', default={}): {
                 Optional('root', default=manifest_path.parent): And(str, Use(lambda x: (manifest_path.parent / x).resolve())),
+                Optional('resources', default=manifest_path.parent): And(str, Use((lambda x: (manifest_path.parent / x).resolve()))),
                 Optional('include', default=('**/*',)): And([str], Use(tuple)),
                 Optional('exclude', default=()): And([str], Use(tuple)),
             },

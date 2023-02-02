@@ -1,3 +1,4 @@
+import os
 import sys
 from asyncio import create_subprocess_exec
 from pathlib import Path
@@ -35,6 +36,7 @@ class PdfBuilder(Processor):
             'build.tex',
             '-halt-on-error',
             cwd=xelatex_workdir,
+            env=os.environ | {'TEXINPUTS': f'{self.book.paths.resources}:'},
             stdin=DEVNULL,
             stdout=DEVNULL)
         await xelatex.wait()
@@ -80,7 +82,6 @@ class PdfBuilder(Processor):
                 'pandoc',
                 '--from', 'json',
                 '--to', 'latex-smart',
-                '--resource-path', self.book.root / '_images',
                 '--wrap', 'none',
                 stdin=PIPE,
                 stdout=PIPE)
@@ -104,7 +105,10 @@ class PdfBuilder(Processor):
                     break
             for line in file:
                 line = line.rstrip()
-                if line == 'End of file on the terminal!':
+                if line in ('End of file on the terminal!',
+                            ' When in doubt, ask someone for help!',
+                            'Here is how much of TeX\'s memory you used:',
+                            '?'):
                     break
                 print(line, file=sys.stderr)
             print('\033[0m', end='', file=sys.stderr)

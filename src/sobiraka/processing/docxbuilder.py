@@ -33,7 +33,6 @@ class DocxBuilder(Processor):
             'pandoc',
             '--from', 'json',
             '--to', 'docx',
-            '--resource-path', self.book.root / '_images',
             '--output', output,
             stdin=PIPE)
         pandoc.stdin.write(json_bytes)

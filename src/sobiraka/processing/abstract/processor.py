@@ -130,9 +130,6 @@ class Processor(Dispatcher):
 
         return tuple(nodes)
 
-    async def process_image(self, elem: Image, page: Page):
-        elem.url = str(self.book.root / '_images' / elem.url)
-
     @on_demand
     async def process2(self, page: Page):
         await self.process1(page)
