@@ -50,10 +50,10 @@ class BookTestCase(IsolatedAsyncioTestCase, Generic[T]):
         if diff:
             raise AssertionError('\n\n' + '\n'.join(diff[3:]))
 
-    def for_each_expected(self, suffix: str) -> Iterable[tuple[Page, Path]]:
+    def for_each_expected(self, suffix: str, *, subdir: str = '') -> Iterable[tuple[Page, Path]]:
         ok = True
         for page in self.book.pages:
-            expected = self.dir / 'expected' / page.relative_path.with_suffix(suffix)
+            expected = self.dir / 'expected' / subdir / page.relative_path.with_suffix(suffix)
             if expected.exists():
                 yield page, expected
             else:
