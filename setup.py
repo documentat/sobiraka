@@ -8,10 +8,10 @@ setup(
     install_requires=[
         'frozendict~=2.3.4',
         'jinja2~=3.1.2',
+        'jsonschema~=4.17.3',
         'more-itertools~=9.0.0',
         'panflute~=2.2.3',
         'pyyaml~=6.0',
-        'schema~=0.7.5',
     ],
     packages=find_packages('src'),
     package_dir={'sobiraka': 'src/sobiraka'},

@@ -7,19 +7,42 @@ from typing import Any, Self, TYPE_CHECKING
 
 import yaml
 from frozendict import frozendict
+from jsonschema import validate
 from more_itertools import unique_justseen
-from schema import And, Optional, Schema, Use
+
+from sobiraka.runtime import RT
 
 if TYPE_CHECKING: from .page import Page
+
+MANIFEST_SCHEMA = yaml.load((RT.FILES / 'sobiraka-book.yaml').read_text(), yaml.SafeLoader)
+
+MANIFEST_BASE = {
+    'id': None,
+    'title': None,
+    'paths': {
+        'root': None,
+        'resources': None,
+        'include': ['**/*'],
+        'exclude': '',
+    },
+    'pdf': {
+        'header': None,
+    },
+    'lint': {
+        'dictionaries': [],
+        'exceptions': [],
+    },
+    'variables': {},
+}
 
 
 @dataclass(kw_only=True, frozen=True)
 class BookConfig_Paths:
     manifest_path: Path
     root: Path
-    resources: Path = None
-    include: tuple[str] = field(default_factory=tuple)
-    exclude: tuple[str] = field(default_factory=tuple)
+    resources: Path
+    include: tuple[str]
+    exclude: tuple[str]
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -30,10 +53,10 @@ class BookConfig_PDF:
 
 @dataclass(kw_only=True, frozen=True)
 class BookConfig_Lint:
-    dictionaries: tuple[str] = field(default_factory=tuple)
+    dictionaries: tuple[str]
     """List of Hunspell dictionaries to use for spellchecking."""
 
-    exceptions: tuple[Path] = field(default_factory=tuple)
+    exceptions: tuple[Path]
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -62,40 +85,35 @@ class Book:
 
     @classmethod
     def from_manifest(cls, manifest_path: Path) -> Self:
+        from sobiraka.utils import convert_or_none, merge_dicts
 
-        schema = Schema({
-            Optional('id', default=manifest_path.parent.stem): str,
-            Optional('title', default=manifest_path.parent.stem): str,
-            Optional('paths', default={}): {
-                Optional('root', default=manifest_path.parent): And(str, Use(lambda x: (manifest_path.parent / x).resolve())),
-                Optional('resources', default=manifest_path.parent): And(str, Use((lambda x: (manifest_path.parent / x).resolve()))),
-                Optional('include', default=('**/*',)): And([str], Use(tuple)),
-                Optional('exclude', default=()): And([str], Use(tuple)),
-            },
-            Optional('pdf', default={}): {
-                Optional('header', default=None): And(str, Use(lambda x: manifest_path.parent / x)),
-            },
-            Optional('lint', default={}): {
-                Optional('dictionaries', default=()): And([str], Use(tuple)),
-                Optional('exceptions', default=()): And([
-                    And(str, Use(lambda x: (manifest_path.parent / x).resolve())),
-                ], Use(tuple)),
-            },
-            Optional('variables', default=frozendict): And(dict, Use(frozendict)),
-        })
+        def path(x: str) -> Path:
+            return (manifest_path.parent / (x or '')).resolve()
 
         manifest_path = manifest_path.resolve()
         with manifest_path.open() as manifest_file:
             manifest: dict = yaml.load(manifest_file, yaml.SafeLoader) or {}
-        manifest = schema.validate(manifest)
+        validate(manifest, MANIFEST_SCHEMA)
+        manifest = merge_dicts(MANIFEST_BASE, manifest)
 
         book = Book(
-            id=manifest['id'],
-            title=manifest['title'],
-            paths=BookConfig_Paths(**manifest['paths'], manifest_path=manifest_path),
-            pdf=BookConfig_PDF(**manifest['pdf']),
-            lint=BookConfig_Lint(**manifest['lint']),
-            variables=manifest['variables'],
+            id=manifest['id'] or manifest_path.parent.stem,
+            title=manifest['id'] or manifest_path.parent.stem,
+            paths=BookConfig_Paths(
+                manifest_path=manifest_path,
+                root=path(manifest['paths']['root']),
+                resources=path(manifest['paths']['resources']),
+                include=tuple(manifest['paths']['include']),
+                exclude=tuple(manifest['paths']['exclude']),
+            ),
+            pdf=BookConfig_PDF(
+                header=convert_or_none(path, manifest['pdf']['header']),
+            ),
+            lint=BookConfig_Lint(
+                dictionaries=tuple(manifest['lint']['dictionaries']),
+                exceptions=tuple(path(x) for x in manifest['lint']['exceptions']),
+            ),
+            variables=frozendict(manifest['variables']),
         )
         return book
 

@@ -13,12 +13,9 @@ class TestPageProcessingOrder(IsolatedAsyncioTestCase):
         temp_dir: str = self.enterContext(TemporaryDirectory(prefix='sobiraka-test-'))
         self.dir: Path = Path(temp_dir)
 
-        self.book = Book(id='test-book',
-                         title='Test Book',
-                         paths=BookConfig_Paths(
-                             root=self.dir,
-                             manifest_path=self.dir,
-                         ))
+        manifest_path = self.dir / 'book.yaml'
+        manifest_path.touch()
+        self.book = Book.from_manifest(manifest_path)
 
         page_path = self.dir / 'page.md'
         page_path.touch()
@@ -28,7 +25,7 @@ class TestPageProcessingOrder(IsolatedAsyncioTestCase):
 
         self.order: list[str] = []
 
-    async def test_page_build_order(self):
+    async def test_order(self):
         create_task(self.wait_until_loaded(self.page))
         create_task(self.wait_until_processed1(self.page))
         create_task(self.wait_until_processed2(self.page))

@@ -1,0 +1,45 @@
+additionalProperties: false
+properties:
+
+  id: { type: string }
+  title: { type: string }
+
+  paths:
+    additionalProperties: false
+    properties:
+      root: { type: string }
+      resources: { type: string }
+      include:
+        type: array
+        minItems: 0
+        items:
+          type: string
+      exclude:
+        type: array
+        minItems: 0
+        items:
+          type: string
+
+  pdf:
+    additionalProperties: false
+    properties:
+      header: { type: string }
+
+  lint:
+    additionalProperties: false
+    properties:
+      dictionaries:
+        type: array
+        minItems: 0
+        uniqueItems: true
+        items:
+          type: string
+      exceptions:
+        type: array
+        minItems: 0
+        uniqueItems: true
+        items:
+          type: string
+
+  variables:
+    type: object
