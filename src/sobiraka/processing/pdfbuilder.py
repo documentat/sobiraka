@@ -50,7 +50,7 @@ class PdfBuilder(Processor):
             hash(page.book)
             self.generate_latex_for_page(page).start()
 
-        if self.print_errors():
+        if self.print_issues():
             raise Exception
 
         latex_output.write((RT.FILES / 'base.sty').read_bytes())

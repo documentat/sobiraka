@@ -1,12 +1,12 @@
 from dataclasses import dataclass
 
 
-class ProcessingError:
+class Issue:
     pass
 
 
 @dataclass(order=True, frozen=True)
-class BadLinkError(ProcessingError):
+class BadLink(Issue):
     target: str
 
     def __str__(self):
@@ -14,7 +14,7 @@ class BadLinkError(ProcessingError):
 
 
 @dataclass(order=True, frozen=True)
-class AmbiguosLinkError(ProcessingError):
+class AmbiguosLink(Issue):
     target: str
     anchor: str
 

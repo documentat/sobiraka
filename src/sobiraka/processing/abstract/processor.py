@@ -10,11 +10,9 @@ from typing import Awaitable
 import jinja2
 import panflute
 from more_itertools import padded
-from panflute import Code, Doc, Header, Image, Link, Str, stringify
+from panflute import Code, Doc, Header, Link, Str, stringify
 
-from sobiraka.models import Book, Href, Page, UrlHref
-from sobiraka.models.error import BadLinkError, ProcessingError
-from sobiraka.models.href import PageHref
+from sobiraka.models import BadLink, Book, Href, Issue, Page, PageHref, UrlHref
 from sobiraka.utils import LatexBlock, on_demand, save_debug_json
 from .dispatcher import Dispatcher
 
@@ -50,12 +48,12 @@ class Processor(Dispatcher):
         Do not rely on the value for page here until :func:`process1()` is awaited for that page.
         
         Note that sometime a user leaves anchors empty or specifies identical anchors for multiple headers by mistake.
-        However, this is not considered a critical error as long as no page contains links to this anchor.
+        However, this is not considered a critical issue as long as no page contains links to this anchor.
         For that reason, all the titles for an anchor are stored as a list (in order of appearance on the page),
-        and it is up to :func:`.process2_link()` to report an error if necessary.
+        and it is up to :func:`.process2_link()` to report an issue if necessary.
         """
 
-        self.errors: dict[Page, set[ProcessingError]] = defaultdict(set)
+        self.issues: dict[Page, set[Issue]] = defaultdict(set)
 
         self.process2_tasks: dict[Page, list[Awaitable]] = defaultdict(list)
         """:meta private:"""
@@ -136,18 +134,18 @@ class Processor(Dispatcher):
         await gather(*self.process2_tasks[page])
         save_debug_json('s2', page, self.doc[page])
 
-    def print_errors(self) -> bool:
-        errors_found: bool = False
+    def print_issues(self) -> bool:
+        issues_found: bool = False
         for page in self.book.pages:
-            if self.errors[page]:
-                message = f'Errors in {page.relative_path}:'
-                errors = sorted(self.errors[page], key=lambda e: (e.__class__.__name__, e))
-                for error in errors:
-                    message += f'\n    {error}'
+            if self.issues[page]:
+                message = f'Issues in {page.relative_path}:'
+                issues = sorted(self.issues[page], key=lambda e: (e.__class__.__name__, e))
+                for issue in issues:
+                    message += f'\n    {issue}'
                 message += '\n'
                 print(message, file=sys.stderr)
-                errors_found = True
-        return errors_found
+                issues_found = True
+        return issues_found
 
     # --------------------------------------------------------------------------------
     # Internal links
@@ -157,7 +155,7 @@ class Processor(Dispatcher):
             self.links[page].append(UrlHref(elem.url))
         else:
             if page.path.suffix == '.rst':
-                self.errors[page].add(BadLinkError(elem.url))
+                self.issues[page].add(BadLink(elem.url))
                 return
             await self._process_internal_link(elem, elem.url, page)
 
@@ -183,7 +181,7 @@ class Processor(Dispatcher):
                     target_path = (page.path.parent / target_path_str).resolve().relative_to(self.book.root)
                 target = self.book.pages_by_path[target_path]
             except (KeyError, ValueError):
-                self.errors[page].add(BadLinkError(target_text))
+                self.issues[page].add(BadLink(target_text))
                 return
         else:
             target = page
@@ -205,7 +203,7 @@ class Processor(Dispatcher):
                 elem.url = f'#{href.target.id}--{href.anchor}'
                 autolabel = self.anchors[href.target][href.anchor]
             except (KeyError, AssertionError):
-                self.errors[page].add(BadLinkError(target_text))
+                self.issues[page].add(BadLink(target_text))
                 return
         else:
             elem.url = f'#{href.target.id}'

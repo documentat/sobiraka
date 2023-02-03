@@ -1,8 +1,5 @@
-from unittest import main
-
 from abstracttests.booktestcase import BookTestCase
-from sobiraka.models import Href, Page, PageHref, UrlHref
-from sobiraka.models.error import BadLinkError, ProcessingError
+from sobiraka.models import BadLink, Href, Issue, Page, PageHref, UrlHref
 
 
 class AbstractTestLinksBad(BookTestCase):
@@ -28,13 +25,13 @@ class AbstractTestLinksBad(BookTestCase):
         self.assertSequenceEqual(expected_ids, actual_ids)
 
     def test_errors(self):
-        data: dict[Page, tuple[ProcessingError, ...]] = {
+        data: dict[Page, tuple[Issue, ...]] = {
             self.document0: (
-                BadLinkError(f'../sub/document1.{self.EXT}'),
-                BadLinkError(f'document2.{self.EXT}'),
-                BadLinkError(f'sub/subsub/document3.{self.EXT}#section-1'),
-                BadLinkError(f'sub/subsub/document3.{self.EXT}#section2'),
-                BadLinkError('sub/subsub/subsubsub/document4'),
+                BadLink(f'../sub/document1.{self.EXT}'),
+                BadLink(f'document2.{self.EXT}'),
+                BadLink(f'sub/subsub/document3.{self.EXT}#section-1'),
+                BadLink(f'sub/subsub/document3.{self.EXT}#section2'),
+                BadLink('sub/subsub/subsubsub/document4'),
             ),
             self.document1: (),
             self.document2: (),
@@ -43,7 +40,7 @@ class AbstractTestLinksBad(BookTestCase):
         }
         for page, expected_errors in data.items():
             with self.subTest(page):
-                self.assertEqual(set(expected_errors), self.processor.errors[page])
+                self.assertEqual(set(expected_errors), self.processor.issues[page])
 
     def test_links(self):
         data: dict[Page, tuple[Href, ...]] = {
