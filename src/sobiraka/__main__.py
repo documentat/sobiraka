@@ -2,8 +2,9 @@ from argparse import ArgumentParser
 from asyncio import run
 from pathlib import Path
 
+from sobiraka.linter import Linter
 from sobiraka.models import Book
-from sobiraka.processing import DocxBuilder, PdfBuilder, Linter, TxtBuilder
+from sobiraka.processing import DocxBuilder, PdfBuilder, TxtBuilder
 from sobiraka.runtime import RT
 from sobiraka.utils import validate_dictionary
 

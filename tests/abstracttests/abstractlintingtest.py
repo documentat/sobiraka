@@ -1,7 +1,7 @@
 from functools import cached_property
 
 from abstracttests.booktestcase import BookTestCase
-from sobiraka.processing import Linter
+from sobiraka.linter import Linter
 
 
 class AbstractLintingTest(BookTestCase[Linter]):

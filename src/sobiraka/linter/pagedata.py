@@ -1,120 +1,16 @@
 from __future__ import annotations
 
-import os
 import re
-from asyncio import create_subprocess_exec, gather
-from bisect import bisect_left
+from _bisect import bisect_left
 from dataclasses import dataclass
 from functools import cache, cached_property
 from itertools import chain, pairwise
-from subprocess import PIPE
-from typing import AsyncIterable, Awaitable, Iterable, Sequence
+from typing import Iterable, Sequence
 
-from more_itertools import unique_everseen
-
-from sobiraka.models import Book, MisspelledWords, Page
-from sobiraka.runtime import RT
-from .abstract import Plainifier
+from sobiraka.models import Book, Page
 
 SEP = re.compile(r'[?!.]+\s*')
 END = re.compile(r'[?!.]+\s*$')
-
-
-class Linter(Plainifier):
-
-    def __init__(self, book: Book):
-        super().__init__(book)
-
-        self._page_data: dict[Page, PageData] = {}
-
-        self.environ = os.environ
-        if self.book.lint.dictionaries:
-            self.environ = self.environ.copy()
-            self.environ['DICPATH'] = ':'.join((
-                str(RT.FILES / 'dictionaries'),
-                str(self.book.paths.manifest_path.parent)))
-            self.environ['DICTIONARY'] = ','.join(self.book.lint.dictionaries)
-
-    async def data(self, page: Page) -> PageData:
-        if page not in self._page_data:
-            text = await self.plainify(page)
-            self._page_data[page] = PageData(page, text)
-        return self._page_data[page]
-
-    async def check(self):
-        tasks: list[Awaitable] = []
-        for page in self.book.pages:
-            tasks.append(self.check_page(page))
-        await gather(*tasks)
-
-        if self.issues:
-            return 1
-        return 0
-
-    async def check_page(self, page: Page):
-        data = await self.data(page)
-
-        words: list[str] = []
-        for phrase in data.clean_phrases:
-            words += phrase.split()
-        words = list(unique_everseen(words))
-        misspelled_words: list[str] = []
-        async for word in self.find_misspelled_words(words):
-            if word not in misspelled_words:
-                misspelled_words.append(word)
-        if misspelled_words:
-            self.issues[page].add(MisspelledWords(page.relative_path, tuple(misspelled_words)))
-
-    async def find_misspelled_words(self, words: Iterable[str]) -> AsyncIterable[str]:
-        hunspell = await create_subprocess_exec(
-            'hunspell',
-            env=self.environ,
-            stdin=PIPE,
-            stdout=PIPE)
-        hunspell_version = await hunspell.stdout.readline()
-        assert re.match(br'Hunspell 1\..+\n', hunspell_version), hunspell_version
-
-        hunspell.stdin.write(' '.join(words).encode('utf-8'))
-        hunspell.stdin.close()
-
-        async for line in hunspell.stdout:
-            line = line.decode('utf-8').rstrip('\n')
-
-            if m := re.fullmatch('& (\S+) (\d+) (\d+): (.+)', line):
-                misspelled_word, near_misses_count, position, near_misses = m.groups()
-                yield misspelled_word
-
-            elif m := re.fullmatch('# (\S+) (\d+)', line):
-                misspelled_word, position = m.groups()
-                yield misspelled_word
-
-            elif m := re.fullmatch('\+ (\w+)', line):
-                continue
-
-            elif line in ('', '*', '-'):
-                continue
-
-            else:
-                raise ValueError(line)
-
-
-@cache
-def exceptions_regexp(book: Book) -> re.Pattern | None:
-    """
-    Prepare a regular expression that matches any exception.
-    If no exceptions are provided, returns `None`.
-    """
-    regexp_parts: list[str] = []
-    for exceptions_path in book.lint.exceptions:
-        with exceptions_path.open() as exceptions_file:
-            for line in exceptions_file:
-                line = line.strip()
-                if exceptions_path.suffix == '.regexp':
-                    regexp_parts.append(line)
-                else:
-                    regexp_parts.append(r'\b' + re.escape(line) + r'\b')
-    if regexp_parts:
-        return re.compile('|'.join(regexp_parts))
 
 
 @dataclass
@@ -203,7 +99,7 @@ class PageData:
                 # Example:
                 #     Example Corp. | is a company. | Visit www. | example. | com for more info.
                 #   → Example Corp. is a company. | Visit www.example.com for more info.
-                phrases[left:right+1] = Fragment(self, linenum, phrases[left].start, phrases[right].end),
+                phrases[left:right + 1] = Fragment(self, linenum, phrases[left].start, phrases[right].end),
 
             # Add this line's phrases to the result
             result += phrases
@@ -235,3 +131,22 @@ class Fragment:
     @property
     def text(self) -> str:
         return self.page_data.lines[self.linenum][self.start:self.end]
+
+
+@cache
+def exceptions_regexp(book: Book) -> re.Pattern | None:
+    """
+    Prepare a regular expression that matches any exception.
+    If no exceptions are provided, returns `None`.
+    """
+    regexp_parts: list[str] = []
+    for exceptions_path in book.lint.exceptions:
+        with exceptions_path.open() as exceptions_file:
+            for line in exceptions_file:
+                line = line.strip()
+                if exceptions_path.suffix == '.regexp':
+                    regexp_parts.append(line)
+                else:
+                    regexp_parts.append(r'\b' + re.escape(line) + r'\b')
+    if regexp_parts:
+        return re.compile('|'.join(regexp_parts))
