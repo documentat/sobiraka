@@ -5,7 +5,8 @@ paths:
 lint:
   dictionaries:
     - en_US
-    - dictionary
+    - dictionaries/examplecom
   exceptions:
-    - exceptions.regexp
-    - exceptions.txt
+    - exceptions/examplecom.regexp
+    - exceptions/examplecom.txt
+    - exceptions/macos.regexp

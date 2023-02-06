@@ -11,21 +11,21 @@ class AbstractLintingTest(BookTestCase[Linter]):
     def processor(self) -> Linter:
         return Linter(self.book)
 
-    async def test_misspelled_words(self):
-        for page, expected in self.for_each_expected('.misspelled-words'):
+    async def test_issues(self):
+        for page, expected in self.for_each_expected('.issues'):
             with self.subTest(page):
                 expected = expected.read_text().splitlines()
                 await self.processor.check()
-                actual = self.processor.misspelled_words[page]
+                actual_issues = sorted(self.processor.issues[page], key=lambda x: (x.__class__.__name__, x))
+                actual = list(map(str, actual_issues))
                 self.assertNoDiff(expected, actual)
 
     async def test_phrases(self):
         for page, expected in self.for_each_expected('.phrases'):
             with self.subTest(page):
-                expected = expected.read_text().splitlines()
-                actual = []
-                async for phrase in self.processor.phrases(page):
-                    actual.append(phrase)
+                expected = tuple(expected.read_text().splitlines())
+                page_data = await self.processor.data(page)
+                actual = tuple(x.text for x in page_data.phrases)
                 self.assertNoDiff(expected, actual)
 
 

@@ -1,17 +1,18 @@
+from __future__ import annotations
+
 import os
 import re
-import sys
 from asyncio import create_subprocess_exec, gather
 from bisect import bisect_left
-from collections import defaultdict
-from functools import cached_property
-from itertools import pairwise
+from dataclasses import dataclass
+from functools import cache, cached_property
+from itertools import chain, pairwise
 from subprocess import PIPE
-from typing import AsyncIterable, Awaitable, Iterable
+from typing import AsyncIterable, Awaitable, Iterable, Sequence
 
 from more_itertools import unique_everseen
 
-from sobiraka.models import Book, Page
+from sobiraka.models import Book, MisspelledWords, Page
 from sobiraka.runtime import RT
 from .abstract import Plainifier
 
@@ -24,7 +25,7 @@ class Linter(Plainifier):
     def __init__(self, book: Book):
         super().__init__(book)
 
-        self.misspelled_words: dict[Page, list[str]] = defaultdict(list)
+        self._page_data: dict[Page, PageData] = {}
 
         self.environ = os.environ
         if self.book.lint.dictionaries:
@@ -34,133 +35,35 @@ class Linter(Plainifier):
                 str(self.book.paths.manifest_path.parent)))
             self.environ['DICTIONARY'] = ','.join(self.book.lint.dictionaries)
 
+    async def data(self, page: Page) -> PageData:
+        if page not in self._page_data:
+            text = await self.plainify(page)
+            self._page_data[page] = PageData(page, text)
+        return self._page_data[page]
+
     async def check(self):
         tasks: list[Awaitable] = []
         for page in self.book.pages:
             tasks.append(self.check_page(page))
         await gather(*tasks)
 
-        if self.misspelled_words:
-            for page, words in sorted(self.misspelled_words.items()):
-                print(f'Misspelled words in {page.relative_path}: {", ".join(words)}', file=sys.stderr)
+        if self.issues:
             return 1
-
         return 0
 
     async def check_page(self, page: Page):
+        data = await self.data(page)
+
         words: list[str] = []
-        async for phrase in self.phrases(page, remove_exceptions=True):
+        for phrase in data.clean_phrases:
             words += phrase.split()
         words = list(unique_everseen(words))
-
-        async for misspelled_word in self.find_misspelled_words(words):
-            if misspelled_word not in self.misspelled_words[page]:
-                self.misspelled_words[page].append(misspelled_word)
-
-    @cached_property
-    def exceptions(self) -> tuple[tuple[str, ...], tuple[str, ...]]:
-        exception_texts: list[str] = []
-        exception_regexps: list[str] = []
-
-        for exceptions_path in self.book.lint.exceptions:
-            with exceptions_path.open() as exceptions_file:
-                if exceptions_path.suffix == '.regexp':
-                    exception_regexps += (line.strip() for line in exceptions_file)
-                else:
-                    exception_texts += (line.strip() for line in exceptions_file)
-
-        return tuple(exception_texts), tuple(exception_regexps)
-
-    @cached_property
-    def exceptions_regexp(self) -> re.Pattern | None:
-        """
-        Prepare a regular expression that matches any exception.
-        If no exceptions are provided, returns `None`.
-        """
-        regexp_parts = list(self.exceptions[1])
-        for exception in self.exceptions[0]:
-            regexp_parts.append(r'\b' + re.escape(exception) + r'\b')
-        return re.compile('|'.join(regexp_parts)) if regexp_parts else None
-
-    async def phrases(self, page: Page, *, remove_exceptions: bool = False) -> AsyncIterable[str]:
-        """
-        Normally, a text is split into phrases by periods, exclamation points, etc.
-        However, the 'exceptions' dictionary may contain some words
-        that contain periods in them ('e.g.', 'H.265', 'www.example.com').
-        This function first splits the line into phrases using :meth:`phrase_bounds()`,
-        but then moves their bounds for each exception that was accidentally split.
-
-        If `remove_exceptions=True`, the exceptions will be replaced with spaces in the result.
-        This is used to generate phrases that can be sent to another linter.
-        """
-        text = await self.plainify(page)
-
-        # Each phrase can only be on a single line,
-        # so we work with each line separately
-        for line in text.splitlines():
-
-            # Split the line into phrases, but then move their bounds
-            # for each exception that was accidentally split.
-            # Example:
-            #     Example Corp. is a company. Visit www.example.com for more info.
-            #   → Example Corp. | is a company. | Visit www. | example. | com for more info.
-            # BTW, if you are debugging this function, here is a useful expression for you:
-            #   list(line[start:end] for start,end in bounds)
-            bounds = self.phrase_bounds(line)
-
-            # Look for exceptions
-            if self.exceptions_regexp:
-                for m in re.finditer(self.exceptions_regexp, line):
-                    exception: str = m.group()
-
-                    # Find the phrases overlapping with the exception from left and right.
-                    left = bisect_left(bounds, m.start(), key=lambda x: x[1])
-                    right = bisect_left(bounds, m.end(), key=lambda x: x[0]) - 1
-
-                    # If the exception ends like a phrase would, we will merge one more phrase from the right.
-                    # Unless, of course, there are no more phrases on the right.
-                    if re.search(END, exception):
-                        right = min(right + 1, len(bounds) - 1)
-
-                    # Merge the left and right phrases into one.
-                    # (If left and right are the same phrase, this does nothing.)
-                    # Example:
-                    #     Example Corp. | is a company. | Visit www. | example. | com for more info.
-                    #   → Example Corp. is a company. | Visit www.example.com for more info.
-                    bounds[left:right+1] = (bounds[left][0], bounds[right][1]),
-
-                    # Optionally, replace the exception itself with spaces.
-                    if remove_exceptions:
-                        line = line[:m.start()] + ' ' * len(m.group()) + line[m.end():]
-
-            # Finally, add the phrases as strings to the result
-            for start, end in bounds:
-                yield line[start:end]
-
-    @staticmethod
-    def phrase_bounds(line: str) -> list[tuple[int, int]]:
-        """
-        Split the line into phrase by pediods, exclamation or question marks or clusters of them.
-        The punctuation marks are included in the phrases, but the spaces after are not.
-
-        Return pairs of numbers representing `start` and `end` of each phrase.
-        The content of each phrase can then be accessed as `line[start:end]`.
-        """
-        phrase_bounds: list[tuple[int, int]] = []
-
-        separators = \
-            re.search('^', line), \
-            *re.finditer(SEP, line), \
-            re.search('$', line)
-
-        for before, after in pairwise(separators):
-            num_spaces = len(re.search(r'\s*$', after.group()).group())
-            phrase_bounds.append((before.end(), after.end() - num_spaces))
-
-        if line[phrase_bounds[-1][0]:phrase_bounds[-1][1]] == '':
-            phrase_bounds.pop()
-
-        return phrase_bounds
+        misspelled_words: list[str] = []
+        async for word in self.find_misspelled_words(words):
+            if word not in misspelled_words:
+                misspelled_words.append(word)
+        if misspelled_words:
+            self.issues[page].add(MisspelledWords(page.relative_path, tuple(misspelled_words)))
 
     async def find_misspelled_words(self, words: Iterable[str]) -> AsyncIterable[str]:
         hunspell = await create_subprocess_exec(
@@ -193,3 +96,142 @@ class Linter(Plainifier):
 
             else:
                 raise ValueError(line)
+
+
+@cache
+def exceptions_regexp(book: Book) -> re.Pattern | None:
+    """
+    Prepare a regular expression that matches any exception.
+    If no exceptions are provided, returns `None`.
+    """
+    regexp_parts: list[str] = []
+    for exceptions_path in book.lint.exceptions:
+        with exceptions_path.open() as exceptions_file:
+            for line in exceptions_file:
+                line = line.strip()
+                if exceptions_path.suffix == '.regexp':
+                    regexp_parts.append(line)
+                else:
+                    regexp_parts.append(r'\b' + re.escape(line) + r'\b')
+    if regexp_parts:
+        return re.compile('|'.join(regexp_parts))
+
+
+@dataclass
+class PageData:
+    page: Page
+    text: str
+
+    @property
+    def lines(self) -> list[str]:
+        return self.text.splitlines()
+
+    @property
+    def exceptions(self) -> Sequence[Fragment]:
+        for exceptions in self.exceptions_by_line:
+            return tuple(chain(*self.exceptions_by_line))
+
+    @cached_property
+    def exceptions_by_line(self) -> Sequence[Sequence[Fragment]]:
+        exceptions_by_line: list[list[Fragment]] = []
+        regexp = exceptions_regexp(self.page.book)
+        for linenum, line in enumerate(self.lines):
+            exceptions_by_line.append([])
+            if regexp:
+                for m in re.finditer(regexp, line):
+                    exceptions_by_line[linenum].append(Fragment(self, linenum, m.start(), m.end()))
+        return tuple(tuple(x) for x in exceptions_by_line)
+
+    @cached_property
+    def naive_phrases(self) -> Sequence[Sequence[Fragment]]:
+        """
+        Split each line into phrases by pediods, exclamation or question marks or clusters of them.
+        The punctuation marks are included in the phrases, but the spaces after are not.
+
+        Return pairs of numbers representing `start` and `end` of each phrase.
+        The content of each phrase can then be accessed as `line[start:end]`.
+        """
+        result: list[list[Fragment]] = []
+
+        for linenum, line in enumerate(self.lines):
+            result.append([])
+
+            separators = re.search('^', line), *re.finditer(SEP, line), re.search('$', line)
+
+            for before, after in pairwise(separators):
+                num_spaces = len(re.search(r'\s*$', after.group()).group())
+                result[linenum].append(Fragment(self, linenum, before.end(), after.end() - num_spaces))
+
+            if result[linenum][-1].text == '':
+                result[linenum].pop()
+
+        return tuple(tuple(x) for x in result)
+
+    @cached_property
+    def phrases(self) -> Sequence[Fragment]:
+        """
+        Normally, a text is split into phrases by periods, exclamation points, etc.
+        However, the 'exceptions' dictionary may contain some words
+        that contain periods in them ('e.g.', 'H.265', 'www.example.com').
+        This function first splits the line into phrases using :meth:`phrase_bounds()`,
+        but then moves their bounds for each exception that was accidentally split.
+
+        If `remove_exceptions=True`, the exceptions will be replaced with spaces in the result.
+        This is used to generate phrases that can be sent to another linter.
+        """
+        result: list[Fragment] = []
+
+        # Each phrase can only be on a single line,
+        # so we work with each line separately
+        for linenum, line in enumerate(self.lines):
+            phrases = list(self.naive_phrases[linenum])
+            exceptions = self.exceptions_by_line[linenum]
+
+            for exc in exceptions:
+                # Find the phrases overlapping with the exception from left and right.
+                left = bisect_left(phrases, exc.start, key=lambda x: x.end)
+                right = bisect_left(phrases, exc.end, key=lambda x: x.start) - 1
+
+                # If the exception ends like a phrase would (e.g., 'e.g.'),
+                # we will merge one more phrase from the right.
+                # Unless, of course, there are no more phrases on the right.
+                if re.search(END, exc.text):
+                    right = min(right + 1, len(phrases) - 1)
+
+                # Merge the left and right phrases into one.
+                # (If left and right are the same phrase, this does nothing.)
+                # Example:
+                #     Example Corp. | is a company. | Visit www. | example. | com for more info.
+                #   → Example Corp. is a company. | Visit www.example.com for more info.
+                phrases[left:right+1] = Fragment(self, linenum, phrases[left].start, phrases[right].end),
+
+            # Add this line's phrases to the result
+            result += phrases
+
+        return tuple(result)
+
+    @property
+    def clean_phrases(self) -> Iterable[str]:
+        for phrase in self.phrases:
+            result = phrase.text
+            for exc in self.exceptions_by_line[phrase.linenum]:
+                if phrase.start <= exc.start and exc.end <= phrase.end:
+                    start = exc.start - phrase.start
+                    end = exc.end - phrase.start
+                    result = result[:start] + ' ' * len(exc.text) + result[end:]
+            yield result
+
+
+@dataclass(frozen=True)
+class Fragment:
+    page_data: PageData
+    linenum: int
+    start: int
+    end: int
+
+    def __repr__(self):
+        return f'<{self.__class__.__name__}: {self.linenum} {self.start} {self.end}: {self.text!r}>'
+
+    @property
+    def text(self) -> str:
+        return self.page_data.lines[self.linenum][self.start:self.end]
