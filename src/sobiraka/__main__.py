@@ -56,7 +56,10 @@ async def async_main():  # pragma: no cover
 
         case 'lint':
             book = Book.from_manifest(args.source)
-            exit_code = await Linter(book).check()
+            linter = Linter(book)
+            exit_code = await linter.check()
+            if exit_code != 0:
+                linter.print_issues()
 
         case 'validate_dictionary':
             exit_code = validate_dictionary(args.dic, autofix=args.autofix)
