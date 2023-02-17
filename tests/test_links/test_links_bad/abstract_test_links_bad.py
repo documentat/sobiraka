@@ -24,7 +24,7 @@ class AbstractTestLinksBad(BookTestCase):
         actual_ids = tuple(page.id for page in self.book.pages)
         self.assertSequenceEqual(expected_ids, actual_ids)
 
-    def test_errors(self):
+    def test_issues(self):
         data: dict[Page, tuple[Issue, ...]] = {
             self.document0: (
                 BadLink(f'../sub/document1.{self.EXT}'),

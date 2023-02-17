@@ -63,7 +63,7 @@ class BookTestCase(IsolatedAsyncioTestCase, Generic[T]):
         if not ok:
             raise SkipTest
 
-    def test_errors(self):
+    def test_issues(self):
         for page in self.book.pages:
             with self.subTest(page):
                 self.assertEqual(set(), self.processor.issues[page])
