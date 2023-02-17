@@ -126,7 +126,7 @@ class Fragment:
     end: int
 
     def __repr__(self):
-        return f'<{self.__class__.__name__}: {self.linenum} {self.start} {self.end}: {self.text!r}>'
+        return f'<{self.linenum} {self.start} {self.end}: {self.text!r}>'
 
     @property
     def text(self) -> str:

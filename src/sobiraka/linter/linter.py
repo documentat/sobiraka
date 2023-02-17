@@ -1,12 +1,12 @@
 from asyncio import gather
-from typing import Awaitable
+from typing import AsyncIterable, Awaitable
 
 from more_itertools import unique_everseen
 
-from sobiraka.models import Book, MisspelledWords, Page
+from sobiraka.models import Book, Issue, MisspelledWords, Page, PhraseBeginsWithLowerCase
 from sobiraka.processing.abstract import Plainifier
 from .hunspell import run_hunspell
-from .pagedata import PageData
+from .pagedata import Fragment, PageData
 
 
 class Linter(Plainifier):
@@ -44,3 +44,17 @@ class Linter(Plainifier):
                 misspelled_words.append(word)
         if misspelled_words:
             self.issues[page].add(MisspelledWords(page.relative_path, tuple(misspelled_words)))
+
+        for phrase in data.phrases:
+            async for issue in self.check_phrase(phrase):
+                self.issues[page].add(issue)
+
+    async def check_phrase(self, phrase: Fragment) -> AsyncIterable[Issue]:
+        page_data = phrase.page_data
+        if self.book.lint.checks.phrases_must_begin_with_capitals:
+            if phrase.text[0].islower():
+                for exception in page_data.exceptions_by_line[phrase.linenum]:
+                    if exception.start <= phrase.start < exception.end:
+                        break
+                else:
+                    yield PhraseBeginsWithLowerCase(phrase.text)
