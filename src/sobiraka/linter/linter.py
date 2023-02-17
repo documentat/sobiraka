@@ -43,11 +43,11 @@ class Linter(Plainifier):
             if word not in misspelled_words:
                 misspelled_words.append(word)
         if misspelled_words:
-            self.issues[page].add(MisspelledWords(page.relative_path, tuple(misspelled_words)))
+            self.issues[page].append(MisspelledWords(page.relative_path, tuple(misspelled_words)))
 
         for phrase in data.phrases:
             async for issue in self.check_phrase(phrase):
-                self.issues[page].add(issue)
+                self.issues[page].append(issue)
 
     async def check_phrase(self, phrase: Fragment) -> AsyncIterable[Issue]:
         page_data = phrase.page_data

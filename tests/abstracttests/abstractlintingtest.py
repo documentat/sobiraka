@@ -16,7 +16,7 @@ class AbstractLintingTest(BookTestCase[Linter]):
             with self.subTest(page):
                 expected = expected.read_text().splitlines()
                 await self.processor.check()
-                actual_issues = sorted(self.processor.issues[page], key=lambda x: (x.__class__.__name__, x))
+                actual_issues = self.processor.issues[page]
                 actual = list(map(str, actual_issues))
                 self.assertNoDiff(expected, actual)
 

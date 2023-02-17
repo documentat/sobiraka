@@ -66,4 +66,4 @@ class BookTestCase(IsolatedAsyncioTestCase, Generic[T]):
     def test_issues(self):
         for page in self.book.pages:
             with self.subTest(page):
-                self.assertEqual(set(), self.processor.issues[page])
+                self.assertEqual([], self.processor.issues[page])

@@ -25,22 +25,22 @@ class AbstractTestLinksBad(BookTestCase):
         self.assertSequenceEqual(expected_ids, actual_ids)
 
     def test_issues(self):
-        data: dict[Page, tuple[Issue, ...]] = {
-            self.document0: (
+        data: dict[Page, list[Issue]] = {
+            self.document0: [
                 BadLink(f'../sub/document1.{self.EXT}'),
                 BadLink(f'document2.{self.EXT}'),
+                BadLink('sub/subsub/subsubsub/document4'),
                 BadLink(f'sub/subsub/document3.{self.EXT}#section-1'),
                 BadLink(f'sub/subsub/document3.{self.EXT}#section2'),
-                BadLink('sub/subsub/subsubsub/document4'),
-            ),
-            self.document1: (),
-            self.document2: (),
-            self.document3: (),
-            self.document4: (),
+            ],
+            self.document1: [],
+            self.document2: [],
+            self.document3: [],
+            self.document4: [],
         }
-        for page, expected_errors in data.items():
+        for page, expected_issues in data.items():
             with self.subTest(page):
-                self.assertEqual(set(expected_errors), self.processor.issues[page])
+                self.assertEqual(expected_issues, self.processor.issues[page])
 
     def test_links(self):
         data: dict[Page, tuple[Href, ...]] = {
