@@ -1,13 +1,12 @@
 from asyncio import gather
 from difflib import unified_diff
-from functools import cached_property
 from inspect import getfile
 from pathlib import Path
 from typing import Any, Generic, Iterable, Sequence, TypeVar
 from unittest import IsolatedAsyncioTestCase, SkipTest
 
 from sobiraka.models import Book, Page
-from sobiraka.processing.abstract import Plainifier, Processor
+from sobiraka.processing.abstract import Processor
 
 T = TypeVar('T', bound=Processor)
 
@@ -26,13 +25,13 @@ class BookTestCase(IsolatedAsyncioTestCase, Generic[T]):
         self.dir: Path = filepath.parent
 
         self.book = self.load_book()
+        self.processor: T = self._init_processor()
 
         awaitables = tuple(self.processor.process2(page) for page in self.book.pages)
         await gather(*awaitables)
 
-    @cached_property
-    def processor(self) -> T:
-        return Plainifier(self.book)
+    def _init_processor(self) -> T:
+        return Processor(self.book)
 
     def subTest(self, msg: Any = ..., **params: Any):
         match msg:

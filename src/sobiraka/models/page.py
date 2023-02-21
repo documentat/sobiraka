@@ -130,7 +130,7 @@ class Page:
     def syntax(self) -> str:
         match self.path.suffix:
             case '.md':
-                return 'markdown'
+                return 'markdown-smart'
             case '.rst':
                 return 'rst-auto_identifiers'
             case _:  # pragma: no cover

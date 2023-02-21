@@ -18,7 +18,7 @@ class EmptyPage(Page):
 
     @property
     def syntax(self) -> str:
-        return 'markdown'
+        return 'markdown-smart'
 
     @cache
     def raw(self) -> str:

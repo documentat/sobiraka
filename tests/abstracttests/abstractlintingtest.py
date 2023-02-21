@@ -1,5 +1,3 @@
-from functools import cached_property
-
 from abstracttests.booktestcase import BookTestCase
 from sobiraka.linter import Linter
 
@@ -7,8 +5,7 @@ from sobiraka.linter import Linter
 class AbstractLintingTest(BookTestCase[Linter]):
     maxDiff = None
 
-    @cached_property
-    def processor(self) -> Linter:
+    def _init_processor(self) -> Linter:
         return Linter(self.book)
 
     async def test_issues(self):
@@ -24,8 +21,8 @@ class AbstractLintingTest(BookTestCase[Linter]):
         for page, expected in self.for_each_expected('.phrases'):
             with self.subTest(page):
                 expected = tuple(expected.read_text().splitlines())
-                page_data = await self.processor.data(page)
-                actual = tuple(x.text for x in page_data.phrases)
+                tm = await self.processor.tm(page)
+                actual = tuple(x.text for x in tm.phrases)
                 self.assertNoDiff(expected, actual)
 
 
