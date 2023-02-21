@@ -21,6 +21,10 @@ FROM python:3.11-alpine3.16 AS install-dependencies-linter
 RUN ln -s /usr/local/bin/python /usr/bin/python
 RUN /usr/bin/python -m pip install --prefix /prefix pylint~=2.17.4
 
+FROM python:3.11-alpine3.16 AS install-dependencies-documentator
+RUN ln -s /usr/local/bin/python /usr/bin/python
+RUN /usr/bin/python -m pip install --prefix /prefix sphinx~=6.1.3 sphinxcontrib-apidoc~=0.3.0 furo~=2022.12.07
+
 FROM install-dependencies AS install-package
 COPY --from=build-package /dist/*.tar.gz .
 RUN /usr/bin/python -m pip install --prefix /prefix *.tar.gz
@@ -57,6 +61,10 @@ CMD make tests
 FROM tester-src AS linter
 COPY --from=install-dependencies-linter /prefix /usr
 CMD make lint
+
+FROM tester-dist AS documentator
+COPY --from=install-dependencies-documentator /prefix /usr
+CMD make docs
 
 FROM common AS release
 COPY --from=install-package /prefix /usr

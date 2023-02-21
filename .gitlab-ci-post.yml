@@ -10,3 +10,17 @@ publish:
     - docker pull $CI_REGISTRY_IMAGE/cache/release:by-commit-$CI_COMMIT_SHA
     - docker tag $CI_REGISTRY_IMAGE/cache/release:by-commit-$CI_COMMIT_SHA $CI_REGISTRY_IMAGE/sobiraka:$CI_COMMIT_SHA
     - docker push $CI_REGISTRY_IMAGE/sobiraka:$CI_COMMIT_SHA
+
+pages:
+  stage: publish
+  needs: [docs]
+  image: alpine:3.16
+  variables:
+    GIT_STRATEGY: none
+  script:
+    - mv docs public
+  artifacts:
+    paths:
+      - public
+  rules:
+    - if: $CI_COMMIT_REF_NAME == 'master'

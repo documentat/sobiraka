@@ -1,3 +1,7 @@
+/.dockerignore
+build/
+docs/build/
+docs/modules/
 tests/**/actual.pdf
 tests/**/actual-*.png
 tests/**/expected.pdf
