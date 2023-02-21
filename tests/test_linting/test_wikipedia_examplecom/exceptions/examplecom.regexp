@@ -1,2 +1,4 @@
 \b[Ee]xample\.(com|net|org|edu)\b
 \bIPv[46]\b
+\.example\b
+\.local\b

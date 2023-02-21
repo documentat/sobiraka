@@ -2,8 +2,9 @@ from argparse import ArgumentParser
 from asyncio import run
 from pathlib import Path
 
+from sobiraka.linter import Linter
 from sobiraka.models import Book
-from sobiraka.processing import DocxBuilder, PdfBuilder, Linter, TxtBuilder
+from sobiraka.processing import DocxBuilder, PdfBuilder
 from sobiraka.runtime import RT
 from sobiraka.utils import validate_dictionary
 
@@ -21,10 +22,6 @@ async def async_main():  # pragma: no cover
     cmd_pdf = commands.add_parser('pdf', help='Build PDF file.')
     cmd_pdf.add_argument('source', type=absolute_path)
     cmd_pdf.add_argument('target', type=absolute_path)
-
-    cmd_txt = commands.add_parser('txt', help='Build TXT files.')
-    cmd_txt.add_argument('source', type=absolute_path)
-    cmd_txt.add_argument('target', type=absolute_path)
 
     cmd_lint = commands.add_parser('lint', help='Check book for various issues.')
     cmd_lint.add_argument('source', type=absolute_path)
@@ -49,13 +46,12 @@ async def async_main():  # pragma: no cover
             book = Book.from_manifest(args.source)
             exit_code = await PdfBuilder(book).run(args.target)
 
-        case 'txt':
-            book = Book.from_manifest(args.source)
-            exit_code = await TxtBuilder(book).run(args.target)
-
         case 'lint':
             book = Book.from_manifest(args.source)
-            exit_code = await Linter(book).check()
+            linter = Linter(book)
+            exit_code = await linter.check()
+            if exit_code != 0:
+                linter.print_issues()
 
         case 'validate_dictionary':
             exit_code = validate_dictionary(args.dic, autofix=args.autofix)

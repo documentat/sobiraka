@@ -31,6 +31,7 @@ MANIFEST_BASE = {
     'lint': {
         'dictionaries': [],
         'exceptions': [],
+        'checks': {},
     },
     'variables': {},
 }
@@ -52,11 +53,18 @@ class BookConfig_PDF:
 
 
 @dataclass(kw_only=True, frozen=True)
+class BookConfig_Lint_Checks:
+    phrases_must_begin_with_capitals: bool = True
+
+
+@dataclass(kw_only=True, frozen=True)
 class BookConfig_Lint:
-    dictionaries: tuple[str]
+    dictionaries: tuple[str, ...]
     """List of Hunspell dictionaries to use for spellchecking."""
 
     exceptions: tuple[Path]
+
+    checks: BookConfig_Lint_Checks
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -112,6 +120,7 @@ class Book:
             lint=BookConfig_Lint(
                 dictionaries=tuple(manifest['lint']['dictionaries']),
                 exceptions=tuple(path(x) for x in manifest['lint']['exceptions']),
+                checks=BookConfig_Lint_Checks(**manifest['lint']['checks']),
             ),
             variables=frozendict(manifest['variables']),
         )

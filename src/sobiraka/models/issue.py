@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from pathlib import Path
+from textwrap import shorten
 
 
 class Issue:
@@ -30,3 +31,12 @@ class MisspelledWords(Issue):
 
     def __str__(self):
         return f'Misspelled words in {self.relative_path}: {", ".join(self.words)}.'
+
+
+@dataclass(order=True, frozen=True)
+class PhraseBeginsWithLowerCase(Issue):
+    phrase: str
+
+    def __str__(self):
+        prefix = 'Phrase begins with a lowercase letter: '
+        return prefix + shorten(self.phrase, 80 - len(prefix) - 1, placeholder="...")

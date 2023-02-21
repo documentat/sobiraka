@@ -1,5 +1,6 @@
 from abstracttests.booktestcase import BookTestCase
 from sobiraka.models import Href, Page, PageHref, UrlHref
+from sobiraka.processing import PdfBuilder
 
 
 class AbstractTestLinksGood(BookTestCase):

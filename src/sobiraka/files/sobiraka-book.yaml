@@ -40,6 +40,9 @@ properties:
         uniqueItems: true
         items:
           type: string
+      checks:
+        properties:
+          phrases_must_begin_with_capitals: { type: boolean }
 
   variables:
     type: object

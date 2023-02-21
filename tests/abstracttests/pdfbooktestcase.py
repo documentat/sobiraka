@@ -1,10 +1,7 @@
 import hashlib
 from asyncio import create_subprocess_exec
-from functools import cached_property
-from io import BytesIO
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from unittest import SkipTest
 
 from sobiraka.processing import PdfBuilder
 from .abstracttestwithrttmp import AbstractTestWithRtTmp
@@ -12,8 +9,7 @@ from .booktestcase import BookTestCase
 
 
 class PdfBookTestCase(BookTestCase[PdfBuilder], AbstractTestWithRtTmp):
-    @cached_property
-    def processor(self):
+    def _init_processor(self):
         return PdfBuilder(self.book)
 
     async def test_latex(self):

@@ -13,7 +13,7 @@ from more_itertools import padded
 from panflute import Code, Doc, Header, Link, Str, stringify
 
 from sobiraka.models import BadLink, Book, Href, Issue, Page, PageHref, UrlHref
-from sobiraka.utils import LatexBlock, on_demand, save_debug_json
+from sobiraka.utils import LatexBlock, on_demand, save_debug_json, UniqueList
 from .dispatcher import Dispatcher
 
 
@@ -53,7 +53,7 @@ class Processor(Dispatcher):
         and it is up to :func:`.process2_link()` to report an issue if necessary.
         """
 
-        self.issues: dict[Page, set[Issue]] = defaultdict(set)
+        self.issues: dict[Page, UniqueList[Issue]] = defaultdict(UniqueList)
 
         self.process2_tasks: dict[Page, list[Awaitable]] = defaultdict(list)
         """:meta private:"""
@@ -139,8 +139,7 @@ class Processor(Dispatcher):
         for page in self.book.pages:
             if self.issues[page]:
                 message = f'Issues in {page.relative_path}:'
-                issues = sorted(self.issues[page], key=lambda e: (e.__class__.__name__, e))
-                for issue in issues:
+                for issue in self.issues[page]:
                     message += f'\n    {issue}'
                 message += '\n'
                 print(message, file=sys.stderr)
@@ -155,7 +154,7 @@ class Processor(Dispatcher):
             self.links[page].append(UrlHref(elem.url))
         else:
             if page.path.suffix == '.rst':
-                self.issues[page].add(BadLink(elem.url))
+                self.issues[page].append(BadLink(elem.url))
                 return
             await self._process_internal_link(elem, elem.url, page)
 
@@ -181,7 +180,7 @@ class Processor(Dispatcher):
                     target_path = (page.path.parent / target_path_str).resolve().relative_to(self.book.root)
                 target = self.book.pages_by_path[target_path]
             except (KeyError, ValueError):
-                self.issues[page].add(BadLink(target_text))
+                self.issues[page].append(BadLink(target_text))
                 return
         else:
             target = page
@@ -203,7 +202,7 @@ class Processor(Dispatcher):
                 elem.url = f'#{href.target.id}--{href.anchor}'
                 autolabel = self.anchors[href.target][href.anchor]
             except (KeyError, AssertionError):
-                self.issues[page].add(BadLink(target_text))
+                self.issues[page].append(BadLink(target_text))
                 return
         else:
             elem.url = f'#{href.target.id}'

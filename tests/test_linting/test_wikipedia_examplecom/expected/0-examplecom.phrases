@@ -17,12 +17,9 @@ The IETF established the authority of this use in publication RFC 2606 in 1999.
 The reservation for the educational domain edu was sponsored by the Internet Corporation for Assigned Names and Numbers (ICANN) in 2000.
 In 2013, the status and purpose of the domains was restated as belonging to a group of special-use domain names in RFC 6761.
 See also
-.
-example – Top-level domain name reserved for documentation purposes
-.
-local – Pseudo-TLD with no meaning in the DNS for use with local zeroconf networking only
+.example – Top-level domain name reserved for documentation purposes
+.local – Pseudo-TLD with no meaning in the DNS for use with local zeroconf networking only
 Fictitious domain name
 IPv4 § Special-use addresses – some special-use IPv4 address ranges are reserved for documentation and examples
 Reserved top-level domains
-------------------------------------------------------------------------
 From Wikipedia, the free encyclopedia
