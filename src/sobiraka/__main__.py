@@ -3,8 +3,7 @@ from asyncio import run
 from pathlib import Path
 
 from sobiraka.linter import Linter
-from sobiraka.models import Book
-from sobiraka.processing import DocxBuilder, HtmlBuilder, PdfBuilder
+from sobiraka.processing import HtmlBuilder, PdfBuilder
 from sobiraka.runtime import RT
 from sobiraka.utils import validate_dictionary
 
@@ -18,10 +17,6 @@ async def async_main():  # pragma: no cover
     cmd_html = commands.add_parser('html', help='Build HTML site.')
     cmd_html.add_argument('source', type=absolute_path)
     cmd_html.add_argument('target', type=absolute_path)
-
-    cmd_docx = commands.add_parser('docx', help='Build DOCX file.')
-    cmd_docx.add_argument('source', type=absolute_path)
-    cmd_docx.add_argument('target', type=absolute_path)
 
     cmd_pdf = commands.add_parser('pdf', help='Build PDF file.')
     cmd_pdf.add_argument('source', type=absolute_path)
@@ -45,10 +40,6 @@ async def async_main():  # pragma: no cover
         case 'html':
             book = Book.from_manifest(args.source)
             exit_code = await HtmlBuilder(book).run(args.target)
-
-        case 'docx':
-            book = Book.from_manifest(args.source)
-            exit_code = await DocxBuilder(book).run(args.target)
 
         case 'pdf':
             book = Book.from_manifest(args.source)
