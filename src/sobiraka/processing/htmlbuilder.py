@@ -1,0 +1,84 @@
+import re
+from asyncio import Task, create_subprocess_exec, create_task, gather, to_thread
+from os.path import relpath
+from pathlib import Path
+from shutil import copyfile
+from subprocess import PIPE
+
+from aiofiles.os import makedirs
+from panflute import Image
+
+from sobiraka.models import Book, EmptyPage, Page, PageHref
+from .abstract import Processor
+from ..utils import panflute_to_bytes
+
+
+class HtmlBuilder(Processor):
+    def __init__(self, book: Book):
+        super().__init__(book)
+        self._additional_files: set[Path] = set()
+
+    async def run(self, output: Path):
+        output.mkdir(parents=True, exist_ok=True)
+
+        generating: list[Task] = []
+        for page in self.book.pages:
+            target_file = output / self.make_target_path(page)
+            generating.append(create_task(self.generate_html_for_page(page, target_file)))
+
+        await gather(*generating)
+
+    async def generate_html_for_page(self, page: Page, target_file: Path):
+        await self.process2(page)
+
+        target_file.parent.mkdir(parents=True, exist_ok=True)
+
+        pandoc = await create_subprocess_exec(
+            'pandoc',
+            '--from', 'json',
+            '--to', 'html',
+            '--wrap', 'none',
+            '--output', target_file,
+            stdin=PIPE)
+        pandoc.stdin.write(panflute_to_bytes(self.doc[page]))
+        pandoc.stdin.close()
+        await pandoc.wait()
+        assert pandoc.returncode == 0
+
+    @staticmethod
+    def make_target_path(page: Page) -> Path:
+        target_path = Path()
+        for part in page.relative_path.parts:
+            target_path /= re.sub(r'^(\d+-)?', '', part)
+
+        if isinstance(page, EmptyPage):
+            target_path /= 'index.html'
+        elif page.is_index:
+            target_path = target_path.with_name('index.html')
+        else:
+            target_path = target_path.with_suffix('.html')
+
+        return target_path
+
+    def make_internal_url(self, href: PageHref, *, page: Page) -> str:
+        if href.target is page:
+            result = ''
+        else:
+            source_path = self.make_target_path(page)
+            target_path = self.make_target_path(href.target)
+            result = relpath(target_path, start=source_path.parent)
+
+        if href.anchor:
+            result += '#' + href.anchor
+
+        return result
+
+    async def process_image(self, elem: Image, page: Page) -> tuple[Image, ...]:
+        source_path = self.book.paths.resources / elem.url
+        target_path = self.book.html.resources_prefix / elem.url
+        if target_path not in self._additional_files:
+            self._additional_files.add(target_path)
+            await makedirs(target_path.parent, exist_ok=True)
+            await create_task(to_thread(copyfile, source_path, target_path))
+        elem.url = relpath(target_path, start=page.parent.path)
+        return elem,

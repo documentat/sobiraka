@@ -1,5 +1,6 @@
 import re
 import sys
+from abc import abstractmethod
 from asyncio import create_subprocess_exec, gather
 from collections import defaultdict
 from io import BytesIO
@@ -195,18 +196,20 @@ class Processor(Dispatcher):
 
     async def process2_internal_link(self, elem: Link, *, href: PageHref, target_text: str, page: Page):
         await self.process1(href.target)
+        elem.url = self.make_internal_url(href, page=page)
 
         if href.anchor:
             try:
                 assert len(self.anchors[href.target][href.anchor]) == 1
-                elem.url = f'#{href.target.id}--{href.anchor}'
                 autolabel = self.anchors[href.target][href.anchor]
             except (KeyError, AssertionError):
                 self.issues[page].append(BadLink(target_text))
                 return
         else:
-            elem.url = f'#{href.target.id}'
             autolabel = self.titles[href.target]
 
         if not elem.content:
             elem.content = Str(autolabel)
+
+    @abstractmethod
+    def make_internal_url(self, href: PageHref, *, page: Page) -> str: ...

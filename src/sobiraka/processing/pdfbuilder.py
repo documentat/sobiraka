@@ -6,7 +6,7 @@ from shutil import copyfile
 from subprocess import DEVNULL, PIPE
 from typing import BinaryIO
 
-from sobiraka.models import Book, Page
+from sobiraka.models import Book, Page, PageHref
 from sobiraka.runtime import RT
 from sobiraka.utils import on_demand, panflute_to_bytes
 from .abstract import Processor
@@ -47,7 +47,6 @@ class PdfBuilder(Processor):
 
     async def generate_latex(self, latex_output: BinaryIO):
         for page in self.book.pages:
-            hash(page.book)
             self.generate_latex_for_page(page).start()
 
         if self.print_issues():
@@ -112,3 +111,6 @@ class PdfBuilder(Processor):
                     break
                 print(line, file=sys.stderr)
             print('\033[0m', end='', file=sys.stderr)
+
+    def make_internal_url(self, href: PageHref, *, page: Page) -> str:
+        return '#' + href.target.id + '--' + href.anchor

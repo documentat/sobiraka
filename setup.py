@@ -6,6 +6,7 @@ setup(
     author='Max Alibaev',
     python_requires='~=3.11',
     install_requires=[
+        'aiofiles~=v23.1.0',
         'frozendict~=2.3.4',
         'jinja2~=3.1.2',
         'jsonschema~=4.17.3',

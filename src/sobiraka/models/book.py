@@ -25,6 +25,9 @@ MANIFEST_BASE = {
         'include': ['**/*'],
         'exclude': '',
     },
+    'html': {
+        'resources_prefix': '_resources',
+    },
     'pdf': {
         'header': None,
     },
@@ -44,6 +47,11 @@ class BookConfig_Paths:
     resources: Path
     include: tuple[str]
     exclude: tuple[str]
+
+
+@dataclass(kw_only=True, frozen=True)
+class BookConfig_HTML:
+    resources_prefix: Path | None = None
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -84,6 +92,7 @@ class Book:
     """Book title. May be used when rendering output files."""
 
     paths: BookConfig_Paths = field(default_factory=BookConfig_Paths, kw_only=True)
+    html: BookConfig_HTML = field(default_factory=BookConfig_HTML, kw_only=True)
     pdf: BookConfig_PDF = field(default_factory=BookConfig_PDF, kw_only=True)
     lint: BookConfig_Lint = field(default_factory=BookConfig_Lint, kw_only=True)
     variables: dict[str, Any] = field(default_factory=frozendict)
@@ -113,6 +122,9 @@ class Book:
                 resources=path(manifest['paths']['resources']),
                 include=tuple(manifest['paths']['include']),
                 exclude=tuple(manifest['paths']['exclude']),
+            ),
+            html=BookConfig_HTML(
+                resources_prefix=convert_or_none(Path, manifest['html']['resources_prefix']),
             ),
             pdf=BookConfig_PDF(
                 header=convert_or_none(path, manifest['pdf']['header']),
