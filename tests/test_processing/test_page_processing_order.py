@@ -3,7 +3,8 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest import IsolatedAsyncioTestCase, main
 
-from sobiraka.models import Project, Page, load_project
+from sobiraka.models import Page
+from sobiraka.models.load import load_project
 from sobiraka.processing import PdfBuilder
 
 

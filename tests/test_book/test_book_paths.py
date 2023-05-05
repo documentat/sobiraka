@@ -4,7 +4,8 @@ from tempfile import TemporaryDirectory
 from textwrap import dedent
 from unittest import IsolatedAsyncioTestCase, main
 
-from sobiraka.models import Project, load_project
+from sobiraka.models import Project
+from sobiraka.models.load import load_project
 
 
 class TestBookPaths(IsolatedAsyncioTestCase):

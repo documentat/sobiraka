@@ -3,7 +3,7 @@ from asyncio import run
 from pathlib import Path
 
 from sobiraka.linter import Linter
-from sobiraka.models import load_project
+from sobiraka.models.load import load_project
 from sobiraka.processing import HtmlBuilder, PdfBuilder
 from sobiraka.runtime import RT
 from sobiraka.utils import validate_dictionary

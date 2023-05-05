@@ -5,7 +5,8 @@ from pathlib import Path
 from typing import Any, Generic, Iterable, Sequence, TypeVar
 from unittest import IsolatedAsyncioTestCase, SkipTest
 
-from sobiraka.models import Project, Page, load_project
+from sobiraka.models import Project, Page
+from sobiraka.models.load import load_project
 from sobiraka.processing.abstract import Processor
 
 T = TypeVar('T', bound=Processor)
