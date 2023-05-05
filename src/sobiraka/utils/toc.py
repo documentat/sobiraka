@@ -20,7 +20,7 @@ class TocGenerator:
         return replace(self, _is_local=True)
 
     async def _plaintext(self, make_line: Callable[[Page], str]) -> str:
-        pages = self.page.children_recursive if self._is_local else self.processor.book.pages
+        pages = self.page.children_recursive if self._is_local else self.processor.project.pages
         text = ''
         for page in pages:
             if page is not self.page:

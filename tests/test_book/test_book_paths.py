@@ -4,7 +4,7 @@ from tempfile import TemporaryDirectory
 from textwrap import dedent
 from unittest import IsolatedAsyncioTestCase, main
 
-from sobiraka.models import Book
+from sobiraka.models import Project, load_project
 
 
 class TestBookPaths(IsolatedAsyncioTestCase):
@@ -13,7 +13,7 @@ class TestBookPaths(IsolatedAsyncioTestCase):
     def prepare_dirs(self):
         temp_dir: str = self.enterContext(TemporaryDirectory(prefix='sobiraka-test-'))
         self.root = Path(temp_dir)
-        self.manifest_path = self.root / 'book.yaml'
+        self.manifest_path = self.root / 'project.yaml'
 
     async def asyncSetUp(self):
         self.root: Path
@@ -37,35 +37,35 @@ class TestBookPaths(IsolatedAsyncioTestCase):
             path.parent.mkdir(parents=True, exist_ok=True)
             path.touch()
 
-    async def book_from_manifest(self, manifest_str: str) -> Book:
-        manifest_str = dedent(manifest_str)
+    async def project_from_yaml(self, data_yaml: str) -> Project:
+        data_yaml = dedent(data_yaml)
         if self.path_to_root:
-            manifest_str = re.sub(r'^paths:\n', f'paths:\n  root: {self.path_to_root}\n', manifest_str, flags=re.MULTILINE)
+            data_yaml = re.sub(r'^paths:\n', f'paths:\n  root: {self.path_to_root}\n', data_yaml, flags=re.MULTILINE)
         self.manifest_path.parent.mkdir(parents=True, exist_ok=True)
-        self.manifest_path.write_text(dedent(manifest_str))
-        return Book.from_manifest(self.manifest_path)
+        self.manifest_path.write_text(dedent(data_yaml))
+        return load_project(self.manifest_path)
 
-    def assertPagePaths(self, book: Book, expected_paths: tuple[Path, ...]):
+    def assertPagePaths(self, book: Project, expected_paths: tuple[Path, ...]):
         actual_paths = tuple(p.path for p in book.pages)
         self.assertSequenceEqual(expected_paths, actual_paths)
 
     ################################################################################
 
     async def test_empty(self):
-        book = await self.book_from_manifest('''
+        project = await self.project_from_yaml('''
             paths:
               include: []
         ''')
-        self.assertEqual(0, book.max_level)
-        self.assertPagePaths(book, ())
+        self.assertEqual(0, project.volumes[0].max_level)
+        self.assertPagePaths(project, ())
 
     async def test_include_all(self):
-        book = await self.book_from_manifest('''
+        project = await self.project_from_yaml('''
             paths:
               include: ['**/*.md']
         ''')
-        self.assertEqual(4, book.max_level)
-        self.assertPagePaths(book, (
+        self.assertEqual(4, project.volumes[0].max_level)
+        self.assertPagePaths(project, (
             self.root,
             self.root / 'intro.md',
             self.root / 'part1',
@@ -84,23 +84,23 @@ class TestBookPaths(IsolatedAsyncioTestCase):
         ))
 
     async def test_include_only_top_level(self):
-        book = await self.book_from_manifest('''
+        project = await self.project_from_yaml('''
             paths:
               include: ['*.md']
         ''')
-        self.assertEqual(2, book.max_level)
-        self.assertPagePaths(book, (
+        self.assertEqual(2, project.volumes[0].max_level)
+        self.assertPagePaths(project, (
             self.root,
             self.root / 'intro.md',
         ))
 
     async def test_include_only_part2(self):
-        book = await self.book_from_manifest('''
+        project = await self.project_from_yaml('''
             paths:
               include: ['part2/*.md']
         ''')
-        self.assertEqual(3, book.max_level)
-        self.assertPagePaths(book, (
+        self.assertEqual(3, project.volumes[0].max_level)
+        self.assertPagePaths(project, (
             self.root,
             self.root / 'part2',
             self.root / 'part2' / 'chapter1.md',
@@ -109,12 +109,12 @@ class TestBookPaths(IsolatedAsyncioTestCase):
         ))
 
     async def test_include_only_chapters3(self):
-        book = await self.book_from_manifest('''
+        project = await self.project_from_yaml('''
             paths:
               include: ['**/chapter3.md']
         ''')
-        self.assertEqual(4, book.max_level)
-        self.assertPagePaths(book, (
+        self.assertEqual(4, project.volumes[0].max_level)
+        self.assertPagePaths(project, (
             self.root,
             self.root / 'part1',
             self.root / 'part1' / 'chapter3.md',
@@ -126,13 +126,13 @@ class TestBookPaths(IsolatedAsyncioTestCase):
         ))
 
     async def test_include_all_except_part2(self):
-        book = await self.book_from_manifest('''
+        project = await self.project_from_yaml('''
             paths:
               include: ['**/*.md']
               exclude: ['**/part2/*.md']
         ''')
-        self.assertEqual(4, book.max_level)
-        self.assertPagePaths(book, (
+        self.assertEqual(4, project.volumes[0].max_level)
+        self.assertPagePaths(project, (
             self.root,
             self.root / 'intro.md',
             self.root / 'part1',
@@ -147,13 +147,13 @@ class TestBookPaths(IsolatedAsyncioTestCase):
         ))
 
     async def test_include_all_except_chapters3(self):
-        book = await self.book_from_manifest('''
+        project = await self.project_from_yaml('''
             paths:
               include: ['**/*.md']
               exclude: ['**/chapter3.md']
         ''')
-        self.assertEqual(4, book.max_level)
-        self.assertPagePaths(book, (
+        self.assertEqual(4, project.volumes[0].max_level)
+        self.assertPagePaths(project, (
             self.root,
             self.root / 'intro.md',
             self.root / 'part1',
@@ -173,7 +173,7 @@ class TestBookPaths_CustomRootAbsolute(TestBookPaths):
     def prepare_dirs(self):
         super().prepare_dirs()
         temp_dir: str = self.enterContext(TemporaryDirectory(prefix='sobiraka-test-'))
-        self.manifest_path = Path(temp_dir) / 'book.yaml'
+        self.manifest_path = Path(temp_dir) / 'project.yaml'
         self.path_to_root = str(self.root)
 
 
@@ -187,7 +187,7 @@ class TestBookPaths_CustomRootInside(TestBookPaths):
 class TestBookPaths_CustomRootOutside(TestBookPaths):
     def prepare_dirs(self):
         super().prepare_dirs()
-        self.manifest_path = self.root / 'manifest' / 'book.yaml'
+        self.manifest_path = self.root / 'manifest' / 'project.yaml'
         self.path_to_root = '..'
 
 

@@ -13,15 +13,15 @@ import panflute
 from more_itertools import padded
 from panflute import Code, Doc, Header, Link, Str, stringify
 
-from sobiraka.models import BadLink, Book, Href, Issue, Page, PageHref, UrlHref
+from sobiraka.models import BadLink, Project, Href, Issue, Page, PageHref, UrlHref
 from sobiraka.utils import LatexBlock, on_demand, save_debug_json, UniqueList
 from .dispatcher import Dispatcher
 
 
 class Processor(Dispatcher):
 
-    def __init__(self, book: Book):
-        self.book: Book = book
+    def __init__(self, project: Project):
+        self.project: Project = project
 
         self.jinja = jinja2.Environment(
             comment_start_string='{{#',
@@ -68,7 +68,7 @@ class Processor(Dispatcher):
         """
         from sobiraka.utils.toc import TocGenerator
 
-        variables = self.book.variables | {
+        variables = page.volume.variables | {
             'toc': TocGenerator(page=page, processor=self),
         }
 
@@ -137,7 +137,7 @@ class Processor(Dispatcher):
 
     def print_issues(self) -> bool:
         issues_found: bool = False
-        for page in self.book.pages:
+        for page in self.project.pages:
             if self.issues[page]:
                 message = f'Issues in {page.relative_path}:'
                 for issue in self.issues[page]:
@@ -178,8 +178,8 @@ class Processor(Dispatcher):
                 if target_path_str.startswith('/'):
                     target_path = Path(target_path_str[1:])
                 else:
-                    target_path = (page.path.parent / target_path_str).resolve().relative_to(self.book.root)
-                target = self.book.pages_by_path[target_path]
+                    target_path = (page.path.parent / target_path_str).resolve().relative_to(page.volume.root)
+                target = page.volume.pages_by_path[target_path]
             except (KeyError, ValueError):
                 self.issues[page].append(BadLink(target_text))
                 return

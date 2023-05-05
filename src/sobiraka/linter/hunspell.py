@@ -4,21 +4,21 @@ from asyncio import create_subprocess_exec
 from subprocess import PIPE
 from typing import AsyncIterable, Sequence
 
-from sobiraka.models import Book
+from sobiraka.models import Volume
 from sobiraka.runtime import RT
 
 
-async def run_hunspell(words: Sequence[str], book: Book) -> AsyncIterable[str]:
+async def run_hunspell(words: Sequence[str], volume: Volume) -> AsyncIterable[str]:
     if not words:
         return
 
     environ = os.environ
-    if book.lint.dictionaries:
+    if volume.lint.dictionaries:
         environ = environ.copy()
         environ['DICPATH'] = ':'.join((
             str(RT.FILES / 'dictionaries'),
-            str(book.paths.manifest_path.parent)))
-        environ['DICTIONARY'] = ','.join(book.lint.dictionaries)
+            str(volume.project.root)))
+        environ['DICTIONARY'] = ','.join(volume.lint.dictionaries)
 
     hunspell = await create_subprocess_exec(
         'hunspell',

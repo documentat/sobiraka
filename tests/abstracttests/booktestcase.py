@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Any, Generic, Iterable, Sequence, TypeVar
 from unittest import IsolatedAsyncioTestCase, SkipTest
 
-from sobiraka.models import Book, Page
+from sobiraka.models import Project, Page, load_project
 from sobiraka.processing.abstract import Processor
 
 T = TypeVar('T', bound=Processor)
@@ -14,9 +14,8 @@ T = TypeVar('T', bound=Processor)
 class BookTestCase(IsolatedAsyncioTestCase, Generic[T]):
     maxDiff = None
 
-    def load_book(self) -> Book:
-        book_yaml = self.dir / 'book.yaml'
-        return Book.from_manifest(book_yaml)
+    def load_project(self) -> Project:
+        return load_project(self.dir / 'project.yaml')
 
     async def asyncSetUp(self):
         await super().asyncSetUp()
@@ -24,14 +23,14 @@ class BookTestCase(IsolatedAsyncioTestCase, Generic[T]):
         filepath = Path(getfile(self.__class__))
         self.dir: Path = filepath.parent
 
-        self.book = self.load_book()
+        self.project = self.load_project()
         self.processor: T = self._init_processor()
 
-        awaitables = tuple(self.processor.process2(page) for page in self.book.pages)
+        awaitables = tuple(self.processor.process2(page) for page in self.project.pages)
         await gather(*awaitables)
 
     def _init_processor(self) -> T:
-        return Processor(self.book)
+        return Processor(self.project)
 
     def subTest(self, msg: Any = ..., **params: Any):
         match msg:
@@ -51,7 +50,7 @@ class BookTestCase(IsolatedAsyncioTestCase, Generic[T]):
 
     def for_each_expected(self, suffix: str, *, subdir: str = '') -> Iterable[tuple[Page, Path]]:
         ok = True
-        for page in self.book.pages:
+        for page in self.project.pages:
             expected = self.dir / 'expected' / subdir / page.relative_path.with_suffix(suffix)
             if expected.exists():
                 yield page, expected
@@ -63,6 +62,6 @@ class BookTestCase(IsolatedAsyncioTestCase, Generic[T]):
             raise SkipTest
 
     def test_issues(self):
-        for page in self.book.pages:
+        for page in self.project.pages:
             with self.subTest(page):
                 self.assertEqual([], self.processor.issues[page])

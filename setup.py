@@ -4,10 +4,10 @@ setup(
     name='sobiraka',
     version='0.0.1',
     author='Max Alibaev',
-    python_requires='~=3.11',
+    python_requires='~=3.10',
     install_requires=[
-        'aiofiles~=v23.1.0',
-        'frozendict~=2.3.4',
+        'aiofiles~=23.1.0',
+        'utilspie~=0.1.0',
         'jinja2~=3.1.2',
         'jsonschema~=4.17.3',
         'more-itertools~=9.0.0',

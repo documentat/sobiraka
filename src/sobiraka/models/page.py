@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from functools import cache, cached_property
 from pathlib import Path
 
-from .book import Book
+from .project import Volume
 
 
 @dataclass(frozen=True)
@@ -15,16 +15,20 @@ class Page:
 
     During the processing by the :func:`.load_page()`, :func:`.process1()` and :func:`.process2()` functions, some of the page's fields may be altered.
     """
-    book: Book
-    """The :class:`.Book` this page belongs to."""
+    volume: Volume
+    """The :class:`.Volume` this page belongs to."""
 
     path: Path
     """Absolute path to the page source, relative to :data:`.Book.root`.
     
     :see also: :data:`relative_path`"""
 
+    def __hash__(self):
+        return hash((id(self.volume), self.path))
+
     def __repr__(self):
-        return f'<Page: {str(self.relative_path)!r}>'
+        path = self.path.relative_to(self.volume.project.root)
+        return f'<{self.__class__.__name__}: {str(path)!r}>'
 
     def __lt__(self, other):
         assert isinstance(other, Page)
@@ -33,7 +37,7 @@ class Page:
     @cached_property
     def relative_path(self) -> Path:
         """Path to the page source, relative to :data:`.Book.root`."""
-        return self.path.relative_to(self.book.root)
+        return self.path.relative_to(self.volume.root)
 
     @cached_property
     def is_index(self) -> bool:
@@ -54,18 +58,18 @@ class Page:
             if isinstance(self, EmptyPage):
                 if self.relative_path == Path('.'):
                     return None
-                return self.book.pages_by_path[self.relative_path.parent]
+                return self.volume.pages_by_path[self.relative_path.parent]
             else:
                 if self.relative_path.parent == Path('.'):
                     return None
-                return self.book.pages_by_path[self.relative_path.parent.parent]
+                return self.volume.pages_by_path[self.relative_path.parent.parent]
         else:
-            return self.book.pages_by_path[self.relative_path.parent]
+            return self.volume.pages_by_path[self.relative_path.parent]
 
     @cached_property
     def children(self) -> list[Page]:
         children: list[Page] = []
-        for page in self.book.pages:
+        for page in self.volume.pages:
             if page.parent is self:
                 children.append(page)
         return children
@@ -73,7 +77,7 @@ class Page:
     @cached_property
     def children_recursive(self) -> list[Page]:
         children: list[Page] = []
-        for page in self.book.pages:
+        for page in self.volume.pages:
             if page is not self and self in page.breadcrumbs:
                 children.append(page)
         return children
@@ -108,7 +112,7 @@ class Page:
 
         Equals to number of parts in the :data:`id` plus 1.
         """
-        level = len(self.relative_path.parts) + 1
+        level = len(self.path.relative_to(self.volume.root).parts) + 1
         if self.path.stem == '0' or self.path.stem.startswith('0-'):
             level -= 1
         return level
@@ -124,7 +128,7 @@ class Page:
         :example: In a book with only three pages, having levels `1`, `2`, `3`,
             their corresponding antilevels will be `3`, `2`, `1`.
         """
-        return self.book.max_level - self.level + 1
+        return self.volume.max_level - self.level + 1
 
     @property
     def syntax(self) -> str:

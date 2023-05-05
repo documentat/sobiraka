@@ -8,14 +8,14 @@ from sobiraka.models import EmptyPage, Page
 class TestChildren(BookTestCase):
     async def asyncSetUp(self):
         await super().asyncSetUp()
-        self.index_root = self.book.pages_by_path[Path()]
-        self.document1 = self.book.pages_by_path[Path() / 'document1.rst']
-        self.index_sub = self.book.pages_by_path[Path() / 'sub' / '0-index.rst']
-        self.document2 = self.book.pages_by_path[Path() / 'sub' / 'document2.rst']
-        self.index_subsub = self.book.pages_by_path[Path() / 'sub' / 'subsub']
-        self.document3 = self.book.pages_by_path[Path() / 'sub' / 'subsub' / 'document3.rst']
-        self.document4 = self.book.pages_by_path[Path() / 'sub' / 'subsub' / 'document4.rst']
-        self.document5 = self.book.pages_by_path[Path() / 'sub' / 'subsub' / 'document5.rst']
+        self.index_root = self.project.pages_by_path[Path()]
+        self.document1 = self.project.pages_by_path[Path() / 'document1.rst']
+        self.index_sub = self.project.pages_by_path[Path() / 'sub' / '0-index.rst']
+        self.document2 = self.project.pages_by_path[Path() / 'sub' / 'document2.rst']
+        self.index_subsub = self.project.pages_by_path[Path() / 'sub' / 'subsub']
+        self.document3 = self.project.pages_by_path[Path() / 'sub' / 'subsub' / 'document3.rst']
+        self.document4 = self.project.pages_by_path[Path() / 'sub' / 'subsub' / 'document4.rst']
+        self.document5 = self.project.pages_by_path[Path() / 'sub' / 'subsub' / 'document5.rst']
 
     def test_types(self):
         data: dict[Page, type[Page]] = {

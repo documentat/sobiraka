@@ -20,11 +20,11 @@ class TestLevels(BookTestCase):
             'r--part2--chapter3--paragraph2',
             'r--part2--chapter3--paragraph3',
         )
-        actual_ids = tuple(page.id for page in self.book.pages)
+        actual_ids = tuple(page.id for page in self.project.pages)
         self.assertSequenceEqual(expected_ids, actual_ids)
 
     def test_max_level(self):
-        self.assertEqual(4, self.book.max_level)
+        self.assertEqual(4, self.project.volumes[0].max_level)
 
     def test_levels(self):
         for path, level in (
@@ -42,7 +42,7 @@ class TestLevels(BookTestCase):
                 (Path() / 'part2' / '3-chapter3' / '3-paragraph3.rst', 4),
         ):
             with self.subTest(path):
-                self.assertEqual(level, self.book.pages_by_path[path].level)
+                self.assertEqual(level, self.project.pages_by_path[path].level)
 
     def test_antilevels(self):
         for path, antilevel in (
@@ -60,11 +60,10 @@ class TestLevels(BookTestCase):
                 (Path() / 'part2' / '3-chapter3' / '3-paragraph3.rst', 1),
         ):
             with self.subTest(path):
-                self.assertEqual(antilevel, self.book.pages_by_path[path].antilevel)
+                self.assertEqual(antilevel, self.project.pages_by_path[path].antilevel)
 
 
 del BookTestCase
-
 
 if __name__ == '__main__':
     main()

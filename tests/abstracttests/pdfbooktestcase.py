@@ -10,7 +10,7 @@ from .booktestcase import BookTestCase
 
 class PdfBookTestCase(BookTestCase[PdfBuilder], AbstractTestWithRtTmp):
     def _init_processor(self):
-        return PdfBuilder(self.book)
+        return PdfBuilder(self.project.volumes[0])
 
     async def test_latex(self):
         for page, expected in self.for_each_expected('.tex', subdir='tex'):

@@ -17,7 +17,7 @@ class Linter(LintPreprocessor):
         await self.preprocess()
 
         tasks: list[Awaitable] = []
-        for page in self.book.pages:
+        for page in self.project.pages:
             tasks.append(self.check_page(page))
         await gather(*tasks)
 
@@ -28,20 +28,20 @@ class Linter(LintPreprocessor):
     async def check_page(self, page: Page):
         tm = self._tm[page]
 
-        if page.book.lint.dictionaries:
+        if page.volume.lint.dictionaries:
             words: list[str] = []
             for phrase in tm.clean_phrases:
                 words += phrase.split()
             words = list(unique_everseen(words))
             misspelled_words: list[str] = []
-            async for word in run_hunspell(words, self.book):
+            async for word in run_hunspell(words, page.volume):
                 if word not in misspelled_words:
                     misspelled_words.append(word)
             if misspelled_words:
                 self.issues[page].append(MisspelledWords(page.relative_path, tuple(misspelled_words)))
 
         for phrase in tm.phrases:
-            if self.book.lint.checks.phrases_must_begin_with_capitals:
+            if page.volume.lint.checks.phrases_must_begin_with_capitals:
                 async for issue in self.check__phrases_must_begin_with_capitals(phrase):
                     self.issues[page].append(issue)
 

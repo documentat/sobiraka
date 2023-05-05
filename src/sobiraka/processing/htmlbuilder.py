@@ -8,21 +8,21 @@ from subprocess import PIPE
 from aiofiles.os import makedirs
 from panflute import Image
 
-from sobiraka.models import Book, EmptyPage, Page, PageHref
+from sobiraka.models import Project, EmptyPage, Page, PageHref
 from .abstract import Processor
 from ..utils import panflute_to_bytes
 
 
 class HtmlBuilder(Processor):
-    def __init__(self, book: Book):
-        super().__init__(book)
+    def __init__(self, project: Project):
+        super().__init__(project)
         self._additional_files: set[Path] = set()
 
     async def run(self, output: Path):
         output.mkdir(parents=True, exist_ok=True)
 
         generating: list[Task] = []
-        for page in self.book.pages:
+        for page in self.project.pages:
             target_file = output / self.make_target_path(page)
             generating.append(create_task(self.generate_html_for_page(page, target_file)))
 
@@ -74,8 +74,8 @@ class HtmlBuilder(Processor):
         return result
 
     async def process_image(self, elem: Image, page: Page) -> tuple[Image, ...]:
-        source_path = self.book.paths.resources / elem.url
-        target_path = self.book.html.resources_prefix / elem.url
+        source_path = page.volume.paths.resources / elem.url
+        target_path = page.volume.html.resources_prefix / elem.url
         if target_path not in self._additional_files:
             self._additional_files.add(target_path)
             await makedirs(target_path.parent, exist_ok=True)

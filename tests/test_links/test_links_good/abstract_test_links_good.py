@@ -6,7 +6,7 @@ from sobiraka.processing import PdfBuilder
 class AbstractTestLinksGood(BookTestCase):
     async def asyncSetUp(self):
         await super().asyncSetUp()
-        _, self.document0, _, self.document1, _, self.document2, self.document3, _, self.document4 = self.book.pages
+        _, self.document0, _, self.document1, _, self.document2, self.document3, _, self.document4 = self.project.pages
 
     def test_ids(self):
         expected_ids = (
@@ -20,7 +20,7 @@ class AbstractTestLinksGood(BookTestCase):
             'r--sub--subsub--subsubsub',
             'r--sub--subsub--subsubsub--document4',
         )
-        actual_ids = tuple(page.id for page in self.book.pages)
+        actual_ids = tuple(page.id for page in self.project.pages)
         self.assertSequenceEqual(expected_ids, actual_ids)
 
     def test_links(self):

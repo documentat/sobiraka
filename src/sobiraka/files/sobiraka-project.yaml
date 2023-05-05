@@ -1,0 +1,80 @@
+oneOf:
+  - { $ref: '#/$defs/book' }
+
+  - additionalProperties: false
+    properties:
+      languages:
+        patternProperties:
+          .+: { $ref: '#/$defs/book' }
+
+  - additionalProperties: false
+    properties:
+      volumes:
+        patternProperties:
+          .+: { $ref: '#/$defs/book' }
+
+  - additionalProperties: false
+    properties:
+      languages:
+        patternProperties:
+          .+:
+            additionalProperties: false
+            properties:
+              volumes:
+                patternProperties:
+                  .+: { $ref: '#/$defs/book' }
+
+$defs:
+  book:
+    additionalProperties: false
+    properties:
+      id: { type: string }
+      title: { type: string }
+
+      paths:
+        additionalProperties: false
+        properties:
+          root: { type: string }
+          resources: { type: string }
+          include:
+            type: array
+            minItems: 0
+            items:
+              type: string
+          exclude:
+            type: array
+            minItems: 0
+            items:
+              type: string
+
+      html:
+        additionalProperties: false
+        properties:
+          resources_prefix: { type: string }
+
+      pdf:
+        additionalProperties: false
+        properties:
+          header: { type: string }
+
+      lint:
+        additionalProperties: false
+        properties:
+          dictionaries:
+            type: array
+            minItems: 0
+            uniqueItems: true
+            items:
+              type: string
+          exceptions:
+            type: array
+            minItems: 0
+            uniqueItems: true
+            items:
+              type: string
+          checks:
+            properties:
+              phrases_must_begin_with_capitals: { type: boolean }
+
+      variables:
+        type: object

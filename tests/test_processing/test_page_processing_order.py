@@ -3,8 +3,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest import IsolatedAsyncioTestCase, main
 
-from sobiraka.models import Book, Page
-from sobiraka.models.book import BookConfig_Paths
+from sobiraka.models import Project, Page, load_project
 from sobiraka.processing import PdfBuilder
 
 
@@ -13,15 +12,15 @@ class TestPageProcessingOrder(IsolatedAsyncioTestCase):
         temp_dir: str = self.enterContext(TemporaryDirectory(prefix='sobiraka-test-'))
         self.dir: Path = Path(temp_dir)
 
-        manifest_path = self.dir / 'book.yaml'
+        manifest_path = self.dir / 'project.yaml'
         manifest_path.touch()
-        self.book = Book.from_manifest(manifest_path)
+        self.project = load_project(manifest_path)
 
         page_path = self.dir / 'page.md'
         page_path.touch()
-        self.page = Page(self.book, self.dir / 'page.md')
+        self.page = Page(self.project.volumes[0], self.dir / 'page.md')
 
-        self.processor = PdfBuilder(self.book)  # TODO make a simpler processor
+        self.processor = PdfBuilder(self.project.volumes[0])  # TODO make a simpler processor
 
         self.order: list[str] = []
 

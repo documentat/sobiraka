@@ -2,7 +2,7 @@ from argparse import ArgumentParser
 from asyncio import run
 from pathlib import Path
 
-from sobiraka.linter import Linter
+from sobiraka.models import load_project
 from sobiraka.processing import HtmlBuilder, PdfBuilder
 from sobiraka.runtime import RT
 from sobiraka.utils import validate_dictionary
@@ -20,6 +20,7 @@ async def async_main():  # pragma: no cover
 
     cmd_pdf = commands.add_parser('pdf', help='Build PDF file.')
     cmd_pdf.add_argument('source', type=absolute_path)
+    cmd_pdf.add_argument('volume', nargs='?')
     cmd_pdf.add_argument('target', type=absolute_path)
 
     cmd_lint = commands.add_parser('lint', help='Check book for various issues.')
@@ -38,12 +39,13 @@ async def async_main():  # pragma: no cover
             exit_code = 1
 
         case 'html':
-            book = Book.from_manifest(args.source)
-            exit_code = await HtmlBuilder(book).run(args.target)
+            project = load_project(args.source)
+            exit_code = await HtmlBuilder(project).run(args.target)
 
         case 'pdf':
-            book = Book.from_manifest(args.source)
-            exit_code = await PdfBuilder(book).run(args.target)
+            project = load_project(args.source)
+            volume = project.volumes_by_key[args.volume]
+            exit_code = await PdfBuilder(volume).run(args.target)
 
         case 'lint':
             book = Book.from_manifest(args.source)
