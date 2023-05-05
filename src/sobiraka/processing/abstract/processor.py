@@ -20,9 +20,7 @@ from .dispatcher import Dispatcher
 
 class Processor(Dispatcher):
 
-    def __init__(self, project: Project):
-        self.project: Project = project
-
+    def __init__(self):
         self.jinja = jinja2.Environment(
             comment_start_string='{{#',
             comment_end_string='#}}',
@@ -58,6 +56,9 @@ class Processor(Dispatcher):
 
         self.process2_tasks: dict[Page, list[Awaitable]] = defaultdict(list)
         """:meta private:"""
+
+    @abstractmethod
+    def get_pages(self) -> tuple[Page, ...]: ...
 
     @on_demand
     async def load_page(self, page: Page):
@@ -137,7 +138,7 @@ class Processor(Dispatcher):
 
     def print_issues(self) -> bool:
         issues_found: bool = False
-        for page in self.project.pages:
+        for page in self.get_pages():
             if self.issues[page]:
                 message = f'Issues in {page.relative_path}:'
                 for issue in self.issues[page]:

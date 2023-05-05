@@ -14,7 +14,7 @@ from .abstract import Processor
 
 class PdfBuilder(Processor):
     def __init__(self, volume: Volume):
-        super().__init__(volume.project)
+        super().__init__()
         self.volume: Volume = volume
         self._latex: dict[Page, bytes] = {}
 
@@ -61,7 +61,7 @@ class PdfBuilder(Processor):
             latex_output.write(b'\n\n' + (80 * b'%'))
         latex_output.write(b'\n\n\\begin{document}\n\\begin{sloppypar}')
 
-        for page in self.project.pages:
+        for page in self.volume.pages:
             await self.generate_latex_for_page(page)
             latex_output.write(b'\n\n' + (80 * b'%'))
             latex_output.write(b'\n\n%%% ' + bytes(page.relative_path) + b'\n')
@@ -112,6 +112,9 @@ class PdfBuilder(Processor):
                     break
                 print(line, file=sys.stderr)
             print('\033[0m', end='', file=sys.stderr)
+
+    def get_pages(self) -> tuple[Page, ...]:
+        return self.volume.pages
 
     def make_internal_url(self, href: PageHref, *, page: Page) -> str:
         result = '#' + href.target.id

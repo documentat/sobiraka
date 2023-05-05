@@ -15,7 +15,8 @@ from ..utils import panflute_to_bytes
 
 class HtmlBuilder(Processor):
     def __init__(self, project: Project):
-        super().__init__(project)
+        super().__init__()
+        self.project: Project = project
         self._additional_files: set[Path] = set()
 
     async def run(self, output: Path):
