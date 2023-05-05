@@ -44,10 +44,10 @@ def _normalized_and_merged(data: dict, key: str) -> Iterable[tuple[str, dict]]:
 
     if key not in data:
         yield None, data
-    elif list(data[key]) == ['_']:
-        yield None, data[key]['_']
-    elif '_' in data[key]:
-        defaults = data[key].pop('_')
+    elif list(data[key]) == ['DEFAULT']:
+        yield None, data[key]['DEFAULT']
+    elif 'DEFAULT' in data[key]:
+        defaults = data[key].pop('DEFAULT')
         for k, v in data[key].items():
             v = merge_dicts(defaults, v)
             yield k, v

@@ -61,7 +61,7 @@ class TestManifest_1L_1VUnderscored(TestManifest_1L_1V):
         languages:
             en:
                 volumes:
-                    _:
+                    DEFAULT:
                         title: Documentation
                         paths:
                             root: src/en
@@ -93,7 +93,7 @@ class TestManifest_1LUnderscore_1V(TestManifest_1L_1V):
 
     YAML = '''
         languages:
-            _:
+            DEFAULT:
                 volumes:
                     vol1:
                         title: Documentation
@@ -114,9 +114,9 @@ class TestManifest_1LUnderscore_1VUnderscore(TestManifest_1L_1V):
 
     YAML = '''
         languages:
-            _:
+            DEFAULT:
                 volumes:
-                    _:
+                    DEFAULT:
                         title: Documentation
                         paths:
                             root: src/en
@@ -135,7 +135,7 @@ class TestManifest_1LUnderscore_1VFlat(TestManifest_1L_1V):
 
     YAML = '''
         languages:
-            _:
+            DEFAULT:
                 title: Documentation
                 paths:
                     root: src/en
@@ -170,7 +170,7 @@ class TestManifest_1LFlat_1VUnderscore(TestManifest_1L_1V):
 
     YAML = '''
         volumes:
-            _:
+            DEFAULT:
                 title: Documentation
                 paths:
                     root: src/en
@@ -275,9 +275,9 @@ class TestManifest_2L_2V(_TestManifest):
 class TestManifest_2L_2V_LanguageDefaults(TestManifest_2L_2V):
     YAML = '''
         languages:
-            _:
+            DEFAULT:
                 volumes:
-                    _:
+                    DEFAULT:
                         html:
                             resources_prefix: img
             en:
@@ -312,7 +312,7 @@ class TestManifest_2L_2V_VolumeDefaults(TestManifest_2L_2V):
         languages:
             en:
                 volumes:
-                    _:
+                    DEFAULT:
                         title: Documentation
                     vol1:
                         paths:
@@ -328,7 +328,7 @@ class TestManifest_2L_2V_VolumeDefaults(TestManifest_2L_2V):
                             resources_prefix: img
             ru:
                 volumes:
-                    _:
+                    DEFAULT:
                         title: Документация
                     vol1:
                         paths:
@@ -348,14 +348,14 @@ class TestManifest_2L_2V_VolumeDefaults(TestManifest_2L_2V):
 class TestManifest_2L_2V_AllDefaults(TestManifest_2L_2V):
     YAML = '''
         languages:
-            _:
+            DEFAULT:
                 volumes:
-                    _:
+                    DEFAULT:
                         html:
                             resources_prefix: img
             en:
                 volumes:
-                    _:
+                    DEFAULT:
                         title: Documentation
                     vol1:
                         paths:
@@ -367,7 +367,7 @@ class TestManifest_2L_2V_AllDefaults(TestManifest_2L_2V):
                             include: [four, five, six]
             ru:
                 volumes:
-                    _:
+                    DEFAULT:
                         title: Документация
                     vol1:
                         paths:
