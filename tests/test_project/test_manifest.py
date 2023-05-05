@@ -1,19 +1,15 @@
 from pathlib import Path
-from textwrap import dedent
 from unittest import TestCase, main
 
-import yaml
-
 from sobiraka.models import Volume
-from sobiraka.models.load import load_project_from_dict
+from sobiraka.models.load import load_project_from_str
 
 
 class _TestManifest(TestCase):
     YAML = NotImplemented
 
     def setUp(self):
-        manifest = yaml.safe_load(dedent(self.YAML))
-        self.project = load_project_from_dict(manifest, base=Path('/BASE'))
+        self.project = load_project_from_str(self.YAML, base=Path('/BASE'))
 
 
 class TestManifest_1L_1V(_TestManifest):

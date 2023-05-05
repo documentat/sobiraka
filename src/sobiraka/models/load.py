@@ -1,4 +1,5 @@
 from pathlib import Path
+from textwrap import dedent
 from typing import Iterable
 
 import jsonschema
@@ -17,6 +18,12 @@ def load_project(manifest_path: Path) -> Project:
     with manifest_path.open() as manifest_file:
         manifest: dict = yaml.safe_load(manifest_file) or {}
     return load_project_from_dict(manifest, base=manifest_path.parent)
+
+
+def load_project_from_str(manifest_yaml: str, *, base: Path) -> Project:
+    manifest_yaml = dedent(manifest_yaml)
+    manifest: dict = yaml.safe_load(manifest_yaml) or {}
+    return load_project_from_dict(manifest, base=base)
 
 
 def load_project_from_dict(manifest: dict, *, base: Path) -> Project:
