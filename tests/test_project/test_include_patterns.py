@@ -8,7 +8,7 @@ from sobiraka.models import Project
 from sobiraka.models.load import load_project
 
 
-class TestProjectPaths(IsolatedAsyncioTestCase):
+class TestIncludePatterns(IsolatedAsyncioTestCase):
     maxDiff = None
 
     def prepare_dirs(self):
@@ -170,7 +170,7 @@ class TestProjectPaths(IsolatedAsyncioTestCase):
         ))
 
 
-class TestProjectPaths_CustomRootAbsolute(TestProjectPaths):
+class TestIncludePatterns_CustomRootAbsolute(TestIncludePatterns):
     def prepare_dirs(self):
         super().prepare_dirs()
         temp_dir: str = self.enterContext(TemporaryDirectory(prefix='sobiraka-test-'))
@@ -178,14 +178,14 @@ class TestProjectPaths_CustomRootAbsolute(TestProjectPaths):
         self.path_to_root = str(self.root)
 
 
-class TestProjectPaths_CustomRootInside(TestProjectPaths):
+class TestIncludePatterns_CustomRootInside(TestIncludePatterns):
     def prepare_dirs(self):
         super().prepare_dirs()
         self.root /= 'src'
         self.path_to_root = 'src'
 
 
-class TestProjectPaths_CustomRootOutside(TestProjectPaths):
+class TestIncludePatterns_CustomRootOutside(TestIncludePatterns):
     def prepare_dirs(self):
         super().prepare_dirs()
         self.manifest_path = self.root / 'manifest' / 'project.yaml'
