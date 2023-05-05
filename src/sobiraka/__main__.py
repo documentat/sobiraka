@@ -46,12 +46,12 @@ async def async_main():  # pragma: no cover
 
         case 'pdf':
             project = load_project(args.source)
-            volume = project.volumes_by_key[args.volume]
+            volume = project.get_volume(args.volume)
             exit_code = await PdfBuilder(volume).run(args.target)
 
         case 'lint':
             project = load_project(args.source)
-            volume = project.volumes_by_key[args.volume]
+            volume = project.get_volume(args.volume)
             linter = Linter(volume)
             exit_code = await linter.check()
             if exit_code != 0:

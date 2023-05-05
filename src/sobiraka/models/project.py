@@ -49,7 +49,7 @@ class Volume_Lint:
 class Volume:
     project: Project = field(init=False, hash=False)
     lang: str | None = None
-    codename: str = ''
+    codename: str | None = None
 
     title: str = ''
     """Volume title."""
@@ -64,7 +64,11 @@ class Volume:
         return hash((id(self.project), self.codename, self.lang))
 
     def __repr__(self):
-        return f'<{self.__class__.__name__}: {repr(str(self.paths.root))}>'
+        return f'<{self.__class__.__name__}: {self.identifier!r}>'
+
+    @property
+    def identifier(self) -> str | None:
+        return '/'.join(filter(None, (self.lang, self.codename))) or None
 
     @cached_property
     def pages_by_path(self) -> dict[Path, Page]:
@@ -128,10 +132,15 @@ class Project:
     root: Path
 
     volumes: tuple[Volume, ...] = field(hash=False)
-    volumes_by_key: dict[str | None, Volume] = field(hash=False)
 
     def __repr__(self):
         return f'<{self.__class__.__name__}: {str(self.root)!r}>'
+
+    def get_volume(self, identifier: str | None = None) -> Volume:
+        for volume in self.volumes:
+            if volume.identifier == identifier:
+                return volume
+        raise KeyError
 
     @cached_property
     def pages_by_path(self) -> dict[Path, Page]:

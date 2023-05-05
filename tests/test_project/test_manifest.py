@@ -1,3 +1,4 @@
+from abc import abstractmethod, ABCMeta
 from pathlib import Path
 from unittest import TestCase, main
 
@@ -5,11 +6,32 @@ from sobiraka.models import Volume
 from sobiraka.models.load import load_project_from_str
 
 
-class _TestManifest(TestCase):
+class _TestManifest(TestCase, metaclass=ABCMeta):
     YAML = NotImplemented
 
     def setUp(self):
         self.project = load_project_from_str(self.YAML, base=Path('/BASE'))
+
+    @abstractmethod
+    def test_lang(self): ...
+
+    @abstractmethod
+    def test_codename(self): ...
+
+    @abstractmethod
+    def test_identifier(self): ...
+
+    @abstractmethod
+    def test_title(self): ...
+
+    @abstractmethod
+    def test_root(self): ...
+
+    @abstractmethod
+    def test_include(self): ...
+
+    @abstractmethod
+    def test_resources_prefix(self): ...
 
 
 class TestManifest_1L_1V(_TestManifest):
@@ -17,11 +39,14 @@ class TestManifest_1L_1V(_TestManifest):
         super().setUp()
         self.volume: Volume = self.project.volumes[0]
 
+    def test_lang(self):
+        self.assertEqual('en', self.volume.lang)
+
     def test_codename(self):
         self.assertEqual('vol1', self.volume.codename)
 
-    def test_lang(self):
-        self.assertEqual('en', self.volume.lang)
+    def test_identifier(self):
+        self.assertEqual('en/vol1', self.volume.identifier)
 
     def test_title(self):
         self.assertEqual('Documentation', self.volume.title)
@@ -53,6 +78,9 @@ class TestManifest_1L_1VUnderscored(TestManifest_1L_1V):
     def test_codename(self):
         self.assertEqual(None, self.volume.codename)
 
+    def test_identifier(self):
+        self.assertEqual('en', self.volume.identifier)
+
     YAML = '''
         languages:
             en:
@@ -71,6 +99,9 @@ class TestManifest_1L_1VFlat(TestManifest_1L_1V):
     def test_codename(self):
         self.assertEqual(None, self.volume.codename)
 
+    def test_identifier(self):
+        self.assertEqual('en', self.volume.identifier)
+
     YAML = '''
         languages:
             en:
@@ -87,6 +118,9 @@ class TestManifest_1LUnderscore_1V(TestManifest_1L_1V):
     def test_lang(self):
         self.assertEqual(None, self.volume.lang)
 
+    def test_identifier(self):
+        self.assertEqual('vol1', self.volume.identifier)
+
     YAML = '''
         languages:
             DEFAULT:
@@ -102,11 +136,14 @@ class TestManifest_1LUnderscore_1V(TestManifest_1L_1V):
 
 
 class TestManifest_1LUnderscore_1VUnderscore(TestManifest_1L_1V):
+    def test_lang(self):
+        self.assertEqual(None, self.volume.lang)
+
     def test_codename(self):
         self.assertEqual(None, self.volume.codename)
 
-    def test_lang(self):
-        self.assertEqual(None, self.volume.lang)
+    def test_identifier(self):
+        self.assertEqual(None, self.volume.identifier)
 
     YAML = '''
         languages:
@@ -123,11 +160,14 @@ class TestManifest_1LUnderscore_1VUnderscore(TestManifest_1L_1V):
 
 
 class TestManifest_1LUnderscore_1VFlat(TestManifest_1L_1V):
+    def test_lang(self):
+        self.assertEqual(None, self.volume.lang)
+
     def test_codename(self):
         self.assertEqual(None, self.volume.codename)
 
-    def test_lang(self):
-        self.assertEqual(None, self.volume.lang)
+    def test_identifier(self):
+        self.assertEqual(None, self.volume.identifier)
 
     YAML = '''
         languages:
@@ -145,6 +185,9 @@ class TestManifest_1LFlat_1V(TestManifest_1L_1V):
     def test_lang(self):
         self.assertEqual(None, self.volume.lang)
 
+    def test_identifier(self):
+        self.assertEqual('vol1', self.volume.identifier)
+
     YAML = '''
         volumes:
             vol1:
@@ -158,11 +201,14 @@ class TestManifest_1LFlat_1V(TestManifest_1L_1V):
 
 
 class TestManifest_1LFlat_1VUnderscore(TestManifest_1L_1V):
+    def test_lang(self):
+        self.assertEqual(None, self.volume.lang)
+
     def test_codename(self):
         self.assertEqual(None, self.volume.codename)
 
-    def test_lang(self):
-        self.assertEqual(None, self.volume.lang)
+    def test_identifier(self):
+        self.assertEqual(None, self.volume.identifier)
 
     YAML = '''
         volumes:
@@ -177,11 +223,14 @@ class TestManifest_1LFlat_1VUnderscore(TestManifest_1L_1V):
 
 
 class TestManifest_1LFlat_1VFlat(TestManifest_1L_1V):
+    def test_lang(self):
+        self.assertEqual(None, self.volume.lang)
+
     def test_codename(self):
         self.assertEqual(None, self.volume.codename)
 
-    def test_lang(self):
-        self.assertEqual(None, self.volume.lang)
+    def test_identifier(self):
+        self.assertEqual(None, self.volume.identifier)
 
     YAML = '''
         title: Documentation
@@ -194,41 +243,47 @@ class TestManifest_1LFlat_1VFlat(TestManifest_1L_1V):
 
 
 class TestManifest_2L_2V(_TestManifest):
-    def test_codename(self):
-        expected_data = 'vol1', 'vol2', 'vol1', 'vol2'
-        for expected, volume in zip(expected_data, self.project.volumes, strict=True):
-            with self.subTest(volume.codename):
-                self.assertEqual(expected, volume.codename)
-
     def test_lang(self):
         expected_data = 'en', 'en', 'ru', 'ru'
-        for expected, volume in zip(expected_data, self.project.volumes, strict=True):
-            with self.subTest(volume.codename):
+        for i, (expected, volume) in enumerate(zip(expected_data, self.project.volumes, strict=True)):
+            with self.subTest(f'{i} - {expected}'):
                 self.assertEqual(expected, volume.lang)
+
+    def test_codename(self):
+        expected_data = 'vol1', 'vol2', 'vol1', 'vol2'
+        for i, (expected, volume) in enumerate(zip(expected_data, self.project.volumes, strict=True)):
+            with self.subTest(f'{i} - {expected}'):
+                self.assertEqual(expected, volume.codename)
+
+    def test_identifier(self):
+        expected_data = 'en/vol1', 'en/vol2', 'ru/vol1', 'ru/vol2'
+        for i, (expected, volume) in enumerate(zip(expected_data, self.project.volumes, strict=True)):
+            with self.subTest(f'{i} - {expected}'):
+                self.assertEqual(expected, volume.identifier)
 
     def test_title(self):
         expected_data = 'Documentation', 'Documentation', 'Документация', 'Документация'
-        for expected, volume in zip(expected_data, self.project.volumes, strict=True):
-            with self.subTest(volume.codename):
+        for i, (expected, volume) in enumerate(zip(expected_data, self.project.volumes, strict=True)):
+            with self.subTest(f'{i} - {expected}'):
                 self.assertEqual(expected, volume.title)
 
     def test_root(self):
         expected_data = Path('/BASE/src/en'), Path('/BASE/src/en'), Path('/BASE/src/ru'), Path('/BASE/src/ru')
-        for expected, volume in zip(expected_data, self.project.volumes, strict=True):
-            with self.subTest(volume.codename):
+        for i, (expected, volume) in enumerate(zip(expected_data, self.project.volumes, strict=True)):
+            with self.subTest(f'{i} - {expected}'):
                 self.assertEqual(expected, volume.root)
 
     def test_include(self):
         expected_data = ('one', 'two', 'three'), ('four', 'five', 'six'), ('one', 'two', 'three'), (
             'four', 'five', 'six')
-        for expected, volume in zip(expected_data, self.project.volumes, strict=True):
-            with self.subTest(volume.codename):
+        for i, (expected, volume) in enumerate(zip(expected_data, self.project.volumes, strict=True)):
+            with self.subTest(f'{i} - {expected}'):
                 self.assertEqual(expected, volume.paths.include)
 
     def test_resources_prefix(self):
         expected_data = 4 * (Path('/BASE/img'),)
-        for expected, volume in zip(expected_data, self.project.volumes, strict=True):
-            with self.subTest(volume.codename):
+        for i, (expected, volume) in enumerate(zip(expected_data, self.project.volumes, strict=True)):
+            with self.subTest(f'{i} - {expected}'):
                 self.assertEqual(expected, volume.html.resources_prefix)
 
     YAML = '''

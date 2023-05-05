@@ -27,8 +27,11 @@ class Page:
         return hash((id(self.volume), self.path))
 
     def __repr__(self):
-        path = self.path.relative_to(self.volume.project.root)
-        return f'<{self.__class__.__name__}: {str(path)!r}>'
+        path = self.path.relative_to(self.volume.root)
+        if self.volume.identifier:
+            return f'<{self.__class__.__name__}: [{self.volume.identifier}]/{path}>'
+        else:
+            return f'<{self.__class__.__name__}: /{path}>'
 
     def __lt__(self, other):
         assert isinstance(other, Page)

@@ -31,16 +31,11 @@ def load_project_from_dict(manifest: dict, *, base: Path) -> Project:
         jsonschema.validate(manifest, MANIFEST_SCHEMA)
 
     volumes: list[Volume] = []
-    volumes_by_key: dict[str | None, Volume] = {}
-
     for lang, language_data in _normalized_and_merged(manifest, 'languages'):
         for codename, volume_data in _normalized_and_merged(language_data, 'volumes'):
-            volume = _load_volume(lang, codename, volume_data, base)
-            key = '/'.join(filter(None, (lang, codename))) or None
-            volumes.append(volume)
-            volumes_by_key[key] = volume
+            volumes.append(_load_volume(lang, codename, volume_data, base))
 
-    project = Project(root=base, volumes=tuple(volumes), volumes_by_key=frozendict(volumes_by_key))
+    project = Project(root=base, volumes=tuple(volumes))
     for volume in volumes:
         object.__setattr__(volume, 'project', project)
     return project
