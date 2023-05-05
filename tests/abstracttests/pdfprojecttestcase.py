@@ -5,10 +5,10 @@ from tempfile import TemporaryDirectory
 
 from sobiraka.processing import PdfBuilder
 from .abstracttestwithrttmp import AbstractTestWithRtTmp
-from .booktestcase import BookTestCase
+from .projecttestcase import ProjectTestCase
 
 
-class PdfBookTestCase(BookTestCase[PdfBuilder], AbstractTestWithRtTmp):
+class PdfProjectTestCase(ProjectTestCase[PdfBuilder], AbstractTestWithRtTmp):
     def _init_processor(self):
         return PdfBuilder(self.project.volumes[0])
 
@@ -42,4 +42,4 @@ class PdfBookTestCase(BookTestCase[PdfBuilder], AbstractTestWithRtTmp):
                     self.assertEqual(expected_sha.hexdigest(), actual_sha.hexdigest())
 
 
-del BookTestCase, AbstractTestWithRtTmp
+del ProjectTestCase, AbstractTestWithRtTmp

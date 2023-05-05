@@ -1,10 +1,10 @@
 from pathlib import Path
 from unittest import main
 
-from abstracttests.booktestcase import BookTestCase
+from abstracttests.projecttestcase import ProjectTestCase
 
 
-class TestLevels(BookTestCase):
+class TestLevels(ProjectTestCase):
     def test_ids(self):
         expected_ids = (
             'r',
@@ -63,7 +63,7 @@ class TestLevels(BookTestCase):
                 self.assertEqual(antilevel, self.project.pages_by_path[path].antilevel)
 
 
-del BookTestCase
+del ProjectTestCase
 
 if __name__ == '__main__':
     main()

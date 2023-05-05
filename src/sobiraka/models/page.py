@@ -19,7 +19,7 @@ class Page:
     """The :class:`.Volume` this page belongs to."""
 
     path: Path
-    """Absolute path to the page source, relative to :data:`.Book.root`.
+    """Absolute path to the page source.
     
     :see also: :data:`relative_path`"""
 
@@ -36,7 +36,7 @@ class Page:
 
     @cached_property
     def relative_path(self) -> Path:
-        """Path to the page source, relative to :data:`.Book.root`."""
+        """Path to the page source, relative to :data:`.Volume.root`."""
         return self.path.relative_to(self.volume.root)
 
     @cached_property
@@ -93,7 +93,7 @@ class Page:
     @cached_property
     def id(self) -> str:
         """
-        Textual representation of :data:`breadcrumbs`, unique within the :class:`.Book`.
+        Textual representation of :data:`breadcrumbs`, unique within the :class:`.Volume`.
 
         :examples:
             ``0-main.md`` → ``r`` \n
@@ -108,7 +108,7 @@ class Page:
     @cached_property
     def level(self) -> int:
         """
-        The depth of the page's location within its :class:`.Book`.
+        The depth of the page's location within its :class:`.Volume`.
 
         Equals to number of parts in the :data:`id` plus 1.
         """
@@ -120,12 +120,12 @@ class Page:
     @property
     def antilevel(self) -> int:
         """
-        A value that shows how far is this page's :data:`level` from the biggest level found in this :class:`.Book`.
+        A value that shows how far is this page's :data:`level` from the biggest level found in this :class:`.Volume`.
 
         For the pages with the biggest level, this value always equals to `1`.
         For other pages, it is always larger than `1`.
 
-        :example: In a book with only three pages, having levels `1`, `2`, `3`,
+        :example: In a volume with only three pages, having levels `1`, `2`, `3`,
             their corresponding antilevels will be `3`, `2`, `1`.
         """
         return self.volume.max_level - self.level + 1

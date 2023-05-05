@@ -1,9 +1,9 @@
-from abstracttests.booktestcase import BookTestCase
+from abstracttests.projecttestcase import ProjectTestCase
 from sobiraka.models import Href, Page, PageHref, UrlHref
 from sobiraka.processing import PdfBuilder
 
 
-class AbstractTestLinksGood(BookTestCase):
+class AbstractTestLinksGood(ProjectTestCase):
     async def asyncSetUp(self):
         await super().asyncSetUp()
         _, self.document0, _, self.document1, _, self.document2, self.document3, _, self.document4 = self.project.pages
@@ -66,4 +66,4 @@ class AbstractTestLinksGood(BookTestCase):
                 self.assertSequenceEqual(expected_links, tuple(self.processor.links[page]))
 
 
-del BookTestCase
+del ProjectTestCase

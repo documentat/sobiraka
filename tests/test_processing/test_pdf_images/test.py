@@ -1,13 +1,13 @@
 from unittest import main
 
-from abstracttests.pdfbooktestcase import PdfBookTestCase
+from abstracttests.pdfprojecttestcase import PdfProjectTestCase
 
 
-class TestPdfImages(PdfBookTestCase):
+class TestPdfImages(PdfProjectTestCase):
     pass
 
 
-del PdfBookTestCase
+del PdfProjectTestCase
 
 if __name__ == '__main__':
     main()

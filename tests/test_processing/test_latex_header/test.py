@@ -1,13 +1,13 @@
 from unittest import main
 
-from abstracttests.pdfbooktestcase import PdfBookTestCase
+from abstracttests.pdfprojecttestcase import PdfProjectTestCase
 
 
-class TestLatexHeader(PdfBookTestCase):
+class TestLatexHeader(PdfProjectTestCase):
     pass
 
 
-del PdfBookTestCase
+del PdfProjectTestCase
 
 if __name__ == '__main__':
     main()

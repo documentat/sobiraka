@@ -27,7 +27,7 @@ class Volume_HTML:
 @dataclass(kw_only=True, frozen=True)
 class Volume_PDF:
     header: Path | None = None
-    """Path to the file containing LaTeX header directives for the book, if provided."""
+    """Path to the file containing LaTeX header directives for the volume, if provided."""
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -52,7 +52,7 @@ class Volume:
     codename: str = ''
 
     title: str = ''
-    """Book title. May be used when rendering output files."""
+    """Volume title."""
 
     paths: Volume_Paths = field(default_factory=Volume_Paths, kw_only=True)
     html: Volume_HTML = field(default_factory=Volume_HTML, kw_only=True)
@@ -110,12 +110,12 @@ class Volume:
 
     @property
     def root(self) -> Path:
-        """Absolute path to the root directory of the book."""
+        """Absolute path to the root directory of the volume."""
         return self.paths.root
 
     @cached_property
     def max_level(self) -> int:
-        """Maximum value of :obj:`.Page.level` in the book. Used for calculating :obj:`.Page.antilevel`."""
+        """Maximum value of :obj:`.Page.level` in the volume. Used for calculating :obj:`.Page.antilevel`."""
         levels = tuple(page.level for page in self.pages)
         return max(levels) if levels else 0
 
@@ -124,10 +124,6 @@ class Volume:
 class Project:
     """
     A single documentation project that needs to be processed and rendered.
-
-    .. important::
-        Note that because each :class:`.Page`'s data is modified during processing, a book must not be used for more than one rendering.
-        Doing so will lead to unexpected behavior, as data loaded with different parameters do not necessarily co-exist nnicely.
     """
     root: Path
 

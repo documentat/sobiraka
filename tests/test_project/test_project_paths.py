@@ -8,7 +8,7 @@ from sobiraka.models import Project
 from sobiraka.models.load import load_project
 
 
-class TestBookPaths(IsolatedAsyncioTestCase):
+class TestProjectPaths(IsolatedAsyncioTestCase):
     maxDiff = None
 
     def prepare_dirs(self):
@@ -46,8 +46,8 @@ class TestBookPaths(IsolatedAsyncioTestCase):
         self.manifest_path.write_text(dedent(data_yaml))
         return load_project(self.manifest_path)
 
-    def assertPagePaths(self, book: Project, expected_paths: tuple[Path, ...]):
-        actual_paths = tuple(p.path for p in book.pages)
+    def assertPagePaths(self, project: Project, expected_paths: tuple[Path, ...]):
+        actual_paths = tuple(p.path for p in project.pages)
         self.assertSequenceEqual(expected_paths, actual_paths)
 
     ################################################################################
@@ -170,7 +170,7 @@ class TestBookPaths(IsolatedAsyncioTestCase):
         ))
 
 
-class TestBookPaths_CustomRootAbsolute(TestBookPaths):
+class TestProjectPaths_CustomRootAbsolute(TestProjectPaths):
     def prepare_dirs(self):
         super().prepare_dirs()
         temp_dir: str = self.enterContext(TemporaryDirectory(prefix='sobiraka-test-'))
@@ -178,14 +178,14 @@ class TestBookPaths_CustomRootAbsolute(TestBookPaths):
         self.path_to_root = str(self.root)
 
 
-class TestBookPaths_CustomRootInside(TestBookPaths):
+class TestProjectPaths_CustomRootInside(TestProjectPaths):
     def prepare_dirs(self):
         super().prepare_dirs()
         self.root /= 'src'
         self.path_to_root = 'src'
 
 
-class TestBookPaths_CustomRootOutside(TestBookPaths):
+class TestProjectPaths_CustomRootOutside(TestProjectPaths):
     def prepare_dirs(self):
         super().prepare_dirs()
         self.manifest_path = self.root / 'manifest' / 'project.yaml'

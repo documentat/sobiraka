@@ -1,9 +1,9 @@
-from abstracttests.booktestcase import BookTestCase
+from abstracttests.projecttestcase import ProjectTestCase
 from sobiraka.models import Href, Page, PageHref, UrlHref
 from sobiraka.processing import HtmlBuilder
 
 
-class AbstractTestLinksGoodHtml(BookTestCase):
+class AbstractTestLinksGoodHtml(ProjectTestCase):
     def _init_processor(self):
         return HtmlBuilder(self.project)
 
@@ -79,4 +79,4 @@ class AbstractTestLinksGoodHtml(BookTestCase):
                         self.assertEqual(expected_url, actual_url)
 
 
-del BookTestCase
+del ProjectTestCase

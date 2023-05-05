@@ -24,7 +24,7 @@ async def async_main():  # pragma: no cover
     cmd_pdf.add_argument('volume', nargs='?')
     cmd_pdf.add_argument('target', type=absolute_path)
 
-    cmd_lint = commands.add_parser('lint', help='Check book for various issues.')
+    cmd_lint = commands.add_parser('lint', help='Check a volume for various issues.')
     cmd_lint.add_argument('source', type=absolute_path)
     cmd_lint.add_argument('volume', nargs='?')
 

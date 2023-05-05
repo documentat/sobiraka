@@ -8,7 +8,7 @@ from sobiraka.models import Volume
 def exceptions_regexp(volume: Volume) -> re.Pattern | None:
     """
     Prepare a regular expression that matches any exception.
-    If the book declares no exceptions, returns `None`.
+    If the volume declares no exceptions, returns `None`.
     """
     regexp_parts: list[str] = []
     for exceptions_path in volume.lint.exceptions:

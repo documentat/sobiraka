@@ -1,8 +1,8 @@
-from abstracttests.booktestcase import BookTestCase
+from abstracttests.projecttestcase import ProjectTestCase
 from sobiraka.models import BadLink, Href, Issue, Page, PageHref, UrlHref
 
 
-class AbstractTestLinksBad(BookTestCase):
+class AbstractTestLinksBad(ProjectTestCase):
     EXT: str
 
     async def asyncSetUp(self):
@@ -82,4 +82,4 @@ class AbstractTestLinksBad(BookTestCase):
                 self.assertSequenceEqual(expected_links, tuple(self.processor.links[page]))
 
 
-del BookTestCase
+del ProjectTestCase

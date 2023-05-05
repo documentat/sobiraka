@@ -12,7 +12,7 @@ from sobiraka.processing.abstract import Processor
 T = TypeVar('T', bound=Processor)
 
 
-class BookTestCase(IsolatedAsyncioTestCase, Generic[T]):
+class ProjectTestCase(IsolatedAsyncioTestCase, Generic[T]):
     maxDiff = None
 
     def load_project(self) -> Project:
