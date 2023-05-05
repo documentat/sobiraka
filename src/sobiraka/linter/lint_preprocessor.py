@@ -4,7 +4,7 @@ from typing import Awaitable, Callable
 
 from panflute import BlockQuote, BulletList, Caption, Citation, Cite, Code, CodeBlock, Definition, DefinitionItem, DefinitionList, Div, Element, Emph, Header, HorizontalRule, Image, LineBlock, LineBreak, LineItem, Link, ListItem, Math, Note, Null, OrderedList, Para, Plain, Quoted, RawBlock, RawInline, SmallCaps, SoftBreak, Space, Span, Str, Strikeout, Strong, Subscript, Superscript, Table, TableBody, TableCell, TableFoot, TableHead, TableRow, Underline
 
-from sobiraka.models import Page, Project
+from sobiraka.models import Page, Volume
 from sobiraka.processing.abstract import Processor
 from .exceptions_regexp import exceptions_regexp
 from .textmodel import Fragment, Pos, TextModel
@@ -12,10 +12,11 @@ from .textmodel import Fragment, Pos, TextModel
 
 class LintPreprocessor(Processor):
 
-    def __init__(self, project: Project):
-        super().__init__(project)
+    def __init__(self, volume: Volume):
+        super().__init__()
+        self.volume: Volume = volume
 
-        regexp = exceptions_regexp(self.project.volumes[0])
+        regexp = exceptions_regexp(self.volume)
         self._tm: dict[Page, TextModel] = defaultdict(lambda: TextModel(exceptions_regexp=regexp))
 
     async def tm(self, page: Page) -> TextModel:
@@ -24,7 +25,7 @@ class LintPreprocessor(Processor):
 
     async def preprocess(self):
         tasks: list[Awaitable] = []
-        for page in self.project.pages:
+        for page in self.volume.pages:
             tasks.append(self.process2(page))
         await gather(*tasks)
 

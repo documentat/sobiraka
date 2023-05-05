@@ -30,7 +30,7 @@ class BookTestCase(IsolatedAsyncioTestCase, Generic[T]):
         await gather(*awaitables)
 
     def _init_processor(self) -> T:
-        return Processor(self.project)
+        return Processor()
 
     def subTest(self, msg: Any = ..., **params: Any):
         match msg:

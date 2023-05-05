@@ -6,7 +6,7 @@ class AbstractLintingTest(BookTestCase[Linter]):
     maxDiff = None
 
     def _init_processor(self) -> Linter:
-        return Linter(self.project)
+        return Linter(self.project.volumes[0])
 
     async def test_issues(self):
         for page, expected in self.for_each_expected('.issues'):

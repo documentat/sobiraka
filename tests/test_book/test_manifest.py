@@ -5,7 +5,7 @@ from unittest import TestCase, main
 import yaml
 
 from sobiraka.models import Volume
-from sobiraka.models.project import load_project_from_dict
+from sobiraka.models.load import load_project_from_dict
 
 
 class _TestManifest(TestCase):
