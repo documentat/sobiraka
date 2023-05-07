@@ -1,5 +1,6 @@
 import re
 from functools import cache
+from pathlib import Path
 
 from .page import Page
 
@@ -10,11 +11,22 @@ class EmptyPage(Page):
         if self.parent is None:
             return 'r'
         else:
-            return re.sub(r'^(\d+-)?', '', self.relative_path.stem)
+            return re.sub(r'^(\d+-)?', '', self.path.stem)
 
-    @property
     def is_index(self) -> bool:
         return True
+
+    @property
+    def path_in_project(self) -> Path:
+        return self.path.relative_to(self.volume.project.root)
+
+    @property
+    def path_in_volume(self) -> Path:
+        return self.path.relative_to(self.volume.root)
+
+    @property
+    def parent(self) -> Page | None:
+        return self.volume.pages_by_path.get(self.path_in_project.parent)
 
     @property
     def syntax(self) -> str:

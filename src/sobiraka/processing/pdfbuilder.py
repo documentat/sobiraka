@@ -64,7 +64,7 @@ class PdfBuilder(Processor):
         for page in self.volume.pages:
             await self.generate_latex_for_page(page)
             latex_output.write(b'\n\n' + (80 * b'%'))
-            latex_output.write(b'\n\n%%% ' + bytes(page.relative_path) + b'\n')
+            latex_output.write(b'\n\n%%% ' + bytes(page.path_in_project) + b'\n')
             latex_output.write(self._latex[page])
 
         latex_output.write(b'\n\n' + (80 * b'%'))
@@ -92,7 +92,7 @@ class PdfBuilder(Processor):
             self._latex[page] = await pandoc.stdout.read()
 
         if RT.TMP:
-            (RT.TMP / 'content' / page.relative_path.with_suffix('.tex')).write_bytes(self._latex[page])
+            (RT.TMP / 'content' / page.path_in_project.with_suffix('.tex')).write_bytes(self._latex[page])
 
     @staticmethod
     def print_xelatex_error(log_path: Path):

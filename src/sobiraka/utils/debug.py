@@ -29,7 +29,7 @@ def save_debug_json(suffix: str, page: Page, doc: Doc):
                      r'["", [], []]',
                      content)
 
-    debug_path = page.relative_path.with_suffix(f'.{suffix}.json')
+    debug_path = page.path_in_project.with_suffix(f'.{suffix}.json')
     debug_path = RT.TMP / 'content' / debug_path
     debug_path.parent.mkdir(parents=True, exist_ok=True)
     debug_path.write_text(content)

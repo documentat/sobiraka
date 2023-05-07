@@ -27,22 +27,32 @@ class Page:
         return hash((id(self.volume), self.path))
 
     def __repr__(self):
-        path = self.path.relative_to(self.volume.root)
+        path = '/'.join(self.path.relative_to(self.volume.root).parts)
         if self.volume.identifier:
             return f'<{self.__class__.__name__}: [{self.volume.identifier}]/{path}>'
+        elif path == Path('.'):
+            return f'<{self.__class__.__name__}: />'
         else:
             return f'<{self.__class__.__name__}: /{path}>'
 
     def __lt__(self, other):
-        assert isinstance(other, Page)
-        return self.relative_path < other.relative_path
+        assert isinstance(other, Page), TypeError
+        assert self.volume.project == other.volume.project
+        return (self.volume, self.path_in_volume) < (other.volume, other.path_in_volume)
 
     @cached_property
-    def relative_path(self) -> Path:
+    def path_in_project(self) -> Path:
+        """Path to the page source, relative to :data:`.Project.root`."""
+        return self.path.relative_to(self.volume.project.root)
+
+    @cached_property
+    def path_in_volume(self) -> Path:
         """Path to the page source, relative to :data:`.Volume.root`."""
         return self.path.relative_to(self.volume.root)
 
-    @cached_property
+    def is_root(self) -> bool:
+        return self.parent is None
+
     def is_index(self) -> bool:
         return bool(re.fullmatch(r'0(-.*)? | (\d+-)?index', self.path.stem, flags=re.X))
 
@@ -55,19 +65,10 @@ class Page:
 
     @cached_property
     def parent(self) -> Page | None:
-        from . import EmptyPage
-
-        if self.is_index:
-            if isinstance(self, EmptyPage):
-                if self.relative_path == Path('.'):
-                    return None
-                return self.volume.pages_by_path[self.relative_path.parent]
-            else:
-                if self.relative_path.parent == Path('.'):
-                    return None
-                return self.volume.pages_by_path[self.relative_path.parent.parent]
+        if self.is_index():
+            return self.volume.pages_by_path.get(self.path_in_project.parent.parent)
         else:
-            return self.volume.pages_by_path[self.relative_path.parent]
+            return self.volume.pages_by_path.get(self.path_in_project.parent)
 
     @cached_property
     def children(self) -> list[Page]:
@@ -88,10 +89,10 @@ class Page:
     def _id_segment(self) -> str:
         if self.parent is None:
             return 'r'
-        elif self.is_index:
-            return re.sub(r'^(\d+-)?', '', self.relative_path.parent.stem)
+        elif self.is_index():
+            return re.sub(r'^(\d+-)?', '', self.path.parent.stem)
         else:
-            return re.sub(r'^(\d+-)?', '', self.relative_path.stem)
+            return re.sub(r'^(\d+-)?', '', self.path.stem)
 
     @cached_property
     def id(self) -> str:

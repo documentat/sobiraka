@@ -36,10 +36,10 @@ class ProjectTestCase(IsolatedAsyncioTestCase, Generic[T]):
     def subTest(self, msg: Any = ..., **params: Any):
         match msg:
             case Page() as page:
-                if page.relative_path == Path('.'):
+                if page.is_root():
                     return super().subTest('')
                 else:
-                    return super().subTest(page.relative_path.with_suffix(''))
+                    return super().subTest(page.path_in_project.with_suffix(''))
             case _:
                 return super().subTest(msg)
 
@@ -52,7 +52,7 @@ class ProjectTestCase(IsolatedAsyncioTestCase, Generic[T]):
     def for_each_expected(self, suffix: str, *, subdir: str = '') -> Iterable[tuple[Page, Path]]:
         ok = True
         for page in self.project.pages:
-            expected = self.dir / 'expected' / subdir / page.relative_path.with_suffix(suffix)
+            expected = self.dir / 'expected' / subdir / page.path_in_volume.with_suffix(suffix)
             if expected.exists():
                 yield page, expected
             else:

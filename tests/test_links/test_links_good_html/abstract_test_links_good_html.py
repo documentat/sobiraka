@@ -70,9 +70,9 @@ class AbstractTestLinksGoodHtml(ProjectTestCase):
             for href, expected_url in expected_links.items():
                 if isinstance(href, PageHref):
                     with self.subTest(
-                            str(page.relative_path.with_suffix(''))
+                            str(page.path_in_volume.with_suffix(''))
                             + ' → '
-                            + str(href.target.relative_path.with_suffix(''))
+                            + str(href.target.path_in_volume.with_suffix(''))
                             + (f'#{href.anchor}' if href.anchor else '')
                     ):
                         actual_url = self.processor.make_internal_url(href, page=page)

@@ -3,7 +3,7 @@ from unittest import main
 from ..abstract_test_links_good_html import AbstractTestLinksGoodHtml
 
 
-class TestLinksGood_MD(AbstractTestLinksGoodHtml):
+class TestLinksGoodHtml_MD(AbstractTestLinksGoodHtml):
     pass
 
 

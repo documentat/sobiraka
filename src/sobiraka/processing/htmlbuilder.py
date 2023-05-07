@@ -49,12 +49,12 @@ class HtmlBuilder(Processor):
     @staticmethod
     def make_target_path(page: Page) -> Path:
         target_path = Path()
-        for part in page.relative_path.parts:
+        for part in page.path_in_volume.parts:
             target_path /= re.sub(r'^(\d+-)?', '', part)
 
         if isinstance(page, EmptyPage):
             target_path /= 'index.html'
-        elif page.is_index:
+        elif page.is_index():
             target_path = target_path.with_name('index.html')
         else:
             target_path = target_path.with_suffix('.html')

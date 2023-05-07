@@ -13,7 +13,7 @@ import panflute
 from more_itertools import padded
 from panflute import Code, Doc, Header, Link, Str, stringify
 
-from sobiraka.models import BadLink, Project, Href, Issue, Page, PageHref, UrlHref
+from sobiraka.models import BadLink, Href, Issue, Page, PageHref, UrlHref, EmptyPage
 from sobiraka.utils import LatexBlock, on_demand, save_debug_json, UniqueList
 from .dispatcher import Dispatcher
 
@@ -140,7 +140,7 @@ class Processor(Dispatcher):
         issues_found: bool = False
         for page in self.get_pages():
             if self.issues[page]:
-                message = f'Issues in {page.relative_path}:'
+                message = f'Issues in {page.path_in_project}:'
                 for issue in self.issues[page]:
                     message += f'\n    {issue}'
                 message += '\n'
@@ -177,9 +177,13 @@ class Processor(Dispatcher):
         if target_path_str:
             try:
                 if target_path_str.startswith('/'):
-                    target_path = Path(target_path_str[1:])
+                    target_path = page.volume.relative_root / Path(target_path_str[1:])
                 else:
-                    target_path = (page.path.parent / target_path_str).resolve().relative_to(page.volume.root)
+                    if isinstance(page, EmptyPage):
+                        target_path = (page.path / target_path_str).resolve()
+                    else:
+                        target_path = (page.path.parent / target_path_str).resolve()
+                    target_path = target_path.relative_to(page.volume.project.root)
                 target = page.volume.pages_by_path[target_path]
             except (KeyError, ValueError):
                 self.issues[page].append(BadLink(target_text))

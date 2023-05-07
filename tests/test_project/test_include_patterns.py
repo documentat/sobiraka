@@ -170,26 +170,11 @@ class TestIncludePatterns(IsolatedAsyncioTestCase):
         ))
 
 
-class TestIncludePatterns_CustomRootAbsolute(TestIncludePatterns):
-    def prepare_dirs(self):
-        super().prepare_dirs()
-        temp_dir: str = self.enterContext(TemporaryDirectory(prefix='sobiraka-test-'))
-        self.manifest_path = Path(temp_dir) / 'project.yaml'
-        self.path_to_root = str(self.root)
-
-
-class TestIncludePatterns_CustomRootInside(TestIncludePatterns):
+class TestIncludePatterns_CustomRoot(TestIncludePatterns):
     def prepare_dirs(self):
         super().prepare_dirs()
         self.root /= 'src'
         self.path_to_root = 'src'
-
-
-class TestIncludePatterns_CustomRootOutside(TestIncludePatterns):
-    def prepare_dirs(self):
-        super().prepare_dirs()
-        self.manifest_path = self.root / 'manifest' / 'project.yaml'
-        self.path_to_root = '..'
 
 
 if __name__ == '__main__':

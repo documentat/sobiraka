@@ -28,36 +28,36 @@ class TestLevels(ProjectTestCase):
 
     def test_levels(self):
         for path, level in (
-                (Path() / '0-index.rst', 1),
-                (Path() / 'part1' / '0-intro.rst', 2),
-                (Path() / 'part1' / '1-chapter1.rst', 3),
-                (Path() / 'part1' / '2-chapter2.rst', 3),
-                (Path() / 'part1' / '3-chapter3.rst', 3),
-                (Path() / 'part2' / '0-intro.rst', 2),
-                (Path() / 'part2' / '1-chapter1.rst', 3),
-                (Path() / 'part2' / '2-chapter2.rst', 3),
-                (Path() / 'part2' / '3-chapter3' / '0.rst', 3),
-                (Path() / 'part2' / '3-chapter3' / '1-paragraph1.rst', 4),
-                (Path() / 'part2' / '3-chapter3' / '2-paragraph2.rst', 4),
-                (Path() / 'part2' / '3-chapter3' / '3-paragraph3.rst', 4),
+                (Path('src') / '0-index.rst', 1),
+                (Path('src') / 'part1' / '0-intro.rst', 2),
+                (Path('src') / 'part1' / '1-chapter1.rst', 3),
+                (Path('src') / 'part1' / '2-chapter2.rst', 3),
+                (Path('src') / 'part1' / '3-chapter3.rst', 3),
+                (Path('src') / 'part2' / '0-intro.rst', 2),
+                (Path('src') / 'part2' / '1-chapter1.rst', 3),
+                (Path('src') / 'part2' / '2-chapter2.rst', 3),
+                (Path('src') / 'part2' / '3-chapter3' / '0.rst', 3),
+                (Path('src') / 'part2' / '3-chapter3' / '1-paragraph1.rst', 4),
+                (Path('src') / 'part2' / '3-chapter3' / '2-paragraph2.rst', 4),
+                (Path('src') / 'part2' / '3-chapter3' / '3-paragraph3.rst', 4),
         ):
             with self.subTest(path):
                 self.assertEqual(level, self.project.pages_by_path[path].level)
 
     def test_antilevels(self):
         for path, antilevel in (
-                (Path() / '0-index.rst', 4),
-                (Path() / 'part1' / '0-intro.rst', 3),
-                (Path() / 'part1' / '1-chapter1.rst', 2),
-                (Path() / 'part1' / '2-chapter2.rst', 2),
-                (Path() / 'part1' / '3-chapter3.rst', 2),
-                (Path() / 'part2' / '0-intro.rst', 3),
-                (Path() / 'part2' / '1-chapter1.rst', 2),
-                (Path() / 'part2' / '2-chapter2.rst', 2),
-                (Path() / 'part2' / '3-chapter3' / '0.rst', 2),
-                (Path() / 'part2' / '3-chapter3' / '1-paragraph1.rst', 1),
-                (Path() / 'part2' / '3-chapter3' / '2-paragraph2.rst', 1),
-                (Path() / 'part2' / '3-chapter3' / '3-paragraph3.rst', 1),
+                (Path('src') / '0-index.rst', 4),
+                (Path('src') / 'part1' / '0-intro.rst', 3),
+                (Path('src') / 'part1' / '1-chapter1.rst', 2),
+                (Path('src') / 'part1' / '2-chapter2.rst', 2),
+                (Path('src') / 'part1' / '3-chapter3.rst', 2),
+                (Path('src') / 'part2' / '0-intro.rst', 3),
+                (Path('src') / 'part2' / '1-chapter1.rst', 2),
+                (Path('src') / 'part2' / '2-chapter2.rst', 2),
+                (Path('src') / 'part2' / '3-chapter3' / '0.rst', 2),
+                (Path('src') / 'part2' / '3-chapter3' / '1-paragraph1.rst', 1),
+                (Path('src') / 'part2' / '3-chapter3' / '2-paragraph2.rst', 1),
+                (Path('src') / 'part2' / '3-chapter3' / '3-paragraph3.rst', 1),
         ):
             with self.subTest(path):
                 self.assertEqual(antilevel, self.project.pages_by_path[path].antilevel)

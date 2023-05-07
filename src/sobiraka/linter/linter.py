@@ -44,7 +44,7 @@ class Linter(LintPreprocessor):
                 if word not in misspelled_words:
                     misspelled_words.append(word)
             if misspelled_words:
-                self.issues[page].append(MisspelledWords(page.relative_path, tuple(misspelled_words)))
+                self.issues[page].append(MisspelledWords(page.path_in_project, tuple(misspelled_words)))
 
         for phrase in tm.phrases:
             if self.volume.lint.checks.phrases_must_begin_with_capitals:

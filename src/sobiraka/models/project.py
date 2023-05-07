@@ -66,6 +66,12 @@ class Volume:
     def __repr__(self):
         return f'<{self.__class__.__name__}: {self.identifier!r}>'
 
+    def __lt__(self, other):
+        assert isinstance(other, Volume)
+        assert self.project is other.project
+        volumes = self.project.volumes
+        return volumes.index(self) < volumes.index(other)
+
     @property
     def identifier(self) -> str | None:
         return '/'.join(filter(None, (self.lang, self.codename))) or None
@@ -86,21 +92,24 @@ class Volume:
             paths -= set(self.root.glob(pattern))
 
         for path in paths:
-            relative_path = path.relative_to(self.root)
+            path_in_project = path.relative_to(self.project.root)
             absolute_path = path.resolve()
 
             page = Page(self, absolute_path)
             pages.append(page)
-            pages_by_path[relative_path] = page
-            if page.is_index:
-                pages_by_path[relative_path.parent] = page
-                expected_paths |= set(relative_path.parent.parents)
-            else:
-                expected_paths |= set(relative_path.parents)
+            pages_by_path[path_in_project] = page
+            if page.is_index():
+                pages_by_path[path_in_project.parent] = page
+
+            for parent in path_in_project.parents:
+                if parent not in pages_by_path:
+                    expected_paths.add(parent)
+                if parent == self.relative_root:
+                    break
 
         for expected_path in expected_paths:
             if expected_path not in pages_by_path:
-                page = EmptyPage(self, self.root / expected_path)
+                page = EmptyPage(self, self.project.root / expected_path)
                 pages.append(page)
                 pages_by_path[expected_path] = page
 
@@ -116,6 +125,10 @@ class Volume:
     def root(self) -> Path:
         """Absolute path to the root directory of the volume."""
         return self.paths.root
+
+    @property
+    def relative_root(self) -> Path:
+        return self.paths.root.relative_to(self.project.root)
 
     @cached_property
     def max_level(self) -> int:
@@ -149,7 +162,7 @@ class Project:
             pages_by_path |= volume.pages_by_path
         return frozendict(pages_by_path)
 
-    @property
+    @cached_property
     def pages(self) -> tuple[Page, ...]:
         pages = sorted(self.pages_by_path.values(), key=lambda p: p.path)
         pages = list(unique_justseen(pages))

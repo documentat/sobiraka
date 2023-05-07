@@ -8,14 +8,14 @@ from sobiraka.models import EmptyPage, Page
 class TestChildren(ProjectTestCase):
     async def asyncSetUp(self):
         await super().asyncSetUp()
-        self.index_root = self.project.pages_by_path[Path()]
-        self.document1 = self.project.pages_by_path[Path() / 'document1.rst']
-        self.index_sub = self.project.pages_by_path[Path() / 'sub' / '0-index.rst']
-        self.document2 = self.project.pages_by_path[Path() / 'sub' / 'document2.rst']
-        self.index_subsub = self.project.pages_by_path[Path() / 'sub' / 'subsub']
-        self.document3 = self.project.pages_by_path[Path() / 'sub' / 'subsub' / 'document3.rst']
-        self.document4 = self.project.pages_by_path[Path() / 'sub' / 'subsub' / 'document4.rst']
-        self.document5 = self.project.pages_by_path[Path() / 'sub' / 'subsub' / 'document5.rst']
+        self.index_root = self.project.pages_by_path[Path('src')]
+        self.document1 = self.project.pages_by_path[Path('src') / 'document1.rst']
+        self.index_sub = self.project.pages_by_path[Path('src') / 'sub' / '0-index.rst']
+        self.document2 = self.project.pages_by_path[Path('src') / 'sub' / 'document2.rst']
+        self.index_subsub = self.project.pages_by_path[Path('src') / 'sub' / 'subsub']
+        self.document3 = self.project.pages_by_path[Path('src') / 'sub' / 'subsub' / 'document3.rst']
+        self.document4 = self.project.pages_by_path[Path('src') / 'sub' / 'subsub' / 'document4.rst']
+        self.document5 = self.project.pages_by_path[Path('src') / 'sub' / 'subsub' / 'document5.rst']
 
     def test_types(self):
         data: dict[Page, type[Page]] = {
@@ -45,7 +45,7 @@ class TestChildren(ProjectTestCase):
         }
         for page, expected in data.items():
             with self.subTest(page):
-                self.assertEqual(expected, page.is_index)
+                self.assertEqual(expected, page.is_index())
 
     def test_breadcrumbs(self):
         data: tuple[list[Page], ...] = (
