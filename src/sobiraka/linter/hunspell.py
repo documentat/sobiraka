@@ -17,7 +17,7 @@ async def run_hunspell(words: Sequence[str], volume: Volume) -> AsyncIterable[st
         environ = environ.copy()
         environ['DICPATH'] = ':'.join((
             str(RT.FILES / 'dictionaries'),
-            str(volume.project.root)))
+            str(volume.project.base)))
         environ['DICTIONARY'] = ','.join(volume.lint.dictionaries)
 
     hunspell = await create_subprocess_exec(

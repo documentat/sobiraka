@@ -92,7 +92,7 @@ class Volume:
             paths -= set(self.root.glob(pattern))
 
         for path in paths:
-            path_in_project = path.relative_to(self.project.root)
+            path_in_project = path.relative_to(self.project.base)
             absolute_path = path.resolve()
 
             page = Page(self, absolute_path)
@@ -109,7 +109,7 @@ class Volume:
 
         for expected_path in expected_paths:
             if expected_path not in pages_by_path:
-                page = EmptyPage(self, self.project.root / expected_path)
+                page = EmptyPage(self, self.project.base / expected_path)
                 pages.append(page)
                 pages_by_path[expected_path] = page
 
@@ -128,7 +128,7 @@ class Volume:
 
     @property
     def relative_root(self) -> Path:
-        return self.paths.root.relative_to(self.project.root)
+        return self.paths.root.relative_to(self.project.base)
 
     @cached_property
     def max_level(self) -> int:
@@ -142,12 +142,12 @@ class Project:
     """
     A single documentation project that needs to be processed and rendered.
     """
-    root: Path
+    base: Path
 
     volumes: tuple[Volume, ...] = field(hash=False)
 
     def __repr__(self):
-        return f'<{self.__class__.__name__}: {str(self.root)!r}>'
+        return f'<{self.__class__.__name__}: {str(self.base)!r}>'
 
     def get_volume(self, identifier: str | None = None) -> Volume:
         for volume in self.volumes:

@@ -35,7 +35,7 @@ def load_project_from_dict(manifest: dict, *, base: Path) -> Project:
         for codename, volume_data in _normalized_and_merged(language_data, 'volumes'):
             volumes.append(_load_volume(lang, codename, volume_data, base))
 
-    project = Project(root=base, volumes=tuple(volumes))
+    project = Project(base=base, volumes=tuple(volumes))
     for volume in volumes:
         object.__setattr__(volume, 'project', project)
     return project

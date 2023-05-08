@@ -18,7 +18,7 @@ class EmptyPage(Page):
 
     @property
     def path_in_project(self) -> Path:
-        return self.path.relative_to(self.volume.project.root)
+        return self.path.relative_to(self.volume.project.base)
 
     @property
     def path_in_volume(self) -> Path:

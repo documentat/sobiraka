@@ -183,7 +183,7 @@ class Processor(Dispatcher):
                         target_path = (page.path / target_path_str).resolve()
                     else:
                         target_path = (page.path.parent / target_path_str).resolve()
-                    target_path = target_path.relative_to(page.volume.project.root)
+                    target_path = target_path.relative_to(page.volume.project.base)
                 target = page.volume.pages_by_path[target_path]
             except (KeyError, ValueError):
                 self.issues[page].append(BadLink(target_text))

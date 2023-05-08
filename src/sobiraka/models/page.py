@@ -43,7 +43,7 @@ class Page:
     @cached_property
     def path_in_project(self) -> Path:
         """Path to the page source, relative to :data:`.Project.root`."""
-        return self.path.relative_to(self.volume.project.root)
+        return self.path.relative_to(self.volume.project.base)
 
     @cached_property
     def path_in_volume(self) -> Path:
