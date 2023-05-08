@@ -28,8 +28,8 @@ class Page:
 
     def __repr__(self):
         path = '/'.join(self.path.relative_to(self.volume.root).parts)
-        if self.volume.identifier:
-            return f'<{self.__class__.__name__}: [{self.volume.identifier}]/{path}>'
+        if self.volume.autoprefix:
+            return f'<{self.__class__.__name__}: [{self.volume.autoprefix}]/{path}>'
         elif path == Path('.'):
             return f'<{self.__class__.__name__}: />'
         else:

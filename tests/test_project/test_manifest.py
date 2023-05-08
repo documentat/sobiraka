@@ -19,7 +19,7 @@ class _TestManifest(TestCase, metaclass=ABCMeta):
     def test_codename(self): ...
 
     @abstractmethod
-    def test_identifier(self): ...
+    def test_autoprefix(self): ...
 
     @abstractmethod
     def test_title(self): ...
@@ -45,8 +45,8 @@ class TestManifest_1L_1V(_TestManifest):
     def test_codename(self):
         self.assertEqual('vol1', self.volume.codename)
 
-    def test_identifier(self):
-        self.assertEqual('en/vol1', self.volume.identifier)
+    def test_autoprefix(self):
+        self.assertEqual('en/vol1', self.volume.autoprefix)
 
     def test_title(self):
         self.assertEqual('Documentation', self.volume.title)
@@ -78,8 +78,8 @@ class TestManifest_1L_1VUnderscored(TestManifest_1L_1V):
     def test_codename(self):
         self.assertEqual(None, self.volume.codename)
 
-    def test_identifier(self):
-        self.assertEqual('en', self.volume.identifier)
+    def test_autoprefix(self):
+        self.assertEqual('en', self.volume.autoprefix)
 
     YAML = '''
         languages:
@@ -99,8 +99,8 @@ class TestManifest_1L_1VFlat(TestManifest_1L_1V):
     def test_codename(self):
         self.assertEqual(None, self.volume.codename)
 
-    def test_identifier(self):
-        self.assertEqual('en', self.volume.identifier)
+    def test_autoprefix(self):
+        self.assertEqual('en', self.volume.autoprefix)
 
     YAML = '''
         languages:
@@ -118,8 +118,8 @@ class TestManifest_1LUnderscore_1V(TestManifest_1L_1V):
     def test_lang(self):
         self.assertEqual(None, self.volume.lang)
 
-    def test_identifier(self):
-        self.assertEqual('vol1', self.volume.identifier)
+    def test_autoprefix(self):
+        self.assertEqual('vol1', self.volume.autoprefix)
 
     YAML = '''
         languages:
@@ -142,8 +142,8 @@ class TestManifest_1LUnderscore_1VUnderscore(TestManifest_1L_1V):
     def test_codename(self):
         self.assertEqual(None, self.volume.codename)
 
-    def test_identifier(self):
-        self.assertEqual(None, self.volume.identifier)
+    def test_autoprefix(self):
+        self.assertEqual(None, self.volume.autoprefix)
 
     YAML = '''
         languages:
@@ -166,8 +166,8 @@ class TestManifest_1LUnderscore_1VFlat(TestManifest_1L_1V):
     def test_codename(self):
         self.assertEqual(None, self.volume.codename)
 
-    def test_identifier(self):
-        self.assertEqual(None, self.volume.identifier)
+    def test_autoprefix(self):
+        self.assertEqual(None, self.volume.autoprefix)
 
     YAML = '''
         languages:
@@ -185,8 +185,8 @@ class TestManifest_1LFlat_1V(TestManifest_1L_1V):
     def test_lang(self):
         self.assertEqual(None, self.volume.lang)
 
-    def test_identifier(self):
-        self.assertEqual('vol1', self.volume.identifier)
+    def test_autoprefix(self):
+        self.assertEqual('vol1', self.volume.autoprefix)
 
     YAML = '''
         volumes:
@@ -207,8 +207,8 @@ class TestManifest_1LFlat_1VUnderscore(TestManifest_1L_1V):
     def test_codename(self):
         self.assertEqual(None, self.volume.codename)
 
-    def test_identifier(self):
-        self.assertEqual(None, self.volume.identifier)
+    def test_autoprefix(self):
+        self.assertEqual(None, self.volume.autoprefix)
 
     YAML = '''
         volumes:
@@ -229,8 +229,8 @@ class TestManifest_1LFlat_1VFlat(TestManifest_1L_1V):
     def test_codename(self):
         self.assertEqual(None, self.volume.codename)
 
-    def test_identifier(self):
-        self.assertEqual(None, self.volume.identifier)
+    def test_autoprefix(self):
+        self.assertEqual(None, self.volume.autoprefix)
 
     YAML = '''
         title: Documentation
@@ -255,11 +255,11 @@ class TestManifest_2L_2V(_TestManifest):
             with self.subTest(f'{i} - {expected}'):
                 self.assertEqual(expected, volume.codename)
 
-    def test_identifier(self):
+    def test_autoprefix(self):
         expected_data = 'en/vol1', 'en/vol2', 'ru/vol1', 'ru/vol2'
         for i, (expected, volume) in enumerate(zip(expected_data, self.project.volumes, strict=True)):
             with self.subTest(f'{i} - {expected}'):
-                self.assertEqual(expected, volume.identifier)
+                self.assertEqual(expected, volume.autoprefix)
 
     def test_title(self):
         expected_data = 'Documentation', 'Documentation', 'Документация', 'Документация'

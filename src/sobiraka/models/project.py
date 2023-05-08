@@ -64,7 +64,7 @@ class Volume:
         return hash((id(self.project), self.codename, self.lang))
 
     def __repr__(self):
-        return f'<{self.__class__.__name__}: {self.identifier!r}>'
+        return f'<{self.__class__.__name__}: {self.autoprefix!r}>'
 
     def __lt__(self, other):
         assert isinstance(other, Volume)
@@ -73,7 +73,7 @@ class Volume:
         return volumes.index(self) < volumes.index(other)
 
     @property
-    def identifier(self) -> str | None:
+    def autoprefix(self) -> str | None:
         return '/'.join(filter(None, (self.lang, self.codename))) or None
 
     @cached_property
@@ -149,9 +149,9 @@ class Project:
     def __repr__(self):
         return f'<{self.__class__.__name__}: {str(self.base)!r}>'
 
-    def get_volume(self, identifier: str | None = None) -> Volume:
+    def get_volume(self, autoprefix: str | None = None) -> Volume:
         for volume in self.volumes:
-            if volume.identifier == identifier:
+            if volume.autoprefix == autoprefix:
                 return volume
         raise KeyError
 
