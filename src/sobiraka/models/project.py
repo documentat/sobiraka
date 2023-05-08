@@ -21,6 +21,7 @@ class Volume_Paths:
 
 @dataclass(kw_only=True, frozen=True)
 class Volume_HTML:
+    prefix: str | None = None
     resources_prefix: Path | None = None
 
 

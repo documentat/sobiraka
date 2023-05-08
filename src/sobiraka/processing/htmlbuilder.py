@@ -1,5 +1,7 @@
+import os.path
 import re
 from asyncio import Task, create_subprocess_exec, create_task, gather, to_thread
+from functools import partial
 from os.path import relpath
 from pathlib import Path
 from shutil import copyfile
@@ -46,8 +48,8 @@ class HtmlBuilder(Processor):
         await pandoc.wait()
         assert pandoc.returncode == 0
 
-    @staticmethod
-    def make_target_path(page: Page) -> Path:
+    @classmethod
+    def make_target_path(cls, page: Page) -> Path:
         target_path = Path()
         for part in page.path_in_volume.parts:
             target_path /= re.sub(r'^(\d+-)?', '', part)
@@ -59,7 +61,20 @@ class HtmlBuilder(Processor):
         else:
             target_path = target_path.with_suffix('.html')
 
+        prefix = page.volume.html.prefix or '$AUTOPREFIX'
+        prefix = re.sub(r'\$\w+', partial(cls.replace_in_prefix, page), prefix)
+        prefix = os.path.join(*prefix.split('/'))
+
+        target_path = prefix / target_path
         return target_path
+
+    @classmethod
+    def replace_in_prefix(cls, page: Page, m: re.Match) -> str:
+        return {
+            '$LANG': page.volume.lang,
+            '$VOLUME': page.volume.codename,
+            '$AUTOPREFIX': page.volume.autoprefix,
+        }[m.group()]
 
     def make_internal_url(self, href: PageHref, *, page: Page) -> str:
         if href.target is page:

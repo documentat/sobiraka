@@ -83,6 +83,7 @@ def _load_volume(lang: str | None, codename: str, volume_data: dict, base: Path)
             exclude=tuple(_('paths.exclude', '')),
         ),
         html=Volume_HTML(
+            prefix=_('html.prefix'),
             resources_prefix=convert_or_none(global_path, _('html.resources_prefix', '_resources')),
         ),
         pdf=Volume_PDF(

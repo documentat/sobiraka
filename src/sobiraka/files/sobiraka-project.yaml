@@ -50,6 +50,7 @@ $defs:
       html:
         additionalProperties: false
         properties:
+          prefix: {type: string}
           resources_prefix: { type: string }
 
       pdf:
