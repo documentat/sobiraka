@@ -71,6 +71,7 @@ class Processor(Dispatcher):
 
         variables = page.volume.variables | {
             'toc': TocGenerator(page=page, processor=self),
+            'LANG': page.volume.lang,
         }
 
         page_text = page.raw()

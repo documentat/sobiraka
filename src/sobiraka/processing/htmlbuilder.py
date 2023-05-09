@@ -90,8 +90,9 @@ class HtmlBuilder(Processor):
         return result
 
     async def process_image(self, elem: Image, page: Page) -> tuple[Image, ...]:
-        source_path = page.volume.paths.resources / elem.url
-        target_path = page.volume.html.resources_prefix / elem.url
+        path = elem.url.replace('$LANG', page.volume.lang)
+        source_path = page.volume.paths.resources / path
+        target_path = page.volume.html.resources_prefix / path
         if target_path not in self._additional_files:
             self._additional_files.add(target_path)
             await makedirs(target_path.parent, exist_ok=True)
