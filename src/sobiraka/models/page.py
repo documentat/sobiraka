@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from functools import cache, cached_property
 from pathlib import Path
 
-from .project import Volume
+from .volume import Volume
 
 
 @dataclass(frozen=True)

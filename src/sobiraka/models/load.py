@@ -7,8 +7,8 @@ import yaml
 from utilspie.collectionsutils import frozendict
 
 from sobiraka.runtime import RT
-from .project import Project, Volume
-from .project import Volume_Paths, Volume_HTML, Volume_PDF, Volume_Lint, Volume_Lint_Checks
+from .project import Project
+from .volume import Volume, Volume_HTML, Volume_Lint, Volume_Lint_Checks, Volume_PDF, Volume_Paths
 
 MANIFEST_SCHEMA = yaml.load((RT.FILES / 'sobiraka-project.yaml').read_text(), yaml.SafeLoader)
 
