@@ -23,8 +23,19 @@ build-tester-src:
 		--build-arg GID=$$(id -g) \
 		--tag sobiraka:tester-src
 
+build-linter:
+	@DOCKER_BUILDKIT=1 \
+		docker build . \
+		--target linter \
+		--build-arg UID=$$(id -u) \
+		--build-arg GID=$$(id -g) \
+		--tag sobiraka:linter
+
 test-src:
 	@docker run --rm -it -v $(PWD):/W:ro -e COVERAGE_FILE=~/coverage sobiraka:tester-src
 
 test-dist:
 	@docker run --rm -it -e COVERAGE_FILE=~/coverage sobiraka:tester-dist
+
+lint:
+	@docker run --rm -it -v $(PWD):/W:ro sobiraka:linter

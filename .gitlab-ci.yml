@@ -75,6 +75,11 @@ build-release:
   variables:
     VARIANT: release
 
+build-linter:
+  extends: .build-docker
+  variables:
+    VARIANT: linter
+
 ################################################################################
 
 .test:
@@ -101,6 +106,15 @@ test-src:
   needs: [build-tester-dist]
   variables:
     VARIANT: tester-src
+
+lint:
+  extends: .test
+  needs: [build-linter]
+  variables:
+    VARIANT: linter
+  script:
+    - make lint
+  allow_failure: true
 
 ################################################################################
 

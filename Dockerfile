@@ -17,6 +17,10 @@ RUN ln -s /usr/local/bin/python /usr/bin/python
 COPY --from=build-package /sobiraka.egg-info/requires.txt .
 RUN /usr/bin/python -m pip install --prefix /prefix --requirement requires.txt
 
+FROM python:3.11-alpine3.16 AS install-dependencies-linter
+RUN ln -s /usr/local/bin/python /usr/bin/python
+RUN /usr/bin/python -m pip install --prefix /prefix pylint~=2.17.4
+
 FROM install-dependencies AS install-package
 COPY --from=build-package /dist/*.tar.gz .
 RUN /usr/bin/python -m pip install --prefix /prefix *.tar.gz
@@ -49,6 +53,10 @@ COPY --from=install-package /prefix /usr
 COPY Makefile .
 COPY tests tests
 CMD make tests
+
+FROM tester-src AS linter
+COPY --from=install-dependencies-linter /prefix /usr
+CMD make lint
 
 FROM common AS release
 COPY --from=install-package /prefix /usr
