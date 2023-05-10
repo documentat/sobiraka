@@ -4,8 +4,10 @@ import re
 from dataclasses import dataclass
 from functools import cache, cached_property
 from pathlib import Path
+from typing import TYPE_CHECKING
 
-from .volume import Volume
+if TYPE_CHECKING:
+    from .volume import Volume
 
 
 @dataclass(frozen=True)
@@ -13,7 +15,8 @@ class Page:
     """
     Representation of a single source file in the documentation.
 
-    During the processing by the :func:`.load_page()`, :func:`.process1()` and :func:`.process2()` functions, some of the page's fields may be altered.
+    During the processing by the :func:`.load_page()`, :func:`.process1()` and :func:`.process2()` functions,
+    some of the page's fields may be altered.
     """
     volume: Volume
     """The :class:`.Volume` this page belongs to."""
@@ -28,12 +31,13 @@ class Page:
 
     def __repr__(self):
         path = '/'.join(self.path.relative_to(self.volume.root).parts)
-        if self.volume.autoprefix:
-            return f'<{self.__class__.__name__}: [{self.volume.autoprefix}]/{path}>'
-        elif path == Path('.'):
-            return f'<{self.__class__.__name__}: />'
-        else:
-            return f'<{self.__class__.__name__}: /{path}>'
+        match path:
+            case self.volume.autoprefix:
+                return f'<{self.__class__.__name__}: [{self.volume.autoprefix}]/{path}>'
+            case Path('.'):
+                return f'<{self.__class__.__name__}: />'
+            case _:
+                return f'<{self.__class__.__name__}: /{path}>'
 
     def __lt__(self, other):
         assert isinstance(other, Page), TypeError
@@ -67,8 +71,7 @@ class Page:
     def parent(self) -> Page | None:
         if self.is_index():
             return self.volume.pages_by_path.get(self.path_in_project.parent.parent)
-        else:
-            return self.volume.pages_by_path.get(self.path_in_project.parent)
+        return self.volume.pages_by_path.get(self.path_in_project.parent)
 
     @cached_property
     def children(self) -> list[Page]:
@@ -86,13 +89,12 @@ class Page:
                 children.append(page)
         return children
 
-    def _id_segment(self) -> str:
+    def id_segment(self) -> str:
         if self.parent is None:
             return 'r'
-        elif self.is_index():
+        if self.is_index():
             return re.sub(r'^(\d+-)?', '', self.path.parent.stem)
-        else:
-            return re.sub(r'^(\d+-)?', '', self.path.stem)
+        return re.sub(r'^(\d+-)?', '', self.path.stem)
 
     @cached_property
     def id(self) -> str:
@@ -106,7 +108,7 @@ class Page:
         """
         parts: list[str] = []
         for page in self.breadcrumbs:
-            parts.append(page._id_segment())
+            parts.append(page.id_segment())
         return '--'.join(parts)
 
     @cached_property
@@ -144,6 +146,7 @@ class Page:
             case _:  # pragma: no cover
                 raise NotImplementedError(self.path.suffix)
 
+    # pylint: disable=method-cache-max-size-none
     @cache
     def raw(self) -> str:
         return self.path.read_text('utf-8')

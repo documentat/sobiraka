@@ -7,11 +7,10 @@ from .page import Page
 
 class EmptyPage(Page):
 
-    def _id_segment(self) -> str:
+    def id_segment(self) -> str:
         if self.parent is None:
             return 'r'
-        else:
-            return re.sub(r'^(\d+-)?', '', self.path.stem)
+        return re.sub(r'^(\d+-)?', '', self.path.stem)
 
     def is_index(self) -> bool:
         return True
@@ -32,6 +31,7 @@ class EmptyPage(Page):
     def syntax(self) -> str:
         return 'markdown-smart'
 
+    # pylint: disable=method-cache-max-size-none
     @cache
     def raw(self) -> str:
         return '# ' + self.path.stem + '\n\n{{ toc.local.md() }}'

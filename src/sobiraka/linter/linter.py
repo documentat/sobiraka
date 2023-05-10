@@ -5,16 +5,15 @@ from typing import AsyncIterable, Awaitable
 from more_itertools import unique_everseen
 from panflute import Code, ListItem, stringify
 
-from sobiraka.models import Issue, MisspelledWords, Page, PhraseBeginsWithLowerCase, Volume
+from sobiraka.models import Issue, MisspelledWords, Page, PhraseBeginsWithLowerCase
 from .hunspell import run_hunspell
 from .lint_preprocessor import LintPreprocessor
 from .textmodel import Fragment
 
 
+# TODO: Reorganize Processor and related abstract classes
+# pylint: disable=abstract-method
 class Linter(LintPreprocessor):
-
-    def __init__(self, volume: Volume):
-        super().__init__(volume)
 
     def get_pages(self) -> tuple[Page, ...]:
         return self.volume.pages

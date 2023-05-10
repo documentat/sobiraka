@@ -10,7 +10,7 @@ from subprocess import PIPE
 from aiofiles.os import makedirs
 from panflute import Image
 
-from sobiraka.models import Project, EmptyPage, Page, PageHref
+from sobiraka.models import EmptyPage, Page, PageHref, Project
 from .abstract import Processor
 from ..utils import panflute_to_bytes
 
@@ -76,6 +76,9 @@ class HtmlBuilder(Processor):
             '$AUTOPREFIX': page.volume.autoprefix,
         }[m.group()]
 
+    def get_pages(self) -> tuple[Page, ...]:
+        return self.project.pages
+
     def make_internal_url(self, href: PageHref, *, page: Page) -> str:
         if href.target is page:
             result = ''
@@ -98,4 +101,4 @@ class HtmlBuilder(Processor):
             await makedirs(target_path.parent, exist_ok=True)
             await create_task(to_thread(copyfile, source_path, target_path))
         elem.url = relpath(target_path, start=page.parent.path)
-        return elem,
+        return (elem,)

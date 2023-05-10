@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import re
-from _bisect import bisect_left
+from bisect import bisect_left
 from dataclasses import dataclass, field
 from functools import cached_property
 from itertools import chain, pairwise
@@ -86,7 +86,7 @@ class TextModel:
 
         # Each phrase can only be on a single line,
         # so we work with each line separately
-        for linenum, line in enumerate(self.lines):
+        for linenum in range(len(self.lines)):
             phrases = list(self.naive_phrases[linenum])
             exceptions = self.exceptions_by_line[linenum]
 
@@ -106,7 +106,7 @@ class TextModel:
                 # Example:
                 #     Example Corp. | is a company. | Visit www. | example. | com for more info.
                 #   → Example Corp. is a company. | Visit www.example.com for more info.
-                phrases[left:right + 1] = Fragment(self, phrases[left].start, phrases[right].end),
+                phrases[left:right + 1] = (Fragment(self, phrases[left].start, phrases[right].end),)
 
             # Add this line's phrases to the result
             result += phrases
@@ -142,12 +142,12 @@ class Fragment:
     def text(self) -> str:
         if self.start.line == self.end.line:
             return self.tm.lines[self.start.line][self.start.char:self.end.char]
-        else:
-            result = self.tm.lines[self.start.line][self.start.char:]
-            for line in range(self.start.line+1, self.end.line):
-                result += '\n' + self.tm.lines[line]
-            result += '\n' + self.tm.lines[self.end.line][:self.end.char]
-            return result
+
+        result = self.tm.lines[self.start.line][self.start.char:]
+        for line in range(self.start.line+1, self.end.line):
+            result += '\n' + self.tm.lines[line]
+        result += '\n' + self.tm.lines[self.end.line][:self.end.char]
+        return result
 
 
 @dataclass(frozen=True, eq=True, order=True)

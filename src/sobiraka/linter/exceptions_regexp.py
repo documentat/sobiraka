@@ -21,3 +21,4 @@ def exceptions_regexp(volume: Volume) -> re.Pattern | None:
                     regexp_parts.append(r'\b' + re.escape(line) + r'\b')
     if regexp_parts:
         return re.compile('|'.join(regexp_parts))
+    return None

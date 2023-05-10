@@ -34,15 +34,15 @@ async def run_hunspell(words: Sequence[str], volume: Volume) -> AsyncIterable[st
     async for line in hunspell.stdout:
         line = line.decode('utf-8').rstrip('\n')
 
-        if m := re.fullmatch('& (\S+) (\d+) (\d+): (.+)', line):
-            misspelled_word, near_misses_count, position, near_misses = m.groups()
+        if m := re.fullmatch(r'& (\S+) (\d+) (\d+): (.+)', line):
+            misspelled_word, _, _, _ = m.groups()
             yield misspelled_word
 
-        elif m := re.fullmatch('# (\S+) (\d+)', line):
-            misspelled_word, position = m.groups()
+        elif m := re.fullmatch(r'# (\S+) (\d+)', line):
+            misspelled_word, _ = m.groups()
             yield misspelled_word
 
-        elif m := re.fullmatch('\+ (\w+)', line):
+        elif m := re.fullmatch(r'\+ (\w+)', line):
             continue
 
         elif line in ('', '*', '-'):

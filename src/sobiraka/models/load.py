@@ -7,6 +7,8 @@ import yaml
 from utilspie.collectionsutils import frozendict
 
 from sobiraka.runtime import RT
+from sobiraka.utils import merge_dicts
+from sobiraka.utils import convert_or_none
 from .project import Project
 from .volume import Volume, Volume_HTML, Volume_Lint, Volume_Lint_Checks, Volume_PDF, Volume_Paths
 
@@ -42,7 +44,7 @@ def load_project_from_dict(manifest: dict, *, base: Path) -> Project:
 
 
 def _normalized_and_merged(data: dict, key: str) -> Iterable[tuple[str, dict]]:
-    from sobiraka.utils import merge_dicts
+
 
     if key not in data:
         yield None, data
@@ -58,8 +60,6 @@ def _normalized_and_merged(data: dict, key: str) -> Iterable[tuple[str, dict]]:
 
 
 def _load_volume(lang: str | None, codename: str, volume_data: dict, base: Path) -> Volume:
-    from sobiraka.utils import convert_or_none
-
     def _(_keys, _default=None):
         try:
             _result = volume_data

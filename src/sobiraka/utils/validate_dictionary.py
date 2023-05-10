@@ -2,6 +2,12 @@ import re
 import sys
 from pathlib import Path
 
+# TODO: Refactor validate_dictionary()
+# pylint: disable=no-else-return
+# pylint: disable=too-many-branches
+# pylint: disable=too-many-locals
+# pylint: disable=too-many-statements
+# pylint: disable=unused-variable
 
 def validate_dictionary(dic_path: Path, *, autofix: bool = False) -> 0:
     criticals: dict[tuple[Path, int], str] = {}

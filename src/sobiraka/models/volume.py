@@ -50,6 +50,8 @@ class Volume_Lint:
 
 @dataclass(kw_only=True, frozen=True)
 class Volume:
+    # pylint: disable=too-many-instance-attributes
+
     project: Project = field(init=False, hash=False)
     lang: str | None = None
     codename: str | None = None
@@ -81,6 +83,7 @@ class Volume:
 
     @cached_property
     def pages_by_path(self) -> dict[Path, Page]:
+        # pylint: disable=import-outside-toplevel
         from .page import Page
         from .emptypage import EmptyPage
 

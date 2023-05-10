@@ -1,3 +1,4 @@
+import sys
 from argparse import ArgumentParser
 from asyncio import run
 from pathlib import Path
@@ -62,7 +63,7 @@ async def async_main():  # pragma: no cover
 
         case _:
             raise NotImplementedError(args.command)
-    exit(exit_code or 0)
+    sys.exit(exit_code or 0)
 
 
 def absolute_path(path: str) -> Path:

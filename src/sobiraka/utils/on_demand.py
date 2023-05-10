@@ -1,7 +1,7 @@
-from asyncio import create_task, Task
+from asyncio import Task, create_task
 
 
-class _OnDemandInstance:
+class OnDemandInstance:
     def __init__(self, function):
         self._function = function
         self._task: Task | None = None
@@ -22,7 +22,7 @@ def on_demand(function):
         try:
             aod = aods[args]
         except KeyError:
-            aod = aods[args] = _OnDemandInstance(lambda: function(*args))
+            aod = aods[args] = OnDemandInstance(lambda: function(*args))
         return aod
 
     return wrapper

@@ -1,0 +1,17 @@
+[MAIN]
+disable=
+    import-outside-toplevel,
+    missing-class-docstring,
+    missing-function-docstring,
+    missing-module-docstring,
+    too-few-public-methods,
+
+[FORMAT]
+max-line-length=120
+good-names=
+    i,k,m,v,x,
+    li,tm,
+
+[BASIC]
+class-rgx=[A-Z][A-z0-9]+(_?[A-Z][A-z0-9]+)*
+method-rgx=[a-z0-9_]+

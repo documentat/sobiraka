@@ -27,9 +27,12 @@ class Processor(Dispatcher):
             enable_async=True)
 
         self.doc: dict[Page, Doc] = {}
-        """The document tree, as parsed by `Pandoc <https://pandoc.org/>`_ and `Panflute <http://scorreia.com/software/panflute/>`_.
+        """
+        The document tree, as parsed by `Pandoc <https://pandoc.org/>`_ 
+        and `Panflute <http://scorreia.com/software/panflute/>`_.
         
-        Do not rely on the value for page here until :func:`load()` is awaited for that page."""
+        Do not rely on the value for page here until :func:`load()` is awaited for that page.
+        """
 
         self.titles: dict[Page, str | None] = {}
         """Page titles.
@@ -171,7 +174,7 @@ class Processor(Dispatcher):
 
         link = Link(Str(label))
         await self._process_internal_link(link, target_text, page)
-        return link,
+        return (link,)
 
     async def _process_internal_link(self, elem: Link, target_text: str, page: Page):
         target_path_str, target_anchor = padded(target_text.split('#', maxsplit=1), None, 2)

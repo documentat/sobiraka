@@ -2,7 +2,11 @@ from asyncio import gather
 from collections import defaultdict
 from typing import Awaitable, Callable
 
-from panflute import BlockQuote, BulletList, Caption, Citation, Cite, Code, CodeBlock, Definition, DefinitionItem, DefinitionList, Div, Element, Emph, Header, HorizontalRule, Image, LineBlock, LineBreak, LineItem, Link, ListItem, Math, Note, Null, OrderedList, Para, Plain, Quoted, RawBlock, RawInline, SmallCaps, SoftBreak, Space, Span, Str, Strikeout, Strong, Subscript, Superscript, Table, TableBody, TableCell, TableFoot, TableHead, TableRow, Underline
+from panflute import BlockQuote, BulletList, Caption, Citation, Cite, Code, CodeBlock, Definition, DefinitionItem, \
+    DefinitionList, Div, Element, Emph, Header, HorizontalRule, Image, LineBlock, LineBreak, LineItem, Link, \
+    ListItem, Math, Note, Null, OrderedList, Para, Plain, Quoted, RawBlock, RawInline, SmallCaps, SoftBreak, Space, \
+    Span, Str, Strikeout, Strong, Subscript, Superscript, Table, TableBody, TableCell, TableFoot, TableHead, TableRow, \
+    Underline
 
 from sobiraka.models import Page, Volume
 from sobiraka.processing.abstract import Processor
@@ -11,6 +15,7 @@ from .textmodel import Fragment, Pos, TextModel
 
 
 class LintPreprocessor(Processor):
+    # pylint: disable=too-many-public-methods
 
     def __init__(self, volume: Volume):
         super().__init__()
@@ -47,7 +52,7 @@ class LintPreprocessor(Processor):
         tm = self._tm[page]
 
         start = tm.end_pos
-        f = len(tm.fragments)
+        pos = len(tm.fragments)
 
         if process is not None:
             await process()
@@ -59,7 +64,7 @@ class LintPreprocessor(Processor):
             assert start.line == end.line, 'Processing an inline container produced extra newlines.'
 
         fragment = Fragment(tm, start, end, elem)
-        tm.fragments.insert(f, fragment)
+        tm.fragments.insert(pos, fragment)
 
     def _ensure_new_line(self, page: Page):
         tm = self._tm[page]
@@ -133,6 +138,7 @@ class LintPreprocessor(Processor):
             for subelem in elem.definitions:
                 await self.process_element(subelem, page)
                 self._ensure_new_line(page)
+
         await self._container(page, elem, allow_new_line=True, process=process)
 
     async def process_definition_list(self, elem: DefinitionList, page: Page):
@@ -172,6 +178,7 @@ class LintPreprocessor(Processor):
             await self.process_table_body(elem.content[0], page)
             await self.process_table_foot(elem.foot, page)
             await self.process_caption(elem.caption, page)
+
         await self._container(page, elem, allow_new_line=True, process=process)
 
     async def process_table_body(self, elem: TableBody, page: Page):
@@ -199,11 +206,13 @@ class LintPreprocessor(Processor):
 
     async def process_line_block(self, elem: LineBlock, page: Page):
         tm = self._tm[page]
+
         async def process():
             for i, line_item in enumerate(elem.content):
                 if i != 0:
                     tm.lines[-1] += ' '
                 await self._container(page, line_item)
+
         await self._container(page, elem, allow_new_line=True, process=process)
         self._ensure_new_line(page)
 
@@ -213,23 +222,47 @@ class LintPreprocessor(Processor):
     ################################################################################
     # Ignored elements
 
-    async def process_code_block(self, elem: CodeBlock, page: Page): pass
-    async def process_horizontal_rule(self, elem: HorizontalRule, page: Page): pass
-    async def process_math(self, elem: Math, page: Page): pass
-    async def process_raw_block(self, elem: RawBlock, page: Page): pass
-    async def process_raw_inline(self, elem: RawInline, page: Page): pass
-    async def process_subscript(self, elem: Subscript, page: Page): pass
-    async def process_superscript(self, elem: Superscript, page: Page): pass
+    async def process_code_block(self, elem: CodeBlock, page: Page):
+        pass
+
+    async def process_horizontal_rule(self, elem: HorizontalRule, page: Page):
+        pass
+
+    async def process_math(self, elem: Math, page: Page):
+        pass
+
+    async def process_raw_block(self, elem: RawBlock, page: Page):
+        pass
+
+    async def process_raw_inline(self, elem: RawInline, page: Page):
+        pass
+
+    async def process_subscript(self, elem: Subscript, page: Page):
+        pass
+
+    async def process_superscript(self, elem: Superscript, page: Page):
+        pass
 
     ################################################################################
     # Rarely used elements, not implemented
 
-    async def process_citation(self, elem: Citation, page: Page):     return await self.process_default(elem, page)
-    async def process_cite(self, elem: Cite, page: Page):             return await self.process_default(elem, page)
-    async def process_note(self, elem: Note, page: Page):             return await self.process_default(elem, page)
-    async def process_null(self, elem: Null, page: Page):             await self.process_default(elem, page)
-    async def process_quoted(self, elem: Quoted, page: Page):         return await self.process_default(elem, page)
-    async def process_soft_break(self, elem: SoftBreak, page: Page):  await self.process_default(elem, page)
+    async def process_citation(self, elem: Citation, page: Page):
+        return await self.process_default(elem, page)
+
+    async def process_cite(self, elem: Cite, page: Page):
+        return await self.process_default(elem, page)
+
+    async def process_note(self, elem: Note, page: Page):
+        return await self.process_default(elem, page)
+
+    async def process_null(self, elem: Null, page: Page):
+        await self.process_default(elem, page)
+
+    async def process_quoted(self, elem: Quoted, page: Page):
+        return await self.process_default(elem, page)
+
+    async def process_soft_break(self, elem: SoftBreak, page: Page):
+        await self.process_default(elem, page)
 
     ################################################################################
 

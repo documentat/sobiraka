@@ -43,7 +43,7 @@ class PdfBuilder(Processor):
         await xelatex.wait()
         if xelatex.returncode != 0:
             self.print_xelatex_error(xelatex_workdir / 'build.log')
-            exit(1)
+            sys.exit(1)
         copyfile(xelatex_workdir / 'build.pdf', output)
 
     async def generate_latex(self, latex_output: BinaryIO):
@@ -51,7 +51,7 @@ class PdfBuilder(Processor):
             self.generate_latex_for_page(page).start()
 
         if self.print_issues():
-            raise Exception
+            sys.exit(1)
 
         latex_output.write((RT.FILES / 'base.sty').read_bytes())
         latex_output.write(b'\n\n' + (80 * b'%'))

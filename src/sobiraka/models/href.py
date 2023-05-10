@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-import re
 import typing
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from pathlib import Path
 
-if typing.TYPE_CHECKING: from .page import Page
+if typing.TYPE_CHECKING:
+    from .page import Page
 
 
 class Href(ABC):
@@ -33,7 +32,7 @@ class PageHref(Href):
     def __str__(self):
         text = ''
         if self.target:
-            text += str(self.target.relative_path)
+            text += str(self.target.path_in_project)
         if self.anchor:
             text += '#' + self.anchor
         return text
