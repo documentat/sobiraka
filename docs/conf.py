@@ -1,4 +1,6 @@
+import re
 import sys
+from dataclasses import is_dataclass
 from pathlib import Path
 from typing import Any, Literal
 
@@ -45,10 +47,14 @@ def maybe_skip_member(
         app: Sphinx,
         what: Literal['module', 'class', 'exception', 'function', 'method', 'attribute'],
         name: str,
-        obj: object,
+        obj,
         skip: bool,
         options: dict[str, Any],
 ) -> bool:
+    if what == 'class' and name == '__init__':
+        class_ = obj.__globals__[re.sub(r'\..+$', '', obj.__qualname__)]
+        if is_dataclass(class_):
+            return True
     return skip
 
 

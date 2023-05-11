@@ -1,69 +1,40 @@
-from __future__ import annotations
-
 from dataclasses import dataclass, field
 from functools import cached_property
 from pathlib import Path
-from typing import Any, TYPE_CHECKING
 
 from more_itertools import unique_justseen
 from utilspie.collectionsutils import frozendict
 
-if TYPE_CHECKING:
-    from .project import Project
-    from .page import Page
+from .config import Config
+from .emptypage import EmptyPage
+from .page import Page
+from .project import Project
 
 
+# pylint: disable=too-many-instance-attributes
 @dataclass(kw_only=True, frozen=True)
-class Volume_Paths:
-    root: Path
-    resources: Path
-    include: tuple[str]
-    exclude: tuple[str]
-
-
-@dataclass(kw_only=True, frozen=True)
-class Volume_HTML:
-    prefix: str | None = None
-    resources_prefix: Path | None = None
-
-
-@dataclass(kw_only=True, frozen=True)
-class Volume_PDF:
-    header: Path | None = None
-    """Path to the file containing LaTeX header directives for the volume, if provided."""
-
-
-@dataclass(kw_only=True, frozen=True)
-class Volume_Lint_Checks:
-    phrases_must_begin_with_capitals: bool = True
-
-
-@dataclass(kw_only=True, frozen=True)
-class Volume_Lint:
-    dictionaries: tuple[str, ...]
-    """List of Hunspell dictionaries to use for spellchecking."""
-
-    exceptions: tuple[Path]
-
-    checks: Volume_Lint_Checks
-
-
-@dataclass(kw_only=True, frozen=True)
-class Volume:
-    # pylint: disable=too-many-instance-attributes
+class Volume(Config):
+    """
+    A part of a :obj:`.Project`, identified uniquely by :data:`lang` and :data:`codename`.
+    """
 
     project: Project = field(init=False, hash=False)
+    """
+    The project to which this volume belongs.
+    """
+
     lang: str | None = None
+    """
+    The language code of this volume. See :obj:`
+    """
+
     codename: str | None = None
+    """
+    Short identifier of the 
+    """
 
-    title: str = ''
-    """Volume title."""
-
-    paths: Volume_Paths = field(default_factory=Volume_Paths, kw_only=True)
-    html: Volume_HTML = field(default_factory=Volume_HTML, kw_only=True)
-    pdf: Volume_PDF = field(default_factory=Volume_PDF, kw_only=True)
-    lint: Volume_Lint = field(default_factory=Volume_Lint, kw_only=True)
-    variables: dict[str, Any] = field(default_factory=frozendict, kw_only=True)
+    title: str | None = None
+    """Human-readable title of the volume."""
 
     def __hash__(self):
         return hash((id(self.project), self.codename, self.lang))
@@ -84,8 +55,6 @@ class Volume:
     @cached_property
     def pages_by_path(self) -> dict[Path, Page]:
         # pylint: disable=import-outside-toplevel
-        from .page import Page
-        from .emptypage import EmptyPage
 
         pages: list[Page] = []
         pages_by_path: dict[Path, Page] = {}
