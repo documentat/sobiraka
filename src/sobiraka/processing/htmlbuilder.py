@@ -71,7 +71,7 @@ class HtmlBuilder(Processor):
     @classmethod
     def replace_in_prefix(cls, page: Page, m: re.Match) -> str:
         return {
-            '$LANG': page.volume.lang,
+            '$LANG': page.volume.lang or '',
             '$VOLUME': page.volume.codename,
             '$AUTOPREFIX': page.volume.autoprefix,
         }[m.group()]
@@ -93,7 +93,7 @@ class HtmlBuilder(Processor):
         return result
 
     async def process_image(self, elem: Image, page: Page) -> tuple[Image, ...]:
-        path = elem.url.replace('$LANG', page.volume.lang)
+        path = elem.url.replace('$LANG', page.volume.lang or '')
         source_path = page.volume.paths.resources / path
         target_path = page.volume.html.resources_prefix / path
         if target_path not in self._additional_files:
