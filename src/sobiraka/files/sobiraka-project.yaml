@@ -52,6 +52,7 @@ $defs:
         properties:
           prefix: {type: string}
           resources_prefix: { type: string }
+          theme: {type: string}
 
       pdf:
         additionalProperties: false

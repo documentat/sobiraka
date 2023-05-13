@@ -7,12 +7,13 @@ from pathlib import Path
 from shutil import copyfile
 from subprocess import PIPE
 
+import jinja2
 from aiofiles.os import makedirs
-from panflute import Image
+from panflute import Element, Header, Image
 
-from sobiraka.models import EmptyPage, Page, PageHref, Project
+from sobiraka.models import EmptyPage, Page, PageHref, Project, Volume
+from sobiraka.utils import panflute_to_bytes
 from .abstract import Processor
-from ..utils import panflute_to_bytes
 
 
 class HtmlBuilder(Processor):
@@ -20,6 +21,7 @@ class HtmlBuilder(Processor):
         super().__init__()
         self.project: Project = project
         self._additional_files: set[Path] = set()
+        self._jinja_environments: dict[Volume, jinja2.Environment] = {}
 
     async def run(self, output: Path):
         output.mkdir(parents=True, exist_ok=True)
@@ -41,12 +43,33 @@ class HtmlBuilder(Processor):
             '--from', 'json',
             '--to', 'html',
             '--wrap', 'none',
-            '--output', target_file,
-            stdin=PIPE)
-        pandoc.stdin.write(panflute_to_bytes(self.doc[page]))
+            stdin=PIPE,
+            stdout=PIPE)
+        html, _ = await pandoc.communicate(panflute_to_bytes(self.doc[page]))
         pandoc.stdin.close()
         await pandoc.wait()
         assert pandoc.returncode == 0
+
+        template = await self.get_template(page.volume)
+        html = await template.render_async(
+            project=page.volume.project,
+            volume=page.volume,
+            page=page,
+            title=self.titles[page],
+            body=html.decode('utf-8').strip())
+
+        target_file.write_text(html, encoding='utf-8')
+
+    async def get_template(self, volume: Volume) -> jinja2.Template:
+        try:
+            jinja = self._jinja_environments[volume]
+        except KeyError:
+            jinja = self._jinja_environments[volume] = jinja2.Environment(
+                loader=jinja2.FileSystemLoader(volume.html.theme),
+                enable_async=True,
+                comment_start_string='{{#',
+                comment_end_string='#}}')
+        return jinja.get_template('page.html')
 
     @classmethod
     def make_target_path(cls, page: Page) -> Path:
@@ -91,6 +114,12 @@ class HtmlBuilder(Processor):
             result += '#' + href.anchor
 
         return result
+
+    async def process_header(self, elem: Header, page: Page) -> tuple[Element, ...]:
+        elems = await super().process_header(elem, page)
+        if elem.level == 1:
+            return ()
+        return elems
 
     async def process_image(self, elem: Image, page: Page) -> tuple[Image, ...]:
         path = elem.url.replace('$LANG', page.volume.lang or '')

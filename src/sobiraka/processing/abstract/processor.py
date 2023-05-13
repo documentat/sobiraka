@@ -11,7 +11,7 @@ from typing import Awaitable
 import jinja2
 import panflute
 from more_itertools import padded
-from panflute import Code, Doc, Header, Link, Str, stringify
+from panflute import Code, Doc, Element, Header, Link, Str, stringify
 
 from sobiraka.models import BadLink, Href, Issue, Page, PageHref, UrlHref, EmptyPage
 from sobiraka.utils import LatexBlock, on_demand, save_debug_json, UniqueList
@@ -107,7 +107,7 @@ class Processor(Dispatcher):
         save_debug_json('s1', page, self.doc[page])
         return page
 
-    async def process_header(self, elem: Header, page: Page):
+    async def process_header(self, elem: Header, page: Page) -> tuple[Element, ...]:
         nodes = [elem]
 
         if not elem.identifier:

@@ -4,6 +4,8 @@ from typing import Any
 
 from utilspie.collectionsutils import frozendict
 
+from sobiraka.runtime import RT
+
 
 @dataclass(kw_only=True, frozen=True)
 class Config_Paths:
@@ -45,6 +47,9 @@ class Config_HTML:
 
     resources_prefix: Path = '_resources'
     """Relative path to the directory for placing the resources, such as images."""
+
+    theme: Path = RT.FILES / 'theme'
+    # TODO: describe what should be there
 
 
 @dataclass(kw_only=True, frozen=True)
