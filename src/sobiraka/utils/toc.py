@@ -1,38 +1,30 @@
-from __future__ import annotations
-
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 from textwrap import dedent
-from typing import Callable
+from typing import Awaitable, Callable
 
 from sobiraka.models import Page
-from sobiraka.processing.abstract import Processor
 
 
-@dataclass(kw_only=True)
-class TocGenerator:
-    page: Page
-    processor: Processor
+@dataclass
+class TableOfContents:
+    roots: list[Page]
+    get_title: Callable[[Page], Awaitable[str]]
 
-    _is_local: bool = False
-
-    @property
-    def local(self) -> TocGenerator:
-        return replace(self, _is_local=True)
-
-    async def _plaintext(self, make_line: Callable[[Page], str]) -> str:
-        pages = self.page.children_recursive if self._is_local else self.page.volume.project.pages
+    async def _plaintext(self, line_template: str) -> str:
         text = ''
-        for page in pages:
-            if page is not self.page:
-                await self.processor.process1(page)
-            text += make_line(page)
+        for root in self.roots:
+            for page in (root, *root.children_recursive):
+                text += line_template.format(
+                    indent="  " * page.level,
+                    title=await self.get_title(page),
+                    path=page.path_in_volume)
         text = dedent(text)
         return text
 
+    @property
     async def rst(self) -> str:
-        return await self._plaintext(
-            lambda page: f'{"  " * page.level}- :doc:`{self.processor.titles[page]} </{page.path_in_volume}>`\n')
+        return await self._plaintext('{indent}- :doc:`{title} </{path}>`\n')
 
+    @property
     async def md(self) -> str:
-        return await self._plaintext(
-            lambda page: f'{"  " * page.level}- [{self.processor.titles[page]}](/{page.path_in_volume})\n')
+        return await self._plaintext('{indent}- [{title}](/{path})\n')

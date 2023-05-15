@@ -34,4 +34,4 @@ class EmptyPage(Page):
     # pylint: disable=method-cache-max-size-none
     @cache
     def raw(self) -> str:
-        return '# ' + self.path.stem + '\n\n{{ toc.local.md() }}'
+        return '# ' + self.path.stem + '\n\n{{ toc.md }}'

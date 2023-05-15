@@ -70,10 +70,10 @@ class Processor(Dispatcher):
 
         This method is called by :obj:`.Page.loaded`.
         """
-        from sobiraka.utils.toc import TocGenerator
+        from sobiraka.utils.toc import TableOfContents
 
         variables = page.volume.variables | {
-            'toc': TocGenerator(page=page, processor=self),
+            'toc': TableOfContents(page.children, self.get_title),
             'LANG': page.volume.lang,
         }
 
@@ -91,6 +91,12 @@ class Processor(Dispatcher):
 
         self.doc[page] = panflute.load(BytesIO(json_bytes))
         save_debug_json('s0', page, self.doc[page])
+
+    async def get_title(self, page: Page) -> str:
+        # TODO: maybe make get_title() a separate @on_demand step?
+        if page not in self.titles:
+            await self.process1(page)
+        return self.titles[page]
 
     @on_demand
     async def process1(self, page: Page) -> Page:

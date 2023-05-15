@@ -15,3 +15,4 @@ good-names=
 [BASIC]
 class-rgx=[A-Z][A-z0-9]+(_?[A-Z][A-z0-9]+)*
 method-rgx=[a-z0-9_]+
+attr-rgx=[a-z0-9_]+
