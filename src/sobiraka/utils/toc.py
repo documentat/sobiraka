@@ -7,7 +7,7 @@ from sobiraka.models import Page
 
 @dataclass
 class TableOfContents:
-    roots: list[Page]
+    roots: tuple[Page, ...]
     get_title: Callable[[Page], Awaitable[str]]
 
     async def _plaintext(self, line_template: str) -> str:

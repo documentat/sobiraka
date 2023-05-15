@@ -48,15 +48,15 @@ class TestChildren(ProjectTestCase):
                 self.assertEqual(expected, page.is_index())
 
     def test_breadcrumbs(self):
-        data: tuple[list[Page], ...] = (
-            [self.index_root],
-            [self.index_root, self.document1],
-            [self.index_root, self.index_sub],
-            [self.index_root, self.index_sub, self.document2],
-            [self.index_root, self.index_sub, self.index_subsub],
-            [self.index_root, self.index_sub, self.index_subsub, self.document3],
-            [self.index_root, self.index_sub, self.index_subsub, self.document4],
-            [self.index_root, self.index_sub, self.index_subsub, self.document5],
+        data: tuple[tuple[Page, ...], ...] = (
+            (self.index_root,),
+            (self.index_root, self.document1),
+            (self.index_root, self.index_sub),
+            (self.index_root, self.index_sub, self.document2),
+            (self.index_root, self.index_sub, self.index_subsub),
+            (self.index_root, self.index_sub, self.index_subsub, self.document3),
+            (self.index_root, self.index_sub, self.index_subsub, self.document4),
+            (self.index_root, self.index_sub, self.index_subsub, self.document5),
         )
         for expected in data:
             page = expected[-1]
@@ -79,30 +79,30 @@ class TestChildren(ProjectTestCase):
                 self.assertEqual(expected, page.parent)
 
     def test_children(self):
-        data: dict[Page, list[Page]] = {
-            self.index_root: [self.document1, self.index_sub],
-            self.document1: [],
-            self.index_sub: [self.document2, self.index_subsub],
-            self.document2: [],
-            self.index_subsub: [self.document3, self.document4, self.document5],
-            self.document3: [],
-            self.document4: [],
-            self.document5: [],
+        data: dict[Page, tuple[Page, ...]] = {
+            self.index_root: (self.document1, self.index_sub),
+            self.document1: (),
+            self.index_sub: (self.document2, self.index_subsub),
+            self.document2: (),
+            self.index_subsub: (self.document3, self.document4, self.document5),
+            self.document3: (),
+            self.document4: (),
+            self.document5: (),
         }
         for page, expected in data.items():
             with self.subTest(page):
                 self.assertEqual(expected, page.children)
 
     def test_children_recursive(self):
-        data: dict[Page, list[Page]] = {
-            self.index_root: [self.document1, self.index_sub, self.document2, self.index_subsub, self.document3, self.document4, self.document5],
-            self.document1: [],
-            self.index_sub: [self.document2, self.index_subsub, self.document3, self.document4, self.document5],
-            self.document2: [],
-            self.index_subsub: [self.document3, self.document4, self.document5],
-            self.document3: [],
-            self.document4: [],
-            self.document5: [],
+        data: dict[Page, tuple[Page, ...]] = {
+            self.index_root: (self.document1, self.index_sub, self.document2, self.index_subsub, self.document3, self.document4, self.document5),
+            self.document1: (),
+            self.index_sub: (self.document2, self.index_subsub, self.document3, self.document4, self.document5),
+            self.document2: (),
+            self.index_subsub: (self.document3, self.document4, self.document5),
+            self.document3: (),
+            self.document4: (),
+            self.document5: (),
         }
         for page, expected in data.items():
             with self.subTest(page):

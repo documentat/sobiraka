@@ -61,11 +61,11 @@ class Page:
         return bool(re.fullmatch(r'0(-.*)? | (\d+-)?index', self.path.stem, flags=re.X))
 
     @cached_property
-    def breadcrumbs(self) -> list[Page]:
+    def breadcrumbs(self) -> tuple[Page, ...]:
         breadcrumbs: list[Page] = [self]
         while breadcrumbs[0].parent is not None:
             breadcrumbs.insert(0, breadcrumbs[0].parent)
-        return breadcrumbs
+        return tuple(breadcrumbs)
 
     @cached_property
     def parent(self) -> Page | None:
@@ -74,20 +74,20 @@ class Page:
         return self.volume.pages_by_path.get(self.path_in_project.parent)
 
     @cached_property
-    def children(self) -> list[Page]:
+    def children(self) -> tuple[Page, ...]:
         children: list[Page] = []
         for page in self.volume.pages:
             if page.parent is self:
                 children.append(page)
-        return children
+        return tuple(children)
 
     @cached_property
-    def children_recursive(self) -> list[Page]:
+    def children_recursive(self) -> tuple[Page, ...]:
         children: list[Page] = []
         for page in self.volume.pages:
             if page is not self and self in page.breadcrumbs:
                 children.append(page)
-        return children
+        return tuple(children)
 
     def id_segment(self) -> str:
         if self.parent is None:
