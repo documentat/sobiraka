@@ -1,6 +1,6 @@
 import os.path
 import re
-from asyncio import Task, create_subprocess_exec, create_task, gather, to_thread
+from asyncio import create_subprocess_exec, create_task, to_thread
 from datetime import datetime
 from functools import partial
 from os.path import relpath
@@ -12,7 +12,7 @@ import jinja2
 from aiofiles.os import makedirs
 from panflute import Element, Header, Image
 
-from sobiraka.models import EmptyPage, Page, PageHref, Project, Volume
+from sobiraka.models import EmptyPage, GlobalToc, Page, PageHref, Project, Volume
 from sobiraka.utils import panflute_to_bytes
 from .abstract import Processor
 
@@ -27,14 +27,14 @@ class HtmlBuilder(Processor):
     async def run(self, output: Path):
         output.mkdir(parents=True, exist_ok=True)
 
-        generating: list[Task] = []
         for page in self.project.pages:
             target_file = output / self.make_target_path(page)
-            generating.append(create_task(self.generate_html_for_page(page, target_file)))
-
-        await gather(*generating)
+            await self.generate_html_for_page(page, target_file)
 
     async def generate_html_for_page(self, page: Page, target_file: Path):
+        volume = page.volume
+        project = page.volume.project
+
         await self.process2(page)
 
         target_file.parent.mkdir(parents=True, exist_ok=True)
@@ -53,12 +53,15 @@ class HtmlBuilder(Processor):
 
         template = await self.get_template(page.volume)
         html = await template.render_async(
-            project=page.volume.project,
-            volume=page.volume,
+            project=project,
+            volume=volume,
             page=page,
+
             title=self.titles[page],
             body=html.decode('utf-8').strip(),
+
             now=datetime.now(),
+            toc=GlobalToc_HTML(self, volume, page),
         )
 
         target_file.write_text(html, encoding='utf-8')
@@ -70,6 +73,7 @@ class HtmlBuilder(Processor):
             jinja = self._jinja_environments[volume] = jinja2.Environment(
                 loader=jinja2.FileSystemLoader(volume.html.theme),
                 enable_async=True,
+                undefined=jinja2.StrictUndefined,
                 comment_start_string='{{#',
                 comment_end_string='#}}')
         return jinja.get_template('page.html')
@@ -134,3 +138,12 @@ class HtmlBuilder(Processor):
             await create_task(to_thread(copyfile, source_path, target_path))
         elem.url = relpath(target_path, start=page.parent.path)
         return (elem,)
+
+
+class GlobalToc_HTML(GlobalToc):
+    processor: HtmlBuilder
+
+    def get_href(self, page: Page) -> Path:
+        current_path = self.processor.make_target_path(self.current)
+        target_path = self.processor.make_target_path(page)
+        return Path(relpath(target_path, start=current_path.parent))

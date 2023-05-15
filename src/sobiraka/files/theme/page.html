@@ -5,15 +5,42 @@
 </head>
 
 <body>
-    <h1>{{ title }}</h1>
+    <table>
+        <tr>
+            <td valign="top" width="30%">
+                <ul>
+                    {% for item in toc recursive %}
+                        <li>
+                            {% if item.is_current %}
+                                <strong>{{ item.title }}</strong>
+                            {% elif item.is_selected %}
+                                <a href="{{ item.href }}"><strong>{{ item.title }}</strong></a>
+                            {% else %}
+                                <a href="{{ item.href }}">{{ item.title }}</a>
+                            {% endif %}
 
-    <article>
-        {{ body | indent(8) }}
-    </article>
+                            {% if item.children %}
+                                <ul>
+                                    {{ loop(item.children) }}
+                                </ul>
+                            {% endif %}
+                        </li>
+                    {% endfor %}
+                </ul>
+            </td>
+            <td valign="top">
+                <h1>{{ title }}</h1>
 
-    <hr/>
-    
-    <footer>
-        <em>Built at {{ now }}</em>
-    </footer>
+                <article>
+                    {{ body | indent(20) }}
+                </article>
+
+                <hr/>
+
+                <footer>
+                    <em>Built at {{ now }}</em>
+                </footer>
+            </td>
+        </tr>
+    </table>
 </body>

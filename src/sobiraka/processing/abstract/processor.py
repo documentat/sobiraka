@@ -70,10 +70,10 @@ class Processor(Dispatcher):
 
         This method is called by :obj:`.Page.loaded`.
         """
-        from sobiraka.utils.toc import TableOfContents
+        from sobiraka.models import LocalToc
 
         variables = page.volume.variables | {
-            'toc': TableOfContents(page.children, self.get_title),
+            'toc': LocalToc(self, page),
             'LANG': page.volume.lang,
         }
 
