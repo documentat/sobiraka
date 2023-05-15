@@ -1,6 +1,7 @@
 import os.path
 import re
 from asyncio import Task, create_subprocess_exec, create_task, gather, to_thread
+from datetime import datetime
 from functools import partial
 from os.path import relpath
 from pathlib import Path
@@ -56,7 +57,9 @@ class HtmlBuilder(Processor):
             volume=page.volume,
             page=page,
             title=self.titles[page],
-            body=html.decode('utf-8').strip())
+            body=html.decode('utf-8').strip(),
+            now=datetime.now(),
+        )
 
         target_file.write_text(html, encoding='utf-8')
 
