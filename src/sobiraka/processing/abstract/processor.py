@@ -82,7 +82,7 @@ class Processor(Dispatcher):
 
         pandoc = await create_subprocess_exec(
             'pandoc',
-            '--from', page.syntax,
+            '--from', page.syntax.as_pandoc_format(),
             '--to', 'json',
             stdin=PIPE,
             stdout=PIPE)

@@ -3,6 +3,7 @@ from functools import cache
 from pathlib import Path
 
 from .page import Page
+from .syntax import Syntax
 
 
 class EmptyPage(Page):
@@ -28,8 +29,8 @@ class EmptyPage(Page):
         return self.volume.pages_by_path.get(self.path_in_project.parent)
 
     @property
-    def syntax(self) -> str:
-        return 'markdown-smart'
+    def syntax(self) -> Syntax:
+        return Syntax.MD
 
     # pylint: disable=method-cache-max-size-none
     @cache

@@ -6,6 +6,8 @@ from functools import cache, cached_property
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from .syntax import Syntax
+
 if TYPE_CHECKING:
     from .volume import Volume
 
@@ -137,14 +139,8 @@ class Page:
         return self.volume.max_level - self.level + 1
 
     @property
-    def syntax(self) -> str:
-        match self.path.suffix:
-            case '.md':
-                return 'markdown-smart'
-            case '.rst':
-                return 'rst-auto_identifiers'
-            case _:  # pragma: no cover
-                raise NotImplementedError(self.path.suffix)
+    def syntax(self) -> Syntax:
+        return Syntax(self.path.suffix[1:])
 
     # pylint: disable=method-cache-max-size-none
     @cache
