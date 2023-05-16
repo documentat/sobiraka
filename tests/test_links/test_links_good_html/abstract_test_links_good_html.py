@@ -5,7 +5,7 @@ from sobiraka.processing import HtmlBuilder
 
 class AbstractTestLinksGoodHtml(ProjectTestCase):
     def _init_processor(self):
-        return HtmlBuilder(self.project)
+        return HtmlBuilder(self.project, self.dir)
 
     async def asyncSetUp(self):
         await super().asyncSetUp()

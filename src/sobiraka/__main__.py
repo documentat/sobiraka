@@ -43,12 +43,12 @@ async def async_main():  # pragma: no cover
 
         case 'html':
             project = load_project(args.source)
-            exit_code = await HtmlBuilder(project).run(args.target)
+            exit_code = await HtmlBuilder(project, args.target).run()
 
         case 'pdf':
             project = load_project(args.source)
             volume = project.get_volume(args.volume)
-            exit_code = await PdfBuilder(volume).run(args.target)
+            exit_code = await PdfBuilder(volume, args.target).run()
 
         case 'lint':
             project = load_project(args.source)

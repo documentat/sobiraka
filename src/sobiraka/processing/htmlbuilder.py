@@ -18,26 +18,30 @@ from .abstract import Processor
 
 
 class HtmlBuilder(Processor):
-    def __init__(self, project: Project):
+    def __init__(self, project: Project, output: Path):
         super().__init__()
         self.project: Project = project
+        self.output: Path = output
+
         self._additional_files: set[Path] = set()
         self._jinja_environments: dict[Volume, jinja2.Environment] = {}
 
-    async def run(self, output: Path):
-        output.mkdir(parents=True, exist_ok=True)
+    async def run(self):
+        self.output.mkdir(parents=True, exist_ok=True)
 
         for page in self.project.pages:
-            target_file = output / self.make_target_path(page)
-            await self.generate_html_for_page(page, target_file)
+            await self.generate_html_for_page(page)
 
-    async def generate_html_for_page(self, page: Page, target_file: Path):
+    async def generate_html_for_page(self, page: Page):
         volume = page.volume
         project = page.volume.project
 
         await self.process2(page)
 
+        target_file = self.make_target_path(page)
         target_file.parent.mkdir(parents=True, exist_ok=True)
+        path_to_root_page = Path(relpath(self.make_target_path(volume.root_page), start=target_file.parent))
+        path_to_static = Path(relpath(self.output / '_static', start=target_file.parent))
 
         pandoc = await create_subprocess_exec(
             'pandoc',
@@ -62,6 +66,9 @@ class HtmlBuilder(Processor):
 
             now=datetime.now(),
             toc=GlobalToc_HTML(self, volume, page),
+
+            ROOT_PAGE=path_to_root_page,
+            STATIC=path_to_static,
         )
 
         target_file.write_text(html, encoding='utf-8')
@@ -78,8 +85,7 @@ class HtmlBuilder(Processor):
                 comment_end_string='#}}')
         return jinja.get_template('page.html')
 
-    @classmethod
-    def make_target_path(cls, page: Page) -> Path:
+    def make_target_path(self, page: Page) -> Path:
         target_path = Path()
         for part in page.path_in_volume.parts:
             target_path /= re.sub(r'^(\d+-)?', '', part)
@@ -92,10 +98,10 @@ class HtmlBuilder(Processor):
             target_path = target_path.with_suffix('.html')
 
         prefix = page.volume.html.prefix or '$AUTOPREFIX'
-        prefix = re.sub(r'\$\w+', partial(cls.replace_in_prefix, page), prefix)
+        prefix = re.sub(r'\$\w+', partial(self.replace_in_prefix, page), prefix)
         prefix = os.path.join(*prefix.split('/'))
 
-        target_path = prefix / target_path
+        target_path = self.output / prefix / target_path
         return target_path
 
     @classmethod

@@ -105,6 +105,10 @@ class Volume(Config):
     def relative_root(self) -> Path:
         return self.paths.root.relative_to(self.project.base)
 
+    @property
+    def root_page(self) -> Page:
+        return self.pages_by_path[self.relative_root]
+
     @cached_property
     def max_level(self) -> int:
         """Maximum value of :obj:`.Page.level` in the volume. Used for calculating :obj:`.Page.antilevel`."""

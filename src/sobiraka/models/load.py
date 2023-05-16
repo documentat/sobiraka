@@ -91,7 +91,7 @@ def _load_volume(lang: str | None, codename: str, volume_data: dict, base: Path)
         html=Config_HTML(
             prefix=_('html.prefix', '$AUTOPREFIX'),
             resources_prefix=convert_or_none(global_path, _('html.resources_prefix', '_resources')),
-            theme=convert_or_none(global_path, _('html.theme', RT.FILES / 'theme')),
+            theme=convert_or_none(global_path, _('html.theme', RT.FILES / 'themes' / 'material')),
         ),
         pdf=Config_PDF(
             header=convert_or_none(global_path, _('pdf.header')),

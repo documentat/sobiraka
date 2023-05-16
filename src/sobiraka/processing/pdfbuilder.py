@@ -13,13 +13,15 @@ from .abstract import Processor
 
 
 class PdfBuilder(Processor):
-    def __init__(self, volume: Volume):
+    def __init__(self, volume: Volume, output: Path):
         super().__init__()
         self.volume: Volume = volume
+        self.output: Path = output
+
         self._latex: dict[Page, bytes] = {}
 
-    async def run(self, output: Path):
-        output.parent.mkdir(parents=True, exist_ok=True)
+    async def run(self):
+        self.output.parent.mkdir(parents=True, exist_ok=True)
 
         xelatex_workdir = RT.TMP / 'tex'
         xelatex_workdir.mkdir(parents=True, exist_ok=True)
@@ -44,7 +46,7 @@ class PdfBuilder(Processor):
         if xelatex.returncode != 0:
             self.print_xelatex_error(xelatex_workdir / 'build.log')
             sys.exit(1)
-        copyfile(xelatex_workdir / 'build.pdf', output)
+        copyfile(xelatex_workdir / 'build.pdf', self.output)
 
     async def generate_latex(self, latex_output: BinaryIO):
         for page in self.volume.pages:

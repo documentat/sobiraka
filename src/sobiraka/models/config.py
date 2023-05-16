@@ -48,7 +48,7 @@ class Config_HTML:
     resources_prefix: Path = '_resources'
     """Relative path to the directory for placing the resources, such as images."""
 
-    theme: Path = RT.FILES / 'theme'
+    theme: Path = RT.FILES / 'themes' / 'material'
     # TODO: describe what should be there
 
 
