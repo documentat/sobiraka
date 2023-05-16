@@ -83,7 +83,29 @@ class TocTreeItem:
 
 
 @dataclass
-class LocalToc(TableOfContents):
+class GlobalToc(TableOfContents, metaclass=ABCMeta):
+    processor: Processor
+    volume: Volume
+    current: Page
+
+    def get_roots(self) -> tuple[Page, ...]:
+        return tuple(page for page in self.volume.pages if page.parent is None)
+
+    def get_title(self, page: Page) -> Awaitable[str]:
+        return self.processor.get_title(page)
+
+    def is_current(self, page: Page) -> bool:
+        return page is self.current
+
+    def is_selected(self, page: Page) -> bool:
+        return page in self.current.breadcrumbs
+
+    def syntax(self) -> Syntax:
+        raise NotImplementedError('Iterate through items manually')
+
+
+@dataclass
+class SubtreeToc(TableOfContents):
     processor: Processor
     current: Page | None
 
@@ -104,25 +126,3 @@ class LocalToc(TableOfContents):
 
     def syntax(self) -> Syntax:
         return self.current.syntax
-
-
-@dataclass
-class GlobalToc(TableOfContents, metaclass=ABCMeta):
-    processor: Processor
-    volume: Volume
-    current: Page
-
-    def get_roots(self) -> tuple[Page, ...]:
-        return tuple(page for page in self.volume.pages if page.parent is None)
-
-    def get_title(self, page: Page) -> Awaitable[str]:
-        return self.processor.get_title(page)
-
-    def is_current(self, page: Page) -> bool:
-        return page is self.current
-
-    def is_selected(self, page: Page) -> bool:
-        return page in self.current.breadcrumbs
-
-    def syntax(self) -> Syntax:
-        raise NotImplementedError('Iterate through items manually')

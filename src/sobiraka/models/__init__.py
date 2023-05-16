@@ -4,5 +4,5 @@ from .issue import AmbiguosLink, BadLink, Issue, MisspelledWords, PhraseBeginsWi
 from .page import Page
 from .project import Project
 from .syntax import Syntax
-from .toc import GlobalToc, LocalToc, TableOfContents, TocTreeItem
+from .toc import GlobalToc, SubtreeToc, TableOfContents, TocTreeItem
 from .volume import Volume
