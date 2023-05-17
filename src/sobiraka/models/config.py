@@ -45,7 +45,7 @@ class Config_HTML:
     - ``$AUTOPREFIX`` — will be replaced with :obj:`.Volume.autoprefix`.
     """
 
-    resources_prefix: Path = '_resources'
+    resources_prefix: str = '_resources'
     """Relative path to the directory for placing the resources, such as images."""
 
     theme: Path = RT.FILES / 'themes' / 'material'

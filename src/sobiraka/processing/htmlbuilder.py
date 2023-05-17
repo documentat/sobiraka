@@ -1,6 +1,6 @@
 import os.path
 import re
-from asyncio import create_subprocess_exec, create_task, to_thread
+from asyncio import create_subprocess_exec, create_task, to_thread, Task, gather
 from datetime import datetime
 from functools import partial
 from os.path import relpath
@@ -23,14 +23,35 @@ class HtmlBuilder(Processor):
         self.project: Project = project
         self.output: Path = output
 
-        self._additional_files: set[Path] = set()
+        self._generating: list[Task] = []
+        self._copying: dict[Path, Task] = {}
+
         self._jinja_environments: dict[Volume, jinja2.Environment] = {}
 
     async def run(self):
         self.output.mkdir(parents=True, exist_ok=True)
 
+        # Copy the theme's static directory
+        for volume in self.project.volumes:
+            static = volume.html.theme / '_static'
+            for source_path in static.rglob('**/*'):
+                if source_path.is_file():
+                    target_path = self.output / '_static' / source_path.relative_to(static)
+                    self._copying[target_path] = create_task(self.copy_file(source_path, target_path))
+
+        # Generate the HTML pages in no particular order
         for page in self.project.pages:
-            await self.generate_html_for_page(page)
+            self._generating.append(create_task(self.generate_html_for_page(page)))
+        await gather(*self._generating)
+
+        # Wait until all additional files will be copied to the output directory
+        # This may include tasks that started as a side effect of generating the HTML pages
+        await gather(*self._copying.values())
+
+    @staticmethod
+    async def copy_file(source_path: Path, target_path: Path):
+        await makedirs(target_path.parent, exist_ok=True)
+        await to_thread(copyfile, source_path, target_path)
 
     async def generate_html_for_page(self, page: Page):
         volume = page.volume
@@ -137,12 +158,10 @@ class HtmlBuilder(Processor):
     async def process_image(self, elem: Image, page: Page) -> tuple[Image, ...]:
         path = elem.url.replace('$LANG', page.volume.lang or '')
         source_path = page.volume.paths.resources / path
-        target_path = page.volume.html.resources_prefix / path
-        if target_path not in self._additional_files:
-            self._additional_files.add(target_path)
-            await makedirs(target_path.parent, exist_ok=True)
-            await create_task(to_thread(copyfile, source_path, target_path))
-        elem.url = relpath(target_path, start=page.parent.path)
+        target_path = self.output / page.volume.html.resources_prefix / path
+        if target_path not in self._copying:
+            self._copying[target_path] = create_task(self.copy_file(source_path, target_path))
+        elem.url = relpath(target_path, start=self.make_target_path(page).parent)
         return (elem,)
 
 
