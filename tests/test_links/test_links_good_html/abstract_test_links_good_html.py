@@ -1,9 +1,9 @@
-from abstracttests.projecttestcase import ProjectTestCase
+from abstracttests.projectdirtestcase import ProjectDirTestCase
 from sobiraka.models import Href, Page, PageHref, UrlHref
 from sobiraka.processing import HtmlBuilder
 
 
-class AbstractTestLinksGoodHtml(ProjectTestCase):
+class AbstractTestLinksGoodHtml(ProjectDirTestCase):
     def _init_processor(self):
         return HtmlBuilder(self.project, self.dir)
 
@@ -79,4 +79,4 @@ class AbstractTestLinksGoodHtml(ProjectTestCase):
                         self.assertEqual(expected_url, actual_url)
 
 
-del ProjectTestCase
+del ProjectDirTestCase

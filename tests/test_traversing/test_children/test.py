@@ -1,11 +1,11 @@
 from pathlib import Path
 from unittest import main
 
-from abstracttests.projecttestcase import ProjectTestCase
+from abstracttests.projectdirtestcase import ProjectDirTestCase
 from sobiraka.models import EmptyPage, Page
 
 
-class TestChildren(ProjectTestCase):
+class TestChildren(ProjectDirTestCase):
     async def asyncSetUp(self):
         await super().asyncSetUp()
         self.index_root = self.project.pages_by_path[Path('src')]
@@ -109,7 +109,7 @@ class TestChildren(ProjectTestCase):
                 self.assertEqual(expected, page.children_recursive)
 
 
-del ProjectTestCase
+del ProjectDirTestCase
 
 if __name__ == '__main__':
     main()

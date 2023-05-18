@@ -6,10 +6,10 @@ from tempfile import TemporaryDirectory
 from sobiraka.processing import PdfBuilder
 from testutils import assertNoDiff
 from .abstracttestwithrttmp import AbstractTestWithRtTmp
-from .projecttestcase import ProjectTestCase
+from .projectdirtestcase import ProjectDirTestCase
 
 
-class PdfProjectTestCase(ProjectTestCase[PdfBuilder], AbstractTestWithRtTmp):
+class PdfProjectTestCase(ProjectDirTestCase[PdfBuilder], AbstractTestWithRtTmp):
     async def asyncSetUp(self):
         output_dir = self.enterContext(TemporaryDirectory(prefix='sobiraka-test-'))
         self.output_dir = Path(output_dir)
@@ -46,4 +46,4 @@ class PdfProjectTestCase(ProjectTestCase[PdfBuilder], AbstractTestWithRtTmp):
                 self.assertEqual(expected_sha.hexdigest(), actual_sha.hexdigest())
 
 
-del ProjectTestCase, AbstractTestWithRtTmp
+del ProjectDirTestCase, AbstractTestWithRtTmp

@@ -1,9 +1,9 @@
-from abstracttests.projecttestcase import ProjectTestCase
 from sobiraka.linter import Linter
 from testutils import assertNoDiff
+from .projectdirtestcase import ProjectDirTestCase
 
 
-class AbstractLintingTest(ProjectTestCase[Linter]):
+class AbstractLintingTest(ProjectDirTestCase[Linter]):
     maxDiff = None
 
     def _init_processor(self) -> Linter:
@@ -27,4 +27,4 @@ class AbstractLintingTest(ProjectTestCase[Linter]):
                 assertNoDiff(expected, actual)
 
 
-del ProjectTestCase
+del ProjectDirTestCase

@@ -1,3 +1,4 @@
+from abc import abstractmethod, ABCMeta
 from asyncio import gather
 from inspect import getfile
 from pathlib import Path
@@ -5,17 +6,13 @@ from typing import Any, Generic, Iterable, TypeVar
 from unittest import IsolatedAsyncioTestCase, SkipTest
 
 from sobiraka.models import Project, Page
-from sobiraka.models.load import load_project
 from sobiraka.processing.abstract import Processor
 
 T = TypeVar('T', bound=Processor)
 
 
-class ProjectTestCase(IsolatedAsyncioTestCase, Generic[T]):
+class ProjectTestCase(IsolatedAsyncioTestCase, Generic[T], metaclass=ABCMeta):
     maxDiff = None
-
-    def load_project(self) -> Project:
-        return load_project(self.dir / 'project.yaml')
 
     async def asyncSetUp(self):
         await super().asyncSetUp()
@@ -23,11 +20,15 @@ class ProjectTestCase(IsolatedAsyncioTestCase, Generic[T]):
         filepath = Path(getfile(self.__class__))
         self.dir: Path = filepath.parent
 
-        self.project = self.load_project()
+        self.project = self._init_project()
         self.processor: T = self._init_processor()
 
         awaitables = tuple(self.processor.process2(page) for page in self.project.pages)
         await gather(*awaitables)
+
+    @abstractmethod
+    def _init_project(self) -> Project:
+        ...
 
     def _init_processor(self) -> T:
         return Processor()
