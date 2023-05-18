@@ -1,5 +1,6 @@
 from abstracttests.projecttestcase import ProjectTestCase
 from sobiraka.linter import Linter
+from testutils import assertNoDiff
 
 
 class AbstractLintingTest(ProjectTestCase[Linter]):
@@ -15,7 +16,7 @@ class AbstractLintingTest(ProjectTestCase[Linter]):
                 await self.processor.check()
                 actual_issues = self.processor.issues[page]
                 actual = list(map(str, actual_issues))
-                self.assertNoDiff(expected, actual)
+                assertNoDiff(expected, actual)
 
     async def test_phrases(self):
         for page, expected in self.for_each_expected('.phrases'):
@@ -23,7 +24,7 @@ class AbstractLintingTest(ProjectTestCase[Linter]):
                 expected = tuple(expected.read_text().splitlines())
                 tm = await self.processor.tm(page)
                 actual = tuple(x.text for x in tm.phrases)
-                self.assertNoDiff(expected, actual)
+                assertNoDiff(expected, actual)
 
 
 del ProjectTestCase

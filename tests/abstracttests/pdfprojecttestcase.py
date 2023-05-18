@@ -4,6 +4,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from sobiraka.processing import PdfBuilder
+from testutils import assertNoDiff
 from .abstracttestwithrttmp import AbstractTestWithRtTmp
 from .projecttestcase import ProjectTestCase
 
@@ -24,7 +25,7 @@ class PdfProjectTestCase(ProjectTestCase[PdfBuilder], AbstractTestWithRtTmp):
                 expected = expected.read_text().splitlines()
                 await self.processor.generate_latex_for_page(page)
                 actual = self.processor._latex[page].decode('utf-8').splitlines()
-                self.assertNoDiff(expected, actual)
+                assertNoDiff(expected, actual)
 
     async def test_pdf(self):
         await self.processor.run()

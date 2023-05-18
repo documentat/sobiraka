@@ -1,8 +1,7 @@
 from asyncio import gather
-from difflib import unified_diff
 from inspect import getfile
 from pathlib import Path
-from typing import Any, Generic, Iterable, Sequence, TypeVar
+from typing import Any, Generic, Iterable, TypeVar
 from unittest import IsolatedAsyncioTestCase, SkipTest
 
 from sobiraka.models import Project, Page
@@ -42,12 +41,6 @@ class ProjectTestCase(IsolatedAsyncioTestCase, Generic[T]):
                     return super().subTest(page.path_in_project.with_suffix(''))
             case _:
                 return super().subTest(msg)
-
-    @staticmethod
-    def assertNoDiff(expected: Sequence[str], actual: Sequence[str]):
-        diff = list(unified_diff(expected, actual, n=1000))
-        if diff:
-            raise AssertionError('\n\n' + '\n'.join(diff[3:]))
 
     def for_each_expected(self, suffix: str, *, subdir: str = '') -> Iterable[tuple[Page, Path]]:
         ok = True

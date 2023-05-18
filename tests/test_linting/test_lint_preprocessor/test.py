@@ -3,6 +3,7 @@ from unittest import main
 from panflute import Space, Str
 
 from abstracttests.abstractlintingtest import AbstractLintingTest
+from testutils import assertNoDiff
 
 
 class TestLintPreprocessor(AbstractLintingTest):
@@ -19,7 +20,7 @@ class TestLintPreprocessor(AbstractLintingTest):
                 while actual[-1] == '':
                     actual.pop()
 
-                self.assertNoDiff(expected, actual)
+                assertNoDiff(expected, actual)
 
     async def test_fragments(self):
         for page, expected in self.for_each_expected('.fragments'):
@@ -35,7 +36,7 @@ class TestLintPreprocessor(AbstractLintingTest):
                         text = f.text.strip().replace('\n', r' \n ')
                         actual.append(f'[{f.start}-{f.end}][{f.element.tag}] {text}'.rstrip())
 
-                self.assertNoDiff(expected, actual)
+                assertNoDiff(expected, actual)
 
 
 del AbstractLintingTest
