@@ -14,13 +14,12 @@ from panflute import Element, Header, Image
 
 from sobiraka.models import EmptyPage, GlobalToc, Page, PageHref, Project, Volume
 from sobiraka.utils import panflute_to_bytes
-from .abstract import Processor
+from .abstract import ProjectProcessor
 
 
-class HtmlBuilder(Processor):
+class HtmlBuilder(ProjectProcessor):
     def __init__(self, project: Project, output: Path):
-        super().__init__()
-        self.project: Project = project
+        super().__init__(project)
         self.output: Path = output
 
         self._generating: list[Task] = []
@@ -132,9 +131,6 @@ class HtmlBuilder(Processor):
             '$VOLUME': page.volume.codename,
             '$AUTOPREFIX': page.volume.autoprefix,
         }[m.group()]
-
-    def get_pages(self) -> tuple[Page, ...]:
-        return self.project.pages
 
     def make_internal_url(self, href: PageHref, *, page: Page) -> str:
         if href.target is page:

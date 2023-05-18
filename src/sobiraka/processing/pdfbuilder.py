@@ -9,13 +9,12 @@ from typing import BinaryIO
 from sobiraka.models import Page, PageHref, Volume
 from sobiraka.runtime import RT
 from sobiraka.utils import on_demand, panflute_to_bytes
-from .abstract import Processor
+from .abstract import VolumeProcessor
 
 
-class PdfBuilder(Processor):
+class PdfBuilder(VolumeProcessor):
     def __init__(self, volume: Volume, output: Path):
-        super().__init__()
-        self.volume: Volume = volume
+        super().__init__(volume)
         self.output: Path = output
 
         self._latex: dict[Page, bytes] = {}
@@ -114,9 +113,6 @@ class PdfBuilder(Processor):
                     break
                 print(line, file=sys.stderr)
             print('\033[0m', end='', file=sys.stderr)
-
-    def get_pages(self) -> tuple[Page, ...]:
-        return self.volume.pages
 
     def make_internal_url(self, href: PageHref, *, page: Page) -> str:
         result = '#' + href.target.id

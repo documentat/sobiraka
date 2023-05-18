@@ -13,7 +13,7 @@ import panflute
 from more_itertools import padded
 from panflute import Code, Doc, Element, Header, Link, Str, stringify
 
-from sobiraka.models import BadLink, Href, Issue, Page, PageHref, UrlHref, EmptyPage
+from sobiraka.models import BadLink, Href, Issue, Page, PageHref, UrlHref, EmptyPage, Project, Volume
 from sobiraka.utils import LatexBlock, on_demand, save_debug_json, UniqueList
 from .dispatcher import Dispatcher
 
@@ -228,3 +228,21 @@ class Processor(Dispatcher):
 
     @abstractmethod
     def make_internal_url(self, href: PageHref, *, page: Page) -> str: ...
+
+
+class ProjectProcessor(Processor):
+    def __init__(self, project: Project):
+        super().__init__()
+        self.project: Project = project
+
+    def get_pages(self) -> tuple[Page, ...]:
+        return self.project.pages
+
+
+class VolumeProcessor(Processor):
+    def __init__(self, volume: Volume):
+        super().__init__()
+        self.volume: Volume = volume
+
+    def get_pages(self) -> tuple[Page, ...]:
+        return self.volume.pages
