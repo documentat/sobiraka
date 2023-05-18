@@ -58,7 +58,7 @@ class TestManifest_1L_1V(_TestManifest):
         self.assertEqual(('one', 'two', 'three'), self.volume.paths.include)
 
     def test_resources_prefix(self):
-        self.assertEqual(Path('/BASE/img'), self.volume.html.resources_prefix)
+        self.assertEqual('img', self.volume.html.resources_prefix)
 
     YAML = '''
         languages:
@@ -281,7 +281,7 @@ class TestManifest_2L_2V(_TestManifest):
                 self.assertEqual(expected, volume.paths.include)
 
     def test_resources_prefix(self):
-        expected_data = 4 * (Path('/BASE/img'),)
+        expected_data = 4 * ('img',)
         for i, (expected, volume) in enumerate(zip(expected_data, self.project.volumes, strict=True)):
             with self.subTest(f'{i} - {expected}'):
                 self.assertEqual(expected, volume.html.resources_prefix)
