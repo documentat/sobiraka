@@ -166,6 +166,8 @@ class GlobalToc_HTML(GlobalToc):
     processor: HtmlBuilder
 
     def get_href(self, page: Page) -> str:
+        # TODO: implement something like make_target_path() in every Processor
+        # pylint: disable=no-member
         current_path = self.processor.make_target_path(self.current)
         target_path = self.processor.make_target_path(page)
         return relpath(target_path, start=current_path.parent)

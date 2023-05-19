@@ -19,7 +19,6 @@ from .dispatcher import Dispatcher
 
 
 class Processor(Dispatcher):
-
     def __init__(self):
         self.jinja = jinja2.Environment(
             comment_start_string='{{#',
@@ -61,7 +60,8 @@ class Processor(Dispatcher):
         """:meta private:"""
 
     @abstractmethod
-    def get_pages(self) -> tuple[Page, ...]: ...
+    def get_pages(self) -> tuple[Page, ...]:
+        ...
 
     @on_demand
     async def load_page(self, page: Page):
@@ -227,10 +227,13 @@ class Processor(Dispatcher):
             elem.content = Str(autolabel)
 
     @abstractmethod
-    def make_internal_url(self, href: PageHref, *, page: Page) -> str: ...
+    def make_internal_url(self, href: PageHref, *, page: Page) -> str:
+        ...
 
 
 class ProjectProcessor(Processor):
+    # TODO: add ABCMeta to the base Processor class
+    # pylint: disable=abstract-method
     def __init__(self, project: Project):
         super().__init__()
         self.project: Project = project
@@ -240,6 +243,7 @@ class ProjectProcessor(Processor):
 
 
 class VolumeProcessor(Processor):
+    # pylint: disable=abstract-method
     def __init__(self, volume: Volume):
         super().__init__()
         self.volume: Volume = volume

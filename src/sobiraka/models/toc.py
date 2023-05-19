@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from itertools import chain
 from os.path import relpath
 from textwrap import dedent
-from typing import Awaitable, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from sobiraka.utils import render
 
@@ -139,8 +139,8 @@ class GlobalToc(CrossPageToc, metaclass=ABCMeta):
     def get_roots(self) -> tuple[Page, ...]:
         return tuple(page for page in self.volume.pages if page.parent is None)
 
-    def get_title(self, page: Page) -> Awaitable[str]:
-        return self.processor.get_title(page)
+    async def get_title(self, page: Page) -> str:
+        return await self.processor.get_title(page)
 
     def is_current(self, page: Page) -> bool:
         return page is self.current
@@ -157,8 +157,8 @@ class SubtreeToc(CrossPageToc):
     def get_roots(self) -> tuple[Page, ...]:
         return self.current.children
 
-    def get_title(self, page: Page) -> Awaitable[str]:
-        return self.processor.get_title(page)
+    async def get_title(self, page: Page) -> str:
+        return await self.processor.get_title(page)
 
     def get_href(self, page: Page) -> str:
         return relpath(page.path_in_volume, start=self.current.path_in_volume.parent)
