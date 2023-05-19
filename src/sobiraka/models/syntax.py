@@ -2,6 +2,7 @@ from enum import Enum
 
 
 class Syntax(Enum):
+    HTML = 'html'
     MD = 'md'
     RST = 'rst'
 

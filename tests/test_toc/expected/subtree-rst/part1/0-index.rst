@@ -1,0 +1,14 @@
+- :doc:`chapter1 <chapter1/0-index.rst>`
+  - :doc:`section1 <chapter1/section1/0-index.rst>`
+    - :doc:`article1 <chapter1/section1/article1.rst>`
+    - :doc:`article2 <chapter1/section1/article2.rst>`
+  - :doc:`section2 <chapter1/section2/0-index.rst>`
+    - :doc:`article1 <chapter1/section2/article1.rst>`
+    - :doc:`article2 <chapter1/section2/article2.rst>`
+- :doc:`chapter2 <chapter2/0-index.rst>`
+  - :doc:`section1 <chapter2/section1/0-index.rst>`
+    - :doc:`article1 <chapter2/section1/article1.rst>`
+    - :doc:`article2 <chapter2/section1/article2.rst>`
+  - :doc:`section2 <chapter2/section2/0-index.rst>`
+    - :doc:`article1 <chapter2/section2/article1.rst>`
+    - :doc:`article2 <chapter2/section2/article2.rst>`

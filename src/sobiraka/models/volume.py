@@ -52,25 +52,28 @@ class Volume(Config):
     def autoprefix(self) -> str | None:
         return '/'.join(filter(None, (self.lang, self.codename))) or None
 
-    @cached_property
-    def pages_by_path(self) -> dict[Path, Page]:
-        # pylint: disable=import-outside-toplevel
-
-        pages: list[Page] = []
-        pages_by_path: dict[Path, Page] = {}
-        expected_paths: set[Path] = set()
-
+    def _find_files(self) -> set[Path]:
         paths: set[Path] = set()
         for pattern in self.paths.include:
             paths |= set(self.root.glob(pattern))
         for pattern in self.paths.exclude:
             paths -= set(self.root.glob(pattern))
+        return paths
 
-        for path in paths:
+    def _init_page(self, path: Path) -> Page:
+        return Page(self, path)
+
+    @cached_property
+    def pages_by_path(self) -> dict[Path, Page]:
+        pages: list[Page] = []
+        pages_by_path: dict[Path, Page] = {}
+        expected_paths: set[Path] = set()
+
+        for path in self._find_files():
             path_in_project = path.relative_to(self.project.base)
             absolute_path = path.resolve()
 
-            page = Page(self, absolute_path)
+            page = self._init_page(absolute_path)
             pages.append(page)
             pages_by_path[path_in_project] = page
             if page.is_index():

@@ -71,9 +71,17 @@ class Page:
 
     @cached_property
     def parent(self) -> Page | None:
+
+        path = self.path_in_project
+        path = path.parent
         if self.is_index():
-            return self.volume.pages_by_path.get(self.path_in_project.parent.parent)
-        return self.volume.pages_by_path.get(self.path_in_project.parent)
+            path = path.parent
+
+        parent = self.volume.pages_by_path.get(path)
+        if parent is self:
+            return None
+
+        return parent
 
     @cached_property
     def children(self) -> tuple[Page, ...]:

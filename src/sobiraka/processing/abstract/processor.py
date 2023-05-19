@@ -94,8 +94,9 @@ class Processor(Dispatcher):
 
     async def get_title(self, page: Page) -> str:
         # TODO: maybe make get_title() a separate @on_demand step?
+        await self.process1(page)
         if page not in self.titles:
-            await self.process1(page)
+            self.titles[page] = page.id_segment()
         return self.titles[page]
 
     @on_demand
@@ -109,7 +110,6 @@ class Processor(Dispatcher):
         """
         await self.load_page(page)
         await self.process_container(self.doc[page], page)
-        self.titles.setdefault(page, page.path.stem)
         save_debug_json('s1', page, self.doc[page])
         return page
 
@@ -221,7 +221,7 @@ class Processor(Dispatcher):
                 self.issues[page].append(BadLink(target_text))
                 return
         else:
-            autolabel = self.titles[href.target]
+            autolabel = await self.get_title(href.target)
 
         if not elem.content:
             elem.content = Str(autolabel)

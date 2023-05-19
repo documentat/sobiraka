@@ -22,6 +22,10 @@ class Project:
 
     volumes: tuple[Volume, ...] = field(hash=False)
 
+    def __post_init__(self):
+        for volume in self.volumes:
+            object.__setattr__(volume, 'project', self)
+
     def __repr__(self):
         return f'<{self.__class__.__name__}: {str(self.base)!r}>'
 

@@ -43,8 +43,6 @@ def load_project_from_dict(manifest: dict, *, base: Path) -> Project:
             volumes.append(_load_volume(lang, codename, volume_data, base))
 
     project = Project(base=base, volumes=tuple(volumes))
-    for volume in volumes:
-        object.__setattr__(volume, 'project', project)
     return project
 
 

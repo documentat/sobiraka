@@ -12,7 +12,7 @@ import jinja2
 from aiofiles.os import makedirs
 from panflute import Element, Header, Image
 
-from sobiraka.models import EmptyPage, GlobalToc, Page, PageHref, Project, Volume
+from sobiraka.models import EmptyPage, GlobalToc, Page, PageHref, Project, Syntax, Volume
 from sobiraka.utils import panflute_to_bytes
 from .abstract import ProjectProcessor
 
@@ -52,7 +52,7 @@ class HtmlBuilder(ProjectProcessor):
         await makedirs(target_path.parent, exist_ok=True)
         await to_thread(copyfile, source_path, target_path)
 
-    async def generate_html_for_page(self, page: Page):
+    async def generate_html_for_page(self, page: Page) -> str:
         volume = page.volume
         project = page.volume.project
 
@@ -92,6 +92,7 @@ class HtmlBuilder(ProjectProcessor):
         )
 
         target_file.write_text(html, encoding='utf-8')
+        return html
 
     async def get_template(self, volume: Volume) -> jinja2.Template:
         try:
@@ -164,7 +165,10 @@ class HtmlBuilder(ProjectProcessor):
 class GlobalToc_HTML(GlobalToc):
     processor: HtmlBuilder
 
-    def get_href(self, page: Page) -> Path:
+    def get_href(self, page: Page) -> str:
         current_path = self.processor.make_target_path(self.current)
         target_path = self.processor.make_target_path(page)
-        return Path(relpath(target_path, start=current_path.parent))
+        return relpath(target_path, start=current_path.parent)
+
+    def syntax(self) -> Syntax:
+        return Syntax.HTML
