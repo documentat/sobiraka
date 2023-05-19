@@ -108,7 +108,7 @@ test-dist:
 
 test-src:
   extends: .test
-  needs: [build-tester-dist]
+  needs: [build-tester-src]
   variables:
     VARIANT: tester-src
 
