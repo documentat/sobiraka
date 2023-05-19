@@ -102,19 +102,21 @@
                             <nav class="md-nav md-nav--primary" data-md-level="0">
                                 <ul class="md-nav__list">
                                     {% for item in toc.items() recursive %}
-                                        <li>
+                                        <li class="md-nav__item">
                                             {% if item.is_current %}
-                                                <strong>{{ item.title }}</strong>
+                                                <span class="md-nav__link caption"><span class="caption-text">{{ item.title }}</span></span>
                                             {% elif item.is_selected %}
-                                                <a href="{{ item.href }}"><strong>{{ item.title }}</strong></a>
+                                                <a class="md-nav__link nav__link--active" href="{{ item.href }}">{{ item.title }}</a>
                                             {% else %}
-                                                <a href="{{ item.href }}">{{ item.title }}</a>
+                                                <a class="md-nav__link" href="{{ item.href }}">{{ item.title }}</a>
                                             {% endif %}
 
                                             {% if item.children %}
-                                                <ul>
-                                                    {{ loop(item.children) }}
-                                                </ul>
+                                                <nav class="md-nav">
+                                                  <ul>
+                                                      {{ loop(item.children) }}
+                                                  </ul>
+                                                </nav>
                                             {% endif %}
                                         </li>
                                     {% endfor %}
