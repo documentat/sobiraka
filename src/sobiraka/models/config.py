@@ -48,8 +48,12 @@ class Config_HTML:
     resources_prefix: str = '_resources'
     """Relative path to the directory for placing the resources, such as images."""
 
+    resources_force_copy: tuple[str, ...] = ()
+
     theme: Path = RT.FILES / 'themes' / 'material'
     # TODO: describe what should be there
+
+    theme_data: dict[str, Any] = field(default=dict)
 
 
 @dataclass(kw_only=True, frozen=True)

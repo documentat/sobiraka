@@ -1,3 +1,4 @@
+from functools import partial
 from pathlib import Path
 from textwrap import dedent
 from typing import Iterable
@@ -47,8 +48,6 @@ def load_project_from_dict(manifest: dict, *, base: Path) -> Project:
 
 
 def _normalized_and_merged(data: dict, key: str) -> Iterable[tuple[str, dict]]:
-
-
     if key not in data:
         yield None, data
     elif list(data[key]) == ['DEFAULT']:
@@ -89,7 +88,10 @@ def _load_volume(lang: str | None, codename: str, volume_data: dict, base: Path)
         html=Config_HTML(
             prefix=_('html.prefix', '$AUTOPREFIX'),
             resources_prefix=_('html.resources_prefix', '_resources'),
-            theme=convert_or_none(global_path, _('html.theme', RT.FILES / 'themes' / 'material')),
+            resources_force_copy=_('html.resources_force_copy', ()),
+            theme=convert_or_none(partial(_load_html_theme, base=base), _('html.theme'))
+                  or RT.FILES / 'themes' / 'material',
+            theme_data=_('html.theme_data', {}),
         ),
         pdf=Config_PDF(
             header=convert_or_none(global_path, _('pdf.header')),
@@ -101,3 +103,14 @@ def _load_volume(lang: str | None, codename: str, volume_data: dict, base: Path)
         ),
         variables=frozendict(_('variables', {})),
     )
+
+
+def _load_html_theme(name: str, *, base: Path) -> Path:
+    theme_dir = base / name
+    if theme_dir.exists() and theme_dir.is_dir():
+        return theme_dir
+    if '/' not in name:
+        theme_dir = RT.FILES / 'themes' / name
+        if theme_dir.exists() and theme_dir.is_dir():
+            return theme_dir
+    raise FileNotFoundError(base / name)

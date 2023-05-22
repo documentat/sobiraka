@@ -52,7 +52,12 @@ $defs:
         properties:
           prefix: {type: string}
           resources_prefix: { type: string }
+          resources_force_copy:
+            type: array
+            items:
+              type: string
           theme: {type: string}
+          theme_data: {type: object}
 
       pdf:
         additionalProperties: false

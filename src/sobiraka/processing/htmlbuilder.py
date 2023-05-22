@@ -6,7 +6,7 @@ from functools import partial
 from os.path import relpath
 from pathlib import Path
 from shutil import copyfile
-from subprocess import DEVNULL, PIPE
+from subprocess import PIPE
 
 import jinja2
 from aiofiles.os import makedirs
@@ -15,6 +15,7 @@ from panflute import Element, Header, Image
 from sobiraka.models import DirPage, GlobalToc, IndexPage, LocalToc, Page, PageHref, Project, Syntax, Volume
 from sobiraka.utils import panflute_to_bytes
 from .abstract import ProjectProcessor
+from ..runtime import RT
 
 
 class HtmlBuilder(ProjectProcessor):
@@ -37,6 +38,13 @@ class HtmlBuilder(ProjectProcessor):
                 if source_path.is_file():
                     target_path = self.output / '_static' / source_path.relative_to(static)
                     self._copying[target_path] = create_task(self.copy_file(source_path, target_path))
+
+        # Copy additional static files
+        for volume in self.project.volumes:
+            for filename in volume.html.resources_force_copy:
+                source_path = self.project.base / volume.html.resources_prefix / filename
+                target_path = self.output / volume.html.resources_prefix / filename
+                self._copying[target_path] = create_task(self.copy_file(source_path, target_path))
 
         # Generate the HTML pages in no particular order
         for page in self.project.pages:
@@ -62,6 +70,7 @@ class HtmlBuilder(ProjectProcessor):
         target_file.parent.mkdir(parents=True, exist_ok=True)
         path_to_root_page = Path(relpath(self.make_target_path(volume.root_page), start=target_file.parent))
         path_to_static = Path(relpath(self.output / '_static', start=target_file.parent))
+        path_to_resources = Path(relpath(self.output / volume.html.resources_prefix, start=target_file.parent))
 
         pandoc = await create_subprocess_exec(
             'pandoc',
@@ -88,6 +97,8 @@ class HtmlBuilder(ProjectProcessor):
 
             ROOT_PAGE=path_to_root_page,
             STATIC=path_to_static,
+            RESOURCES=path_to_resources,
+            theme_data=volume.html.theme_data,
         )
 
         target_file.write_text(html, encoding='utf-8')
@@ -98,7 +109,7 @@ class HtmlBuilder(ProjectProcessor):
             jinja = self._jinja_environments[volume]
         except KeyError:
             jinja = self._jinja_environments[volume] = jinja2.Environment(
-                loader=jinja2.FileSystemLoader(volume.html.theme),
+                loader=jinja2.FileSystemLoader((RT.FILES / 'themes' / volume.html.theme)),
                 enable_async=True,
                 undefined=jinja2.StrictUndefined,
                 comment_start_string='{{#',
