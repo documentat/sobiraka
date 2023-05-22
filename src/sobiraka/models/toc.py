@@ -127,7 +127,7 @@ class TocTreeItem:
                 parts.append('1 child item')
             else:
                 parts.append(f'{len(self.children)} child items')
-        return f'<{self.__class__.__name__}: ({", ".join(parts)}>'
+        return f'<{self.__class__.__name__}: {", ".join(parts)}>'
 
 
 @dataclass
@@ -171,3 +171,34 @@ class SubtreeToc(CrossPageToc):
 
     def syntax(self) -> Syntax:
         return self.current.syntax
+
+
+@dataclass
+class LocalToc(TableOfContents):
+    processor: Processor
+    page: Page
+
+    async def items(self) -> list[TocTreeItem]:
+        root = TocTreeItem(title='', href='')
+        breadcrumbs: list[TocTreeItem] = [root]
+        current_level: int = 0
+
+        for anchor in self.processor.anchors[self.page]:
+            item = TocTreeItem(title=anchor.label, href=f'#{anchor.identifier}')
+            if anchor.header.level == current_level:
+                breadcrumbs[-2].children.append(item)
+                breadcrumbs[-1] = item
+            elif anchor.header.level > current_level:
+                breadcrumbs[-1].children.append(item)
+                breadcrumbs.append(item)
+            elif anchor.header.level < current_level:
+                breadcrumbs[anchor.header.level - 1].children.append(item)
+                breadcrumbs[anchor.header.level:] = [item]
+            current_level = anchor.header.level
+
+        # TODO: Support sources with zero or multiple top-level headers
+        if root.children:
+            assert len(root.children) == 1, str(root.children)
+            root.children = root.children[0].children
+
+        return root.children

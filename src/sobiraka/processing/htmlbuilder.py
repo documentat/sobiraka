@@ -1,18 +1,18 @@
 import os.path
 import re
-from asyncio import create_subprocess_exec, create_task, to_thread, Task, gather
+from asyncio import Task, create_subprocess_exec, create_task, gather, to_thread
 from datetime import datetime
 from functools import partial
 from os.path import relpath
 from pathlib import Path
 from shutil import copyfile
-from subprocess import PIPE
+from subprocess import DEVNULL, PIPE
 
 import jinja2
 from aiofiles.os import makedirs
 from panflute import Element, Header, Image
 
-from sobiraka.models import EmptyPage, GlobalToc, Page, PageHref, Project, Syntax, Volume
+from sobiraka.models import DirPage, GlobalToc, IndexPage, LocalToc, Page, PageHref, Project, Syntax, Volume
 from sobiraka.utils import panflute_to_bytes
 from .abstract import ProjectProcessor
 
@@ -71,8 +71,6 @@ class HtmlBuilder(ProjectProcessor):
             stdin=PIPE,
             stdout=PIPE)
         html, _ = await pandoc.communicate(panflute_to_bytes(self.doc[page]))
-        pandoc.stdin.close()
-        await pandoc.wait()
         assert pandoc.returncode == 0
 
         template = await self.get_template(page.volume)
@@ -86,6 +84,7 @@ class HtmlBuilder(ProjectProcessor):
 
             now=datetime.now(),
             toc=GlobalToc_HTML(self, volume, page),
+            local_toc=LocalToc(self, page),
 
             ROOT_PAGE=path_to_root_page,
             STATIC=path_to_static,
@@ -111,12 +110,15 @@ class HtmlBuilder(ProjectProcessor):
         for part in page.path_in_volume.parts:
             target_path /= re.sub(r'^(\d+-)?', '', part)
 
-        if isinstance(page, EmptyPage):
-            target_path /= 'index.html'
-        elif page.is_index():
-            target_path = target_path.with_name('index.html')
-        else:
-            target_path = target_path.with_suffix('.html')
+        match page:
+            case IndexPage():
+                target_path = target_path.with_name('index.html')
+            case DirPage():
+                target_path /= 'index.html'
+            case Page():
+                target_path = target_path.with_suffix('.html')
+            case _:
+                raise TypeError(page.__class__.__name__)
 
         prefix = page.volume.html.prefix or '$AUTOPREFIX'
         prefix = re.sub(r'\$\w+', partial(self.replace_in_prefix, page), prefix)

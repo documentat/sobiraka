@@ -6,10 +6,10 @@ from functools import cache, cached_property
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from .syntax import Syntax
+from ..syntax import Syntax
 
 if TYPE_CHECKING:
-    from .volume import Volume
+    from sobiraka.models.volume import Volume
 
 
 @dataclass(frozen=True)
@@ -56,11 +56,11 @@ class Page:
         """Path to the page source, relative to :data:`.Volume.root`."""
         return self.path.relative_to(self.volume.root)
 
-    def is_root(self) -> bool:
-        return self.parent is None
+    def keys(self) -> tuple[Path, ...]:
+        return (self.path_in_project,)
 
-    def is_index(self) -> bool:
-        return bool(re.fullmatch(r'0(-.*)? | (\d+-)?index', self.path.stem, flags=re.X))
+    def is_root(self) -> bool:
+        return False
 
     @cached_property
     def breadcrumbs(self) -> tuple[Page, ...]:
@@ -71,17 +71,9 @@ class Page:
 
     @cached_property
     def parent(self) -> Page | None:
-
-        path = self.path_in_project
-        path = path.parent
-        if self.is_index():
-            path = path.parent
-
-        parent = self.volume.pages_by_path.get(path)
-        if parent is self:
+        if self.is_root():
             return None
-
-        return parent
+        return self.volume.pages_by_path[self.path_in_project.parent]
 
     @cached_property
     def children(self) -> tuple[Page, ...]:
@@ -100,11 +92,9 @@ class Page:
         return tuple(children)
 
     def id_segment(self) -> str:
-        if self.parent is None:
+        if self.is_root():
             return 'r'
-        if self.is_index():
-            return re.sub(r'^(\d+-)?', '', self.path.parent.stem)
-        return re.sub(r'^(\d+-)?', '', self.path.stem)
+        return re.sub(r'^(\d+-)?', '', self.path_in_project.stem)
 
     @cached_property
     def id(self) -> str:

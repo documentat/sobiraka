@@ -13,8 +13,8 @@ import panflute
 from more_itertools import padded
 from panflute import Code, Doc, Element, Header, Link, Str, stringify
 
-from sobiraka.models import BadLink, Href, Issue, Page, PageHref, UrlHref, EmptyPage, Project, Volume
-from sobiraka.utils import LatexBlock, on_demand, save_debug_json, UniqueList
+from sobiraka.models import Anchor, Anchors, BadLink, DirPage, Href, Issue, Page, PageHref, Project, UrlHref, Volume
+from sobiraka.utils import LatexBlock, UniqueList, on_demand, save_debug_json
 from .dispatcher import Dispatcher
 
 
@@ -43,7 +43,7 @@ class Processor(Dispatcher):
         
         Do not rely on the value for page here until :func:`process1()` is awaited for that page."""
 
-        self.anchors: dict[Page, dict[str, list[str]]] = defaultdict(dict)
+        self.anchors: dict[Page, Anchors] = defaultdict(Anchors)
         """Dictionary containing anchors and corresponding readable titles.
         
         Do not rely on the value for page here until :func:`process1()` is awaited for that page.
@@ -119,7 +119,8 @@ class Processor(Dispatcher):
         if not elem.identifier:
             elem.identifier = stringify(elem).lower().replace(' ', '-')
 
-        self.anchors[page].setdefault(elem.identifier, []).append(stringify(elem))
+        anchor = Anchor(elem.identifier, stringify(elem), elem)
+        self.anchors[page].append(anchor)
 
         if elem.level == 1:
             full_id = page.id
@@ -189,7 +190,7 @@ class Processor(Dispatcher):
                 if target_path_str.startswith('/'):
                     target_path = page.volume.relative_root / Path(target_path_str[1:])
                 else:
-                    if isinstance(page, EmptyPage):
+                    if isinstance(page, DirPage):
                         target_path = (page.path / target_path_str).resolve()
                     else:
                         target_path = (page.path.parent / target_path_str).resolve()
@@ -215,8 +216,7 @@ class Processor(Dispatcher):
 
         if href.anchor:
             try:
-                assert len(self.anchors[href.target][href.anchor]) == 1
-                autolabel = self.anchors[href.target][href.anchor]
+                autolabel = self.anchors[href.target][href.anchor].label
             except (KeyError, AssertionError):
                 self.issues[page].append(BadLink(target_text))
                 return

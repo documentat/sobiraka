@@ -1,20 +1,20 @@
-import re
 from functools import cache
 from pathlib import Path
 
 from .page import Page
-from .syntax import Syntax
+from ..syntax import Syntax
 
 
-class EmptyPage(Page):
+class DirPage(Page):
 
-    def id_segment(self) -> str:
-        if self.parent is None:
-            return 'r'
-        return re.sub(r'^(\d+-)?', '', self.path.stem)
+    def is_root(self) -> bool:
+        return self.path_in_volume == Path('.')
 
-    def is_index(self) -> bool:
-        return True
+    @property
+    def parent(self) -> Page | None:
+        if self.is_root():
+            return None
+        return self.volume.pages_by_path[self.path_in_project.parent]
 
     @property
     def path_in_project(self) -> Path:
@@ -23,10 +23,6 @@ class EmptyPage(Page):
     @property
     def path_in_volume(self) -> Path:
         return self.path.relative_to(self.volume.root)
-
-    @property
-    def parent(self) -> Page | None:
-        return self.volume.pages_by_path.get(self.path_in_project.parent)
 
     @property
     def syntax(self) -> Syntax:

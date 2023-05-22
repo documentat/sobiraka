@@ -1,9 +1,7 @@
-from __future__ import annotations
-
 from dataclasses import dataclass
 from pathlib import Path
 
-from sobiraka.models import Page, Volume, Syntax
+from sobiraka.models import IndexPage, Page, Syntax, Volume
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -14,8 +12,10 @@ class FakeVolume(Volume):
     def _find_files(self) -> set[Path]:
         return set(self.root / file for file in self.fake_files)
 
-    def _init_page(self, path: Path) -> FakePage:
-        return FakePage(self, path)
+    def _init_page(self, path_in_project: Path) -> Page:
+        return super()._init_page(path_in_project,
+                                  page_class=FakePage,
+                                  indexpage_class=FakeIndexPage)
 
 
 class FakePage(Page):
@@ -26,3 +26,7 @@ class FakePage(Page):
                 return f'#{title}\n'
             case Syntax.RST:
                 return f'{title}\n{"-" * len(title)}\n'
+
+
+class FakeIndexPage(FakePage, IndexPage):
+    pass

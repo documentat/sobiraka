@@ -1,13 +1,16 @@
+from __future__ import annotations
+
+import re
 from dataclasses import dataclass, field
 from functools import cached_property
 from pathlib import Path
+from typing import Callable
 
 from more_itertools import unique_justseen
 from utilspie.collectionsutils import frozendict
 
 from .config import Config
-from .emptypage import EmptyPage
-from .page import Page
+from .page import DirPage, IndexPage, Page
 from .project import Project
 
 
@@ -60,8 +63,17 @@ class Volume(Config):
             paths -= set(self.root.glob(pattern))
         return paths
 
-    def _init_page(self, path: Path) -> Page:
-        return Page(self, path)
+    def _init_page(self, path_in_project: Path, *,
+                   page_class: Callable[[Volume, Path], Page] = Page,
+                   dirpage_class: Callable[[Volume, Path], Page] = DirPage,
+                   indexpage_class: Callable[[Volume, Path], Page] = IndexPage,
+                   ) -> Page:
+        path = self.project.base / path_in_project
+        if path.is_dir():
+            return dirpage_class(self, path)
+        if re.fullmatch(r'0(-.*)? | (\d+-)?index', path.stem, flags=re.X):
+            return indexpage_class(self, path)
+        return page_class(self, path)
 
     @cached_property
     def pages_by_path(self) -> dict[Path, Page]:
@@ -71,13 +83,11 @@ class Volume(Config):
 
         for path in self._find_files():
             path_in_project = path.relative_to(self.project.base)
-            absolute_path = path.resolve()
 
-            page = self._init_page(absolute_path)
+            page = self._init_page(path_in_project)
             pages.append(page)
-            pages_by_path[path_in_project] = page
-            if page.is_index():
-                pages_by_path[path_in_project.parent] = page
+            for key in page.keys():
+                pages_by_path[key] = page
 
             for parent in path_in_project.parents:
                 if parent not in pages_by_path:
@@ -87,9 +97,9 @@ class Volume(Config):
 
         for expected_path in expected_paths:
             if expected_path not in pages_by_path:
-                page = EmptyPage(self, self.project.base / expected_path)
-                pages.append(page)
-                pages_by_path[expected_path] = page
+                page = self._init_page(expected_path)
+                for key in page.keys():
+                    pages_by_path[key] = page
 
         return frozendict(sorted(pages_by_path.items()))
 

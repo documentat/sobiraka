@@ -1,8 +1,8 @@
-from .emptypage import EmptyPage
+from .anchor import Anchor, Anchors
 from .href import Href, PageHref, UrlHref
 from .issue import AmbiguosLink, BadLink, Issue, MisspelledWords, PhraseBeginsWithLowerCase
-from .page import Page
+from .page import DirPage, IndexPage, Page
 from .project import Project
 from .syntax import Syntax
-from .toc import GlobalToc, SubtreeToc, TableOfContents, TocTreeItem
+from .toc import GlobalToc, LocalToc, SubtreeToc, TableOfContents, TocTreeItem
 from .volume import Volume

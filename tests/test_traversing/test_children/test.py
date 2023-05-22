@@ -2,7 +2,7 @@ from pathlib import Path
 from unittest import main
 
 from abstracttests.projectdirtestcase import ProjectDirTestCase
-from sobiraka.models import EmptyPage, Page
+from sobiraka.models import DirPage, IndexPage, Page
 
 
 class TestChildren(ProjectDirTestCase):
@@ -19,11 +19,11 @@ class TestChildren(ProjectDirTestCase):
 
     def test_types(self):
         data: dict[Page, type[Page]] = {
-            self.index_root: EmptyPage,
+            self.index_root: DirPage,
             self.document1: Page,
-            self.index_sub: Page,
+            self.index_sub: IndexPage,
             self.document2: Page,
-            self.index_subsub: EmptyPage,
+            self.index_subsub: DirPage,
             self.document3: Page,
             self.document4: Page,
             self.document5: Page,
@@ -31,21 +31,6 @@ class TestChildren(ProjectDirTestCase):
         for page, expected in data.items():
             with self.subTest(page):
                 self.assertEqual(expected, type(page))
-
-    def test_is_index(self):
-        data: dict[Page, bool] = {
-            self.index_root: True,
-            self.document1: False,
-            self.index_sub: True,
-            self.document2: False,
-            self.index_subsub: True,
-            self.document3: False,
-            self.document4: False,
-            self.document5: False,
-        }
-        for page, expected in data.items():
-            with self.subTest(page):
-                self.assertEqual(expected, page.is_index())
 
     def test_breadcrumbs(self):
         data: tuple[tuple[Page, ...], ...] = (
