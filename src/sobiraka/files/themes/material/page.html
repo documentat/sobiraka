@@ -146,7 +146,7 @@
                     <div class="md-sidebar__scrollwrap">
                       <div class="md-sidebar__inner">
                         <nav class="md-nav md-nav--secondary" data-md-scrollfix="">
-                          <label class="md-nav__title" for="__toc">Contents</label>
+                          <label class="md-nav__title" for="__toc">{{ theme_data.get("local_toc_title", "Contents") }}</label>
                           <ul class="md-nav__list">
 
                             {% for item in local_toc.items() recursive %}
