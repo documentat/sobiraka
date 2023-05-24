@@ -63,6 +63,10 @@
     <link href="subpage/index.html" rel="next" title="Level 1 page"/>
     <link href="specimen.html" rel="prev" title="Specimen"/>
     <link href="{{ STATIC }}/images/apple-icon-152x152.png" rel="apple-touch-icon"/>
+
+    {% if theme_data.get("enable_custom_css") %}
+        <link rel="stylesheet" type="text/css" href="{{ RESOURCES }}/custom.css"/>
+    {% endif %}
 </head>
 <body data-md-color-primary="{{ theme_data.color_primary }}" data-md-color-accent="{{ theme_data.color_accent }}" dir="ltr">
     <svg class="md-svg">
