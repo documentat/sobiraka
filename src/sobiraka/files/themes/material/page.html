@@ -123,14 +123,23 @@
                     <div class="md-sidebar__scrollwrap">
                         <div class="md-sidebar__inner">
                             <nav class="md-nav md-nav--primary" data-md-level="0">
-                                <label class="md-nav__title md-nav__title--site" for="__drawer">
-                                    <a class="md-nav__button md-logo" href="#" title="ITooLabs">
-                                        <i class="md-icon">
-
-                                        </i>
-                                    </a>
-                                    <a href="#" title="ITooLabs">
-                                        ITooLabs
+                                <label class="md-nav__title md-nav__title--site" for="__drawer" style="
+                                    {% with header_background = theme_data.get("header_background") %}
+                                      {% if header_background %} background: {{ header_background }}; {% endif %}
+                                    {% endwith %}
+                                    {% with header_text_color = theme_data.get("header_text_color") %}
+                                      {% if header_text_color %} color: {{ theme_data.header_text_color }}; {% endif %}
+                                    {% endwith %}
+                                    {% with header_shadow = theme_data.get("header_shadow") %}
+                                      {% if not header_shadow %} box-shadow: none; {% endif %}
+                                    {% endwith %}
+                                ">
+                                    <a class="md-nav__button md-logo" href="{{ ROOT_PAGE }}" title="{{ title }}">
+                                        {% if theme_data.get("logo") %}
+                                        <img src="{{ RESOURCES }}/{{ theme_data["logo"] }}" alt="{{ volume.title }}" style="height:1em;"/>
+                                        {% else %}
+                                        <i class="md-icon"></i>
+                                        {% endif %}
                                     </a>
                                 </label>
                                 <ul class="md-nav__list">
@@ -145,7 +154,9 @@
                                             {% endif %}
 
                                             {% if item.children %}
-                                                      {{ loop(item.children) }}
+                                                <ul>
+                                                    {{ loop(item.children) }}
+                                                </ul>
                                             {% endif %}
                                         </li>
                                     {% endfor %}
