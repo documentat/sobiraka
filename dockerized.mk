@@ -2,6 +2,8 @@
 
 PREFIX ?= sobiraka
 
+build: build-release build-tester-dist build-tester-src build-linter build-documentator
+
 build-release:
 	@DOCKER_BUILDKIT=1 \
 		docker build . \
