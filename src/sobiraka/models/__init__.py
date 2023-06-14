@@ -5,4 +5,5 @@ from .page import DirPage, IndexPage, Page
 from .project import Project
 from .syntax import Syntax
 from .toc import GlobalToc, LocalToc, SubtreeToc, TableOfContents, TocTreeItem
+from .version import Version
 from .volume import Volume

@@ -1,11 +1,14 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 from sobiraka.models import IndexPage, Page, Syntax, Volume
+from sobiraka.models.config import Config_Paths
 
 
 @dataclass(kw_only=True, frozen=True)
 class FakeVolume(Volume):
+    paths: Config_Paths = field(default=Config_Paths(root=Path('/')))
+
     syntax: Syntax = Syntax.MD
     fake_files: tuple[str, ...] = ()
 
@@ -18,14 +21,24 @@ class FakeVolume(Volume):
                                   indexpage_class=FakeIndexPage)
 
 
+@dataclass(frozen=True)
 class FakePage(Page):
-    def raw(self) -> str:
+    _meta_text: str = field(kw_only=True, default='')
+
+    def _raw(self) -> str:
         title = self.id_segment()
         match self.syntax:
             case Syntax.MD:
-                return f'#{title}\n'
+                raw = f'#{title}\n'
             case Syntax.RST:
-                return f'{title}\n{"-" * len(title)}\n'
+                raw = f'{title}\n{"-" * len(title)}\n'
+            case _:
+                raise ValueError(self.syntax)
+
+        if self._meta_text:
+            raw = f'---\n{self._meta_text}\n---\n{raw}'
+
+        return raw
 
 
 class FakeIndexPage(FakePage, IndexPage):

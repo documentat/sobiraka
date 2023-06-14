@@ -6,10 +6,15 @@ from functools import cache, cached_property
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+import yaml
+
 from ..syntax import Syntax
+from ..version import Version
 
 if TYPE_CHECKING:
     from sobiraka.models.volume import Volume
+
+_META_PATTERN = re.compile(r'^---\n(.+\n)?---\n', re.DOTALL)
 
 
 @dataclass(frozen=True)
@@ -142,5 +147,27 @@ class Page:
 
     # pylint: disable=method-cache-max-size-none
     @cache
-    def raw(self) -> str:
+    def _raw(self) -> str:
         return self.path.read_text('utf-8')
+
+    def text(self) -> str:
+        return _META_PATTERN.sub('', self._raw())
+
+    @cached_property
+    def meta(self) -> PageMeta:
+        meta = {}
+        if m := _META_PATTERN.match(self._raw()):
+            yaml_text = m.group(1).strip()
+            if yaml_text:
+                meta = yaml.safe_load(m.group(1))
+        meta = PageMeta(meta)
+        return meta
+
+
+class PageMeta(dict):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.version: Version | None = None
+        if 'version' in self:
+            self.version = Version.parse(str(self['version']))

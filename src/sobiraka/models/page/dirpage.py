@@ -30,5 +30,5 @@ class DirPage(Page):
 
     # pylint: disable=method-cache-max-size-none
     @cache
-    def raw(self) -> str:
+    def _raw(self) -> str:
         return '# ' + self.path.stem + '\n\n{{ toc.md }}'

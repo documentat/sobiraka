@@ -77,7 +77,7 @@ class Processor(Dispatcher):
             'LANG': page.volume.lang,
         }
 
-        page_text = page.raw()
+        page_text = page.text()
         page_text = await self.jinja.from_string(page_text).render_async(variables)
 
         pandoc = await create_subprocess_exec(
