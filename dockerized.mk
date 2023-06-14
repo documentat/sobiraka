@@ -2,7 +2,7 @@
 
 PREFIX ?= sobiraka
 
-build: build-release build-tester-dist build-tester-src build-linter build-documentator
+build: build-release build-tester-dist build-tester-src build-linter
 
 build-release:
 	@DOCKER_BUILDKIT=1 \
@@ -33,14 +33,6 @@ build-linter:
 		--build-arg GID=$$(id -g) \
 		--tag sobiraka:linter
 
-build-documentator:
-	@DOCKER_BUILDKIT=1 \
-		docker build . \
-		--target documentator \
-		--build-arg UID=$$(id -u) \
-		--build-arg GID=$$(id -g) \
-		--tag sobiraka:documentator
-
 test-src:
 	@docker run --rm -it -v $(PWD):/W:ro -e COVERAGE_FILE=~/coverage sobiraka:tester-src
 
@@ -49,6 +41,3 @@ test-dist:
 
 lint:
 	@docker run --rm -it -v $(PWD):/W:ro sobiraka:linter
-
-docs:
-	@docker run --rm -it -v $(PWD):/W sobiraka:documentator

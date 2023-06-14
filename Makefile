@@ -7,9 +7,3 @@ tests:
 
 lint:
 	@PYTHONPATH=src python -m pylint sobiraka
-
-docs:
-	@rm -rf docs/modules
-	@rm -rf build/docs/*
-	@SPHINX_APIDOC_OPTIONS=members sphinx-apidoc src/sobiraka --force --separate --output-dir docs/modules
-	@sphinx-build -a -j auto docs docs/build

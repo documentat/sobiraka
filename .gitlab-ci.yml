@@ -80,11 +80,6 @@ build-linter:
   variables:
     VARIANT: linter
 
-build-documentator:
-  extends: .build-docker
-  variables:
-    VARIANT: documentator
-
 ################################################################################
 
 .test:
@@ -120,26 +115,6 @@ lint:
   script:
     - make lint
   allow_failure: true
-
-docs:
-  stage: test
-  needs: [build-documentator]
-  image: $CI_REGISTRY_IMAGE/cache/documentator:by-commit-$CI_COMMIT_SHA
-  services: ['docker:dind']
-  variables:
-    GIT_STRATEGY: fetch
-  before_script:
-    - git config --global --add safe.directory $PWD
-  script:
-    - git checkout -- Makefile docs
-    - make docs
-  after_script:
-    - mv docs/build result
-    - rm -rf Makefile docs
-    - mv result docs
-  artifacts:
-    paths:
-      - docs
 
 ################################################################################
 
