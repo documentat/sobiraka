@@ -13,7 +13,7 @@ from .config import Config_HTML, Config_Lint, Config_Lint_Checks, Config_PDF, Co
 from .project import Project
 from .volume import Volume
 
-MANIFEST_SCHEMA = yaml.load((RT.FILES / 'sobiraka-project.yaml').read_text(), yaml.SafeLoader)
+MANIFEST_SCHEMA = yaml.safe_load((RT.FILES / 'sobiraka-project.yaml').read_text())
 
 
 def load_project(manifest_path: Path) -> Project:
@@ -38,12 +38,19 @@ def load_project_from_dict(manifest: dict, *, base: Path) -> Project:
     if manifest:
         jsonschema.validate(manifest, MANIFEST_SCHEMA)
 
-    volumes: list[Volume] = []
+    volumes: dict[str, Volume] = {}
     for lang, language_data in _normalized_and_merged(manifest, 'languages'):
         for codename, volume_data in _normalized_and_merged(language_data, 'volumes'):
-            volumes.append(_load_volume(lang, codename, volume_data, base))
+            volume = _load_volume(lang, codename, volume_data, base)
+            volumes[volume.autoprefix] = volume
 
-    project = Project(base=base, volumes=tuple(volumes))
+    primary_volume = None
+    if 'primary' in manifest:
+        primary_volume = volumes[manifest['primary']]
+
+    project = Project(base=base,
+                      volumes=tuple(volumes.values()),
+                      primary_volume=primary_volume)
     return project
 
 

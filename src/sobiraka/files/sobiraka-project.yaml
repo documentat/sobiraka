@@ -3,18 +3,24 @@ oneOf:
 
   - additionalProperties: false
     properties:
+      primary:
+        type: string
       languages:
         patternProperties:
           .+: { $ref: '#/$defs/book' }
 
   - additionalProperties: false
     properties:
+      primary:
+        type: string
       volumes:
         patternProperties:
           .+: { $ref: '#/$defs/book' }
 
   - additionalProperties: false
     properties:
+      primary:
+        type: string
       languages:
         patternProperties:
           .+:

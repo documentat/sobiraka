@@ -21,10 +21,13 @@ class Project:
     base: Path
 
     volumes: tuple[Volume, ...] = field(hash=False)
+    primary_volume: Volume = field(hash=False, default=None)
 
     def __post_init__(self):
         for volume in self.volumes:
             object.__setattr__(volume, 'project', self)
+        if self.primary_volume is None:
+            object.__setattr__(self, 'primary_volume', self.volumes[0])
 
     def __repr__(self):
         return f'<{self.__class__.__name__}: {str(self.base)!r}>'
@@ -33,7 +36,7 @@ class Project:
         for volume in self.volumes:
             if volume.autoprefix == autoprefix:
                 return volume
-        raise KeyError
+        raise KeyError(autoprefix)
 
     @cached_property
     def pages_by_path(self) -> dict[Path, Page]:
