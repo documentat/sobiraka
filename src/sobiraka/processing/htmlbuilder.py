@@ -166,9 +166,17 @@ class HtmlBuilder(ProjectProcessor):
         return elems
 
     async def process_image(self, elem: Image, page: Page) -> tuple[Image, ...]:
-        path = elem.url.replace('$LANG', page.volume.lang or '')
-        source_path = page.volume.paths.resources / path
-        target_path = self.output / page.volume.html.resources_prefix / path
+        path = Path(elem.url.replace('$LANG', page.volume.lang or ''))
+
+        if path.is_absolute():
+            source_path = page.volume.paths.resources / path.relative_to('/')
+        else:
+            source_path = (page.path.parent / path).resolve()
+
+        target_path = self.output \
+                      / page.volume.html.resources_prefix \
+                      / source_path.relative_to(page.volume.paths.resources)
+
         if target_path not in self._copying:
             self._copying[target_path] = create_task(self.copy_file(source_path, target_path))
         elem.url = relpath(target_path, start=self.make_target_path(page).parent)
