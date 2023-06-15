@@ -7,7 +7,7 @@ from sobiraka.models import TranslationStatus, Version
 
 class TestVersioning(ProjectDirTestCase):
 
-    def test_translated_page(self):
+    def test_get_translation(self):
         data: dict[str, dict[Path, Path]] = {
             'ru': {
                 Path('src-en/0-index.md'): Path('src-ru/0-index.md'),
@@ -25,7 +25,7 @@ class TestVersioning(ProjectDirTestCase):
                 for path, expected in subdata.items():
                     page = self.project.pages_by_path[path]
                     with self.subTest(page):
-                        page_tr = self.project.get_translated_page(page, lang)
+                        page_tr = self.project.get_translation(page, lang)
                         actual = page_tr.path_in_project
                         self.assertEqual(expected, actual)
 

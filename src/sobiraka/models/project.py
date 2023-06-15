@@ -49,7 +49,7 @@ class Project:
 
         raise KeyError(key)
 
-    def get_translated_page(self, page: Page, lang_or_volume: str | Volume) -> Page:
+    def get_translation(self, page: Page, lang_or_volume: str | Volume) -> Page:
         if isinstance(lang_or_volume, str):
             volume = self.get_volume((lang_or_volume, page.volume.codename))
         else:

@@ -166,7 +166,7 @@ class Page:
     @property
     def original(self) -> Page:
         project = self.volume.project
-        return project.get_translated_page(self, project.primary_volume)
+        return project.get_translation(self, project.primary_volume)
 
     @property
     def translation_status(self) -> TranslationStatus:
