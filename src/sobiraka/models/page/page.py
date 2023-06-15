@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 import yaml
 
 from ..syntax import Syntax
-from ..version import Version
+from ..version import TranslationStatus, Version
 
 if TYPE_CHECKING:
     from sobiraka.models.volume import Volume
@@ -162,6 +162,22 @@ class Page:
                 meta = yaml.safe_load(m.group(1))
         meta = PageMeta(meta)
         return meta
+
+    @property
+    def original(self) -> Page:
+        project = self.volume.project
+        return project.get_translated_page(self, project.primary_volume)
+
+    @property
+    def translation_status(self) -> TranslationStatus:
+        this_version = self.meta.version
+        orig_version = self.original.meta.version
+
+        if this_version == orig_version:
+            return TranslationStatus.LATEST
+        if this_version.major == orig_version.major:
+            return TranslationStatus.IMPERFECT
+        return TranslationStatus.OUTDATED
 
 
 class PageMeta(dict):

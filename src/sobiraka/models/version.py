@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
+from enum import Enum, auto
 
 
 @dataclass(frozen=True, eq=True, order=True)
@@ -21,3 +22,9 @@ class Version:
         major = int(m.group(1))
         minor = int(m.group(2))
         return Version(major, minor)
+
+
+class TranslationStatus(Enum):
+    LATEST = auto()
+    IMPERFECT = auto()
+    OUTDATED = auto()

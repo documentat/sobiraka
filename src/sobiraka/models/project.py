@@ -32,11 +32,31 @@ class Project:
     def __repr__(self):
         return f'<{self.__class__.__name__}: {str(self.base)!r}>'
 
-    def get_volume(self, autoprefix: str | None = None) -> Volume:
-        for volume in self.volumes:
-            if volume.autoprefix == autoprefix:
-                return volume
-        raise KeyError(autoprefix)
+    def get_volume(self, key: str | tuple[str | None, str | None] | None = None) -> Volume:
+        match key:
+            case str() as autoprefix:
+                for volume in self.volumes:
+                    if volume.autoprefix == autoprefix:
+                        return volume
+
+            case (str() | None as lang, str() | None as codename):
+                for volume in self.volumes:
+                    if volume.lang == lang and volume.codename == codename:
+                        return volume
+            case None:
+                assert len(self.volumes) == 1
+                return self.volumes[0]
+
+        raise KeyError(key)
+
+    def get_translated_page(self, page: Page, lang_or_volume: str | Volume) -> Page:
+        if isinstance(lang_or_volume, str):
+            volume = self.get_volume((lang_or_volume, page.volume.codename))
+        else:
+            volume = lang_or_volume
+        path_tr = volume.relative_root / page.path_in_volume
+        page_tr = volume.pages_by_path[path_tr]
+        return page_tr
 
     @cached_property
     def pages_by_path(self) -> dict[Path, Page]:

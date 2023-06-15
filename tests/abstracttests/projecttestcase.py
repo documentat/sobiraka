@@ -36,10 +36,7 @@ class ProjectTestCase(IsolatedAsyncioTestCase, Generic[T], metaclass=ABCMeta):
     def subTest(self, msg: Any = ..., **params: Any):
         match msg:
             case Page() as page:
-                if page.is_root():
-                    return super().subTest('')
-                else:
-                    return super().subTest(page.path_in_project.with_suffix(''))
+                return super().subTest(page.path_in_project.with_suffix(''))
             case _:
                 return super().subTest(msg)
 
