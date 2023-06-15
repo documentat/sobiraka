@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from contextlib import suppress
 from dataclasses import dataclass, field
 from functools import cached_property
 from pathlib import Path
@@ -57,6 +58,15 @@ class Project:
         path_tr = volume.relative_root / page.path_in_volume
         page_tr = volume.pages_by_path[path_tr]
         return page_tr
+
+    def get_all_translations(self, page: Page) -> tuple[Page, ...]:
+        translations: list[Page] = []
+        for volume in self.volumes:
+            if volume.codename == page.volume.codename:
+                with suppress(KeyError):
+                    page = volume.pages_by_path[volume.relative_root / page.path_in_volume]
+                    translations.append(page)
+        return tuple(translations)
 
     @cached_property
     def pages_by_path(self) -> dict[Path, Page]:
