@@ -50,7 +50,7 @@ class Config_HTML:
 
     resources_force_copy: tuple[str, ...] = ()
 
-    theme: Path = RT.FILES / 'themes' / 'material'
+    theme: Path = RT.FILES / 'themes' / 'simple'
     # TODO: describe what should be there
 
     theme_data: dict[str, Any] = field(default=dict)

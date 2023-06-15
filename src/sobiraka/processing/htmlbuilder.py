@@ -84,6 +84,8 @@ class HtmlBuilder(ProjectProcessor):
 
         template = await self.get_template(page.volume)
         html = await template.render_async(
+            builder=self,
+
             project=project,
             volume=volume,
             page=page,
@@ -146,7 +148,10 @@ class HtmlBuilder(ProjectProcessor):
             '$AUTOPREFIX': page.volume.autoprefix,
         }[m.group()]
 
-    def make_internal_url(self, href: PageHref, *, page: Page) -> str:
+    def make_internal_url(self, href: PageHref | Page, *, page: Page) -> str:
+        if isinstance(href, Page):
+            href = PageHref(href)
+
         if href.target is page:
             result = ''
         else:

@@ -97,7 +97,7 @@ def _load_volume(lang: str | None, codename: str, volume_data: dict, base: Path)
             resources_prefix=_('html.resources_prefix', '_resources'),
             resources_force_copy=_('html.resources_force_copy', ()),
             theme=convert_or_none(partial(_load_html_theme, base=base), _('html.theme'))
-                  or RT.FILES / 'themes' / 'material',
+                  or RT.FILES / 'themes' / 'simple',
             theme_data=_('html.theme_data', {}),
         ),
         pdf=Config_PDF(
