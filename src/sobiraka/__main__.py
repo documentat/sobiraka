@@ -7,7 +7,7 @@ from sobiraka.linter import Linter
 from sobiraka.models.load import load_project
 from sobiraka.processing import HtmlBuilder, PdfBuilder
 from sobiraka.runtime import RT
-from sobiraka.utils import validate_dictionary
+from sobiraka.utils import check_translations, validate_dictionary
 
 
 async def async_main():  # pragma: no cover
@@ -29,9 +29,15 @@ async def async_main():  # pragma: no cover
     cmd_lint.add_argument('source', type=absolute_path)
     cmd_lint.add_argument('volume', nargs='?')
 
-    cmd_validate_dictionary = commands.add_parser('validate_dictionary', help='Validate and fix Hunspell dictionary.')
+    cmd_validate_dictionary = commands.add_parser('validate_dictionary',
+                                                  help='Validate and fix Hunspell dictionary.')
     cmd_validate_dictionary.add_argument('dic', type=absolute_path)
     cmd_validate_dictionary.add_argument('--autofix', action='store_true')
+
+    cmd_check_translations = commands.add_parser('check_translations',
+                                                 help='Display translation status of the project.')
+    cmd_check_translations.add_argument('source', type=absolute_path)
+    cmd_check_translations.add_argument('--strict', action='store_true')
 
     args = parser.parse_args()
     RT.TMP = args.tmpdir
@@ -61,8 +67,13 @@ async def async_main():  # pragma: no cover
         case 'validate_dictionary':
             exit_code = validate_dictionary(args.dic, autofix=args.autofix)
 
+        case 'check_translations':
+            project = load_project(args.source)
+            exit_code = check_translations(project, strict=args.strict)
+
         case _:
             raise NotImplementedError(args.command)
+
     sys.exit(exit_code or 0)
 
 

@@ -10,10 +10,10 @@ disable=
 max-line-length=120
 good-names=
     i,k,m,v,x,
-    li,tm,
+    li,ok,tm,
 
 [BASIC]
-class-rgx=[A-Z][A-z0-9]+(_?[A-Z][A-z0-9]+)*
+class-rgx=_?[A-Z][A-z0-9]+(_?[A-Z][A-z0-9]+)*
 method-rgx=[a-z0-9_]+
 attr-rgx=[a-z0-9_]+
 
