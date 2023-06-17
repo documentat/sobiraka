@@ -64,12 +64,12 @@ class TestVersioning(ProjectDirTestCase):
 
     def test_translation_status(self):
         data: dict[Path, TranslationStatus] = {
-            Path('src-en/0-index.md'): TranslationStatus.LATEST,
-            Path('src-en/aaa.md'): TranslationStatus.LATEST,
-            Path('src-en/bbb.md'): TranslationStatus.LATEST,
+            Path('src-en/0-index.md'): TranslationStatus.UPTODATE,
+            Path('src-en/aaa.md'): TranslationStatus.UPTODATE,
+            Path('src-en/bbb.md'): TranslationStatus.UPTODATE,
 
-            Path('src-ru/0-index.md'): TranslationStatus.LATEST,
-            Path('src-ru/aaa.md'): TranslationStatus.IMPERFECT,
+            Path('src-ru/0-index.md'): TranslationStatus.UPTODATE,
+            Path('src-ru/aaa.md'): TranslationStatus.MODIFIED,
             Path('src-ru/bbb.md'): TranslationStatus.OUTDATED,
         }
         for path, expected in data.items():

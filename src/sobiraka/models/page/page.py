@@ -174,9 +174,9 @@ class Page:
         orig_version = self.original.meta.version
 
         if this_version == orig_version:
-            return TranslationStatus.LATEST
+            return TranslationStatus.UPTODATE
         if this_version.major == orig_version.major:
-            return TranslationStatus.IMPERFECT
+            return TranslationStatus.MODIFIED
         return TranslationStatus.OUTDATED
 
 

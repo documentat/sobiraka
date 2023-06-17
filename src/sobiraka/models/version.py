@@ -25,6 +25,6 @@ class Version:
 
 
 class TranslationStatus(Enum):
-    LATEST = auto()
-    IMPERFECT = auto()
+    UPTODATE = auto()
+    MODIFIED = auto()
     OUTDATED = auto()
