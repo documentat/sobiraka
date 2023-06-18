@@ -42,21 +42,23 @@ async def async_main():  # pragma: no cover
     args = parser.parse_args()
     RT.TMP = args.tmpdir
 
-    match args.command:
-        case None:
-            parser.print_help()
-            exit_code = 1
+    if args.command is None:
+        parser.print_help()
+        exit_code = 1
 
-        case 'html':
+    else:
+        cmd = commands.choices.get(args.command)
+
+        if cmd is cmd_html:
             project = load_project(args.source)
             exit_code = await HtmlBuilder(project, args.target).run()
 
-        case 'pdf':
+        elif cmd is cmd_pdf:
             project = load_project(args.source)
             volume = project.get_volume(args.volume)
             exit_code = await PdfBuilder(volume, args.target).run()
 
-        case 'lint':
+        elif cmd is cmd_lint:
             project = load_project(args.source)
             volume = project.get_volume(args.volume)
             linter = Linter(volume)
@@ -64,14 +66,14 @@ async def async_main():  # pragma: no cover
             if exit_code != 0:
                 linter.print_issues()
 
-        case 'validate_dictionary':
+        elif cmd is cmd_validate_dictionary:
             exit_code = validate_dictionary(args.dic, autofix=args.autofix)
 
-        case 'check_translations':
+        elif cmd is cmd_check_translations:
             project = load_project(args.source)
             exit_code = check_translations(project, strict=args.strict)
 
-        case _:
+        else:
             raise NotImplementedError(args.command)
 
     sys.exit(exit_code or 0)
