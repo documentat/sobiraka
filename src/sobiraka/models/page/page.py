@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from functools import cache, cached_property
+from functools import cached_property
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, overload
 
 import yaml
 
@@ -17,7 +17,6 @@ if TYPE_CHECKING:
 _META_PATTERN = re.compile(r'^---\n(.+\n)?---\n', re.DOTALL)
 
 
-@dataclass(frozen=True)
 class Page:
     """
     Representation of a single source file in the documentation.
@@ -25,19 +24,73 @@ class Page:
     During the processing by the :func:`.load_page()`, :func:`.process1()` and :func:`.process2()` functions,
     some of the page's fields may be altered.
     """
-    volume: Volume
-    """The :class:`.Volume` this page belongs to."""
 
-    path: Path
-    """Absolute path to the page source.
-    
-    :see also: :data:`relative_path`"""
+    @overload
+    def __init__(self, volume: Volume, path_in_volume: Path, /):
+        ...
+
+    @overload
+    def __init__(self, path_in_volume: Path, /):
+        ...
+
+    @overload
+    def __init__(self, meta: PageMeta, text: str, /):
+        ...
+
+    @overload
+    def __init__(self, text: str = '', /):
+        ...
+
+    def __init__(self, *args):
+        from sobiraka.models.volume import Volume
+
+        self.volume: Volume | None = None
+        self.path_in_volume: Path | None = None
+
+        self.__meta: PageMeta | None = None
+        self.__text: str | None = None
+
+        match args:
+            case Path() as path_in_volume,:
+                self.path_in_volume = path_in_volume
+
+            case Volume() as volume, Path() as path_in_volume:
+                self.volume = volume
+                self.path_in_volume = path_in_volume
+
+            case str() as raw_text,:
+                self.__meta, self.__text = _process_raw(raw_text)
+
+            case Path() as path_in_volume, PageMeta() as meta, str() as text:
+                self.path_in_volume = path_in_volume
+                self.__meta = meta
+                self.__text = text
+
+            case PageMeta() as meta, str() as text:
+                self.__meta = meta
+                self.__text = text
+
+            case ():
+                self.__meta = PageMeta()
+                self.__text = ''
+
+            case _:
+                raise TypeError(args)
+
+    def __eq__(self, other: Page):
+        try:
+            assert self.__class__ is other.__class__
+            assert self.volume is other.volume
+            assert self.path_in_volume == other.path_in_volume
+            return True
+        except AssertionError:
+            return False
 
     def __hash__(self):
-        return hash((id(self.volume), self.path))
+        return hash(id(self))
 
     def __repr__(self):
-        path = '/'.join(self.path.relative_to(self.volume.root).parts)
+        path = '/'.join(self.path_in_volume.parts)
         match path:
             case self.volume.autoprefix:
                 return f'<{self.__class__.__name__}: [{self.volume.autoprefix}]/{path}>'
@@ -51,18 +104,37 @@ class Page:
         assert self.volume.project == other.volume.project
         return (self.volume, self.path_in_volume) < (other.volume, other.path_in_volume)
 
+    # ------------------------------------------------------------------------------------------------------------------
+    # Getters for the main properties
+
+    @property
+    def meta(self) -> PageMeta:
+        if self.__meta is None:
+            raw_text = self.absolute_path.read_text('utf-8')
+            self.__meta, self.__text = _process_raw(raw_text)
+        return self.__meta
+
+    @property
+    def text(self) -> str:
+        if self.__text is None:
+            raw_text = self.absolute_path.read_text('utf-8')
+            self.__meta, self.__text = _process_raw(raw_text)
+        return self.__text
+
+    @property
+    def syntax(self) -> Syntax:
+        return Syntax(self.path_in_volume.suffix[1:])
+
+    # ------------------------------------------------------------------------------------------------------------------
+    # Paths and the position in the tree
+
+    @cached_property
+    def absolute_path(self) -> Path:
+        return self.volume.root / self.path_in_volume
+
     @cached_property
     def path_in_project(self) -> Path:
-        """Path to the page source, relative to :data:`.Project.root`."""
-        return self.path.relative_to(self.volume.project.base)
-
-    @cached_property
-    def path_in_volume(self) -> Path:
-        """Path to the page source, relative to :data:`.Volume.root`."""
-        return self.path.relative_to(self.volume.root)
-
-    def keys(self) -> tuple[Path, ...]:
-        return (self.path_in_project,)
+        return self.volume.relative_root / self.path_in_volume
 
     def is_root(self) -> bool:
         return False
@@ -78,7 +150,7 @@ class Page:
     def parent(self) -> Page | None:
         if self.is_root():
             return None
-        return self.volume.pages_by_path[self.path_in_project.parent]
+        return self.volume.pages_by_path[self.path_in_volume.parent]
 
     @cached_property
     def children(self) -> tuple[Page, ...]:
@@ -123,8 +195,8 @@ class Page:
 
         Equals to number of parts in the :data:`id` plus 1.
         """
-        level = len(self.path.relative_to(self.volume.root).parts) + 1
-        if self.path.stem == '0' or self.path.stem.startswith('0-'):
+        level = len(self.path_in_volume.parts) + 1
+        if self.path_in_volume.stem == '0' or self.path_in_volume.stem.startswith('0-'):
             level -= 1
         return level
 
@@ -141,27 +213,8 @@ class Page:
         """
         return self.volume.max_level - self.level + 1
 
-    @property
-    def syntax(self) -> Syntax:
-        return Syntax(self.path.suffix[1:])
-
-    # pylint: disable=method-cache-max-size-none
-    @cache
-    def _raw(self) -> str:
-        return self.path.read_text('utf-8')
-
-    def text(self) -> str:
-        return _META_PATTERN.sub('', self._raw())
-
-    @cached_property
-    def meta(self) -> PageMeta:
-        meta = {}
-        if m := _META_PATTERN.match(self._raw()):
-            yaml_text = m.group(1).strip()
-            if yaml_text:
-                meta = yaml.safe_load(m.group(1))
-        meta = PageMeta(meta)
-        return meta
+    # ------------------------------------------------------------------------------------------------------------------
+    # Translation-related properties
 
     @property
     def original(self) -> Page:
@@ -180,10 +233,21 @@ class Page:
         return TranslationStatus.OUTDATED
 
 
-class PageMeta(dict):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+def _process_raw(raw_text: str) -> tuple[PageMeta, str]:
+    if m := re.fullmatch(r'--- \n (.+\n)? --- (?: \n+ (.+) )?', raw_text, re.DOTALL | re.VERBOSE):
+        if meta_str := m.group(1):
+            meta = yaml.safe_load(meta_str)
+        else:
+            meta = {}
+        return PageMeta(**meta), m.group(2)
+    return PageMeta(), raw_text
 
-        self.version: Version | None = None
-        if 'version' in self:
-            self.version = Version.parse(str(self['version']))
+
+@dataclass(kw_only=True)
+class PageMeta:
+    version: Version = None
+
+    def __post_init__(self):
+        if self.version is not None:
+            if not isinstance(self.version, Version):
+                self.version = Version.parse(str(self.version))

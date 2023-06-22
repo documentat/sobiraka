@@ -34,11 +34,12 @@ class ProjectTestCase(IsolatedAsyncioTestCase, Generic[T], metaclass=ABCMeta):
         return Processor()
 
     def subTest(self, msg: Any = ..., **params: Any):
-        match msg:
-            case Page() as page:
-                return super().subTest(page.path_in_project.with_suffix(''))
-            case _:
-                return super().subTest(msg)
+        if isinstance(msg, Page):
+            return super().subTest(msg.path_in_project.with_suffix(''), **params)
+        elif msg is ...:
+            return super().subTest(**params)
+        else:
+            return super().subTest(msg, **params)
 
     def for_each_expected(self, suffix: str, *, subdir: str = '') -> Iterable[tuple[Page, Path]]:
         ok = True

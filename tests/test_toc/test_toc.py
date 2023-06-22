@@ -8,61 +8,53 @@ from bs4.formatter import Formatter
 
 from abstracttests.abstracttestwithrttmp import AbstractTestWithRtTmp
 from abstracttests.projecttestcase import ProjectTestCase
-from sobiraka.models import Page, Project, SubtreeToc, TocTreeItem
-from sobiraka.models.config import Config_Paths
+from sobiraka.models import IndexPage, Page, Project, SubtreeToc, TocTreeItem, Volume
 from sobiraka.processing import HtmlBuilder
 from sobiraka.processing.abstract import ProjectProcessor
 from sobiraka.processing.htmlbuilder import GlobalToc_HTML
 from sobiraka.runtime import RT
-from testutils import FakeVolume, assertNoDiff
+from testutils import assertNoDiff
 
 
 class TestToc(ProjectTestCase, metaclass=ABCMeta):
     ext: str
 
     def _init_project(self) -> Project:
-        return Project(
-            base=self.dir,
-            volumes=(
-                FakeVolume(
-                    paths=Config_Paths(
-                        root=self.dir,
-                    ),
-                    fake_files=tuple(re.sub('\.ext$', f'.{self.ext}', path) for path in (
-                        '0-index.ext',
-                        'part1/0-index.ext',
-                        'part1/chapter1/0-index.ext',
-                        'part1/chapter1/section1/0-index.ext',
-                        'part1/chapter1/section1/article1.ext',
-                        'part1/chapter1/section1/article2.ext',
-                        'part1/chapter1/section2/0-index.ext',
-                        'part1/chapter1/section2/article1.ext',
-                        'part1/chapter1/section2/article2.ext',
-                        'part1/chapter2/0-index.ext',
-                        'part1/chapter2/section1/0-index.ext',
-                        'part1/chapter2/section1/article1.ext',
-                        'part1/chapter2/section1/article2.ext',
-                        'part1/chapter2/section2/0-index.ext',
-                        'part1/chapter2/section2/article1.ext',
-                        'part1/chapter2/section2/article2.ext',
-                        'part2/0-index.ext',
-                        'part2/chapter1/0-index.ext',
-                        'part2/chapter1/section1/0-index.ext',
-                        'part2/chapter1/section1/article1.ext',
-                        'part2/chapter1/section1/article2.ext',
-                        'part2/chapter1/section2/0-index.ext',
-                        'part2/chapter1/section2/article1.ext',
-                        'part2/chapter1/section2/article2.ext',
-                        'part2/chapter2/0-index.ext',
-                        'part2/chapter2/section1/0-index.ext',
-                        'part2/chapter2/section1/article1.ext',
-                        'part2/chapter2/section1/article2.ext',
-                        'part2/chapter2/section2/0-index.ext',
-                        'part2/chapter2/section2/article1.ext',
-                        'part2/chapter2/section2/article2.ext',
-                    ))
-                ),
-            ))
+        return Project(self.dir, {
+            Path('src'): Volume({
+                Path() / f'0-index.{self.ext}': IndexPage('# ('),
+                Path() / 'part1' / f'0-index.{self.ext}': IndexPage('# part1'),
+                Path() / 'part1' / 'chapter1' / f'0-index.{self.ext}': IndexPage('# chapter1'),
+                Path() / 'part1' / 'chapter1' / 'section1' / f'0-index.{self.ext}': IndexPage('# section1'),
+                Path() / 'part1' / 'chapter1' / 'section1' / f'article1.{self.ext}': Page('# article1'),
+                Path() / 'part1' / 'chapter1' / 'section1' / f'article2.{self.ext}': Page('# article2'),
+                Path() / 'part1' / 'chapter1' / 'section2' / f'0-index.{self.ext}': IndexPage('# section2'),
+                Path() / 'part1' / 'chapter1' / 'section2' / f'article1.{self.ext}': Page('# article1'),
+                Path() / 'part1' / 'chapter1' / 'section2' / f'article2.{self.ext}': Page('# article2'),
+                Path() / 'part1' / 'chapter2' / f'0-index.{self.ext}': IndexPage('# chapter2'),
+                Path() / 'part1' / 'chapter2' / 'section1' / f'0-index.{self.ext}': IndexPage('# section1'),
+                Path() / 'part1' / 'chapter2' / 'section1' / f'article1.{self.ext}': Page('# article1'),
+                Path() / 'part1' / 'chapter2' / 'section1' / f'article2.{self.ext}': Page('# article2'),
+                Path() / 'part1' / 'chapter2' / 'section2' / f'0-index.{self.ext}': IndexPage('# section2'),
+                Path() / 'part1' / 'chapter2' / 'section2' / f'article1.{self.ext}': Page('# article1'),
+                Path() / 'part1' / 'chapter2' / 'section2' / f'article2.{self.ext}': Page('# article2'),
+                Path() / 'part2' / f'0-index.{self.ext}': IndexPage('# part2'),
+                Path() / 'part2' / 'chapter1' / f'0-index.{self.ext}': IndexPage('# chapter1'),
+                Path() / 'part2' / 'chapter1' / 'section1' / f'0-index.{self.ext}': IndexPage('# section1'),
+                Path() / 'part2' / 'chapter1' / 'section1' / f'article1.{self.ext}': Page('# article1'),
+                Path() / 'part2' / 'chapter1' / 'section1' / f'article2.{self.ext}': Page('# article2'),
+                Path() / 'part2' / 'chapter1' / 'section2' / f'0-index.{self.ext}': IndexPage('# section2'),
+                Path() / 'part2' / 'chapter1' / 'section2' / f'article1.{self.ext}': Page('# article1'),
+                Path() / 'part2' / 'chapter1' / 'section2' / f'article2.{self.ext}': Page('# article2'),
+                Path() / 'part2' / 'chapter2' / f'0-index.{self.ext}': IndexPage('# chapter2'),
+                Path() / 'part2' / 'chapter2' / 'section1' / f'0-index.{self.ext}': IndexPage('# section1'),
+                Path() / 'part2' / 'chapter2' / 'section1' / f'article1.{self.ext}': Page('# article1'),
+                Path() / 'part2' / 'chapter2' / 'section1' / f'article2.{self.ext}': Page('# article2'),
+                Path() / 'part2' / 'chapter2' / 'section2' / f'0-index.{self.ext}': IndexPage('# section2'),
+                Path() / 'part2' / 'chapter2' / 'section2' / f'article1.{self.ext}': Page('# article1'),
+                Path() / 'part2' / 'chapter2' / 'section2' / f'article2.{self.ext}': Page('# article2'),
+            }),
+        })
 
     def _init_processor(self):
         return ProjectProcessor(self.project)
@@ -92,8 +84,9 @@ class TestGlobalToc(TestToc, AbstractTestWithRtTmp):
         return HtmlBuilder(self.project, RT.TMP)
 
     async def test_get_roots(self):
-        expected: tuple[Page, ...] = (self.project.pages_by_path[Path('0-index.md')],)
-        actual = GlobalToc_HTML(self.processor, self.project.get_volume(), NotImplemented).get_roots()
+        expected: tuple[Page, ...] = (self.project.pages_by_path[Path('src/0-index.md')],)
+        toc = GlobalToc_HTML(self.processor, self.project.get_volume(), NotImplemented)
+        actual = toc.get_roots()
         self.assertSequenceEqual(expected, actual)
 
     async def test_global_toc_items(self):
@@ -143,13 +136,14 @@ class TestGlobalToc(TestToc, AbstractTestWithRtTmp):
                 ]),
             ]),
         ]
-        actual = await GlobalToc_HTML(self.processor, self.project.get_volume(), self.project.pages[0]).items()
+        toc = GlobalToc_HTML(self.processor, self.project.get_volume(), self.project.pages[0])
+        actual = await toc.items()
         self.assertEqual(expected, actual)
 
     async def test_global_toc_rendered(self):
         for name, path in (('root', Path('0-index.md')),
                            ('nonroot', Path('part1/chapter1/section1/article1.md'))):
-            page = self.project.pages_by_path[path]
+            page = self.project.get_volume().pages_by_path[path]
             with self.subTest(page):
                 expected_file = self.dir / 'expected' / 'global-html' / f'from-{name}.html'
 

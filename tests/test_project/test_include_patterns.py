@@ -1,11 +1,10 @@
-import re
+from pathlib import Path
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from textwrap import dedent
 from unittest import IsolatedAsyncioTestCase, main
 
 from sobiraka.models import Project
-from sobiraka.models.load import load_project
+from sobiraka.models.load import load_project_from_dict
 
 
 class TestIncludePatterns(IsolatedAsyncioTestCase):
@@ -13,8 +12,8 @@ class TestIncludePatterns(IsolatedAsyncioTestCase):
 
     def prepare_dirs(self):
         temp_dir: str = self.enterContext(TemporaryDirectory(prefix='sobiraka-test-'))
+        self.base = Path(temp_dir)
         self.root = Path(temp_dir)
-        self.manifest_path = self.root / 'project.yaml'
 
     async def asyncSetUp(self):
         self.root: Path
@@ -38,135 +37,139 @@ class TestIncludePatterns(IsolatedAsyncioTestCase):
             path.parent.mkdir(parents=True, exist_ok=True)
             path.touch()
 
-    async def project_from_yaml(self, data_yaml: str) -> Project:
-        data_yaml = dedent(data_yaml)
+    def prepare_project(self, manifest: dict) -> Project:
         if self.path_to_root:
-            data_yaml = re.sub(r'^paths:\n', f'paths:\n  root: {self.path_to_root}\n', data_yaml, flags=re.MULTILINE)
-        self.manifest_path.parent.mkdir(parents=True, exist_ok=True)
-        self.manifest_path.write_text(dedent(data_yaml))
-        return load_project(self.manifest_path)
+            manifest['paths']['root'] = self.path_to_root
+        return load_project_from_dict(manifest, base=self.base)
 
     def assertPagePaths(self, project: Project, expected_paths: tuple[Path, ...]):
-        actual_paths = tuple(p.path for p in project.pages)
+        actual_paths = tuple(p.path_in_volume for p in project.pages)
         self.assertSequenceEqual(expected_paths, actual_paths)
 
     ################################################################################
 
     async def test_empty(self):
-        project = await self.project_from_yaml('''
-            paths:
-              include: []
-        ''')
+        project = self.prepare_project({
+            'paths': {
+                'include': [],
+            }
+        })
         self.assertEqual(0, project.volumes[0].max_level)
         self.assertPagePaths(project, ())
 
     async def test_include_all(self):
-        project = await self.project_from_yaml('''
-            paths:
-              include: ['**/*.md']
-        ''')
+        project = self.prepare_project({
+            'paths': {
+                'include': ['**/*.md'],
+            }
+        })
         self.assertEqual(4, project.volumes[0].max_level)
         self.assertPagePaths(project, (
-            self.root,
-            self.root / 'intro.md',
-            self.root / 'part1',
-            self.root / 'part1' / 'chapter1.md',
-            self.root / 'part1' / 'chapter2.md',
-            self.root / 'part1' / 'chapter3.md',
-            self.root / 'part2',
-            self.root / 'part2' / 'chapter1.md',
-            self.root / 'part2' / 'chapter2.md',
-            self.root / 'part2' / 'chapter3.md',
-            self.root / 'part3',
-            self.root / 'part3' / 'subdir',
-            self.root / 'part3' / 'subdir' / 'chapter1.md',
-            self.root / 'part3' / 'subdir' / 'chapter2.md',
-            self.root / 'part3' / 'subdir' / 'chapter3.md',
+            Path(),
+            Path() / 'intro.md',
+            Path() / 'part1',
+            Path() / 'part1' / 'chapter1.md',
+            Path() / 'part1' / 'chapter2.md',
+            Path() / 'part1' / 'chapter3.md',
+            Path() / 'part2',
+            Path() / 'part2' / 'chapter1.md',
+            Path() / 'part2' / 'chapter2.md',
+            Path() / 'part2' / 'chapter3.md',
+            Path() / 'part3',
+            Path() / 'part3' / 'subdir',
+            Path() / 'part3' / 'subdir' / 'chapter1.md',
+            Path() / 'part3' / 'subdir' / 'chapter2.md',
+            Path() / 'part3' / 'subdir' / 'chapter3.md',
         ))
 
     async def test_include_only_top_level(self):
-        project = await self.project_from_yaml('''
-            paths:
-              include: ['*.md']
-        ''')
+        project = self.prepare_project({
+            'paths': {
+                'include': ['*.md'],
+            }
+        })
         self.assertEqual(2, project.volumes[0].max_level)
         self.assertPagePaths(project, (
-            self.root,
-            self.root / 'intro.md',
+            Path(),
+            Path() / 'intro.md',
         ))
 
     async def test_include_only_part2(self):
-        project = await self.project_from_yaml('''
-            paths:
-              include: ['part2/*.md']
-        ''')
+        project = self.prepare_project({
+            'paths': {
+                'include': ['part2/*.md'],
+            }
+        })
         self.assertEqual(3, project.volumes[0].max_level)
         self.assertPagePaths(project, (
-            self.root,
-            self.root / 'part2',
-            self.root / 'part2' / 'chapter1.md',
-            self.root / 'part2' / 'chapter2.md',
-            self.root / 'part2' / 'chapter3.md',
+            Path(),
+            Path() / 'part2',
+            Path() / 'part2' / 'chapter1.md',
+            Path() / 'part2' / 'chapter2.md',
+            Path() / 'part2' / 'chapter3.md',
         ))
 
     async def test_include_only_chapters3(self):
-        project = await self.project_from_yaml('''
-            paths:
-              include: ['**/chapter3.md']
-        ''')
+        project = self.prepare_project({
+            'paths': {
+                'include': ['**/chapter3.md'],
+            }
+        })
         self.assertEqual(4, project.volumes[0].max_level)
         self.assertPagePaths(project, (
-            self.root,
-            self.root / 'part1',
-            self.root / 'part1' / 'chapter3.md',
-            self.root / 'part2',
-            self.root / 'part2' / 'chapter3.md',
-            self.root / 'part3',
-            self.root / 'part3' / 'subdir',
-            self.root / 'part3' / 'subdir' / 'chapter3.md',
+            Path(),
+            Path() / 'part1',
+            Path() / 'part1' / 'chapter3.md',
+            Path() / 'part2',
+            Path() / 'part2' / 'chapter3.md',
+            Path() / 'part3',
+            Path() / 'part3' / 'subdir',
+            Path() / 'part3' / 'subdir' / 'chapter3.md',
         ))
 
     async def test_include_all_except_part2(self):
-        project = await self.project_from_yaml('''
-            paths:
-              include: ['**/*.md']
-              exclude: ['**/part2/*.md']
-        ''')
+        project = self.prepare_project({
+            'paths': {
+                'include': ['**/*.md'],
+                'exclude': ['**/part2/*.md'],
+            }
+        })
         self.assertEqual(4, project.volumes[0].max_level)
         self.assertPagePaths(project, (
-            self.root,
-            self.root / 'intro.md',
-            self.root / 'part1',
-            self.root / 'part1' / 'chapter1.md',
-            self.root / 'part1' / 'chapter2.md',
-            self.root / 'part1' / 'chapter3.md',
-            self.root / 'part3',
-            self.root / 'part3' / 'subdir',
-            self.root / 'part3' / 'subdir' / 'chapter1.md',
-            self.root / 'part3' / 'subdir' / 'chapter2.md',
-            self.root / 'part3' / 'subdir' / 'chapter3.md',
+            Path(),
+            Path() / 'intro.md',
+            Path() / 'part1',
+            Path() / 'part1' / 'chapter1.md',
+            Path() / 'part1' / 'chapter2.md',
+            Path() / 'part1' / 'chapter3.md',
+            Path() / 'part3',
+            Path() / 'part3' / 'subdir',
+            Path() / 'part3' / 'subdir' / 'chapter1.md',
+            Path() / 'part3' / 'subdir' / 'chapter2.md',
+            Path() / 'part3' / 'subdir' / 'chapter3.md',
         ))
 
     async def test_include_all_except_chapters3(self):
-        project = await self.project_from_yaml('''
-            paths:
-              include: ['**/*.md']
-              exclude: ['**/chapter3.md']
-        ''')
+        project = self.prepare_project({
+            'paths': {
+                'include': ['**/*.md'],
+                'exclude': ['**/chapter3.md'],
+            }
+        })
         self.assertEqual(4, project.volumes[0].max_level)
         self.assertPagePaths(project, (
-            self.root,
-            self.root / 'intro.md',
-            self.root / 'part1',
-            self.root / 'part1' / 'chapter1.md',
-            self.root / 'part1' / 'chapter2.md',
-            self.root / 'part2',
-            self.root / 'part2' / 'chapter1.md',
-            self.root / 'part2' / 'chapter2.md',
-            self.root / 'part3',
-            self.root / 'part3' / 'subdir',
-            self.root / 'part3' / 'subdir' / 'chapter1.md',
-            self.root / 'part3' / 'subdir' / 'chapter2.md',
+            Path(),
+            Path() / 'intro.md',
+            Path() / 'part1',
+            Path() / 'part1' / 'chapter1.md',
+            Path() / 'part1' / 'chapter2.md',
+            Path() / 'part2',
+            Path() / 'part2' / 'chapter1.md',
+            Path() / 'part2' / 'chapter2.md',
+            Path() / 'part3',
+            Path() / 'part3' / 'subdir',
+            Path() / 'part3' / 'subdir' / 'chapter1.md',
+            Path() / 'part3' / 'subdir' / 'chapter2.md',
         ))
 
 

@@ -33,7 +33,7 @@ class Linter(LintPreprocessor):
     async def check_page(self, page: Page):
         tm = self._tm[page]
 
-        if self.volume.lint.dictionaries:
+        if self.volume.config.lint.dictionaries:
             words: list[str] = []
             for phrase in tm.clean_phrases:
                 words += phrase.split()
@@ -46,7 +46,7 @@ class Linter(LintPreprocessor):
                 self.issues[page].append(MisspelledWords(page.path_in_project, tuple(misspelled_words)))
 
         for phrase in tm.phrases:
-            if self.volume.lint.checks.phrases_must_begin_with_capitals:
+            if self.volume.config.lint.checks.phrases_must_begin_with_capitals:
                 async for issue in self.check__phrases_must_begin_with_capitals(phrase):
                     self.issues[page].append(issue)
 

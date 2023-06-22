@@ -1,10 +1,9 @@
 from __future__ import annotations
 
 from contextlib import suppress
-from dataclasses import dataclass, field
 from functools import cached_property
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, overload
 
 from more_itertools import unique_justseen
 from utilspie.collectionsutils import frozendict
@@ -14,21 +13,42 @@ if TYPE_CHECKING:
     from .volume import Volume
 
 
-@dataclass(kw_only=True, frozen=True)
 class Project:
     """
     A single documentation project that needs to be processed and rendered.
     """
-    base: Path
 
-    volumes: tuple[Volume, ...] = field(hash=False)
-    primary_volume: Volume = field(hash=False, default=None)
+    @overload
+    def __init__(self, base: Path, volumes: tuple[Volume, ...]):
+        ...
 
-    def __post_init__(self):
-        for volume in self.volumes:
-            object.__setattr__(volume, 'project', self)
-        if self.primary_volume is None:
-            object.__setattr__(self, 'primary_volume', self.volumes[0])
+    @overload
+    def __init__(self, base: Path, volumes: dict[Path, Volume]):
+        ...
+
+    def __init__(self, *args):
+        self.base: Path
+        self.volumes: tuple[Volume, ...]
+        self.primary_volume: Volume
+
+        match args:
+            case Path() as base, tuple() as volumes:
+                self.base = base
+                self.volumes = volumes
+                self.primary_volume = self.volumes[0]
+                for volume in self.volumes:
+                    volume.project = self
+
+            case Path() as base, dict() as volumes:
+                self.base = base
+                self.volumes = tuple(volumes.values())
+                self.primary_volume = self.volumes[0]
+                for relative_root, volume in volumes.items():
+                    volume.project = self
+                    volume.root = base / relative_root
+
+            case _:
+                raise TypeError(args)
 
     def __repr__(self):
         return f'<{self.__class__.__name__}: {str(self.base)!r}>'
@@ -44,6 +64,7 @@ class Project:
                 for volume in self.volumes:
                     if volume.lang == lang and volume.codename == codename:
                         return volume
+
             case None:
                 assert len(self.volumes) == 1
                 return self.volumes[0]
@@ -55,8 +76,7 @@ class Project:
             volume = self.get_volume((lang_or_volume, page.volume.codename))
         else:
             volume = lang_or_volume
-        path_tr = volume.relative_root / page.path_in_volume
-        page_tr = volume.pages_by_path[path_tr]
+        page_tr = volume.pages_by_path[page.path_in_volume]
         return page_tr
 
     def get_all_translations(self, page: Page) -> tuple[Page, ...]:
@@ -72,11 +92,12 @@ class Project:
     def pages_by_path(self) -> dict[Path, Page]:
         pages_by_path = {}
         for volume in self.volumes:
-            pages_by_path |= volume.pages_by_path
+            for path_in_volume, page in volume.pages_by_path.items():
+                pages_by_path[volume.relative_root / path_in_volume] = page
         return frozendict(pages_by_path)
 
-    @cached_property
+    @property  # TODO
     def pages(self) -> tuple[Page, ...]:
-        pages = sorted(self.pages_by_path.values(), key=lambda p: p.path)
+        pages = sorted(self.pages_by_path.values(), key=lambda p: p.path_in_project)
         pages = list(unique_justseen(pages))
         return tuple(pages)

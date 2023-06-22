@@ -9,7 +9,7 @@ from utilspie.collectionsutils import frozendict
 
 from sobiraka.runtime import RT
 from sobiraka.utils import convert_or_none, merge_dicts
-from .config import Config_HTML, Config_Lint, Config_Lint_Checks, Config_PDF, Config_Paths
+from .config import Config, Config_HTML, Config_Lint, Config_Lint_Checks, Config_PDF, Config_Paths
 from .project import Project
 from .volume import Volume
 
@@ -44,13 +44,11 @@ def load_project_from_dict(manifest: dict, *, base: Path) -> Project:
             volume = _load_volume(lang, codename, volume_data, base)
             volumes[volume.autoprefix] = volume
 
-    primary_volume = None
-    if 'primary' in manifest:
-        primary_volume = volumes[manifest['primary']]
+    project = Project(base, tuple(volumes.values()))
 
-    project = Project(base=base,
-                      volumes=tuple(volumes.values()),
-                      primary_volume=primary_volume)
+    if 'primary' in manifest:
+        project.primary_volume = volumes[manifest['primary']]
+
     return project
 
 
@@ -82,9 +80,7 @@ def _load_volume(lang: str | None, codename: str, volume_data: dict, base: Path)
         return (base / (x or '')).resolve()
 
     # TODO get defaults directly from the Config_* classes
-    return Volume(
-        codename=codename,
-        lang=lang,
+    return Volume(lang, codename, Config(
         title=_('title'),
         paths=Config_Paths(
             root=global_path(_('paths.root')),
@@ -109,7 +105,7 @@ def _load_volume(lang: str | None, codename: str, volume_data: dict, base: Path)
             checks=Config_Lint_Checks(**_('lint.checks', {})),
         ),
         variables=frozendict(_('variables', {})),
-    )
+    ))
 
 
 def _load_html_theme(name: str, *, base: Path) -> Path:

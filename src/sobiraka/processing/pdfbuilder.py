@@ -38,7 +38,7 @@ class PdfBuilder(VolumeProcessor):
             'build.tex',
             '-halt-on-error',
             cwd=xelatex_workdir,
-            env=os.environ | {'TEXINPUTS': f'{self.volume.paths.resources}:'},
+            env=os.environ | {'TEXINPUTS': f'{self.volume.config.paths.resources}:'},
             stdin=DEVNULL,
             stdout=DEVNULL)
         await xelatex.wait()
@@ -56,9 +56,9 @@ class PdfBuilder(VolumeProcessor):
 
         latex_output.write((RT.FILES / 'base.sty').read_bytes())
         latex_output.write(b'\n\n' + (80 * b'%'))
-        if self.volume.pdf.header:
+        if self.volume.config.pdf.header:
             latex_output.write(b'\n\n')
-            latex_output.write(self.volume.pdf.header.read_bytes())
+            latex_output.write(self.volume.config.pdf.header.read_bytes())
             latex_output.write(b'\n\n' + (80 * b'%'))
         latex_output.write(b'\n\n\\begin{document}\n\\begin{sloppypar}')
 

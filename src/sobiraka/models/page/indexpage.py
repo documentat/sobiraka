@@ -11,9 +11,6 @@ class IndexPage(Page):
             return 'r'
         return re.sub(r'^(\d+-)?', '', self.path_in_project.parent.stem)
 
-    def keys(self) -> tuple[Path, ...]:
-        return self.path_in_project, self.path_in_project.parent
-
     def is_root(self) -> bool:
         return self.path_in_volume.parent == Path('.')
 
@@ -21,4 +18,4 @@ class IndexPage(Page):
     def parent(self) -> Page | None:
         if self.is_root():
             return None
-        return self.volume.pages_by_path[self.path_in_project.parent.parent]
+        return self.volume.pages_by_path[self.path_in_volume.parent.parent]

@@ -1,4 +1,4 @@
-from abc import abstractmethod, ABCMeta
+from abc import ABCMeta, abstractmethod
 from pathlib import Path
 from unittest import TestCase, main
 
@@ -52,16 +52,16 @@ class TestManifest_1L_1V(_TestManifest):
         self.assertEqual('en/vol1', self.volume.autoprefix)
 
     def test_title(self):
-        self.assertEqual('Documentation', self.volume.title)
+        self.assertEqual('Documentation', self.volume.config.title)
 
     def test_root(self):
         self.assertEqual(Path('/BASE/src/en'), self.volume.root)
 
     def test_include(self):
-        self.assertEqual(('one', 'two', 'three'), self.volume.paths.include)
+        self.assertEqual(('one', 'two', 'three'), self.volume.config.paths.include)
 
     def test_resources_prefix(self):
-        self.assertEqual('img', self.volume.html.resources_prefix)
+        self.assertEqual('img', self.volume.config.html.resources_prefix)
 
     YAML = '''
         languages:
@@ -268,7 +268,7 @@ class TestManifest_2L_2V(_TestManifest):
         expected_data = 'Documentation', 'Documentation', 'Документация', 'Документация'
         for i, (expected, volume) in enumerate(zip(expected_data, self.project.volumes, strict=True)):
             with self.subTest(f'{i} - {expected}'):
-                self.assertEqual(expected, volume.title)
+                self.assertEqual(expected, volume.config.title)
 
     def test_root(self):
         expected_data = Path('/BASE/src/en'), Path('/BASE/src/en'), Path('/BASE/src/ru'), Path('/BASE/src/ru')
@@ -281,13 +281,13 @@ class TestManifest_2L_2V(_TestManifest):
             'four', 'five', 'six')
         for i, (expected, volume) in enumerate(zip(expected_data, self.project.volumes, strict=True)):
             with self.subTest(f'{i} - {expected}'):
-                self.assertEqual(expected, volume.paths.include)
+                self.assertEqual(expected, volume.config.paths.include)
 
     def test_resources_prefix(self):
         expected_data = 4 * ('img',)
         for i, (expected, volume) in enumerate(zip(expected_data, self.project.volumes, strict=True)):
             with self.subTest(f'{i} - {expected}'):
-                self.assertEqual(expected, volume.html.resources_prefix)
+                self.assertEqual(expected, volume.config.html.resources_prefix)
 
     def test_primary_volume(self):
         self.assertEqual('ru/vol1', self.project.primary_volume.autoprefix)

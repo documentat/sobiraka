@@ -11,7 +11,7 @@ def exceptions_regexp(volume: Volume) -> re.Pattern | None:
     If the volume declares no exceptions, returns `None`.
     """
     regexp_parts: list[str] = []
-    for exceptions_path in volume.lint.exceptions:
+    for exceptions_path in volume.config.lint.exceptions:
         with exceptions_path.open() as exceptions_file:
             for line in exceptions_file:
                 line = line.strip()

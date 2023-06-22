@@ -133,7 +133,7 @@ class HtmlBuilder(ProjectProcessor):
             case _:
                 raise TypeError(page.__class__.__name__)
 
-        prefix = page.volume.html.prefix or '$AUTOPREFIX'
+        prefix = page.volume.config.html.prefix or '$AUTOPREFIX'
         prefix = re.sub(r'\$\w+', partial(self.replace_in_prefix, page), prefix)
         prefix = os.path.join(*prefix.split('/'))
 
