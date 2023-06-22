@@ -2,14 +2,27 @@ from contextlib import redirect_stderr, redirect_stdout
 from io import StringIO
 from pathlib import Path
 from textwrap import dedent
-from unittest import main
+from unittest import TestCase, main
 
-from abstracttests.projectdirtestcase import ProjectDirTestCase
-from sobiraka.models import TranslationStatus, Version
+from sobiraka.models import IndexPage, Page, PageMeta, Project, TranslationStatus, Version, Volume
 from sobiraka.utils import check_translations
 
 
-class TestVersioning(ProjectDirTestCase):
+class TestVersioning(TestCase):
+    def setUp(self):
+        super().setUp()
+        self.project = Project(Path('/project'), {
+            Path('src-en'): Volume('en', '', {
+                Path('0-index.md'): IndexPage(PageMeta(version=Version(1, 0)), ''),
+                Path('aaa.md'): Page(PageMeta(version=Version(3, 4)), ''),
+                Path('bbb.md'): Page(PageMeta(version=Version(6, 2)), ''),
+            }),
+            Path('src-ru'): Volume('ru', '', {
+                Path('0-index.md'): IndexPage(PageMeta(version=Version(1, 0)), ''),
+                Path('aaa.md'): Page(PageMeta(version=Version(3, 2)), ''),
+                Path('bbb.md'): Page(PageMeta(version=Version(5, 2)), ''),
+            })
+        })
 
     def test_get_translation(self):
         data: dict[str, dict[Path, Path]] = {
@@ -103,8 +116,6 @@ class TestVersioning(ProjectDirTestCase):
                     self.assertEqual('', _stdout.getvalue())
                     self.assertEqual(expected, _stderr.getvalue())
 
-
-del ProjectDirTestCase
 
 if __name__ == '__main__':
     main()
