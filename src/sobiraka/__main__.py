@@ -7,7 +7,8 @@ from sobiraka.linter import Linter
 from sobiraka.models.load import load_project
 from sobiraka.processing import HtmlBuilder, PdfBuilder
 from sobiraka.runtime import RT
-from sobiraka.utils import check_translations, validate_dictionary
+from sobiraka.translating import check_translations
+from sobiraka.utils import validate_dictionary
 
 
 async def async_main():  # pragma: no cover

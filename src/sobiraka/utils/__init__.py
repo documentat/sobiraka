@@ -1,4 +1,3 @@
-from .check_translations import check_translations
 from .convert_or_none import convert_or_none
 from .debug import save_debug_json
 from .latex import LatexBlock, LatexInline

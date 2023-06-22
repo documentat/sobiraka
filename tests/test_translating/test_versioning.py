@@ -5,7 +5,7 @@ from textwrap import dedent
 from unittest import TestCase, main
 
 from sobiraka.models import IndexPage, Page, PageMeta, Project, TranslationStatus, Version, Volume
-from sobiraka.utils import check_translations
+from sobiraka.translating import check_translations
 
 
 class TestVersioning(TestCase):
