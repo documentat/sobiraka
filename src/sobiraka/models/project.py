@@ -54,27 +54,39 @@ class Project:
     def __repr__(self):
         return f'<{self.__class__.__name__}: {str(self.base)!r}>'
 
-    def get_volume(self, key: str | tuple[str | None, str | None] | None = None) -> Volume:
-        match key:
-            case str() as autoprefix:
+    @overload
+    def get_volume(self, autoprefix: str) -> Volume:
+        ...
+
+    @overload
+    def get_volume(self, lang: str | None, codename: str | None) -> Volume:
+        ...
+
+    @overload
+    def get_volume(self) -> Volume:
+        ...
+
+    def get_volume(self, *args) -> Volume:
+        match args:
+            case str() as autoprefix,:
                 for volume in self.volumes:
                     if volume.autoprefix == autoprefix:
                         return volume
 
-            case (str() | None as lang, str() | None as codename):
+            case str() | None as lang, str() | None as codename:
                 for volume in self.volumes:
                     if volume.lang == lang and volume.codename == codename:
                         return volume
 
-            case None:
+            case ():
                 assert len(self.volumes) == 1
                 return self.volumes[0]
 
-        raise KeyError(key)
+        raise KeyError(args)
 
     def get_translation(self, page: Page, lang_or_volume: str | Volume) -> Page:
         if isinstance(lang_or_volume, str):
-            volume = self.get_volume((lang_or_volume, page.volume.codename))
+            volume = self.get_volume(lang_or_volume, page.volume.codename)
         else:
             volume = lang_or_volume
         page_tr = volume.pages_by_path[page.path_in_volume]
