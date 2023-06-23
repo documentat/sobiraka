@@ -30,6 +30,7 @@ class Project:
         self.base: Path
         self.volumes: tuple[Volume, ...]
         self.primary_volume: Volume
+        self.manifest_path: Path | None = None
 
         match args:
             case Path() as base, tuple() as volumes:

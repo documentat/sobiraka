@@ -25,7 +25,9 @@ def load_project(manifest_path: Path) -> Project:
     manifest_path = manifest_path.resolve()
     with manifest_path.open() as manifest_file:
         manifest: dict = yaml.safe_load(manifest_file) or {}
-    return load_project_from_dict(manifest, base=manifest_path.parent)
+    project = load_project_from_dict(manifest, base=manifest_path.parent)
+    project.manifest_path = manifest_path
+    return project
 
 
 def load_project_from_str(manifest_yaml: str, *, base: Path) -> Project:
