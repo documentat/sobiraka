@@ -10,7 +10,7 @@ disable=
 max-line-length=120
 good-names=
     i,k,m,v,x,
-    li,ok,tm,
+    li,ok,tm,v1,v2,
 
 [BASIC]
 class-rgx=_?[A-Z][A-z0-9]+(_?[A-Z][A-z0-9]+)*

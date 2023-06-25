@@ -1,0 +1,8 @@
+languages:
+  en:
+    paths:
+      root: en
+
+  ru:
+    paths:
+      root: ru

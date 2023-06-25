@@ -84,6 +84,14 @@ class Project:
 
         raise KeyError(args)
 
+    def get_volume_by_path(self, path_in_project: Path) -> Volume:
+        if path_in_project.is_absolute():
+            path_in_project = path_in_project.relative_to(self.base)
+        for volume in self.volumes:
+            if volume.relative_root in path_in_project.parents:
+                return volume
+        raise KeyError(path_in_project)
+
     def get_translation(self, page: Page, lang_or_volume: str | Volume) -> Page:
         if isinstance(lang_or_volume, str):
             volume = self.get_volume(lang_or_volume, page.volume.codename)

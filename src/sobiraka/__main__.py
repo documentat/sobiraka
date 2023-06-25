@@ -7,11 +7,13 @@ from sobiraka.linter import Linter
 from sobiraka.models.load import load_project
 from sobiraka.processing import HtmlBuilder, PdfBuilder
 from sobiraka.runtime import RT
-from sobiraka.translating import check_translations
+from sobiraka.translating import check_translations, changelog
 from sobiraka.utils import validate_dictionary
 
 
-async def async_main():  # pragma: no cover
+async def async_main():
+    # pylint: disable=too-many-statements
+
     parser = ArgumentParser()
     parser.add_argument('--tmpdir', type=absolute_path, default=absolute_path('build'))
 
@@ -39,6 +41,12 @@ async def async_main():  # pragma: no cover
                                                  help='Display translation status of the project.')
     cmd_check_translations.add_argument('project', type=absolute_path)
     cmd_check_translations.add_argument('--strict', action='store_true')
+
+    cmd_diff = commands.add_parser('diff',
+                                   help='Display changes in translation versions between two git commits.')
+    cmd_diff.add_argument('project', type=absolute_path)
+    cmd_diff.add_argument('commit1')
+    cmd_diff.add_argument('commit2', default='HEAD')
 
     args = parser.parse_args()
     RT.TMP = args.tmpdir
@@ -73,6 +81,9 @@ async def async_main():  # pragma: no cover
         elif cmd is cmd_check_translations:
             project = load_project(args.project)
             exit_code = check_translations(project, strict=args.strict)
+
+        elif cmd is cmd_diff:
+            exit_code = changelog(args.project, args.commit1, args.commit2)
 
         else:
             raise NotImplementedError(args.command)
