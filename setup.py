@@ -4,7 +4,7 @@ setup(
     name='sobiraka',
     version='0.0.1',
     author='Max Alibaev',
-    python_requires='~=3.10',
+    python_requires='~=3.11',
     install_requires=[
         'aiofiles~=23.1.0',
         'beautifulsoup4~=4.12.2',
