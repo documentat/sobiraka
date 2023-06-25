@@ -8,6 +8,7 @@ setup(
     install_requires=[
         'aiofiles~=23.1.0',
         'beautifulsoup4~=4.12.2',
+        'clint~=0.5.1',
         'jinja2~=3.1.2',
         'jsonschema~=4.17.3',
         'more-itertools~=9.0.0',

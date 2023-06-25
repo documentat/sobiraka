@@ -98,20 +98,19 @@ class TestVersioning(TestCase):
     def test_check_translations(self):
         expected = dedent('''
         en:
-        \033[32m  This is the primary volume\033[0m
-        \033[32m  Pages: 3\033[0m
+          This is the primary volume
+          Pages: 3
         ru:
-        \033[32m  Up-to-date pages: 1\033[0m
-        \033[33m  Modified pages: 1\033[0m
-        \033[33m    src-ru/aaa.md\033[0m
-        \033[31m  Outdated pages: 1\033[0m
-        \033[31m    src-ru/bbb.md\033[0m
+          Up-to-date pages: 1
+          Modified pages: 1
+            src-ru/aaa.md
+          Outdated pages: 1
+            src-ru/bbb.md
         ''').lstrip()
 
         for strict in (False, True):
             with self.subTest(strict=strict):
-                with redirect_stdout(StringIO()) as _stdout, \
-                        redirect_stderr(StringIO()) as _stderr:
+                with redirect_stdout(StringIO()) as _stdout, redirect_stderr(StringIO()) as _stderr:
                     check_translations(self.project, strict=strict)
                     self.assertEqual('', _stdout.getvalue())
                     self.assertEqual(expected, _stderr.getvalue())
