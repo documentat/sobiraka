@@ -30,7 +30,23 @@ class Page:
         ...
 
     @overload
+    def __init__(self, volume: Volume, path_in_volume: Path, meta: PageMeta, text: str, /):
+        ...
+
+    @overload
+    def __init__(self, volume: Volume, path_in_volume: Path, raw_text: str, /):
+        ...
+
+    @overload
     def __init__(self, path_in_volume: Path, /):
+        ...
+
+    @overload
+    def __init__(self, path_in_volume: Path, meta: PageMeta, text: str, /):
+        ...
+
+    @overload
+    def __init__(self, path_in_volume: Path, raw_text: str, /):
         ...
 
     @overload
@@ -38,7 +54,7 @@ class Page:
         ...
 
     @overload
-    def __init__(self, text: str = '', /):
+    def __init__(self, raw_text: str = '', /):
         ...
 
     def __init__(self, *args):
@@ -51,20 +67,35 @@ class Page:
         self.__text: str | None = None
 
         match args:
-            case Path() as path_in_volume,:
-                self.path_in_volume = path_in_volume
-
             case Volume() as volume, Path() as path_in_volume:
                 self.volume = volume
                 self.path_in_volume = path_in_volume
 
-            case str() as raw_text,:
+            case Volume() as volume, Path() as path_in_volume, PageMeta() as meta, str() as text:
+                self.volume = volume
+                self.path_in_volume = path_in_volume
+                self.__meta = meta
+                self.__text = text
+
+            case Volume() as volume, Path() as path_in_volume, str() as raw_text:
+                self.volume = volume
+                self.path_in_volume = path_in_volume
                 self.__meta, self.__text = _process_raw(raw_text)
+
+            case Path() as path_in_volume,:
+                self.path_in_volume = path_in_volume
 
             case Path() as path_in_volume, PageMeta() as meta, str() as text:
                 self.path_in_volume = path_in_volume
                 self.__meta = meta
                 self.__text = text
+
+            case Path() as path_in_volume, str() as raw_text:
+                self.path_in_volume = path_in_volume
+                self.__meta, self.__text = _process_raw(raw_text)
+
+            case str() as raw_text,:
+                self.__meta, self.__text = _process_raw(raw_text)
 
             case PageMeta() as meta, str() as text:
                 self.__meta = meta

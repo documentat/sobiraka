@@ -29,8 +29,47 @@ class TestInitPage(TestCase):
             with self.subTest('path'):
                 self.assertEqual(page_path, page.absolute_path)
             with self.subTest('meta'):
-                self.assertIsInstance(page.meta, PageMeta)
-                self.assertEqual(Version(1, 23), page.meta.version)
+                self.assertEqual(PageMeta(version=Version(1,23)), page.meta)
+            with self.subTest('text'):
+                self.assertEqual('Hello, world!', page.text)
+
+    def test_with_volume_path_meta_text(self):
+        with TemporaryDirectory(prefix='sobiraka-test-') as tmpdir:
+            volume_root = Path(tmpdir)
+            page_path = volume_root / 'page.md'
+
+            volume = Mock(Volume, root=volume_root)
+            meta = PageMeta()
+            page = Page(volume, Path('page.md'), meta, 'Hello, world!')
+
+            with self.subTest('volume'):
+                self.assertIs(volume, page.volume)
+            with self.subTest('path'):
+                self.assertEqual(page_path, page.absolute_path)
+            with self.subTest('meta'):
+                self.assertIs(meta, page.meta)
+            with self.subTest('text'):
+                self.assertEqual('Hello, world!', page.text)
+
+    def test_with_volume_path_text(self):
+        with TemporaryDirectory(prefix='sobiraka-test-') as tmpdir:
+            volume_root = Path(tmpdir)
+            page_path = volume_root / 'page.md'
+
+            volume = Mock(Volume, root=volume_root)
+            page = Page(volume, Path('page.md'), dedent('''
+            ---
+            version: 1.23
+            ---
+            Hello, world!
+            ''').strip())
+
+            with self.subTest('volume'):
+                self.assertIs(volume, page.volume)
+            with self.subTest('path'):
+                self.assertEqual(page_path, page.absolute_path)
+            with self.subTest('meta'):
+               self.assertEqual(PageMeta(version=Version(1,23)), page.meta)
             with self.subTest('text'):
                 self.assertEqual('Hello, world!', page.text)
 
@@ -49,6 +88,38 @@ class TestInitPage(TestCase):
             with self.assertRaises(AttributeError):
                 _ = page.text
 
+    def test_with_path_meta_text(self):
+        path = Path('/example.md')
+        meta = PageMeta()
+        page = Page(path, meta, 'Hello, world!')
+
+        with self.subTest('volume'):
+            self.assertIsNone(page.volume)
+        with self.subTest('path'):
+            self.assertEqual(path, page.path_in_volume)
+        with self.subTest('meta'):
+            self.assertIs(meta, page.meta)
+        with self.subTest('text'):
+            self.assertEqual('Hello, world!', page.text)
+
+    def test_with_path_text(self):
+        path = Path('/example.md')
+        page = Page(path, dedent('''
+        ---
+        version: 1.23
+        ---
+        Hello, world!
+        ''').strip())
+
+        with self.subTest('volume'):
+            self.assertIsNone(page.volume)
+        with self.subTest('path'):
+            self.assertEqual(path, page.path_in_volume)
+        with self.subTest('meta'):
+            self.assertEqual(PageMeta(version=Version(1,23)), page.meta)
+        with self.subTest('text'):
+            self.assertEqual('Hello, world!', page.text)
+
     def test_with_meta_text(self):
         page = Page(PageMeta(version=Version(1, 23)), 'Hello, world!')
 
@@ -57,8 +128,7 @@ class TestInitPage(TestCase):
         with self.subTest('path'):
             self.assertIsNone(page.path_in_volume)
         with self.subTest('meta'):
-            self.assertIsInstance(page.meta, PageMeta)
-            self.assertEqual(Version(1, 23), page.meta.version)
+            self.assertEqual(PageMeta(version=Version(1,23)), page.meta)
         with self.subTest('text'):
             self.assertEqual('Hello, world!', page.text)
 
@@ -75,8 +145,7 @@ class TestInitPage(TestCase):
         with self.subTest('path'):
             self.assertIsNone(page.path_in_volume)
         with self.subTest('meta'):
-            self.assertIsInstance(page.meta, PageMeta)
-            self.assertEqual(Version(1, 23), page.meta.version)
+            self.assertEqual(PageMeta(version=Version(1,23)), page.meta)
         with self.subTest('text'):
             self.assertEqual('Hello, world!', page.text)
 
