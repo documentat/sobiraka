@@ -10,6 +10,7 @@ from utilspie.collectionsutils import frozendict
 from sobiraka.runtime import RT
 from sobiraka.utils import convert_or_none, merge_dicts
 from .config import Config, Config_HTML, Config_Lint, Config_Lint_Checks, Config_PDF, Config_Paths
+from .filesystem import RealFileSystem
 from .project import Project
 from .volume import Volume
 
@@ -46,7 +47,8 @@ def load_project_from_dict(manifest: dict, *, base: Path) -> Project:
             volume = _load_volume(lang, codename, volume_data, base)
             volumes[volume.autoprefix] = volume
 
-    project = Project(base, tuple(volumes.values()))
+    fs = RealFileSystem(base)
+    project = Project(fs, tuple(volumes.values()))
 
     if 'primary' in manifest:
         project.primary_volume = volumes[manifest['primary']]
@@ -78,15 +80,12 @@ def _load_volume(lang: str | None, codename: str, volume_data: dict, base: Path)
         except KeyError:
             return _default
 
-    def global_path(x: str) -> Path:
-        return (base / (x or '')).resolve()
-
     # TODO get defaults directly from the Config_* classes
     return Volume(lang, codename, Config(
         title=_('title'),
         paths=Config_Paths(
-            root=global_path(_('paths.root')),
-            resources=global_path(_('paths.resources')),
+            root=convert_or_none(Path, _('paths.root')) or base,
+            resources=convert_or_none(Path, _('paths.resources')),
             include=tuple(_('paths.include', ['**/*'])),
             exclude=tuple(_('paths.exclude', '')),
         ),
@@ -99,11 +98,11 @@ def _load_volume(lang: str | None, codename: str, volume_data: dict, base: Path)
             theme_data=_('html.theme_data', {}),
         ),
         pdf=Config_PDF(
-            header=convert_or_none(global_path, _('pdf.header')),
+            header=convert_or_none(Path, _('pdf.header')),
         ),
         lint=Config_Lint(
             dictionaries=tuple(_('lint.dictionaries', [])),
-            exceptions=tuple(global_path(x) for x in _('lint.exceptions', [])),
+            exceptions=tuple(map(Path, _('lint.exceptions', []))),
             checks=Config_Lint_Checks(**_('lint.checks', {})),
         ),
         variables=frozendict(_('variables', {})),

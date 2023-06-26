@@ -50,7 +50,7 @@ class Volume:
         self.lang: str | None = None
         self.codename: str | None = None
         self.config: Config = Config()
-        self.root: Path | None = None
+        self.relative_root: Path | None = None
 
         self.__initial_pages: Iterable[Page]
 
@@ -81,7 +81,7 @@ class Volume:
                 self.lang = lang
                 self.codename = codename
                 self.config = config
-                self.root = config.paths.root
+                self.relative_root = config.paths.root
                 self.__initial_pages = self._generate_pages(self._find_files())
 
             case Project() as project, str() | None as lang, str() | None as codename, Config() as config:
@@ -89,7 +89,7 @@ class Volume:
                 self.lang = lang
                 self.codename = codename
                 self.config = config
-                self.root = config.paths.root
+                self.relative_root = config.paths.root
                 self.__initial_pages = self._generate_pages(self._find_files())
 
             case _:
@@ -114,22 +114,16 @@ class Volume:
     def autoprefix(self) -> str | None:
         return '/'.join(filter(None, (self.lang, self.codename))) or None
 
-    @property
-    def relative_root(self) -> Path:
-        return self.root.relative_to(self.project.base)
-
     # ------------------------------------------------------------------------------------------------------------------
     # Pages and paths
 
     def _find_files(self) -> Iterable[Path]:
         paths: set[Path] = set()
-
         for pattern in self.config.paths.include:
-            paths |= set(self.root.glob(pattern))
+            paths |= set(self.project.fs.glob(self.relative_root, pattern))
         for pattern in self.config.paths.exclude:
-            paths -= set(self.root.glob(pattern))
-
-        yield from tuple(p.relative_to(self.root) for p in paths)
+            paths -= set(self.project.fs.glob(self.relative_root, pattern))
+        yield from paths
 
     def _generate_pages(self, paths: Iterable[Path]) -> Iterable[Page]:
         for path_in_volume in paths:

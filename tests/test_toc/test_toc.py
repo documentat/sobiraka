@@ -8,7 +8,7 @@ from bs4.formatter import Formatter
 
 from abstracttests.abstracttestwithrttmp import AbstractTestWithRtTmp
 from abstracttests.projecttestcase import ProjectTestCase
-from sobiraka.models import IndexPage, Page, Project, SubtreeToc, TocTreeItem, Volume
+from sobiraka.models import IndexPage, Page, Project, RealFileSystem, SubtreeToc, TocTreeItem, Volume
 from sobiraka.processing import HtmlBuilder
 from sobiraka.processing.abstract import ProjectProcessor
 from sobiraka.processing.htmlbuilder import GlobalToc_HTML
@@ -20,7 +20,7 @@ class TestToc(ProjectTestCase, metaclass=ABCMeta):
     ext: str
 
     def _init_project(self) -> Project:
-        return Project(self.dir, {
+        return Project(RealFileSystem(self.dir), {
             Path('src'): Volume({
                 Path() / f'0-index.{self.ext}': IndexPage('# ('),
                 Path() / 'part1' / f'0-index.{self.ext}': IndexPage('# part1'),

@@ -33,7 +33,7 @@ class HtmlBuilder(ProjectProcessor):
 
         # Copy the theme's static directory
         for volume in self.project.volumes:
-            static = volume.html.theme / '_static'
+            static = volume.config.html.theme / '_static'
             for source_path in static.rglob('**/*'):
                 if source_path.is_file():
                     target_path = self.output / '_static' / source_path.relative_to(static)
@@ -41,10 +41,10 @@ class HtmlBuilder(ProjectProcessor):
 
         # Copy additional static files
         for volume in self.project.volumes:
-            for filename in volume.html.resources_force_copy:
-                source_path = self.project.base / volume.html.resources_prefix / filename
-                target_path = self.output / volume.html.resources_prefix / filename
-                self._copying[target_path] = create_task(self.copy_file(source_path, target_path))
+            for filename in volume.config.html.resources_force_copy:
+                source_path = volume.config.html.resources_prefix / filename
+                target_path = self.output / volume.config.html.resources_prefix / filename
+                self._copying[target_path] = create_task(self.project.fs.copy(source_path, target_path))
 
         # Generate the HTML pages in no particular order
         for page in self.project.pages:
@@ -176,14 +176,14 @@ class HtmlBuilder(ProjectProcessor):
         if path.is_absolute():
             source_path = page.volume.paths.resources / path.relative_to('/')
         else:
-            source_path = (page.path.parent / path).resolve()
+            source_path = (page.path_in_project.parent / path).resolve()
 
         target_path = self.output \
                       / page.volume.html.resources_prefix \
                       / source_path.relative_to(page.volume.paths.resources)
 
         if target_path not in self._copying:
-            self._copying[target_path] = create_task(self.copy_file(source_path, target_path))
+            self._copying[target_path] = create_task(self.project.fs.copy(source_path, target_path))
         elem.url = relpath(target_path, start=self.make_target_path(page).parent)
         return (elem,)
 

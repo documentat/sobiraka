@@ -3,15 +3,17 @@ from io import StringIO
 from pathlib import Path
 from textwrap import dedent
 from unittest import TestCase, main
+from unittest.mock import Mock
 
 from sobiraka.models import IndexPage, Page, PageMeta, Project, TranslationStatus, Version, Volume
+from sobiraka.models.filesystem import FileSystem
 from sobiraka.translating import check_translations
 
 
 class TestVersioning(TestCase):
     def setUp(self):
         super().setUp()
-        self.project = Project(Path('/project'), {
+        self.project = Project(Mock(FileSystem), {
             Path('src-en'): Volume('en', '', {
                 Path('0-index.md'): IndexPage(PageMeta(version=Version(1, 0)), ''),
                 Path('aaa.md'): Page(PageMeta(version=Version(3, 4)), ''),

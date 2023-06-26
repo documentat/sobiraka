@@ -55,7 +55,7 @@ class TestManifest_1L_1V(_TestManifest):
         self.assertEqual('Documentation', self.volume.config.title)
 
     def test_root(self):
-        self.assertEqual(Path('/BASE/src/en'), self.volume.root)
+        self.assertEqual(Path('src/en'), self.volume.relative_root)
 
     def test_include(self):
         self.assertEqual(('one', 'two', 'three'), self.volume.config.paths.include)
@@ -271,10 +271,10 @@ class TestManifest_2L_2V(_TestManifest):
                 self.assertEqual(expected, volume.config.title)
 
     def test_root(self):
-        expected_data = Path('/BASE/src/en'), Path('/BASE/src/en'), Path('/BASE/src/ru'), Path('/BASE/src/ru')
+        expected_data = Path('src/en'), Path('src/en'), Path('src/ru'), Path('src/ru')
         for i, (expected, volume) in enumerate(zip(expected_data, self.project.volumes, strict=True)):
             with self.subTest(f'{i} - {expected}'):
-                self.assertEqual(expected, volume.root)
+                self.assertEqual(expected, volume.relative_root)
 
     def test_include(self):
         expected_data = ('one', 'two', 'three'), ('four', 'five', 'six'), ('one', 'two', 'three'), (

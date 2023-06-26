@@ -4,16 +4,17 @@ from textwrap import dedent
 from unittest import TestCase, main
 from unittest.mock import Mock
 
-from sobiraka.models import Page, PageMeta, Version, Volume
+from sobiraka.models import Page, PageMeta, Project, Version, Volume
+from sobiraka.models.filesystem import RealFileSystem
 
 
 class TestInitPage(TestCase):
 
     def test_with_volume_path(self):
         with TemporaryDirectory(prefix='sobiraka-test-') as tmpdir:
-            volume_root = Path(tmpdir)
+            root = Path(tmpdir)
 
-            page_path = volume_root / 'page.md'
+            page_path = root / 'page.md'
             page_path.write_text(dedent('''
             ---
             version: 1.23
@@ -21,13 +22,14 @@ class TestInitPage(TestCase):
             Hello, world!
             ''').strip())
 
-            volume = Mock(Volume, root=volume_root)
-            page = Page(volume, page_path)
+            project = Mock(Project, fs=RealFileSystem(root))
+            volume = Mock(Volume, project=project, relative_root=Path('.'))
+            page = Page(volume, Path('page.md'))
 
             with self.subTest('volume'):
                 self.assertIs(volume, page.volume)
-            with self.subTest('path'):
-                self.assertEqual(page_path, page.absolute_path)
+            with self.subTest('path_in_volume'):
+                self.assertEqual(Path('page.md'), page.path_in_volume)
             with self.subTest('meta'):
                 self.assertEqual(PageMeta(version=Version(1,23)), page.meta)
             with self.subTest('text'):
@@ -44,8 +46,8 @@ class TestInitPage(TestCase):
 
             with self.subTest('volume'):
                 self.assertIs(volume, page.volume)
-            with self.subTest('path'):
-                self.assertEqual(page_path, page.absolute_path)
+            with self.subTest('path_in_volume'):
+                self.assertEqual(Path('page.md'), page.path_in_volume)
             with self.subTest('meta'):
                 self.assertIs(meta, page.meta)
             with self.subTest('text'):
@@ -66,10 +68,10 @@ class TestInitPage(TestCase):
 
             with self.subTest('volume'):
                 self.assertIs(volume, page.volume)
-            with self.subTest('path'):
-                self.assertEqual(page_path, page.absolute_path)
+            with self.subTest('path_in_volume'):
+                self.assertEqual(Path('page.md'), page.path_in_volume)
             with self.subTest('meta'):
-               self.assertEqual(PageMeta(version=Version(1,23)), page.meta)
+                self.assertEqual(PageMeta(version=Version(1,23)), page.meta)
             with self.subTest('text'):
                 self.assertEqual('Hello, world!', page.text)
 

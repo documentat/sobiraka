@@ -8,6 +8,8 @@ from typing import TYPE_CHECKING, overload
 from more_itertools import unique_justseen
 from utilspie.collectionsutils import frozendict
 
+from .filesystem import FileSystem
+
 if TYPE_CHECKING:
     from .page import Page
     from .volume import Volume
@@ -19,40 +21,40 @@ class Project:
     """
 
     @overload
-    def __init__(self, base: Path, volumes: tuple[Volume, ...]):
+    def __init__(self, fs: FileSystem, volumes: tuple[Volume, ...]):
         ...
 
     @overload
-    def __init__(self, base: Path, volumes: dict[Path, Volume]):
+    def __init__(self, fs: FileSystem, volumes: dict[Path, Volume]):
         ...
 
     def __init__(self, *args):
-        self.base: Path
+        self.fs: FileSystem
         self.volumes: tuple[Volume, ...]
         self.primary_volume: Volume
         self.manifest_path: Path | None = None
 
         match args:
-            case Path() as base, tuple() as volumes:
-                self.base = base
+            case FileSystem() as fs, tuple() as volumes:
+                self.fs = fs
                 self.volumes = volumes
                 self.primary_volume = self.volumes[0]
                 for volume in self.volumes:
                     volume.project = self
 
-            case Path() as base, dict() as volumes:
-                self.base = base
+            case FileSystem() as fs, dict() as volumes:
+                self.fs = fs
                 self.volumes = tuple(volumes.values())
                 self.primary_volume = self.volumes[0]
                 for relative_root, volume in volumes.items():
                     volume.project = self
-                    volume.root = base / relative_root
+                    volume.relative_root = relative_root
 
             case _:
-                raise TypeError(args)
+                raise TypeError(*args)
 
     def __repr__(self):
-        return f'<{self.__class__.__name__}: {str(self.base)!r}>'
+        return f'<{self.__class__.__name__}: {self.fs}>'
 
     @overload
     def get_volume(self, autoprefix: str) -> Volume:
@@ -85,8 +87,6 @@ class Project:
         raise KeyError(args)
 
     def get_volume_by_path(self, path_in_project: Path) -> Volume:
-        if path_in_project.is_absolute():
-            path_in_project = path_in_project.relative_to(self.base)
         for volume in self.volumes:
             if volume.relative_root in path_in_project.parents:
                 return volume

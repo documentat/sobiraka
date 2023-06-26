@@ -141,14 +141,14 @@ class Page:
     @property
     def meta(self) -> PageMeta:
         if self.__meta is None:
-            raw_text = self.absolute_path.read_text('utf-8')
+            raw_text = self.volume.project.fs.read_text(self.path_in_project)
             self.__meta, self.__text = _process_raw(raw_text)
         return self.__meta
 
     @property
     def text(self) -> str:
         if self.__text is None:
-            raw_text = self.absolute_path.read_text('utf-8')
+            raw_text = self.volume.project.fs.read_text(self.path_in_project)
             self.__meta, self.__text = _process_raw(raw_text)
         return self.__text
 
@@ -158,10 +158,6 @@ class Page:
 
     # ------------------------------------------------------------------------------------------------------------------
     # Paths and the position in the tree
-
-    @cached_property
-    def absolute_path(self) -> Path:
-        return self.volume.root / self.path_in_volume
 
     @cached_property
     def path_in_project(self) -> Path:
