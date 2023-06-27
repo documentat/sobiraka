@@ -2,6 +2,8 @@ import shutil
 from pathlib import Path
 from typing import Iterable
 
+from wcmatch.glob import GLOBSTAR, NODIR, glob
+
 from .filesystem import FileSystem
 
 
@@ -29,5 +31,5 @@ class RealFileSystem(FileSystem):
 
     def glob(self, path: Path, pattern: str) -> Iterable[Path]:
         path = self.resolve(path)
-        for result in path.glob(pattern):
-            yield result.relative_to(path)
+        for result in glob(pattern, flags=GLOBSTAR | NODIR, root_dir=path, limit=0):
+            yield Path(result)
