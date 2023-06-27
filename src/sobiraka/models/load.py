@@ -10,7 +10,7 @@ from utilspie.collectionsutils import frozendict
 from sobiraka.runtime import RT
 from sobiraka.utils import convert_or_none, merge_dicts
 from .config import Config, Config_HTML, Config_Lint, Config_Lint_Checks, Config_PDF, Config_Paths
-from .filesystem import RealFileSystem
+from .filesystem import FileSystem, RealFileSystem
 from .project import Project
 from .volume import Volume
 
@@ -41,13 +41,14 @@ def load_project_from_dict(manifest: dict, *, base: Path) -> Project:
     if manifest:
         jsonschema.validate(manifest, MANIFEST_SCHEMA)
 
+    fs = RealFileSystem(base)
+
     volumes: dict[str, Volume] = {}
     for lang, language_data in _normalized_and_merged(manifest, 'languages'):
         for codename, volume_data in _normalized_and_merged(language_data, 'volumes'):
-            volume = _load_volume(lang, codename, volume_data, base)
+            volume = _load_volume(lang, codename, volume_data, fs)
             volumes[volume.autoprefix] = volume
 
-    fs = RealFileSystem(base)
     project = Project(fs, tuple(volumes.values()))
 
     if 'primary' in manifest:
@@ -70,7 +71,7 @@ def _normalized_and_merged(data: dict, key: str) -> Iterable[tuple[str, dict]]:
         yield from data[key].items()
 
 
-def _load_volume(lang: str | None, codename: str, volume_data: dict, base: Path) -> Volume:
+def _load_volume(lang: str | None, codename: str, volume_data: dict, fs: FileSystem) -> Volume:
     def _(_keys, _default=None):
         try:
             _result = volume_data
@@ -84,7 +85,7 @@ def _load_volume(lang: str | None, codename: str, volume_data: dict, base: Path)
     return Volume(lang, codename, Config(
         title=_('title'),
         paths=Config_Paths(
-            root=convert_or_none(Path, _('paths.root')) or base,
+            root=Path(_('paths.root', '.')),
             resources=convert_or_none(Path, _('paths.resources')),
             include=tuple(_('paths.include', ['**/*'])),
             exclude=tuple(_('paths.exclude', '')),
@@ -93,7 +94,7 @@ def _load_volume(lang: str | None, codename: str, volume_data: dict, base: Path)
             prefix=_('html.prefix', '$AUTOPREFIX'),
             resources_prefix=_('html.resources_prefix', '_resources'),
             resources_force_copy=_('html.resources_force_copy', ()),
-            theme=convert_or_none(partial(_load_html_theme, base=base), _('html.theme'))
+            theme=convert_or_none(partial(_load_html_theme, fs=fs), _('html.theme'))
                   or RT.FILES / 'themes' / 'simple',
             theme_data=_('html.theme_data', {}),
         ),
@@ -109,12 +110,16 @@ def _load_volume(lang: str | None, codename: str, volume_data: dict, base: Path)
     ))
 
 
-def _load_html_theme(name: str, *, base: Path) -> Path:
-    theme_dir = base / name
-    if theme_dir.exists() and theme_dir.is_dir():
+def _load_html_theme(name: str, *, fs: FileSystem) -> Path:
+    theme_dir = Path(name)
+    assert not theme_dir.is_absolute()
+
+    if fs.exists(theme_dir) and fs.is_dir(theme_dir):
         return theme_dir
-    if '/' not in name:
-        theme_dir = RT.FILES / 'themes' / name
+
+    if len(theme_dir.parts) == 1:
+        theme_dir = RT.FILES / 'themes' / theme_dir
         if theme_dir.exists() and theme_dir.is_dir():
             return theme_dir
-    raise FileNotFoundError(base / name)
+
+    raise FileNotFoundError(name)

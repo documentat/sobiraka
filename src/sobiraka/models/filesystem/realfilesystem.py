@@ -19,6 +19,12 @@ class RealFileSystem(FileSystem):
             return self.base / path
         return self.base
 
+    def exists(self, path: Path) -> bool:
+        return self.resolve(path).exists()
+
+    def is_dir(self, path: Path) -> bool:
+        return self.resolve(path).is_dir()
+
     def read_bytes(self, path: Path) -> bytes:
         return self.resolve(path).read_bytes()
 
