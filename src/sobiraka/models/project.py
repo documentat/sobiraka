@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, overload
 from more_itertools import unique_justseen
 from utilspie.collectionsutils import frozendict
 
-from .filesystem import FileSystem
+from sobiraka.models import FileSystem
 
 if TYPE_CHECKING:
     from .page import Page

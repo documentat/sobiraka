@@ -5,8 +5,7 @@ from textwrap import dedent
 from unittest import TestCase, main
 from unittest.mock import Mock
 
-from sobiraka.models import IndexPage, Page, PageMeta, Project, TranslationStatus, Version, Volume
-from sobiraka.models.filesystem import FileSystem
+from sobiraka.models import FileSystem, IndexPage, Page, PageMeta, Project, TranslationStatus, Version, Volume
 from sobiraka.translating import check_translations
 
 

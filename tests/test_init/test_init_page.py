@@ -4,8 +4,7 @@ from textwrap import dedent
 from unittest import TestCase, main
 from unittest.mock import Mock
 
-from sobiraka.models import Page, PageMeta, Project, Version, Volume
-from sobiraka.models.filesystem import RealFileSystem
+from sobiraka.models import Page, PageMeta, Project, RealFileSystem, Version, Volume
 
 
 class TestInitPage(TestCase):
