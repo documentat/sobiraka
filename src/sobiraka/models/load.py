@@ -26,22 +26,21 @@ def load_project(manifest_path: Path) -> Project:
     manifest_path = manifest_path.resolve()
     with manifest_path.open() as manifest_file:
         manifest: dict = yaml.safe_load(manifest_file) or {}
-    project = load_project_from_dict(manifest, base=manifest_path.parent)
+    fs = RealFileSystem(manifest_path.parent)
+    project = load_project_from_dict(manifest, fs=fs)
     project.manifest_path = manifest_path
     return project
 
 
-def load_project_from_str(manifest_yaml: str, *, base: Path) -> Project:
+def load_project_from_str(manifest_yaml: str, *, fs: FileSystem) -> Project:
     manifest_yaml = dedent(manifest_yaml)
     manifest: dict = yaml.safe_load(manifest_yaml) or {}
-    return load_project_from_dict(manifest, base=base)
+    return load_project_from_dict(manifest, fs=fs)
 
 
-def load_project_from_dict(manifest: dict, *, base: Path) -> Project:
+def load_project_from_dict(manifest: dict, *, fs: FileSystem) -> Project:
     if manifest:
         jsonschema.validate(manifest, MANIFEST_SCHEMA)
-
-    fs = RealFileSystem(base)
 
     volumes: dict[str, Volume] = {}
     for lang, language_data in _normalized_and_merged(manifest, 'languages'):

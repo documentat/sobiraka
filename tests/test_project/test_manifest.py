@@ -1,8 +1,9 @@
 from abc import ABCMeta, abstractmethod
 from pathlib import Path
 from unittest import TestCase, main
+from unittest.mock import Mock
 
-from sobiraka.models import Volume
+from sobiraka.models import FileSystem, Volume
 from sobiraka.models.load import load_project_from_str
 
 
@@ -10,7 +11,7 @@ class _TestManifest(TestCase, metaclass=ABCMeta):
     YAML = NotImplemented
 
     def setUp(self):
-        self.project = load_project_from_str(self.YAML, base=Path('/BASE'))
+        self.project = load_project_from_str(self.YAML, fs=Mock(FileSystem))
 
     @abstractmethod
     def test_lang(self): ...

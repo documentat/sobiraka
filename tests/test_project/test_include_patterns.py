@@ -1,9 +1,8 @@
 from pathlib import Path
-from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest import IsolatedAsyncioTestCase, main
 
-from sobiraka.models import Project
+from sobiraka.models import Project, RealFileSystem
 from sobiraka.models.load import load_project_from_dict
 
 
@@ -12,7 +11,7 @@ class TestIncludePatterns(IsolatedAsyncioTestCase):
 
     def prepare_dirs(self):
         temp_dir: str = self.enterContext(TemporaryDirectory(prefix='sobiraka-test-'))
-        self.base = Path(temp_dir)
+        self.fs = RealFileSystem(Path(temp_dir))
         self.root = Path(temp_dir)
 
     async def asyncSetUp(self):
@@ -40,7 +39,7 @@ class TestIncludePatterns(IsolatedAsyncioTestCase):
     def prepare_project(self, manifest: dict) -> Project:
         if self.path_to_root:
             manifest['paths']['root'] = self.path_to_root
-        return load_project_from_dict(manifest, base=self.base)
+        return load_project_from_dict(manifest, fs=self.fs)
 
     def assertPagePaths(self, project: Project, expected_paths: tuple[Path, ...]):
         actual_paths = tuple(p.path_in_volume for p in project.pages)
