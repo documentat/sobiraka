@@ -1,15 +1,16 @@
 from __future__ import annotations
 
 import sys
+from collections import defaultdict
 from dataclasses import dataclass
 from enum import IntEnum, auto
-from itertools import groupby
+from itertools import chain, groupby
 from pathlib import Path
 
 from git import Blob, Commit, Repo
 from more_itertools import unique_justseen
 
-from sobiraka.models import GitFileSystem, Page, Project, Version
+from sobiraka.models import DirPage, GitFileSystem, Page, Project, Version
 from sobiraka.models.load import load_project_from_str
 
 
@@ -17,30 +18,30 @@ def changelog(manifest_path: Path, rev1: str, rev2: str) -> int:
     # pylint: disable=too-many-locals
 
     repo = Repo(manifest_path.parent)
-    commit1 = repo.commit(rev1)
-    commit2 = repo.commit(rev2)
-
-    project1 = load_project_from_revision(commit1, manifest_path.parts[-1])
-    project2 = load_project_from_revision(commit2, manifest_path.parts[-1])
+    project1 = load_project_from_revision(repo.commit(rev1), manifest_path.parts[-1])
+    project2 = load_project_from_revision(repo.commit(rev2), manifest_path.parts[-1])
 
     result: list[ChangeLogItem] = []
 
-    for diff in commit1.diff(commit2):
-        try:
-            page1 = project1.pages_by_path[Path(diff.a_path)]
-            text1 = page1.text
-            v1 = page1.meta.version
+    # To be able to deal with volumes that changed roots between the commits,
+    # we need to address the pages not by their path in project,
+    # but rather by their volume and path in volume.
+    pages_by_tuple: dict[tuple[str, Path], list[Page]] = defaultdict(list)
+    for page in chain(project1.pages, project2.pages):
+        pages_by_tuple[page.volume.autoprefix, page.path_in_volume].append(page)
 
-            page2 = project2.pages_by_path[Path(diff.b_path)]
-            text2 = page2.text
-            v2 = page2.meta.version
+    # We don't care about pages that exist only in one of the commits
+    # Also, we don't care about directory-based pages
+    pages_by_tuple = dict((k, v) for k, v in pages_by_tuple.items()
+                          if len(v) == 2
+                          and DirPage not in map(type, v))
 
-        except KeyError:
-            continue
-
-        status = ChangeLogItemStatus.choose(v1, v2, is_text_modified=text1 != text2)
+    # Compare each pair and get an appropriate status
+    for page1, page2 in pages_by_tuple.values():
+        is_text_modified = page1.text != page2.text
+        status = ChangeLogItemStatus.choose(page1.meta.version, page2.meta.version, is_text_modified)
         if status:
-            result.append(ChangeLogItem(status, page2.path_in_project, v1, v2))
+            result.append(ChangeLogItem(status, page2.path_in_project, page1.meta.version, page2.meta.version))
 
     result.sort()
 
@@ -96,7 +97,7 @@ class ChangeLogItemStatus(IntEnum):
         }[self]
 
     @staticmethod
-    def choose(v1: Version, v2: Version, *, is_text_modified: bool) -> ChangeLogItemStatus | None:
+    def choose(v1: Version, v2: Version, is_text_modified: bool) -> ChangeLogItemStatus | None:
         # pylint: disable=too-many-return-statements, no-else-return
 
         match v1, v2:

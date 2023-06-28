@@ -10,7 +10,6 @@ from sobiraka.translating import changelog
 from testutils import clean_directory
 
 
-@skip('')
 class TestChangelog(TestCase):
     maxDiff = None
 
@@ -27,9 +26,6 @@ class TestChangelog(TestCase):
                 continue
 
             with self.subTest(subdir.name):
-                if subdir.name == '3-move-roots':
-                    raise SkipTest
-
                 try:
                     self._git('init', '--initial-branch', 'master')
                     self._git('config', 'user.name', 'Tester')
