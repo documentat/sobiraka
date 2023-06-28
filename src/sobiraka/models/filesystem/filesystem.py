@@ -2,6 +2,10 @@ from abc import ABCMeta, abstractmethod
 from pathlib import Path
 from typing import Iterable
 
+from wcmatch.glob import GLOBSTAR, NODIR
+
+GLOB_KWARGS = dict(flags=GLOBSTAR | NODIR, limit=0)
+
 
 class FileSystem(metaclass=ABCMeta):
     @abstractmethod

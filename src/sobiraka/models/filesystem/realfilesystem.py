@@ -2,9 +2,9 @@ import shutil
 from pathlib import Path
 from typing import Iterable
 
-from wcmatch.glob import GLOBSTAR, NODIR, glob
+from wcmatch.glob import glob
 
-from .filesystem import FileSystem
+from .filesystem import FileSystem, GLOB_KWARGS
 
 
 class RealFileSystem(FileSystem):
@@ -37,5 +37,4 @@ class RealFileSystem(FileSystem):
 
     def glob(self, path: Path, pattern: str) -> Iterable[Path]:
         path = self.resolve(path)
-        for result in glob(pattern, flags=GLOBSTAR | NODIR, root_dir=path, limit=0):
-            yield Path(result)
+        return map(Path, glob(pattern, root_dir=path, **GLOB_KWARGS))

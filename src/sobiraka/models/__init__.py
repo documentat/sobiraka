@@ -1,5 +1,5 @@
 from .anchor import Anchor, Anchors
-from .filesystem import FileSystem, RealFileSystem
+from .filesystem import FileSystem, GitFileSystem, RealFileSystem
 from .href import Href, PageHref, UrlHref
 from .issue import AmbiguosLink, BadLink, Issue, MisspelledWords, PhraseBeginsWithLowerCase
 from .page import DirPage, IndexPage, Page, PageMeta

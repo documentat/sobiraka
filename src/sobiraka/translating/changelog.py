@@ -6,11 +6,10 @@ from enum import IntEnum, auto
 from itertools import groupby
 from pathlib import Path
 
-import git
-from git import Commit, Repo
+from git import Blob, Commit, Repo
 from more_itertools import unique_justseen
 
-from sobiraka.models import Page, Project, Version
+from sobiraka.models import GitFileSystem, Page, Project, Version
 from sobiraka.models.load import load_project_from_str
 
 
@@ -28,11 +27,11 @@ def changelog(manifest_path: Path, rev1: str, rev2: str) -> int:
 
     for diff in commit1.diff(commit2):
         try:
-            page1 = load_page_from_blob(project1, Path(diff.a_path), diff.a_blob)
+            page1 = project1.pages_by_path[Path(diff.a_path)]
             text1 = page1.text
             v1 = page1.meta.version
 
-            page2 = load_page_from_blob(project2, Path(diff.b_path), diff.b_blob)
+            page2 = project2.pages_by_path[Path(diff.b_path)]
             text2 = page2.text
             v2 = page2.meta.version
 
@@ -57,11 +56,11 @@ def changelog(manifest_path: Path, rev1: str, rev2: str) -> int:
 def load_project_from_revision(commit: Commit, manifest_name: str) -> Project:
     manifest_blob = commit.tree / manifest_name
     manifest_yaml = manifest_blob.data_stream.read().decode('utf-8')
-    project = load_project_from_str(manifest_yaml, base=Path(commit.repo.working_dir))
+    project = load_project_from_str(manifest_yaml, fs=GitFileSystem(commit))
     return project
 
 
-def load_page_from_blob(project: Project, path_in_project: Path, blob: git.Blob) -> Page:
+def load_page_from_blob(project: Project, path_in_project: Path, blob: Blob) -> Page:
     volume = project.get_volume_by_path(path_in_project)
     path_in_volume = path_in_project.relative_to(volume.relative_root)
     text = blob.data_stream.read().decode('utf-8')

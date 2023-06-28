@@ -5,6 +5,7 @@ disable=
     missing-function-docstring,
     missing-module-docstring,
     too-few-public-methods,
+    use-dict-literal,
 
 [FORMAT]
 max-line-length=120
