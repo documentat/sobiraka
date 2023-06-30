@@ -1,11 +1,15 @@
+import os
 from os.path import relpath
 from pathlib import Path
 from typing import Iterable
 
-from git import Commit, Tree
 from wcmatch.glob import globmatch
 
 from .filesystem import FileSystem, GLOB_KWARGS
+
+if True:  # pylint: disable=using-constant-test
+    os.environ['GIT_PYTHON_REFRESH'] = 'quiet'
+    from git import Commit, Tree
 
 
 class GitFileSystem(FileSystem):

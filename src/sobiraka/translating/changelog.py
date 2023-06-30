@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import sys
 from collections import defaultdict
 from dataclasses import dataclass
@@ -7,11 +8,14 @@ from enum import IntEnum, auto
 from itertools import chain, groupby
 from pathlib import Path
 
-from git import Blob, Commit, Repo
 from more_itertools import unique_justseen
 
 from sobiraka.models import DirPage, GitFileSystem, Page, Project, Version
 from sobiraka.models.load import load_project_from_str
+
+if True:  # pylint: disable=using-constant-test
+    os.environ['GIT_PYTHON_REFRESH'] = 'quiet'
+    from git import Repo, Blob, Commit
 
 
 def changelog(manifest_path: Path, rev1: str, rev2: str) -> int:
