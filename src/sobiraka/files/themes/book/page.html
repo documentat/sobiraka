@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="{{ volume.lang }}" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#FFFFFF">
+    <meta name="color-scheme" content="light dark">
+    <meta property="og:title" content="Introduction"/>
+
+    <link rel="icon" href="{{ STATIC }}/favicon.png" type="image/x-icon">
+    <link rel="stylesheet" href="{{ STATIC }}/book.min.css">
+
+    <title>{{ title }} | {{ volume.config.title }}</title>
+</head>
+<body dir="ltr">
+
+<input type="checkbox" class="hidden toggle" id="menu-control"/>
+<input type="checkbox" class="hidden toggle" id="toc-control"/>
+<main class="container flex">
+    <aside class="book-menu">
+        <div class="book-menu-content">
+
+            <nav>
+                <h2 class="book-brand">
+                    <a class="flex align-center" href="{{ ROOT_PAGE }}"><span>{{ volume.config.title }}</span>
+                    </a>
+                </h2>
+
+                {% set translations = project.get_all_translations(page) %}
+                {% if translations | length > 1 %}
+                    <ul class="book-languages">
+                        <li>
+                            <input type="checkbox" id="languages" class="toggle"/>
+                            <label for="languages" class="flex justify-between">
+                                <a role="button" class="flex align-center">
+                                    <img src="{{ STATIC }}/svg/translate.svg" class="book-icon" alt="Languages"/>
+                                    {{ Language.from_part1(page.volume.lang).name }}
+                                </a>
+                            </label>
+                            <ul>
+                                {% for translation in translations %}
+                                    {% if translation is not sameas page %}
+                                        <li>
+                                            <a href="{{ builder.make_internal_url(translation, page=page) }}"
+                                            >{{ Language.from_part1(translation.volume.lang).name }}</a>
+                                        </li>
+                                    {% endif %}
+                                {% endfor %}
+                            </ul>
+                        </li>
+                    </ul>
+                {% endif %}
+
+                <ul>
+                    {% for section in toc.items() %}
+                        <li class="book-section-flat">
+                            <a href="{{ section.href }}"{% if section.is_current %} class="active"{% endif %}
+                            >{{ section.title }}</a>
+
+                            {% if section.children %}
+                                <ul>
+                                    {% for item in section.children recursive %}
+                                        <li>
+                                            <a href="{{ item.href }}"{% if item.is_current %} class="active"{% endif %}
+                                            >{{ item.title }}</a>
+
+                                            {% if item.children %}
+                                                <ul>
+                                                    {{ loop(item.children) }}
+                                                </ul>
+                                            {% endif %}
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                        </li>
+                    {% endfor %}
+                </ul>
+
+            </nav>
+
+
+            <script>(function () {
+                var a = document.querySelector("aside .book-menu-content");
+                addEventListener("beforeunload", function (b) {
+                    localStorage.setItem("menu.scrollTop", a.scrollTop)
+                }), a.scrollTop = localStorage.getItem("menu.scrollTop")
+            })()</script>
+
+
+        </div>
+    </aside>
+
+    <div class="book-page">
+        <header class="book-header">
+
+            <div class="flex align-center justify-between">
+                <label for="menu-control">
+                    <img src="{{ STATIC }}/svg/menu.svg" class="book-icon" alt="Menu"/>
+                </label>
+
+                <strong>Introduction</strong>
+
+                <label for="toc-control">
+
+                    <img src="{{ STATIC }}/svg/toc.svg" class="book-icon" alt="Table of Contents"/>
+
+                </label>
+            </div>
+
+        </header>
+
+
+        <article class="markdown">
+
+            <h1>{{ title }}</h1>
+
+            {{ body }}
+
+        </article>
+
+        <label for="menu-control" class="hidden book-menu-overlay"></label>
+    </div>
+
+
+    {% set local_toc_items = local_toc.items() %}
+    {% if local_toc_items %}
+        <aside class="book-toc">
+            <div class="book-toc-content">
+                <nav id="TableOfContents">
+                    <ul>
+                        {% for item in local_toc.items() recursive %}
+                            <li>
+                                <a href='{{ item.href }}'>{{ item.title }}</a>
+                                {% if item.children %}
+                                    <ul>
+                                        {{ loop(item.children) }}
+                                    </ul>
+                                {% endif %}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </nav>
+            </div>
+        </aside>
+    {% endif %}
+
+</main>
+
+</body>
+</html>
