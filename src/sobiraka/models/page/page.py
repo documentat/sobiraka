@@ -106,7 +106,7 @@ class Page:
                 self.__text = ''
 
             case _:
-                raise TypeError(args)
+                raise TypeError(*args)
 
     def __eq__(self, other: Page):
         try:

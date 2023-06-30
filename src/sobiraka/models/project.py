@@ -84,7 +84,7 @@ class Project:
                 assert len(self.volumes) == 1
                 return self.volumes[0]
 
-        raise KeyError(args)
+        raise KeyError(*args)
 
     def get_volume_by_path(self, path_in_project: Path) -> Volume:
         for volume in self.volumes:

@@ -93,7 +93,7 @@ class Volume:
                 self.__initial_pages = self._generate_pages(self._find_files())
 
             case _:
-                raise TypeError(args)
+                raise TypeError(*args)
 
     def __hash__(self):
         return hash(id(self))
