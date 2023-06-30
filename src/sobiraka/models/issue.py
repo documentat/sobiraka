@@ -26,11 +26,11 @@ class AmbiguosLink(Issue):
 
 @dataclass(order=True, frozen=True)
 class MisspelledWords(Issue):
-    relative_path: Path
+    path_in_project: Path
     words: tuple[str, ...]
 
     def __str__(self):
-        return f'Misspelled words in {self.relative_path}: {", ".join(self.words)}.'
+        return f'Misspelled words in {self.path_in_project}: {", ".join(self.words)}.'
 
 
 @dataclass(order=True, frozen=True)

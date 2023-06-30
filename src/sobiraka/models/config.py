@@ -11,7 +11,7 @@ from sobiraka.runtime import RT
 class Config_Paths:
     """Settings that affect discovering source files."""
 
-    root: Path
+    root: Path = None
     """Absolute path to the directory containing the documentation sources."""
 
     resources: Path | None = None
@@ -50,7 +50,7 @@ class Config_HTML:
 
     resources_force_copy: tuple[str, ...] = ()
 
-    theme: Path = RT.FILES / 'themes' / 'material'
+    theme: Path = RT.FILES / 'themes' / 'simple'
     # TODO: describe what should be there
 
     theme_data: dict[str, Any] = field(default=dict)
@@ -105,6 +105,8 @@ class Config:
     """
     Configuration for a volume. Used as a base class for :obj:`.Volume`.
     """
+    title: str = None
+
     paths: Config_Paths = field(default_factory=Config_Paths, kw_only=True)
     """Settings that affect discovering source files."""
 

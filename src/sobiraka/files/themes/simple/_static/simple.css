@@ -1,0 +1,27 @@
+.main-wrapper {
+    display: flex;
+}
+
+nav.toc {
+    flex: 50em;
+    order: 1;
+}
+
+nav.toc .selected {
+    font-weight: bold;
+}
+
+nav.toc .current {
+    font-weight: bold;
+}
+
+main {
+    flex: auto;
+    order: 2;
+    margin: 0 3em;
+}
+
+aside {
+    flex: 50em;
+    order: 3;
+}

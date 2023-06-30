@@ -5,15 +5,16 @@ disable=
     missing-function-docstring,
     missing-module-docstring,
     too-few-public-methods,
+    use-dict-literal,
 
 [FORMAT]
 max-line-length=120
 good-names=
     i,k,m,v,x,
-    li,tm,
+    fs,li,ok,tm,v1,v2,
 
 [BASIC]
-class-rgx=[A-Z][A-z0-9]+(_?[A-Z][A-z0-9]+)*
+class-rgx=_?[A-Z][A-z0-9]+(_?[A-Z][A-z0-9]+)*
 method-rgx=[a-z0-9_]+
 attr-rgx=[a-z0-9_]+
 

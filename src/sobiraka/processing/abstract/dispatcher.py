@@ -24,7 +24,7 @@ class Dispatcher:
             case Cite():
                 result = await self.process_cite(elem, page)
             case Code() as code:
-                if page.path.suffix == '.rst' and (role := code.attributes.get('role')):
+                if page.path_in_volume.suffix == '.rst' and (role := code.attributes.get('role')):
                     result = await getattr(self, f'process_role_{role}')(code, page)
                 else:
                     result = await self.process_code(code, page)

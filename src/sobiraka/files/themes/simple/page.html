@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang='{{ volume.lang }}'>
+<head>
+    <meta charset='utf-8'/>
+    <title>{{ title }} — {{ volume.config.title }}</title>
+    <link rel='stylesheet' type='text/css' href='{{ STATIC }}/simple.css'/>
+</head>
+<body>
+
+<div class='main-wrapper'>
+
+    <nav class='toc'>
+        <ul>
+            {% for item in toc.items() recursive %}
+                <li>
+                    {% if item.is_current %}
+                        <span class='current'>{{ item.title }}</span>
+                    {% elif item.is_selected %}
+                        <a class='selected' href='{{ item.href }}'>{{ item.title }}</a>
+                    {% else %}
+                        <a href='{{ item.href }}'>{{ item.title }}</a>
+                    {% endif %}
+
+                    {% if item.children %}
+                        <ul>
+                            {{ loop(item.children) }}
+                        </ul>
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+    </nav>
+
+    <aside>
+        {% set local_toc_items = local_toc.items() %}
+        {% if local_toc_items %}
+            <nav class='local-toc'>
+                <ul>
+                    {% for item in local_toc.items() recursive %}
+                        <li>
+                            <a href='{{ item.href }}'>{{ item.title }}</a>
+                            {% if item.children %}
+                                <ul>
+                                    {{ loop(item.children) }}
+                                </ul>
+                            {% endif %}
+                        </li>
+                    {% endfor %}
+                </ul>
+            </nav>
+        {% endif %}
+    </aside>
+
+    <main>
+        <article>
+
+            <h1>{{ title }}</h1>
+
+            {% set translations = project.get_all_translations(page) %}
+            {% if translations %}
+                <nav class='translations'>
+                    {% for translation in translations %}
+                        {% if translation is sameas page %}
+                            <span>{{ translation.volume.lang }}</span>
+                        {% else %}
+                            <a href='{{ builder.make_internal_url(translation, page=page) }}'>{{ translation.volume.lang }}</a>
+                        {% endif %}
+                    {% endfor %}
+                </nav>
+            {% endif %}
+
+            <hr/>
+
+            {{ body }}
+
+        </article>
+    </main>
+
+</div>
+
+<footer>
+    Built at {{ now }}
+</footer>
+
+</body>
+</html>

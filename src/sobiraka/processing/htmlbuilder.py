@@ -3,7 +3,7 @@ import re
 from asyncio import Task, create_subprocess_exec, create_task, gather, to_thread
 from datetime import datetime
 from functools import partial
-from os.path import relpath
+from os.path import normpath, relpath
 from pathlib import Path
 from shutil import copyfile
 from subprocess import PIPE
@@ -33,7 +33,7 @@ class HtmlBuilder(ProjectProcessor):
 
         # Copy the theme's static directory
         for volume in self.project.volumes:
-            static = volume.html.theme / '_static'
+            static = volume.config.html.theme / '_static'
             for source_path in static.rglob('**/*'):
                 if source_path.is_file():
                     target_path = self.output / '_static' / source_path.relative_to(static)
@@ -41,10 +41,10 @@ class HtmlBuilder(ProjectProcessor):
 
         # Copy additional static files
         for volume in self.project.volumes:
-            for filename in volume.html.resources_force_copy:
-                source_path = self.project.base / volume.html.resources_prefix / filename
-                target_path = self.output / volume.html.resources_prefix / filename
-                self._copying[target_path] = create_task(self.copy_file(source_path, target_path))
+            for filename in volume.config.html.resources_force_copy:
+                source_path = volume.config.html.resources_prefix / filename
+                target_path = self.output / volume.config.html.resources_prefix / filename
+                self._copying[target_path] = create_task(self.project.fs.copy(source_path, target_path))
 
         # Generate the HTML pages in no particular order
         for page in self.project.pages:
@@ -70,7 +70,7 @@ class HtmlBuilder(ProjectProcessor):
         target_file.parent.mkdir(parents=True, exist_ok=True)
         path_to_root_page = Path(relpath(self.make_target_path(volume.root_page), start=target_file.parent))
         path_to_static = Path(relpath(self.output / '_static', start=target_file.parent))
-        path_to_resources = Path(relpath(self.output / volume.html.resources_prefix, start=target_file.parent))
+        path_to_resources = Path(relpath(self.output / volume.config.html.resources_prefix, start=target_file.parent))
 
         pandoc = await create_subprocess_exec(
             'pandoc',
@@ -84,11 +84,13 @@ class HtmlBuilder(ProjectProcessor):
 
         template = await self.get_template(page.volume)
         html = await template.render_async(
+            builder=self,
+
             project=project,
             volume=volume,
             page=page,
 
-            title=self.titles[page],
+            title=self.titles.get(page, 'Untitled'),  # TODO why is title not there?
             body=html.decode('utf-8').strip(),
 
             now=datetime.now(),
@@ -98,7 +100,7 @@ class HtmlBuilder(ProjectProcessor):
             ROOT_PAGE=path_to_root_page,
             STATIC=path_to_static,
             RESOURCES=path_to_resources,
-            theme_data=volume.html.theme_data,
+            theme_data=volume.config.html.theme_data,
         )
 
         target_file.write_text(html, encoding='utf-8')
@@ -109,7 +111,7 @@ class HtmlBuilder(ProjectProcessor):
             jinja = self._jinja_environments[volume]
         except KeyError:
             jinja = self._jinja_environments[volume] = jinja2.Environment(
-                loader=jinja2.FileSystemLoader((RT.FILES / 'themes' / volume.html.theme)),
+                loader=jinja2.FileSystemLoader((RT.FILES / 'themes' / volume.config.html.theme)),
                 enable_async=True,
                 undefined=jinja2.StrictUndefined,
                 comment_start_string='{{#',
@@ -131,7 +133,7 @@ class HtmlBuilder(ProjectProcessor):
             case _:
                 raise TypeError(page.__class__.__name__)
 
-        prefix = page.volume.html.prefix or '$AUTOPREFIX'
+        prefix = page.volume.config.html.prefix or '$AUTOPREFIX'
         prefix = re.sub(r'\$\w+', partial(self.replace_in_prefix, page), prefix)
         prefix = os.path.join(*prefix.split('/'))
 
@@ -146,7 +148,10 @@ class HtmlBuilder(ProjectProcessor):
             '$AUTOPREFIX': page.volume.autoprefix,
         }[m.group()]
 
-    def make_internal_url(self, href: PageHref, *, page: Page) -> str:
+    def make_internal_url(self, href: PageHref | Page, *, page: Page) -> str:
+        if isinstance(href, Page):
+            href = PageHref(href)
+
         if href.target is page:
             result = ''
         else:
@@ -166,11 +171,19 @@ class HtmlBuilder(ProjectProcessor):
         return elems
 
     async def process_image(self, elem: Image, page: Page) -> tuple[Image, ...]:
-        path = elem.url.replace('$LANG', page.volume.lang or '')
-        source_path = page.volume.paths.resources / path
-        target_path = self.output / page.volume.html.resources_prefix / path
+        path = Path(elem.url.replace('$LANG', page.volume.lang or ''))
+
+        if path.is_absolute():
+            source_path = page.volume.paths.resources / path.relative_to('/')
+        else:
+            source_path = Path(normpath(page.path_in_project.parent / path))
+
+        target_path = self.output \
+                      / page.volume.config.html.resources_prefix \
+                      / source_path.relative_to(page.volume.config.paths.resources)
+
         if target_path not in self._copying:
-            self._copying[target_path] = create_task(self.copy_file(source_path, target_path))
+            self._copying[target_path] = create_task(to_thread(self.project.fs.copy, source_path, target_path))
         elem.url = relpath(target_path, start=self.make_target_path(page).parent)
         return (elem,)
 

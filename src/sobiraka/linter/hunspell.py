@@ -1,6 +1,7 @@
 import os
 import re
 from asyncio import create_subprocess_exec
+from pathlib import Path
 from subprocess import PIPE
 from typing import AsyncIterable, Sequence
 
@@ -13,12 +14,12 @@ async def run_hunspell(words: Sequence[str], volume: Volume) -> AsyncIterable[st
         return
 
     environ = os.environ
-    if volume.lint.dictionaries:
+    if volume.config.lint.dictionaries:
         environ = environ.copy()
         environ['DICPATH'] = ':'.join((
             str(RT.FILES / 'dictionaries'),
-            str(volume.project.base)))
-        environ['DICTIONARY'] = ','.join(volume.lint.dictionaries)
+            str(volume.project.fs.resolve(Path('.')))))
+        environ['DICTIONARY'] = ','.join(volume.config.lint.dictionaries)
 
     hunspell = await create_subprocess_exec(
         'hunspell',

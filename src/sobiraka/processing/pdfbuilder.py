@@ -38,7 +38,7 @@ class PdfBuilder(VolumeProcessor):
             'build.tex',
             '-halt-on-error',
             cwd=xelatex_workdir,
-            env=os.environ | {'TEXINPUTS': f'{self.volume.paths.resources}:'},
+            env=os.environ | {'TEXINPUTS': f'{self.volume.project.fs.resolve(self.volume.config.paths.resources)}:'},
             stdin=DEVNULL,
             stdout=DEVNULL)
         await xelatex.wait()
@@ -48,7 +48,10 @@ class PdfBuilder(VolumeProcessor):
         copyfile(xelatex_workdir / 'build.pdf', self.output)
 
     async def generate_latex(self, latex_output: BinaryIO):
-        for page in self.volume.pages:
+        volume = self.volume
+        project = self.volume.project
+
+        for page in volume.pages:
             self.generate_latex_for_page(page).start()
 
         if self.print_issues():
@@ -56,13 +59,13 @@ class PdfBuilder(VolumeProcessor):
 
         latex_output.write((RT.FILES / 'base.sty').read_bytes())
         latex_output.write(b'\n\n' + (80 * b'%'))
-        if self.volume.pdf.header:
+        if volume.config.pdf.header:
             latex_output.write(b'\n\n')
-            latex_output.write(self.volume.pdf.header.read_bytes())
+            latex_output.write(project.fs.read_bytes(volume.config.pdf.header))
             latex_output.write(b'\n\n' + (80 * b'%'))
         latex_output.write(b'\n\n\\begin{document}\n\\begin{sloppypar}')
 
-        for page in self.volume.pages:
+        for page in volume.pages:
             await self.generate_latex_for_page(page)
             latex_output.write(b'\n\n' + (80 * b'%'))
             latex_output.write(b'\n\n%%% ' + bytes(page.path_in_project) + b'\n')

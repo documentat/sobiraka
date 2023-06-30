@@ -4,6 +4,7 @@ from abc import abstractmethod
 from asyncio import create_subprocess_exec, gather
 from collections import defaultdict
 from io import BytesIO
+from os.path import normpath
 from pathlib import Path
 from subprocess import PIPE
 from typing import Awaitable
@@ -72,12 +73,12 @@ class Processor(Dispatcher):
         """
         from sobiraka.models import SubtreeToc
 
-        variables = page.volume.variables | {
+        variables = page.volume.config.variables | {
             'toc': SubtreeToc(self, page),
             'LANG': page.volume.lang,
         }
 
-        page_text = page.raw()
+        page_text = page.text
         page_text = await self.jinja.from_string(page_text).render_async(variables)
 
         pandoc = await create_subprocess_exec(
@@ -166,7 +167,7 @@ class Processor(Dispatcher):
         if re.match(r'^\w+:', elem.url):
             self.links[page].append(UrlHref(elem.url))
         else:
-            if page.path.suffix == '.rst':
+            if page.path_in_volume.suffix == '.rst':
                 self.issues[page].append(BadLink(elem.url))
                 return
             await self._process_internal_link(elem, elem.url, page)
@@ -191,10 +192,9 @@ class Processor(Dispatcher):
                     target_path = page.volume.relative_root / Path(target_path_str[1:])
                 else:
                     if isinstance(page, DirPage):
-                        target_path = (page.path / target_path_str).resolve()
+                        target_path = (page.path_in_volume / target_path_str).resolve()
                     else:
-                        target_path = (page.path.parent / target_path_str).resolve()
-                    target_path = target_path.relative_to(page.volume.project.base)
+                        target_path = Path(normpath(page.path_in_volume.parent / target_path_str))
                 target = page.volume.pages_by_path[target_path]
             except (KeyError, ValueError):
                 self.issues[page].append(BadLink(target_text))

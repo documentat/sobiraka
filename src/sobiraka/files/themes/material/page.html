@@ -39,7 +39,7 @@
     </script>
     <link href="{{ STATIC }}/images/apple-icon-152x152.png" rel="apple-touch-icon"/>
     <title>
-        {{ title }} — {{ volume.title }}
+        {{ title }} — {{ volume.config.title }}
     </title>
     <link href="{{ STATIC }}/pygments.css" rel="stylesheet" type="text/css"/>
     <link href="{{ STATIC }}/material.css" rel="stylesheet" type="text/css"/>
@@ -68,7 +68,7 @@
         <link rel="stylesheet" type="text/css" href="{{ RESOURCES }}/custom.css"/>
     {% endif %}
 </head>
-<body data-md-color-primary="{{ theme_data.color_primary }}" data-md-color-accent="{{ theme_data.color_accent }}" dir="ltr">
+<body data-md-color-primary="{{ theme_data.get('color_primary') }}" data-md-color-accent="{{ theme_data.get('color_accent') }}" dir="ltr">
     <svg class="md-svg">
         <defs data-children-count="0">
             <svg height="448" id="__github" viewbox="0 0 416 448" width="416" xmlns="http://www.w3.org/2000/svg">
@@ -98,7 +98,7 @@
                 <div class="md-flex__cell md-flex__cell--shrink">
                     <a class="md-header-nav__button md-logo" href="{{ ROOT_PAGE }}">
                         {% if theme_data.get("logo") %}
-                          <img src="{{ RESOURCES }}/{{ theme_data["logo"] }}" alt="{{ volume.title }}" style="height:1em;"/>
+                          <img src="{{ RESOURCES }}/{{ theme_data["logo"] }}" alt="{{ volume.config.title }}" style="height:1em;"/>
                         {% else %}
                           <i class="md-icon"></i>
                         {% endif %}
@@ -109,7 +109,7 @@
                 </div>
                 <div class="md-flex__cell md-flex__cell--stretch">
                     <div class="md-flex__ellipsis md-header-nav__title" data-md-component="title">
-                        <span class="md-header-nav__topic">{{ volume.title }}</span>
+                        <span class="md-header-nav__topic">{{ volume.config.title }}</span>
                         <span class="md-header-nav__topic">{{ title }}</span>
                     </div>
                 </div>
@@ -136,7 +136,7 @@
                                 ">
                                     <a class="md-nav__button md-logo" href="{{ ROOT_PAGE }}" title="{{ title }}">
                                         {% if theme_data.get("logo") %}
-                                        <img src="{{ RESOURCES }}/{{ theme_data["logo"] }}" alt="{{ volume.title }}" style="height:1em;"/>
+                                        <img src="{{ RESOURCES }}/{{ theme_data["logo"] }}" alt="{{ volume.config.title }}" style="height:1em;"/>
                                         {% else %}
                                         <i class="md-icon"></i>
                                         {% endif %}
