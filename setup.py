@@ -14,6 +14,7 @@ setup(
         'jsonschema~=4.17.3',
         'more-itertools~=9.0.0',
         'panflute~=2.2.3',
+        'python-iso639~=2023.6.15',
         'pyyaml~=6.0',
         'utilspie~=0.1.0',
         'wcmatch~=8.4.1',

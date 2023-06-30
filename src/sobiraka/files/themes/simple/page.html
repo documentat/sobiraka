@@ -57,7 +57,7 @@
             <h1>{{ title }}</h1>
 
             {% set translations = project.get_all_translations(page) %}
-            {% if translations %}
+            {% if translations | length > 1 %}
                 <nav class='translations'>
                     {% for translation in translations %}
                         {% if translation is sameas page %}

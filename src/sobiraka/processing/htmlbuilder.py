@@ -10,6 +10,7 @@ from subprocess import PIPE
 
 import jinja2
 from aiofiles.os import makedirs
+import iso639
 from panflute import Element, Header, Image
 
 from sobiraka.models import DirPage, GlobalToc, IndexPage, LocalToc, Page, PageHref, Project, Syntax, Volume
@@ -96,6 +97,7 @@ class HtmlBuilder(ProjectProcessor):
             now=datetime.now(),
             toc=GlobalToc_HTML(self, volume, page),
             local_toc=LocalToc(self, page),
+            Language=iso639.Language,
 
             ROOT_PAGE=path_to_root_page,
             STATIC=path_to_static,
