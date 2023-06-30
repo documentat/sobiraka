@@ -105,7 +105,7 @@ class Project:
         for volume in self.volumes:
             if volume.codename == page.volume.codename:
                 with suppress(KeyError):
-                    page = volume.pages_by_path[volume.relative_root / page.path_in_volume]
+                    page = volume.pages_by_path[page.path_in_volume]
                     translations.append(page)
         return tuple(translations)
 

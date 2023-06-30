@@ -3,7 +3,7 @@ import re
 from asyncio import Task, create_subprocess_exec, create_task, gather, to_thread
 from datetime import datetime
 from functools import partial
-from os.path import relpath
+from os.path import normpath, relpath
 from pathlib import Path
 from shutil import copyfile
 from subprocess import PIPE
@@ -70,7 +70,7 @@ class HtmlBuilder(ProjectProcessor):
         target_file.parent.mkdir(parents=True, exist_ok=True)
         path_to_root_page = Path(relpath(self.make_target_path(volume.root_page), start=target_file.parent))
         path_to_static = Path(relpath(self.output / '_static', start=target_file.parent))
-        path_to_resources = Path(relpath(self.output / volume.html.resources_prefix, start=target_file.parent))
+        path_to_resources = Path(relpath(self.output / volume.config.html.resources_prefix, start=target_file.parent))
 
         pandoc = await create_subprocess_exec(
             'pandoc',
@@ -90,7 +90,7 @@ class HtmlBuilder(ProjectProcessor):
             volume=volume,
             page=page,
 
-            title=self.titles[page],
+            title=self.titles.get(page, 'Untitled'),  # TODO why is title not there?
             body=html.decode('utf-8').strip(),
 
             now=datetime.now(),
@@ -100,7 +100,7 @@ class HtmlBuilder(ProjectProcessor):
             ROOT_PAGE=path_to_root_page,
             STATIC=path_to_static,
             RESOURCES=path_to_resources,
-            theme_data=volume.html.theme_data,
+            theme_data=volume.config.html.theme_data,
         )
 
         target_file.write_text(html, encoding='utf-8')
@@ -111,7 +111,7 @@ class HtmlBuilder(ProjectProcessor):
             jinja = self._jinja_environments[volume]
         except KeyError:
             jinja = self._jinja_environments[volume] = jinja2.Environment(
-                loader=jinja2.FileSystemLoader((RT.FILES / 'themes' / volume.html.theme)),
+                loader=jinja2.FileSystemLoader((RT.FILES / 'themes' / volume.config.html.theme)),
                 enable_async=True,
                 undefined=jinja2.StrictUndefined,
                 comment_start_string='{{#',
@@ -176,14 +176,14 @@ class HtmlBuilder(ProjectProcessor):
         if path.is_absolute():
             source_path = page.volume.paths.resources / path.relative_to('/')
         else:
-            source_path = (page.path_in_project.parent / path).resolve()
+            source_path = Path(normpath(page.path_in_project.parent / path))
 
         target_path = self.output \
-                      / page.volume.html.resources_prefix \
-                      / source_path.relative_to(page.volume.paths.resources)
+                      / page.volume.config.html.resources_prefix \
+                      / source_path.relative_to(page.volume.config.paths.resources)
 
         if target_path not in self._copying:
-            self._copying[target_path] = create_task(self.project.fs.copy(source_path, target_path))
+            self._copying[target_path] = create_task(to_thread(self.project.fs.copy, source_path, target_path))
         elem.url = relpath(target_path, start=self.make_target_path(page).parent)
         return (elem,)
 

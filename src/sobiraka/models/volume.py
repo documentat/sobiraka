@@ -162,7 +162,7 @@ class Volume:
 
     @property
     def root_page(self) -> Page:
-        return self.pages_by_path[self.relative_root]
+        return self.pages_by_path[Path('.')]
 
     @cached_property
     def max_level(self) -> int:
