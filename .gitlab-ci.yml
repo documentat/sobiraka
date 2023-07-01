@@ -116,6 +116,16 @@ lint:
     - make lint
   allow_failure: true
 
+build-docs:
+  stage: test
+  image: $CI_REGISTRY_IMAGE/cache/release:by-commit-$CI_COMMIT_SHA
+  script:
+    - ls -A | grep -v docs | xargs rm -rf
+    - sobiraka html docs/docs.yaml html
+  artifacts:
+    paths:
+      - html
+
 ################################################################################
 
 include: .gitlab-ci-post.yml

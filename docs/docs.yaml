@@ -1,0 +1,6 @@
+title: Sobiraka
+paths:
+  root: src
+  include: ['**/*.md']
+html:
+  theme: book
