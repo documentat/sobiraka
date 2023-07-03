@@ -70,7 +70,7 @@ class Project:
 
     def get_volume(self, *args) -> Volume:
         match args:
-            case str() as autoprefix,:
+            case str() | None as autoprefix,:
                 for volume in self.volumes:
                     if volume.autoprefix == autoprefix:
                         return volume
