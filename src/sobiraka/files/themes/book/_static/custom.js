@@ -1,5 +1,4 @@
 document.addEventListener('DOMContentLoaded', (event) => {
-    document.querySelectorAll('pre code').forEach((el) => {
-        hljs.highlightElement(el);
-    });
+    hljs.configure({languages: []});
+    hljs.initHighlightingOnLoad();
 });
