@@ -78,6 +78,7 @@ class HtmlBuilder(ProjectProcessor):
             '--from', 'json',
             '--to', 'html',
             '--wrap', 'none',
+            '--no-highlight',
             stdin=PIPE,
             stdout=PIPE)
         html, _ = await pandoc.communicate(panflute_to_bytes(self.doc[page]))
