@@ -1,7 +1,9 @@
+*.egg-info/
 /.dockerignore
-build/
-docs/build/
-docs/modules/
-tests/**/actual.pdf
-tests/**/actual-*.png
-tests/**/expected.pdf
+/build/
+/dist/
+/docs/build/
+/tests/**/actual-*.png
+/tests/**/actual.pdf
+/tests/**/expected.pdf
+__pycache__
