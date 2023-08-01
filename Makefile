@@ -7,3 +7,6 @@ tests:
 
 lint:
 	@PYTHONPATH=src python -m pylint sobiraka
+
+docs:
+	@PYTHONPATH=src python -m sobiraka html docs/docs.yaml docs/build

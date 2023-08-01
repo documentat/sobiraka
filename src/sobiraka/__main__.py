@@ -42,11 +42,11 @@ async def async_main():
     cmd_check_translations.add_argument('project', type=absolute_path)
     cmd_check_translations.add_argument('--strict', action='store_true')
 
-    cmd_diff = commands.add_parser('diff',
+    cmd_changelog = commands.add_parser('changelog',
                                    help='Display changes in translation versions between two git commits.')
-    cmd_diff.add_argument('project', type=absolute_path)
-    cmd_diff.add_argument('commit1')
-    cmd_diff.add_argument('commit2', default='HEAD')
+    cmd_changelog.add_argument('project', type=absolute_path)
+    cmd_changelog.add_argument('commit1')
+    cmd_changelog.add_argument('commit2', default='HEAD')
 
     args = parser.parse_args()
     RT.TMP = args.tmpdir
@@ -82,7 +82,7 @@ async def async_main():
             project = load_project(args.project)
             exit_code = check_translations(project, strict=args.strict)
 
-        elif cmd is cmd_diff:
+        elif cmd is cmd_changelog:
             exit_code = changelog(args.project, args.commit1, args.commit2)
 
         else:
