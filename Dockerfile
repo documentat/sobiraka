@@ -38,7 +38,7 @@ ENTRYPOINT [""]
 FROM common AS tester-src
 RUN apk add git make poppler-utils
 RUN apk add --no-cache py3-pip --repository=http://dl-cdn.alpinelinux.org/alpine/edge/community/
-RUN pip install coverage~=7.0.0
+RUN pip install --break-system-packages coverage~=7.0.0
 ARG UID=1000
 ARG GID=1000
 RUN addgroup mygroup -g $GID
