@@ -3,14 +3,15 @@ import re
 from asyncio import Task, create_subprocess_exec, create_task, gather, to_thread
 from datetime import datetime
 from functools import partial
+from itertools import chain
 from os.path import normpath, relpath
 from pathlib import Path
-from shutil import copyfile
+from shutil import rmtree
 from subprocess import PIPE
 
+import iso639
 import jinja2
 from aiofiles.os import makedirs
-import iso639
 from panflute import Element, Header, Image
 
 from sobiraka.models import DirPage, GlobalToc, IndexPage, LocalToc, Page, PageHref, Project, Syntax, Volume
@@ -24,8 +25,8 @@ class HtmlBuilder(ProjectProcessor):
         super().__init__(project)
         self.output: Path = output
 
-        self._generating: list[Task] = []
-        self._copying: dict[Path, Task] = {}
+        self._additional_tasks: list[Task] = []
+        self._results: set[Path] = set()
 
         self._jinja_environments: dict[Volume, jinja2.Environment] = {}
 
@@ -38,28 +39,44 @@ class HtmlBuilder(ProjectProcessor):
             for source_path in static.rglob('**/*'):
                 if source_path.is_file():
                     target_path = self.output / '_static' / source_path.relative_to(static)
-                    self._copying[target_path] = create_task(self.copy_file(source_path, target_path))
+                    self._additional_tasks.append(create_task(self.copy_file(source_path, target_path)))
 
         # Copy additional static files
         for volume in self.project.volumes:
             for filename in volume.config.html.resources_force_copy:
                 source_path = volume.config.html.resources_prefix / filename
                 target_path = self.output / volume.config.html.resources_prefix / filename
-                self._copying[target_path] = create_task(self.project.fs.copy(source_path, target_path))
+                self._additional_tasks.append(create_task(self.project.fs.copy(source_path, target_path)))
 
         # Generate the HTML pages in no particular order
+        generating: list[Task] = []
         for page in self.project.pages:
-            self._generating.append(create_task(self.generate_html_for_page(page)))
-        await gather(*self._generating)
+            generating.append(create_task(self.generate_html_for_page(page)))
+        await gather(*generating)
 
         # Wait until all additional files will be copied to the output directory
         # This may include tasks that started as a side effect of generating the HTML pages
-        await gather(*self._copying.values())
+        await gather(*self._additional_tasks)
 
-    @staticmethod
-    async def copy_file(source_path: Path, target_path: Path):
-        await makedirs(target_path.parent, exist_ok=True)
-        await to_thread(copyfile, source_path, target_path)
+        # Delete files that were not produced during this build
+        all_files = set()
+        all_dirs = set()
+        for file in self.output.rglob('**/*'):
+            if file.is_dir():
+                all_dirs.add(file)
+            else:
+                all_files.add(file)
+        files_to_delete = all_files - self._results
+        dirs_to_delete = all_dirs - set(chain(*(f.parents for f in self._results)))
+        for file in files_to_delete:
+            file.unlink()
+        for directory in dirs_to_delete:
+            rmtree(directory, ignore_errors=True)
+
+    async def copy_file(self, source: Path, target: Path):
+        await makedirs(target.parent, exist_ok=True)
+        await to_thread(self.project.fs.copy, source, target)
+        self._results.add(target)
 
     async def generate_html_for_page(self, page: Page) -> str:
         volume = page.volume
@@ -107,6 +124,7 @@ class HtmlBuilder(ProjectProcessor):
         )
 
         target_file.write_text(html, encoding='utf-8')
+        self._results.add(target_file)
         return html
 
     async def get_template(self, volume: Volume) -> jinja2.Template:
@@ -185,8 +203,8 @@ class HtmlBuilder(ProjectProcessor):
                       / page.volume.config.html.resources_prefix \
                       / source_path.relative_to(page.volume.config.paths.resources)
 
-        if target_path not in self._copying:
-            self._copying[target_path] = create_task(to_thread(self.project.fs.copy, source_path, target_path))
+        if target_path not in self._additional_tasks:
+            self._additional_tasks.append(create_task(self.copy_file(source_path, target_path)))
         elem.url = relpath(target_path, start=self.make_target_path(page).parent)
         return (elem,)
 
