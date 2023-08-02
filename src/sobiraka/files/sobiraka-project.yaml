@@ -34,7 +34,6 @@ $defs:
   book:
     additionalProperties: false
     properties:
-      id: { type: string }
       title: { type: string }
 
       paths:
