@@ -90,6 +90,13 @@ class LintPreprocessor(Processor):
         tm.fragments.append(fragment)
         tm.lines.append('')
 
+    async def process_soft_break(self, elem: SoftBreak, page: Page):
+        tm = self._tm[page]
+        pos = Pos(len(tm.lines) - 1, len(tm.lines[-1]))
+        fragment = Fragment(tm, pos, pos, elem)
+        tm.fragments.append(fragment)
+        tm.lines.append('')
+
     ################################################################################
     # Inline containers
 
@@ -256,13 +263,10 @@ class LintPreprocessor(Processor):
         return await self.process_default(elem, page)
 
     async def process_null(self, elem: Null, page: Page):
-        await self.process_default(elem, page)
+        return await self.process_default(elem, page)
 
     async def process_quoted(self, elem: Quoted, page: Page):
         return await self.process_default(elem, page)
-
-    async def process_soft_break(self, elem: SoftBreak, page: Page):
-        await self.process_default(elem, page)
 
     ################################################################################
 
