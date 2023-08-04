@@ -110,6 +110,7 @@ class LintPreprocessor(Processor):
         await self._container(page, elem)
 
     async def process_link(self, elem: Link, page: Page):
+        await super().process_link(elem, page)
         await self._container(page, elem)
 
     async def process_plain(self, elem: Plain, page: Page):
