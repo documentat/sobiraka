@@ -1,5 +1,6 @@
 [MAIN]
 disable=
+    duplicate-code,
     import-outside-toplevel,
     missing-class-docstring,
     missing-function-docstring,

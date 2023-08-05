@@ -51,6 +51,13 @@ $defs:
             minItems: 0
             items:
               type: string
+          naming_scheme:
+            type: array
+            minItems: 0
+            uniqueItems: true
+            items:
+              type: string
+              format: regex
 
       html:
         additionalProperties: false

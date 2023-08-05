@@ -11,6 +11,7 @@ from sobiraka.runtime import RT
 from sobiraka.utils import convert_or_none, merge_dicts
 from .config import Config, Config_HTML, Config_Lint, Config_Lint_Checks, Config_PDF, Config_Paths
 from .filesystem import FileSystem, RealFileSystem
+from .namingscheme import NamingScheme
 from .project import Project
 from .volume import Volume
 
@@ -80,7 +81,6 @@ def _load_volume(lang: str | None, codename: str, volume_data: dict, fs: FileSys
         except KeyError:
             return _default
 
-    # TODO get defaults directly from the Config_* classes
     return Volume(lang, codename, Config(
         title=_('title'),
         paths=Config_Paths(
@@ -88,6 +88,7 @@ def _load_volume(lang: str | None, codename: str, volume_data: dict, fs: FileSys
             resources=convert_or_none(Path, _('paths.resources')),
             include=tuple(_('paths.include', ['**/*'])),
             exclude=tuple(_('paths.exclude', '')),
+            naming_scheme=convert_or_none(NamingScheme, _('paths.naming_schema')) or NamingScheme(),
         ),
         html=Config_HTML(
             prefix=_('html.prefix', '$AUTOPREFIX'),

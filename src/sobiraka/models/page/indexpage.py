@@ -1,4 +1,3 @@
-import re
 from pathlib import Path
 
 from .page import Page
@@ -6,10 +5,13 @@ from .page import Page
 
 class IndexPage(Page):
 
-    def id_segment(self) -> str:
-        if self.is_root():
-            return 'r'
-        return re.sub(r'^(\d+-)?', '', self.path_in_project.parent.stem)
+    @property
+    def index(self) -> int | float:
+        return self.volume.config.paths.naming_scheme.get_index(self.path_in_project.parent)
+
+    @property
+    def stem(self) -> str:
+        return self.volume.config.paths.naming_scheme.get_stem(self.path_in_project.parent)
 
     def is_root(self) -> bool:
         return self.path_in_volume.parent == Path('.')

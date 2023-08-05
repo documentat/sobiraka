@@ -18,11 +18,23 @@ class Volume:
     """
 
     @overload
+    def __init__(self):
+        ...
+
+    @overload
     def __init__(self, paths: tuple[Path, ...]):
         ...
 
     @overload
+    def __init__(self, config: Config, paths: tuple[Path, ...]):
+        ...
+
+    @overload
     def __init__(self, pages_by_path: dict[Path, Page]):
+        ...
+
+    @overload
+    def __init__(self, config: Config, pages_by_path: dict[Path, Page]):
         ...
 
     @overload
@@ -55,13 +67,27 @@ class Volume:
         self.__initial_pages: Iterable[Page]
 
         match args:
+            case ():
+                pass
+
             case tuple() as paths,:
+                self.__initial_pages = self._generate_pages(paths)
+
+            case Config() as config, tuple() as paths:
+                self.config = config
                 self.__initial_pages = self._generate_pages(paths)
 
             case dict() as pages_by_path,:
                 for path, page in pages_by_path.items():
                     page.volume = self
                     page.path_in_volume = path
+                self.__initial_pages = pages_by_path.values()
+
+            case Config() as config, dict() as pages_by_path,:
+                for path, page in pages_by_path.items():
+                    page.volume = self
+                    page.path_in_volume = path
+                self.config = config
                 self.__initial_pages = pages_by_path.values()
 
             case str() | None as lang, str() | None as codename, tuple() as paths:
@@ -151,7 +177,8 @@ class Volume:
                 page = DirPage(self, expected_path)
                 pages_by_path[expected_path] = page
 
-        pages_by_path = dict(sorted(pages_by_path.items()))
+        pages_by_path = dict(sorted(pages_by_path.items(),
+                                    key=lambda kv: self.config.paths.naming_scheme.get_sorting_key(kv[0])))
         return pages_by_path
 
     @property

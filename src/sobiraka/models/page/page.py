@@ -133,7 +133,9 @@ class Page:
     def __lt__(self, other):
         assert isinstance(other, Page), TypeError
         assert self.volume.project == other.volume.project
-        return (self.volume, self.path_in_volume) < (other.volume, other.path_in_volume)
+        self_breadcrumbs_as_indexes = tuple(x.index for x in self.breadcrumbs)
+        other_breadcrumbs_as_indexes = tuple(x.index for x in other.breadcrumbs)
+        return (self.volume, self_breadcrumbs_as_indexes) < (other.volume, other_breadcrumbs_as_indexes)
 
     # ------------------------------------------------------------------------------------------------------------------
     # Getters for the main properties
@@ -198,7 +200,15 @@ class Page:
     def id_segment(self) -> str:
         if self.is_root():
             return 'r'
-        return re.sub(r'^(\d+-)?', '', self.path_in_project.stem)
+        return self.stem
+
+    @property
+    def index(self) -> int | float:
+        return self.volume.config.paths.naming_scheme.get_index(self.path_in_project)
+
+    @property
+    def stem(self) -> str:
+        return self.volume.config.paths.naming_scheme.get_stem(self.path_in_project)
 
     @cached_property
     def id(self) -> str:

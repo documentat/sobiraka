@@ -4,6 +4,7 @@ from typing import Any
 
 from utilspie.collectionsutils import frozendict
 
+from sobiraka.models import NamingScheme
 from sobiraka.runtime import RT
 
 
@@ -28,6 +29,8 @@ class Config_Paths:
     Patterns used to exclude certain files within the :data:`root` from the sources.
     Must be compatible with :py:meth:`Path.glob() <pathlib.Path.glob()>`.
     """
+
+    naming_scheme: NamingScheme = NamingScheme()
 
 
 @dataclass(kw_only=True, frozen=True)
