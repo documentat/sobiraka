@@ -78,7 +78,7 @@ class TestManifest_1L_1V(_TestManifest):
     '''
 
 
-class TestManifest_1L_1VUnderscored(TestManifest_1L_1V):
+class TestManifest_1L_1VDefault(TestManifest_1L_1V):
     def test_codename(self):
         self.assertEqual(None, self.volume.codename)
 
@@ -118,7 +118,7 @@ class TestManifest_1L_1VFlat(TestManifest_1L_1V):
     '''
 
 
-class TestManifest_1LUnderscore_1V(TestManifest_1L_1V):
+class TestManifest_1LDefault_1V(TestManifest_1L_1V):
     def test_lang(self):
         self.assertEqual(None, self.volume.lang)
 
@@ -139,7 +139,7 @@ class TestManifest_1LUnderscore_1V(TestManifest_1L_1V):
     '''
 
 
-class TestManifest_1LUnderscore_1VUnderscore(TestManifest_1L_1V):
+class TestManifest_1LDefault_1VDefault(TestManifest_1L_1V):
     def test_lang(self):
         self.assertEqual(None, self.volume.lang)
 
@@ -163,7 +163,7 @@ class TestManifest_1LUnderscore_1VUnderscore(TestManifest_1L_1V):
     '''
 
 
-class TestManifest_1LUnderscore_1VFlat(TestManifest_1L_1V):
+class TestManifest_1LDefault_1VFlat(TestManifest_1L_1V):
     def test_lang(self):
         self.assertEqual(None, self.volume.lang)
 
@@ -204,7 +204,7 @@ class TestManifest_1LFlat_1V(TestManifest_1L_1V):
     '''
 
 
-class TestManifest_1LFlat_1VUnderscore(TestManifest_1L_1V):
+class TestManifest_1LFlat_1VDefault(TestManifest_1L_1V):
     def test_lang(self):
         self.assertEqual(None, self.volume.lang)
 
