@@ -1,5 +1,5 @@
 oneOf:
-  - { $ref: '#/$defs/book' }
+  - { $ref: '#/$defs/project' }
 
   - additionalProperties: false
     properties:
@@ -7,7 +7,7 @@ oneOf:
         type: string
       languages:
         patternProperties:
-          .+: { $ref: '#/$defs/book' }
+          .+: { $ref: '#/$defs/project' }
 
   - additionalProperties: false
     properties:
@@ -15,7 +15,7 @@ oneOf:
         type: string
       volumes:
         patternProperties:
-          .+: { $ref: '#/$defs/book' }
+          .+: { $ref: '#/$defs/project' }
 
   - additionalProperties: false
     properties:
@@ -28,10 +28,10 @@ oneOf:
             properties:
               volumes:
                 patternProperties:
-                  .+: { $ref: '#/$defs/book' }
+                  .+: { $ref: '#/$defs/project' }
 
 $defs:
-  book:
+  project:
     additionalProperties: false
     properties:
       title: { type: string }
@@ -62,14 +62,14 @@ $defs:
       html:
         additionalProperties: false
         properties:
-          prefix: {type: string}
+          prefix: { type: string }
           resources_prefix: { type: string }
           resources_force_copy:
             type: array
             items:
               type: string
-          theme: {type: string}
-          theme_data: {type: object}
+          theme: { type: string }
+          theme_data: { type: object }
 
       pdf:
         additionalProperties: false
