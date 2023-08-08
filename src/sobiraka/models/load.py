@@ -85,10 +85,10 @@ def _load_volume(lang: str | None, codename: str, volume_data: dict, fs: FileSys
         title=_('title'),
         paths=Config_Paths(
             root=Path(_('paths.root', '.')),
-            resources=convert_or_none(Path, _('paths.resources')),
             include=tuple(_('paths.include', ['**/*'])),
             exclude=tuple(_('paths.exclude', '')),
             naming_scheme=convert_or_none(NamingScheme, _('paths.naming_schema')) or NamingScheme(),
+            resources=convert_or_none(Path, _('paths.resources')),
         ),
         html=Config_HTML(
             prefix=_('html.prefix', '$AUTOPREFIX'),

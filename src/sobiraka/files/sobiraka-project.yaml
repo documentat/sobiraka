@@ -40,7 +40,6 @@ $defs:
         additionalProperties: false
         properties:
           root: { type: string }
-          resources: { type: string }
           include:
             type: array
             minItems: 0
@@ -58,6 +57,7 @@ $defs:
             items:
               type: string
               format: regex
+          resources: { type: string }
 
       html:
         additionalProperties: false

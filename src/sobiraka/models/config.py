@@ -15,9 +15,6 @@ class Config_Paths:
     root: Path = None
     """Absolute path to the directory containing the documentation sources."""
 
-    resources: Path | None = None
-    """Absolute path to the directory containing the resources, such as images."""
-
     include: tuple[str] = ('**/*',)
     """
     Patterns used to find source files within the :data:`root`.
@@ -31,6 +28,9 @@ class Config_Paths:
     """
 
     naming_scheme: NamingScheme = NamingScheme()
+
+    resources: Path | None = None
+    """Absolute path to the directory containing the resources, such as images."""
 
 
 @dataclass(kw_only=True, frozen=True)
