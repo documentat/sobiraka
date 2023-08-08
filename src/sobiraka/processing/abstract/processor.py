@@ -118,7 +118,9 @@ class Processor(Dispatcher):
         nodes = [elem]
 
         if not elem.identifier:
-            elem.identifier = stringify(elem).lower().replace(' ', '-')
+            elem.identifier = stringify(elem)
+            elem.identifier = elem.identifier.lower()
+            elem.identifier = re.sub(r'\W+', '-', elem.identifier)
 
         anchor = Anchor(elem.identifier, stringify(elem), elem)
         self.anchors[page].append(anchor)
