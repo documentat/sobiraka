@@ -107,7 +107,7 @@ test-src:
   variables:
     VARIANT: tester-src
 
-lint:
+lint-code:
   extends: .test
   needs: [build-linter]
   variables:
@@ -115,6 +115,14 @@ lint:
   script:
     - make lint
   allow_failure: true
+
+lint-docs:
+  allow_failure: true
+  stage: test
+  image: $CI_REGISTRY_IMAGE/cache/release:by-commit-$CI_COMMIT_SHA
+  script:
+    - ls -A | grep -v docs | xargs rm -rf
+    - sobiraka lint docs/docs.yaml
 
 build-docs:
   stage: test

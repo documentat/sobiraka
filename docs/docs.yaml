@@ -4,3 +4,14 @@ paths:
   include: ['**/*.md']
 html:
   theme: book
+lint:
+  dictionaries:
+    - en_US
+    - ru_RU
+    - lint/dictionaries/en
+    - lint/dictionaries/ru
+  exceptions:
+    - lint/exceptions/branding.txt
+    - lint/exceptions/ru.txt
+    - lint/exceptions/symbols.txt
+    - lint/exceptions/technologies.txt

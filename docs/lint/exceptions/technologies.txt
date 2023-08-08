@@ -1,0 +1,15 @@
+HTML
+html
+iso639
+JSON
+json
+LaTeX
+latex
+md
+PDF
+pdf
+ReStructured Text
+rst
+wcmatch
+YAML
+yaml
