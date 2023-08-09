@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os.path
 import re
 from asyncio import Task, create_subprocess_exec, create_task, gather, to_thread
@@ -17,7 +19,6 @@ from panflute import Element, Header, Image
 from sobiraka.models import DirPage, GlobalToc, IndexPage, LocalToc, Page, PageHref, Project, Syntax, Volume
 from sobiraka.utils import panflute_to_bytes
 from .abstract import ProjectProcessor
-from ..runtime import RT
 
 
 class HtmlBuilder(ProjectProcessor):
@@ -29,16 +30,17 @@ class HtmlBuilder(ProjectProcessor):
         self._results: set[Path] = set()
 
         self._jinja_environments: dict[Volume, jinja2.Environment] = {}
+        self._themes: dict[Volume, HtmlTheme] = {}
 
     async def run(self):
         self.output.mkdir(parents=True, exist_ok=True)
 
         # Copy the theme's static directory
         for volume in self.project.volumes:
-            static = volume.config.html.theme / '_static'
-            for source_path in static.rglob('**/*'):
+            theme = self.get_theme(volume)
+            for source_path in theme.static_dir.rglob('**/*'):
                 if source_path.is_file():
-                    target_path = self.output / '_static' / source_path.relative_to(static)
+                    target_path = self.output / '_static' / source_path.relative_to(theme.static_dir)
                     self._additional_tasks.append(create_task(self.copy_file(source_path, target_path)))
 
         # Copy additional static files
@@ -73,6 +75,11 @@ class HtmlBuilder(ProjectProcessor):
         for directory in dirs_to_delete:
             rmtree(directory, ignore_errors=True)
 
+    def get_theme(self, volume: Volume) -> HtmlTheme:
+        if volume not in self._themes:
+            self._themes[volume] = HtmlTheme(volume.config.html.theme)
+        return self._themes[volume]
+
     async def copy_file(self, source: Path, target: Path):
         await makedirs(target.parent, exist_ok=True)
         await to_thread(self.project.fs.copy, source, target)
@@ -101,7 +108,7 @@ class HtmlBuilder(ProjectProcessor):
         html, _ = await pandoc.communicate(panflute_to_bytes(self.doc[page]))
         assert pandoc.returncode == 0
 
-        template = await self.get_template(page.volume)
+        template = self.get_theme(volume).page_template
         html = await template.render_async(
             builder=self,
 
@@ -126,18 +133,6 @@ class HtmlBuilder(ProjectProcessor):
         target_file.write_text(html, encoding='utf-8')
         self._results.add(target_file)
         return html
-
-    async def get_template(self, volume: Volume) -> jinja2.Template:
-        try:
-            jinja = self._jinja_environments[volume]
-        except KeyError:
-            jinja = self._jinja_environments[volume] = jinja2.Environment(
-                loader=jinja2.FileSystemLoader((RT.FILES / 'themes' / volume.config.html.theme)),
-                enable_async=True,
-                undefined=jinja2.StrictUndefined,
-                comment_start_string='{{#',
-                comment_end_string='#}}')
-        return jinja.get_template('page.html')
 
     def make_target_path(self, page: Page) -> Path:
         target_path = Path()
@@ -221,3 +216,18 @@ class GlobalToc_HTML(GlobalToc):
 
     def syntax(self) -> Syntax:
         return Syntax.HTML
+
+
+class HtmlTheme:
+    def __init__(self, path: Path):
+        self.path: Path = path
+        self.static_dir: Path = path / '_static'
+
+        env = jinja2.Environment(
+            loader=jinja2.FileSystemLoader(path),
+            enable_async=True,
+            undefined=jinja2.StrictUndefined,
+            comment_start_string='{{#',
+            comment_end_string='#}}')
+
+        self.page_template: jinja2.Template = env.get_template('page.html')
