@@ -4,7 +4,7 @@ from sobiraka.models import Page
 from sobiraka.processing.htmlbuilder import HtmlTheme
 
 
-class Theme(HtmlTheme):
+class BookTheme(HtmlTheme):
     async def process_header(self, elem: Header, page: Page) -> tuple[Element, ...]:
         if elem.level >= 2:
             elem.content += (Space(),

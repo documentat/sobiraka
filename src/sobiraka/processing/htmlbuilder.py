@@ -87,8 +87,14 @@ class HtmlBuilder(ProjectProcessor):
             module_spec = spec_from_file_location('theme', theme_dir / 'theme.py')
             module = module_from_spec(module_spec)
             module_spec.loader.exec_module(module)
-            assert issubclass(module.Theme, HtmlTheme)
-            klass = module.Theme
+            klasses = []
+            for klass_name, klass in module.__dict__.items():
+                if not klass_name.startswith('__'):
+                    if issubclass(klass, HtmlTheme):
+                        if klass is not HtmlTheme:
+                            klasses.append(klass)
+            assert len(klasses) == 1
+            klass = klasses[0]
         except FileNotFoundError:
             klass = HtmlTheme
 
