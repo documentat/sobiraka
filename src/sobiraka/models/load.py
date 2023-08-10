@@ -1,4 +1,3 @@
-from functools import partial
 from pathlib import Path
 from textwrap import dedent
 from typing import Iterable
@@ -94,8 +93,7 @@ def _load_volume(lang: str | None, codename: str, volume_data: dict, fs: FileSys
             prefix=_('html.prefix', '$AUTOPREFIX'),
             resources_prefix=_('html.resources_prefix', '_resources'),
             resources_force_copy=_('html.resources_force_copy', ()),
-            theme=convert_or_none(partial(_load_html_theme, fs=fs), _('html.theme'))
-                  or RT.FILES / 'themes' / 'simple',
+            theme=_find_html_theme(_('html.theme', 'simple'), fs=fs),
             theme_data=_('html.theme_data', {}),
         ),
         pdf=Config_PDF(
@@ -110,7 +108,7 @@ def _load_volume(lang: str | None, codename: str, volume_data: dict, fs: FileSys
     ))
 
 
-def _load_html_theme(name: str, *, fs: FileSystem) -> Path:
+def _find_html_theme(name: str, *, fs: FileSystem) -> Path:
     theme_dir = Path(name)
     assert not theme_dir.is_absolute()
 

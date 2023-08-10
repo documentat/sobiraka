@@ -21,10 +21,10 @@ class GitFileSystem(FileSystem):
         raise NotImplementedError
 
     def exists(self, path: Path) -> bool:
-        raise NotImplementedError
+        return str(path) in self.commit.tree
 
     def is_dir(self, path: Path) -> bool:
-        raise NotImplementedError
+        return isinstance(self.commit.tree[str(path)], Tree)
 
     def read_bytes(self, path: Path) -> bytes:
         blob = self.commit.tree / str(path)

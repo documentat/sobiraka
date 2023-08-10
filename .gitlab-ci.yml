@@ -114,11 +114,11 @@ lint-code:
     VARIANT: linter
   script:
     - make lint
-  allow_failure: true
 
 lint-docs:
   allow_failure: true
   stage: test
+  needs: [build-release]
   image: $CI_REGISTRY_IMAGE/cache/release:by-commit-$CI_COMMIT_SHA
   script:
     - ls -A | grep -v docs | xargs rm -rf
@@ -126,6 +126,7 @@ lint-docs:
 
 build-docs:
   stage: test
+  needs: [build-release]
   image: $CI_REGISTRY_IMAGE/cache/release:by-commit-$CI_COMMIT_SHA
   script:
     - ls -A | grep -v docs | xargs rm -rf

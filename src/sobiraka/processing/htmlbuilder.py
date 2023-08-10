@@ -3,8 +3,10 @@ from __future__ import annotations
 import os.path
 import re
 from asyncio import Task, create_subprocess_exec, create_task, gather, to_thread
+from dataclasses import dataclass
 from datetime import datetime
-from functools import partial
+from functools import cache, partial
+from importlib.util import module_from_spec, spec_from_file_location
 from itertools import chain
 from os.path import normpath, relpath
 from pathlib import Path
@@ -17,6 +19,7 @@ from aiofiles.os import makedirs
 from panflute import Element, Header, Image
 
 from sobiraka.models import DirPage, GlobalToc, IndexPage, LocalToc, Page, PageHref, Project, Syntax, Volume
+from sobiraka.processing.abstract.dispatcher import Dispatcher
 from sobiraka.utils import panflute_to_bytes
 from .abstract import ProjectProcessor
 
@@ -37,7 +40,7 @@ class HtmlBuilder(ProjectProcessor):
 
         # Copy the theme's static directory
         for volume in self.project.volumes:
-            theme = self.get_theme(volume)
+            theme = self._get_theme(volume)
             for source_path in theme.static_dir.rglob('**/*'):
                 if source_path.is_file():
                     target_path = self.output / '_static' / source_path.relative_to(theme.static_dir)
@@ -75,10 +78,31 @@ class HtmlBuilder(ProjectProcessor):
         for directory in dirs_to_delete:
             rmtree(directory, ignore_errors=True)
 
-    def get_theme(self, volume: Volume) -> HtmlTheme:
-        if volume not in self._themes:
-            self._themes[volume] = HtmlTheme(volume.config.html.theme)
-        return self._themes[volume]
+    # pylint: disable=method-cache-max-size-none
+    @cache
+    def _get_theme(self, volume: Volume) -> HtmlTheme:
+        theme_dir = volume.config.html.theme
+
+        try:
+            module_spec = spec_from_file_location('theme', theme_dir / 'theme.py')
+            module = module_from_spec(module_spec)
+            module_spec.loader.exec_module(module)
+            assert issubclass(module.Theme, HtmlTheme)
+            klass = module.Theme
+        except FileNotFoundError:
+            klass = HtmlTheme
+
+        jinja_env = jinja2.Environment(
+            loader=jinja2.FileSystemLoader(theme_dir),
+            enable_async=True,
+            undefined=jinja2.StrictUndefined,
+            comment_start_string='{{#',
+            comment_end_string='#}}')
+        page_template = jinja_env.get_template('page.html')
+
+        static_dir = theme_dir / '_static'
+
+        return klass(self, page_template, static_dir)
 
     async def copy_file(self, source: Path, target: Path):
         await makedirs(target.parent, exist_ok=True)
@@ -91,11 +115,9 @@ class HtmlBuilder(ProjectProcessor):
 
         await self.process2(page)
 
-        target_file = self.make_target_path(page)
-        target_file.parent.mkdir(parents=True, exist_ok=True)
-        path_to_root_page = Path(relpath(self.make_target_path(volume.root_page), start=target_file.parent))
-        path_to_static = Path(relpath(self.output / '_static', start=target_file.parent))
-        path_to_resources = Path(relpath(self.output / volume.config.html.resources_prefix, start=target_file.parent))
+        theme = self._get_theme(page.volume)
+        if theme.__class__ is not HtmlTheme:
+            await theme.process_container(self.doc[page], page)
 
         pandoc = await create_subprocess_exec(
             'pandoc',
@@ -108,8 +130,7 @@ class HtmlBuilder(ProjectProcessor):
         html, _ = await pandoc.communicate(panflute_to_bytes(self.doc[page]))
         assert pandoc.returncode == 0
 
-        template = self.get_theme(volume).page_template
-        html = await template.render_async(
+        html = await theme.page_template.render_async(
             builder=self,
 
             project=project,
@@ -124,17 +145,20 @@ class HtmlBuilder(ProjectProcessor):
             local_toc=LocalToc(self, page),
             Language=iso639.Language,
 
-            ROOT_PAGE=path_to_root_page,
-            STATIC=path_to_static,
-            RESOURCES=path_to_resources,
+            ROOT=self.get_path_to_root(page),
+            ROOT_PAGE=self.get_path_to_root_page(page),
+            STATIC=self.get_path_to_static(page),
+            RESOURCES=self.get_path_to_resources(page),
             theme_data=volume.config.html.theme_data,
         )
 
+        target_file = self.get_target_path(page)
+        target_file.parent.mkdir(parents=True, exist_ok=True)
         target_file.write_text(html, encoding='utf-8')
         self._results.add(target_file)
         return html
 
-    def make_target_path(self, page: Page) -> Path:
+    def get_target_path(self, page: Page) -> Path:
         target_path = Path()
         for part in page.path_in_volume.parts:
             target_path /= re.sub(r'^(\d+-)?', '', part)
@@ -171,14 +195,33 @@ class HtmlBuilder(ProjectProcessor):
         if href.target is page:
             result = ''
         else:
-            source_path = self.make_target_path(page)
-            target_path = self.make_target_path(href.target)
+            source_path = self.get_target_path(page)
+            target_path = self.get_target_path(href.target)
             result = relpath(target_path, start=source_path.parent)
 
         if href.anchor:
             result += '#' + href.anchor
 
         return result
+
+    def get_path_to_root(self, page: Page) -> Path:
+        start = self.get_target_path(page)
+        return Path(relpath(self.output, start=start.parent))
+
+    def get_path_to_root_page(self, page: Page) -> Path:
+        start = self.get_target_path(page)
+        root = self.get_target_path(page.volume.root_page)
+        return Path(relpath(root, start=start.parent))
+
+    def get_path_to_static(self, page: Page) -> Path:
+        start = self.get_target_path(page)
+        static = self.output / '_static'
+        return Path(relpath(static, start=start.parent))
+
+    def get_path_to_resources(self, page: Page) -> Path:
+        start = self.get_target_path(page)
+        resources = self.output / page.volume.config.html.resources_prefix
+        return Path(relpath(resources, start=start.parent))
 
     async def process_header(self, elem: Header, page: Page) -> tuple[Element, ...]:
         elems = await super().process_header(elem, page)
@@ -200,7 +243,7 @@ class HtmlBuilder(ProjectProcessor):
 
         if target_path not in self._additional_tasks:
             self._additional_tasks.append(create_task(self.copy_file(source_path, target_path)))
-        elem.url = relpath(target_path, start=self.make_target_path(page).parent)
+        elem.url = relpath(target_path, start=self.get_target_path(page).parent)
         return (elem,)
 
 
@@ -210,24 +253,16 @@ class GlobalToc_HTML(GlobalToc):
     def get_href(self, page: Page) -> str:
         # TODO: implement something like make_target_path() in every Processor
         # pylint: disable=no-member
-        current_path = self.processor.make_target_path(self.current)
-        target_path = self.processor.make_target_path(page)
+        current_path = self.processor.get_target_path(self.current)
+        target_path = self.processor.get_target_path(page)
         return relpath(target_path, start=current_path.parent)
 
     def syntax(self) -> Syntax:
         return Syntax.HTML
 
 
-class HtmlTheme:
-    def __init__(self, path: Path):
-        self.path: Path = path
-        self.static_dir: Path = path / '_static'
-
-        env = jinja2.Environment(
-            loader=jinja2.FileSystemLoader(path),
-            enable_async=True,
-            undefined=jinja2.StrictUndefined,
-            comment_start_string='{{#',
-            comment_end_string='#}}')
-
-        self.page_template: jinja2.Template = env.get_template('page.html')
+@dataclass
+class HtmlTheme(Dispatcher):
+    builder: HtmlBuilder
+    page_template: jinja2.Template
+    static_dir: Path

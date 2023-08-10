@@ -6,7 +6,7 @@ tests:
 	@(cd tests && python -m coverage report --precision=1 --skip-empty --skip-covered --show-missing)
 
 lint:
-	@PYTHONPATH=src python -m pylint sobiraka
+	@PYTHONPATH=src python -m pylint sobiraka src/sobiraka/files/themes/*/theme.py
 
 docs:
 	@PYTHONPATH=src python -m sobiraka html docs/docs.yaml docs/build

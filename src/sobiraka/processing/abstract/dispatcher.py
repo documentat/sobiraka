@@ -1,5 +1,7 @@
+from typing import final
+
 from panflute import BlockQuote, BulletList, Caption, Citation, Cite, Code, CodeBlock, Definition, DefinitionItem, \
-    DefinitionList, Div, Element, Emph, Header, HorizontalRule, Image, LineBlock, LineBreak, LineItem, Link, \
+    DefinitionList, Div, Doc, Element, Emph, Header, HorizontalRule, Image, LineBlock, LineBreak, LineItem, Link, \
     ListContainer, ListItem, Math, Note, Null, OrderedList, Para, Plain, Quoted, RawBlock, RawInline, SmallCaps, \
     SoftBreak, Space, Span, Str, Strikeout, Strong, Subscript, Superscript, Table, TableBody, TableCell, TableFoot, \
     TableHead, TableRow, Underline
@@ -10,6 +12,7 @@ from sobiraka.models import Page
 class Dispatcher:
     # pylint: disable=too-many-public-methods
 
+    @final
     async def process_element(self, elem: Element, page: Page) -> tuple[Element, ...]:
         # pylint: disable=too-many-statements
         match elem:
@@ -38,6 +41,8 @@ class Dispatcher:
                 result = await self.process_definition_list(elem, page)
             case Div():
                 result = await self.process_div(elem, page)
+            case Doc():
+                result = await self.process_container(elem, page)
             case Emph():
                 result = await self.process_emph(elem, page)
             case Header():
