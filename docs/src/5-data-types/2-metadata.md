@@ -12,12 +12,10 @@ version: 12.3
 This is an example page.
 ```
 
-<blockquote class='book-hint warning'>
-
+::: warning
 В данный момент поддерживается только поле `version`.
 Любое другое поле будет ошибкой.
-
-</blockquote>
+:::
 
 ## version
 

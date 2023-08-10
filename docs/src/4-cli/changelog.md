@@ -1,10 +1,8 @@
 # changelog
 
-<blockquote class='book-hint warning'>
-
+::: warning
 Документация по скрипту пока не написана, но можно почитать про [мультиязычность](../1-concepts/2-multilang.md).
-
-</blockquote>
+:::
 
 ## Пример вывода
 

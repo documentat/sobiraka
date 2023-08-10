@@ -26,11 +26,9 @@ languages:
       include: ['**/*.md']
 ```
 
-<blockquote class='book-hint warning'>
-
+::: warning
 В текущей реализации в поле `primary` следует указывать не название языка, а идентификатор тома (см. [Проекты и тома](1-volumes.md)). Так, в проекте с двухуровневой структурой манифеста вам может потребоваться написать `primary: ru/admin-manual` вместо `primary: ru`. Это поведение изменится в будущем, см. [issue #23](https://git.itoolabs.com/documentation/builder/-/issues/23).
-
-</blockquote>
+:::
 
 
 ## Переключение языка в HTML {#switching-languages}

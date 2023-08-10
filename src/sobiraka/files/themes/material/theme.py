@@ -1,7 +1,7 @@
 from uuid import uuid4
 
 import yattag
-from panflute import CodeBlock, Element, Header, Link, RawBlock, Space, Str
+from panflute import CodeBlock, Div, Element, Header, Link, RawBlock, Space, Str
 from pygments import highlight
 from pygments.formatters.html import HtmlFormatter
 from pygments.lexers import get_lexer_by_name
@@ -11,6 +11,8 @@ from sobiraka.processing.htmlbuilder import HtmlTheme
 
 
 class MaterialTheme(HtmlTheme):
+    # pylint: disable=unused-argument
+
     async def process_header(self, elem: Header, page: Page) -> tuple[Element, ...]:
         if elem.level >= 2:
             elem.content += (Space(),
@@ -33,3 +35,21 @@ class MaterialTheme(HtmlTheme):
 
         result = RawBlock(html.getvalue())
         return (result,)
+
+    async def process_div_note(self, elem: Div, page: Page) -> tuple[Element, ...]:
+        return (RawBlock('<div class="admonition note">'),
+                RawBlock('<p class="admonition-title">Note</p>'),
+                *elem.content,
+                RawBlock('</div>'))
+
+    async def process_div_warning(self, elem: Div, page: Page) -> tuple[Element, ...]:
+        return (RawBlock('<div class="admonition warning">'),
+                RawBlock('<p class="admonition-title">Warning</p>'),
+                *elem.content,
+                RawBlock('</div>'))
+
+    async def process_div_danger(self, elem: Div, page: Page) -> tuple[Element, ...]:
+        return (RawBlock('<div class="admonition danger">'),
+                RawBlock('<p class="admonition-title">Danger</p>'),
+                *elem.content,
+                RawBlock('</div>'))

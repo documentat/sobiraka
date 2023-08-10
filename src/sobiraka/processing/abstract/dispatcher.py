@@ -39,8 +39,12 @@ class Dispatcher:
                 result = await self.process_definition_item(elem, page)
             case DefinitionList():
                 result = await self.process_definition_list(elem, page)
-            case Div():
-                result = await self.process_div(elem, page)
+            case Div() as div:
+                if len(div.classes) == 1 \
+                        and (process_custom_div := getattr(self, f'process_div_{div.classes[0]}', None)) is not None:
+                    result = await process_custom_div(div, page)
+                else:
+                    result = await self.process_div(div, page)
             case Doc():
                 result = await self.process_container(elem, page)
             case Emph():
