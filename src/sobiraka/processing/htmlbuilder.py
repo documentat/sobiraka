@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from functools import cache, partial
 from importlib.util import module_from_spec, spec_from_file_location
+from inspect import isclass
 from itertools import chain
 from os.path import normpath, relpath
 from pathlib import Path
@@ -90,7 +91,7 @@ class HtmlBuilder(ProjectProcessor):
             klasses = []
             for klass_name, klass in module.__dict__.items():
                 if not klass_name.startswith('__'):
-                    if issubclass(klass, HtmlTheme):
+                    if isclass(klass) and issubclass(klass, HtmlTheme):
                         if klass is not HtmlTheme:
                             klasses.append(klass)
             assert len(klasses) == 1
