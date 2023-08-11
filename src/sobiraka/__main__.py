@@ -22,6 +22,7 @@ async def async_main():
     cmd_html = commands.add_parser('html', help='Build HTML site.')
     cmd_html.add_argument('project', type=absolute_path)
     cmd_html.add_argument('target', type=absolute_path)
+    cmd_html.add_argument('--hide-index-html', action='store_true', help='Remove the "index.html" part from links.')
 
     cmd_pdf = commands.add_parser('pdf', help='Build PDF file.')
     cmd_pdf.add_argument('project', type=absolute_path)
@@ -60,7 +61,7 @@ async def async_main():
 
         if cmd is cmd_html:
             project = load_project(args.project)
-            exit_code = await HtmlBuilder(project, args.target).run()
+            exit_code = await HtmlBuilder(project, args.target, hide_index_html=args.hide_index_html).run()
 
         elif cmd is cmd_pdf:
             project = load_project(args.project)

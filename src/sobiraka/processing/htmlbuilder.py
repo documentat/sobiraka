@@ -26,9 +26,10 @@ from .abstract import ProjectProcessor
 
 
 class HtmlBuilder(ProjectProcessor):
-    def __init__(self, project: Project, output: Path):
+    def __init__(self, project: Project, output: Path, *, hide_index_html: bool = False):
         super().__init__(project)
         self.output: Path = output
+        self.hide_index_html: bool = hide_index_html
 
         self._additional_tasks: list[Task] = []
         self._results: set[Path] = set()
@@ -153,7 +154,7 @@ class HtmlBuilder(ProjectProcessor):
             Language=iso639.Language,
 
             ROOT=self.get_path_to_root(page),
-            ROOT_PAGE=self.get_path_to_root_page(page),
+            ROOT_PAGE=self.make_internal_url(volume.root_page, page=page),
             STATIC=self.get_path_to_static(page),
             RESOURCES=self.get_path_to_resources(page),
             theme_data=volume.config.html.theme_data,
@@ -204,6 +205,8 @@ class HtmlBuilder(ProjectProcessor):
         else:
             source_path = self.get_target_path(page)
             target_path = self.get_target_path(href.target)
+            if self.hide_index_html and target_path.name == 'index.html':
+                target_path = target_path.parent
             result = relpath(target_path, start=source_path.parent)
 
         if href.anchor:
@@ -214,11 +217,6 @@ class HtmlBuilder(ProjectProcessor):
     def get_path_to_root(self, page: Page) -> Path:
         start = self.get_target_path(page)
         return Path(relpath(self.output, start=start.parent))
-
-    def get_path_to_root_page(self, page: Page) -> Path:
-        start = self.get_target_path(page)
-        root = self.get_target_path(page.volume.root_page)
-        return Path(relpath(root, start=start.parent))
 
     def get_path_to_static(self, page: Page) -> Path:
         start = self.get_target_path(page)
@@ -258,11 +256,7 @@ class GlobalToc_HTML(GlobalToc):
     processor: HtmlBuilder
 
     def get_href(self, page: Page) -> str:
-        # TODO: implement something like make_target_path() in every Processor
-        # pylint: disable=no-member
-        current_path = self.processor.get_target_path(self.current)
-        target_path = self.processor.get_target_path(page)
-        return relpath(target_path, start=current_path.parent)
+        return str(self.processor.make_internal_url(page, page=self.current))
 
     def syntax(self) -> Syntax:
         return Syntax.HTML
