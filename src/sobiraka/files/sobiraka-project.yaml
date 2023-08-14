@@ -3,7 +3,7 @@ oneOf:
 
   - additionalProperties: false
     properties:
-      primary:
+      primary_language:
         type: string
       languages:
         patternProperties:
@@ -11,15 +11,13 @@ oneOf:
 
   - additionalProperties: false
     properties:
-      primary:
-        type: string
       volumes:
         patternProperties:
           .+: { $ref: '#/$defs/project' }
 
   - additionalProperties: false
     properties:
-      primary:
+      primary_language:
         type: string
       languages:
         patternProperties:

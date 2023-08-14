@@ -15,9 +15,9 @@ def check_translations(project: Project, *, strict: bool) -> int:
         print(f'{volume.autoprefix}:', file=sys.stderr)
         with textui.indent(2):
 
-            if volume is project.primary_volume:
+            if volume.lang == project.primary_language:
                 print(colored.green('  This is the primary volume'), file=sys.stderr)
-                print(colored.green(f'  Pages: {len(project.primary_volume.pages)}'), file=sys.stderr)
+                print(colored.green(f'  Pages: {len(volume.pages)}'), file=sys.stderr)
 
             else:
                 pages: dict[TranslationStatus, list[Page]] = {status: [] for status in TranslationStatus}

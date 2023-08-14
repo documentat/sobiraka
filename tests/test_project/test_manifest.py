@@ -34,8 +34,8 @@ class _TestManifest(TestCase, metaclass=ABCMeta):
     @abstractmethod
     def test_resources_prefix(self): ...
 
-    def test_primary_volume(self):
-        self.assertIs(self.project.volumes[0], self.project.primary_volume)
+    def test_primary_language(self):
+        self.assertIs(self.project.volumes[0].lang, self.project.primary_language)
 
 
 class TestManifest_1L_1V(_TestManifest):
@@ -290,11 +290,11 @@ class TestManifest_2L_2V(_TestManifest):
             with self.subTest(f'{i} - {expected}'):
                 self.assertEqual(expected, volume.config.html.resources_prefix)
 
-    def test_primary_volume(self):
-        self.assertEqual('ru/vol1', self.project.primary_volume.autoprefix)
+    def test_primary_language(self):
+        self.assertEqual('ru', self.project.primary_language)
 
     YAML = '''
-        primary: ru/vol1
+        primary_language: ru
         languages:
             en:
                 volumes:
@@ -333,7 +333,7 @@ class TestManifest_2L_2V(_TestManifest):
 
 class TestManifest_2L_2V_LanguageDefaults(TestManifest_2L_2V):
     YAML = '''
-        primary: ru/vol1
+        primary_language: ru
         languages:
             DEFAULT:
                 volumes:
@@ -369,7 +369,7 @@ class TestManifest_2L_2V_LanguageDefaults(TestManifest_2L_2V):
 
 class TestManifest_2L_2V_VolumeDefaults(TestManifest_2L_2V):
     YAML = '''
-        primary: ru/vol1
+        primary_language: ru
         languages:
             en:
                 volumes:
@@ -408,7 +408,7 @@ class TestManifest_2L_2V_VolumeDefaults(TestManifest_2L_2V):
 
 class TestManifest_2L_2V_AllDefaults(TestManifest_2L_2V):
     YAML = '''
-        primary: ru/vol1
+        primary_language: ru
         languages:
             DEFAULT:
                 volumes:

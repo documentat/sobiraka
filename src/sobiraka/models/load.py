@@ -42,17 +42,13 @@ def load_project_from_dict(manifest: dict, *, fs: FileSystem) -> Project:
     if manifest:
         jsonschema.validate(manifest, MANIFEST_SCHEMA)
 
-    volumes: dict[str, Volume] = {}
+    volumes: list[Volume] = []
     for lang, language_data in _normalized_and_merged(manifest, 'languages'):
         for codename, volume_data in _normalized_and_merged(language_data, 'volumes'):
-            volume = _load_volume(lang, codename, volume_data, fs)
-            volumes[volume.autoprefix] = volume
+            volumes.append(_load_volume(lang, codename, volume_data, fs))
 
-    project = Project(fs, tuple(volumes.values()))
-
-    if 'primary' in manifest:
-        project.primary_volume = volumes[manifest['primary']]
-
+    project = Project(fs, tuple(volumes))
+    project.primary_language = manifest.get('primary_language') or volumes[0].lang
     return project
 
 

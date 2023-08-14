@@ -26,7 +26,7 @@ class TestInitProject(TestCase):
             self.assertSequenceEqual(expected, project.volumes)
 
         with self.subTest('primary_volume'):
-            self.assertIs(vol1, project.primary_volume)
+            self.assertIs(None, project.primary_language)
 
     def test_with_fs_dict(self):
         fs = Mock(FileSystem)
@@ -46,8 +46,8 @@ class TestInitProject(TestCase):
             expected = vol1, vol2, vol3
             self.assertSequenceEqual(expected, project.volumes)
 
-        with self.subTest('primary_volume'):
-            self.assertIs(vol1, project.primary_volume)
+        with self.subTest('primary_language'):
+            self.assertIs(None, project.primary_language)
 
         with self.subTest('relative_roots'):
             expected = Path('src1'), Path('src2'), Path('src3')

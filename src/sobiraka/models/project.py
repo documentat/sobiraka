@@ -31,21 +31,21 @@ class Project:
     def __init__(self, *args):
         self.fs: FileSystem
         self.volumes: tuple[Volume, ...]
-        self.primary_volume: Volume
+        self.primary_language: str | None = None
         self.manifest_path: Path | None = None
 
         match args:
             case FileSystem() as fs, tuple() as volumes:
                 self.fs = fs
                 self.volumes = volumes
-                self.primary_volume = self.volumes[0]
+                self.primary_language = self.volumes[0].lang
                 for volume in self.volumes:
                     volume.project = self
 
             case FileSystem() as fs, dict() as volumes:
                 self.fs = fs
                 self.volumes = tuple(volumes.values())
-                self.primary_volume = self.volumes[0]
+                self.primary_language = self.volumes[0].lang
                 for relative_root, volume in volumes.items():
                     volume.project = self
                     volume.relative_root = relative_root
@@ -92,11 +92,8 @@ class Project:
                 return volume
         raise KeyError(path_in_project)
 
-    def get_translation(self, page: Page, lang_or_volume: str | Volume) -> Page:
-        if isinstance(lang_or_volume, str):
-            volume = self.get_volume(lang_or_volume, page.volume.codename)
-        else:
-            volume = lang_or_volume
+    def get_translation(self, page: Page, lang: str) -> Page:
+        volume = self.get_volume(lang, page.volume.codename)
         page_tr = volume.pages_by_path[page.path_in_volume]
         return page_tr
 
