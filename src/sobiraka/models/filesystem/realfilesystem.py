@@ -1,5 +1,5 @@
-import shutil
 from pathlib import Path
+from shutil import copyfile
 from typing import Iterable
 
 from wcmatch.glob import glob
@@ -16,6 +16,7 @@ class RealFileSystem(FileSystem):
 
     def resolve(self, path: Path | None) -> Path:
         if path:
+            assert not path.is_absolute()
             return self.base / path
         return self.base
 
@@ -33,7 +34,8 @@ class RealFileSystem(FileSystem):
 
     def copy(self, source: Path, target: Path):
         source = self.resolve(source)
-        shutil.copyfile(source, target)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        copyfile(source, target)
 
     def glob(self, path: Path, pattern: str) -> Iterable[Path]:
         path = self.resolve(path)

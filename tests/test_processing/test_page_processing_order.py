@@ -19,7 +19,7 @@ class TestPageProcessingOrder(IsolatedAsyncioTestCase):
 
         page_path = self.dir / 'page.md'
         page_path.touch()
-        self.page = Page(self.project.volumes[0], self.dir / 'page.md')
+        self.page = Page(self.project.volumes[0], Path('page.md'))
 
         self.processor = PdfBuilder(self.project.volumes[0], self.dir / 'page.pdf')  # TODO make a simpler processor
 

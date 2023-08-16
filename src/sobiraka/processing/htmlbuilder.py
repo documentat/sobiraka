@@ -11,7 +11,7 @@ from inspect import isclass
 from itertools import chain
 from os.path import normpath, relpath
 from pathlib import Path
-from shutil import rmtree
+from shutil import copyfile, rmtree
 from subprocess import PIPE
 
 import iso639
@@ -46,14 +46,14 @@ class HtmlBuilder(ProjectProcessor):
             for source_path in theme.static_dir.rglob('**/*'):
                 if source_path.is_file():
                     target_path = self.output / '_static' / source_path.relative_to(theme.static_dir)
-                    self._additional_tasks.append(create_task(self.copy_file(source_path, target_path)))
+                    await self.copy_file(source_path, target_path)
 
         # Copy additional static files
         for volume in self.project.volumes:
             for filename in volume.config.html.resources_force_copy:
-                source_path = volume.config.html.resources_prefix / filename
+                source_path = (volume.config.paths.resources or volume.config.paths.root) / filename
                 target_path = self.output / volume.config.html.resources_prefix / filename
-                self._additional_tasks.append(create_task(self.project.fs.copy(source_path, target_path)))
+                await to_thread(self.project.fs.copy, source_path, target_path)
 
         # Generate the HTML pages in no particular order
         generating: list[Task] = []
@@ -114,7 +114,7 @@ class HtmlBuilder(ProjectProcessor):
 
     async def copy_file(self, source: Path, target: Path):
         await makedirs(target.parent, exist_ok=True)
-        await to_thread(self.project.fs.copy, source, target)
+        await to_thread(copyfile, source, target)
         self._results.add(target)
 
     async def generate_html_for_page(self, page: Page) -> str:
@@ -238,7 +238,7 @@ class HtmlBuilder(ProjectProcessor):
         path = Path(elem.url.replace('$LANG', page.volume.lang or ''))
 
         if path.is_absolute():
-            source_path = page.volume.paths.resources / path.relative_to('/')
+            source_path = page.volume.config.paths.resources / path.relative_to('/')
         else:
             source_path = Path(normpath(page.path_in_project.parent / path))
 
@@ -247,7 +247,7 @@ class HtmlBuilder(ProjectProcessor):
                       / source_path.relative_to(page.volume.config.paths.resources)
 
         if target_path not in self._additional_tasks:
-            self._additional_tasks.append(create_task(self.copy_file(source_path, target_path)))
+            self._additional_tasks.append(create_task(to_thread(self.project.fs.copy, source_path, target_path)))
         elem.url = relpath(target_path, start=self.get_target_path(page).parent)
         return (elem,)
 
