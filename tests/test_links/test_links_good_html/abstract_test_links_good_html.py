@@ -1,3 +1,6 @@
+from pathlib import Path
+from tempfile import TemporaryDirectory
+
 from abstracttests.projectdirtestcase import ProjectDirTestCase
 from sobiraka.models import Href, Page, PageHref, UrlHref
 from sobiraka.processing import HtmlBuilder
@@ -5,7 +8,8 @@ from sobiraka.processing import HtmlBuilder
 
 class AbstractTestLinksGoodHtml(ProjectDirTestCase):
     def _init_processor(self):
-        return HtmlBuilder(self.project, self.dir)
+        output = self.enterContext(TemporaryDirectory(prefix='sobiraka-test-'))
+        return HtmlBuilder(self.project, Path(output))
 
     async def asyncSetUp(self):
         await super().asyncSetUp()

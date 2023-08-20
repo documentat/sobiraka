@@ -1,14 +1,16 @@
+import inspect
 import re
 from abc import ABCMeta
 from pathlib import Path
 from unittest import main
+from unittest.mock import Mock
 
 from bs4 import BeautifulSoup
 from bs4.formatter import Formatter
 
 from abstracttests.abstracttestwithrttmp import AbstractTestWithRtTmp
 from abstracttests.projecttestcase import ProjectTestCase
-from sobiraka.models import IndexPage, Page, Project, RealFileSystem, SubtreeToc, TocTreeItem, Volume
+from sobiraka.models import FileSystem, IndexPage, Page, Project, SubtreeToc, TocTreeItem, Volume
 from sobiraka.processing import HtmlBuilder
 from sobiraka.processing.abstract import ProjectProcessor
 from sobiraka.processing.htmlbuilder import GlobalToc_HTML
@@ -20,7 +22,8 @@ class TestToc(ProjectTestCase, metaclass=ABCMeta):
     ext: str
 
     def _init_project(self) -> Project:
-        return Project(RealFileSystem(self.dir), {
+        fs = Mock(FileSystem)
+        return Project(fs, {
             Path('src'): Volume({
                 Path() / f'0-index.{self.ext}': IndexPage('# ('),
                 Path() / 'part1' / f'0-index.{self.ext}': IndexPage('# part1'),
@@ -141,11 +144,13 @@ class TestGlobalToc(TestToc, AbstractTestWithRtTmp):
         self.assertEqual(expected, actual)
 
     async def test_global_toc_rendered(self):
+        test_dir = Path(inspect.getfile(self.__class__)).parent
+
         for name, path in (('root', Path('0-index.md')),
                            ('nonroot', Path('part1/chapter1/section1/article1.md'))):
             page = self.project.get_volume().pages_by_path[path]
             with self.subTest(page):
-                expected_file = self.dir / 'expected' / 'global-html' / f'from-{name}.html'
+                expected_file = test_dir / 'expected' / 'global-html' / f'from-{name}.html'
 
                 expected = expected_file.read_text('utf-8')
                 expected = BeautifulSoup(expected, 'html.parser').prettify(

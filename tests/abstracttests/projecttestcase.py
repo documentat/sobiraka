@@ -1,11 +1,11 @@
-from abc import abstractmethod, ABCMeta
+import inspect
+from abc import ABCMeta, abstractmethod
 from asyncio import gather
-from inspect import getfile
 from pathlib import Path
 from typing import Any, Generic, Iterable, TypeVar
 from unittest import IsolatedAsyncioTestCase, SkipTest
 
-from sobiraka.models import Project, Page
+from sobiraka.models import Page, Project
 from sobiraka.processing.abstract import Processor
 
 T = TypeVar('T', bound=Processor)
@@ -16,9 +16,6 @@ class ProjectTestCase(IsolatedAsyncioTestCase, Generic[T], metaclass=ABCMeta):
 
     async def asyncSetUp(self):
         await super().asyncSetUp()
-
-        filepath = Path(getfile(self.__class__))
-        self.dir: Path = filepath.parent
 
         self.project = self._init_project()
         self.processor: T = self._init_processor()
@@ -42,9 +39,10 @@ class ProjectTestCase(IsolatedAsyncioTestCase, Generic[T], metaclass=ABCMeta):
             return super().subTest(msg, **params)
 
     def for_each_expected(self, suffix: str, *, subdir: str = '') -> Iterable[tuple[Page, Path]]:
+        test_dir = Path(inspect.getfile(self.__class__)).parent
         ok = True
         for page in self.project.pages:
-            expected = self.dir / 'expected' / subdir / page.path_in_volume.with_suffix(suffix)
+            expected = test_dir / 'expected' / subdir / page.path_in_volume.with_suffix(suffix)
             if expected.exists():
                 yield page, expected
             else:
