@@ -46,14 +46,14 @@ class HtmlBuilder(ProjectProcessor):
             for source_path in theme.static_dir.rglob('**/*'):
                 if source_path.is_file():
                     target_path = self.output / '_static' / source_path.relative_to(theme.static_dir)
-                    await self.copy_file_from_theme(source_path, target_path)
+                    self._additional_tasks.append(create_task(self.copy_file_from_theme(source_path, target_path)))
 
         # Copy additional static files
         for volume in self.project.volumes:
             for filename in volume.config.html.resources_force_copy:
                 source_path = (volume.config.paths.resources or volume.config.paths.root) / filename
                 target_path = self.output / volume.config.html.resources_prefix / filename
-                await to_thread(self.project.fs.copy, source_path, target_path)
+                self._additional_tasks.append(create_task(self.copy_file_from_project(source_path, target_path)))
 
         # Generate the HTML pages in no particular order
         generating: list[Task] = []
