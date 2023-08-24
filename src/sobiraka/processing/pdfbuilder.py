@@ -6,9 +6,11 @@ from shutil import copyfile
 from subprocess import DEVNULL, PIPE
 from typing import BinaryIO
 
+from panflute import Element, Header, stringify
+
 from sobiraka.models import Page, PageHref, Volume
 from sobiraka.runtime import RT
-from sobiraka.utils import on_demand, panflute_to_bytes
+from sobiraka.utils import LatexBlock, on_demand, panflute_to_bytes
 from .abstract import VolumeProcessor
 
 
@@ -122,3 +124,22 @@ class PdfBuilder(VolumeProcessor):
         if href.anchor:
             result += '--' + href.anchor
         return result
+
+    async def process_header(self, elem: Header, page: Page) -> tuple[Element, ...]:
+        elem, = list(await super().process_header(elem, page))
+        nodes = [elem]
+
+        if elem.level == 1:
+            full_id = page.id
+        else:
+            full_id = page.id + '--' + elem.identifier
+        nodes.insert(0, LatexBlock(fr'''
+            \hypertarget{{{full_id}}}{{}}
+            \bookmark[level={page.level},dest={full_id}]{{{stringify(elem)}}}
+        '''))
+
+        if page.antilevel > 1:
+            nodes.insert(0, LatexBlock(r'\newpage'))
+            nodes.append(LatexBlock(r'\newpage'))
+
+        return tuple(nodes)

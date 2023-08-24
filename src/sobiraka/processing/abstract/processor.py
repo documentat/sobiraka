@@ -15,7 +15,7 @@ from more_itertools import padded
 from panflute import Code, Doc, Element, Header, Link, Str, stringify
 
 from sobiraka.models import Anchor, Anchors, BadLink, DirPage, Href, Issue, Page, PageHref, Project, UrlHref, Volume
-from sobiraka.utils import LatexBlock, UniqueList, on_demand, save_debug_json
+from sobiraka.utils import UniqueList, on_demand, save_debug_json
 from .dispatcher import Dispatcher
 
 
@@ -115,8 +115,6 @@ class Processor(Dispatcher):
         return page
 
     async def process_header(self, elem: Header, page: Page) -> tuple[Element, ...]:
-        nodes = [elem]
-
         if not elem.identifier:
             elem.identifier = stringify(elem)
             elem.identifier = elem.identifier.lower()
@@ -126,23 +124,9 @@ class Processor(Dispatcher):
         self.anchors[page].append(anchor)
 
         if elem.level == 1:
-            full_id = page.id
-        else:
-            full_id = page.id + '--' + elem.identifier
-
-        if elem.level == 1:
             self.titles[page] = stringify(elem)
 
-        nodes.insert(0, LatexBlock(fr'''
-            \hypertarget{{{full_id}}}{{}}
-            \bookmark[level={page.level},dest={full_id}]{{{stringify(elem)}}}
-        '''))
-
-        if page.antilevel > 1:
-            nodes.insert(0, LatexBlock(r'\newpage'))
-            nodes.append(LatexBlock(r'\newpage'))
-
-        return tuple(nodes)
+        return (elem,)
 
     @on_demand
     async def process2(self, page: Page):
