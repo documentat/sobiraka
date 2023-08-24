@@ -135,7 +135,7 @@ class PdfBuilder(VolumeProcessor):
             full_id = page.id + '--' + elem.identifier
         nodes.insert(0, LatexBlock(fr'''
             \hypertarget{{{full_id}}}{{}}
-            \bookmark[level={page.level},dest={full_id}]{{{stringify(elem)}}}
+            \bookmark[level={elem.level},dest={full_id}]{{{stringify(elem)}}}
         '''))
 
         if page.antilevel > 1:
