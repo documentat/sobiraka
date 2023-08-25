@@ -1,7 +1,7 @@
 from panflute import Div, Element, Header, Link, RawBlock, Space, Str
 
 from sobiraka.models import Page
-from sobiraka.processing.htmlbuilder import HtmlTheme
+from sobiraka.processing.plugin import HtmlTheme
 
 
 class BookTheme(HtmlTheme):

@@ -3,11 +3,8 @@ from __future__ import annotations
 import os.path
 import re
 from asyncio import Task, create_subprocess_exec, create_task, gather, to_thread
-from dataclasses import dataclass
 from datetime import datetime
-from functools import cache, partial
-from importlib.util import module_from_spec, spec_from_file_location
-from inspect import isclass
+from functools import partial
 from itertools import chain
 from os.path import normpath, relpath
 from pathlib import Path
@@ -15,14 +12,13 @@ from shutil import copyfile, rmtree
 from subprocess import PIPE
 
 import iso639
-import jinja2
 from aiofiles.os import makedirs
 from panflute import Element, Header, Image
 
 from sobiraka.models import DirPage, GlobalToc, IndexPage, LocalToc, Page, PageHref, Project, Syntax, Volume
-from sobiraka.processing.abstract.dispatcher import Dispatcher
 from sobiraka.utils import panflute_to_bytes
 from .abstract import ProjectProcessor
+from .plugin import HtmlTheme, load_html_theme
 
 
 class HtmlBuilder(ProjectProcessor):
@@ -34,15 +30,16 @@ class HtmlBuilder(ProjectProcessor):
         self._additional_tasks: list[Task] = []
         self._results: set[Path] = set()
 
-        self._jinja_environments: dict[Volume, jinja2.Environment] = {}
         self._themes: dict[Volume, HtmlTheme] = {}
+        for volume in project.volumes:
+            self._themes[volume] = load_html_theme(volume.config.html.theme)
 
     async def run(self):
         self.output.mkdir(parents=True, exist_ok=True)
 
         # Copy the theme's static directory
         for volume in self.project.volumes:
-            theme = self._get_theme(volume)
+            theme = self._themes[volume]
             for source_path in theme.static_dir.rglob('**/*'):
                 if source_path.is_file():
                     target_path = self.output / '_static' / source_path.relative_to(theme.static_dir)
@@ -80,38 +77,6 @@ class HtmlBuilder(ProjectProcessor):
         for directory in dirs_to_delete:
             rmtree(directory, ignore_errors=True)
 
-    # pylint: disable=method-cache-max-size-none
-    @cache
-    def _get_theme(self, volume: Volume) -> HtmlTheme:
-        theme_dir = volume.config.html.theme
-
-        try:
-            module_spec = spec_from_file_location('theme', theme_dir / 'theme.py')
-            module = module_from_spec(module_spec)
-            module_spec.loader.exec_module(module)
-            klasses = []
-            for klass_name, klass in module.__dict__.items():
-                if not klass_name.startswith('__'):
-                    if isclass(klass) and issubclass(klass, HtmlTheme):
-                        if klass is not HtmlTheme:
-                            klasses.append(klass)
-            assert len(klasses) == 1
-            klass = klasses[0]
-        except FileNotFoundError:
-            klass = HtmlTheme
-
-        jinja_env = jinja2.Environment(
-            loader=jinja2.FileSystemLoader(theme_dir),
-            enable_async=True,
-            undefined=jinja2.StrictUndefined,
-            comment_start_string='{{#',
-            comment_end_string='#}}')
-        page_template = jinja_env.get_template('page.html')
-
-        static_dir = theme_dir / '_static'
-
-        return klass(self, page_template, static_dir)
-
     async def copy_file_from_theme(self, source: Path, target: Path):
         await makedirs(target.parent, exist_ok=True)
         await to_thread(copyfile, source, target)
@@ -128,7 +93,7 @@ class HtmlBuilder(ProjectProcessor):
 
         await self.process2(page)
 
-        theme = self._get_theme(page.volume)
+        theme = self._themes[volume]
         if theme.__class__ is not HtmlTheme:
             await theme.process_container(self.doc[page], page)
 
@@ -265,10 +230,3 @@ class GlobalToc_HTML(GlobalToc):
 
     def syntax(self) -> Syntax:
         return Syntax.HTML
-
-
-@dataclass
-class HtmlTheme(Dispatcher):
-    builder: HtmlBuilder
-    page_template: jinja2.Template
-    static_dir: Path

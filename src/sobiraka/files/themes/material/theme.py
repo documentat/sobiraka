@@ -7,7 +7,7 @@ from pygments.formatters.html import HtmlFormatter
 from pygments.lexers import get_lexer_by_name
 
 from sobiraka.models import Page
-from sobiraka.processing.htmlbuilder import HtmlTheme
+from sobiraka.processing.plugin import HtmlTheme
 
 
 class MaterialTheme(HtmlTheme):
