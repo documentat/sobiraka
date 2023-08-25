@@ -12,6 +12,7 @@ from sobiraka.models import Page, PageHref, Volume
 from sobiraka.runtime import RT
 from sobiraka.utils import LatexBlock, on_demand, panflute_to_bytes
 from .abstract import VolumeProcessor
+from .plugin import PdfTheme, load_pdf_theme
 
 
 class PdfBuilder(VolumeProcessor):
@@ -20,6 +21,10 @@ class PdfBuilder(VolumeProcessor):
         self.output: Path = output
 
         self._latex: dict[Page, bytes] = {}
+
+        self._theme: PdfTheme | None = None
+        if self.volume.config.pdf.theme is not None:
+            self._theme = load_pdf_theme(self.volume.config.pdf.theme)
 
     async def run(self):
         self.output.parent.mkdir(parents=True, exist_ok=True)
@@ -59,10 +64,14 @@ class PdfBuilder(VolumeProcessor):
         if self.print_issues():
             sys.exit(1)
 
-        latex_output.write((RT.FILES / 'base.sty').read_bytes())
-        latex_output.write(b'\n\n' + (80 * b'%'))
+        if self._theme.sty is not None:
+            latex_output.write(b'\n\n' + (80 * b'%'))
+            latex_output.write(b'\n\n%%% ' + self._theme.__class__.__name__.encode('utf-8') + b'\n\n')
+            latex_output.write(self._theme.sty.read_bytes())
+            latex_output.write(b'\n\n' + (80 * b'%'))
         if volume.config.pdf.header:
             latex_output.write(b'\n\n')
+            latex_output.write(b'\n\n%%% Project\'s custom header \n\n')
             latex_output.write(project.fs.read_bytes(volume.config.pdf.header))
             latex_output.write(b'\n\n' + (80 * b'%'))
         latex_output.write(b'\n\n\\begin{document}\n\\begin{sloppypar}')
@@ -70,7 +79,7 @@ class PdfBuilder(VolumeProcessor):
         for page in volume.pages:
             await self.generate_latex_for_page(page)
             latex_output.write(b'\n\n' + (80 * b'%'))
-            latex_output.write(b'\n\n%%% ' + bytes(page.path_in_project) + b'\n')
+            latex_output.write(b'\n\n%%% ' + bytes(page.path_in_project) + b'\n\n')
             latex_output.write(self._latex[page])
 
         latex_output.write(b'\n\n' + (80 * b'%'))
@@ -79,6 +88,9 @@ class PdfBuilder(VolumeProcessor):
     @on_demand
     async def generate_latex_for_page(self, page: Page):
         await self.process2(page)
+
+        if self._theme is not None:
+            await self._theme.process_container(self.doc[page], page)
 
         if len(self.doc[page].content) == 0:
             self._latex[page] = b''

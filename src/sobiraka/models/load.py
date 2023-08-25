@@ -89,11 +89,12 @@ def _load_volume(lang: str | None, codename: str, volume_data: dict, fs: FileSys
             prefix=_('html.prefix', '$AUTOPREFIX'),
             resources_prefix=_('html.resources_prefix', '_resources'),
             resources_force_copy=_('html.resources_force_copy', ()),
-            theme=_find_html_theme(_('html.theme', 'simple'), fs=fs),
+            theme=_find_theme_dir(_('html.theme', 'simple'), fs=fs),
             theme_data=_('html.theme_data', {}),
         ),
         pdf=Config_PDF(
             header=convert_or_none(Path, _('pdf.header')),
+            theme=_find_theme_dir(_('pdf.theme', 'simple'), fs=fs),
         ),
         lint=Config_Lint(
             dictionaries=tuple(_('lint.dictionaries', [])),
@@ -104,7 +105,7 @@ def _load_volume(lang: str | None, codename: str, volume_data: dict, fs: FileSys
     ))
 
 
-def _find_html_theme(name: str, *, fs: FileSystem) -> Path:
+def _find_theme_dir(name: str, *, fs: FileSystem) -> Path:
     theme_dir = Path(name)
     assert not theme_dir.is_absolute()
 

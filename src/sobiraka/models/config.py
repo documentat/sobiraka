@@ -66,6 +66,8 @@ class Config_PDF:
     header: Path | None = None
     """Path to the file containing LaTeX header directives for the volume, if provided."""
 
+    theme: Path = None
+
 
 @dataclass(kw_only=True, frozen=True)
 class Config_Lint_Checks:

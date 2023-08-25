@@ -73,6 +73,7 @@ $defs:
         additionalProperties: false
         properties:
           header: { type: string }
+          theme: { type: string }
 
       lint:
         additionalProperties: false
