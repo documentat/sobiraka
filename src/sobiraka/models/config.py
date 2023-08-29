@@ -68,6 +68,8 @@ class Config_PDF:
 
     theme: Path = None
 
+    numeration: bool = False
+
 
 @dataclass(kw_only=True, frozen=True)
 class Config_Lint_Checks:

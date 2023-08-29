@@ -74,6 +74,7 @@ $defs:
         properties:
           header: { type: string }
           theme: { type: string }
+          numeration: { type: boolean }
 
       lint:
         additionalProperties: false

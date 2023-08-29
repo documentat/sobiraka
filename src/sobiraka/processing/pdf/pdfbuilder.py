@@ -1,17 +1,18 @@
 import os
 import re
 import sys
-from asyncio import create_subprocess_exec
+import urllib.parse
+from asyncio import create_subprocess_exec, gather
 from pathlib import Path
 from shutil import copyfile
 from subprocess import DEVNULL, PIPE
 from typing import BinaryIO
 
-from panflute import Element, Header, stringify
+from panflute import Element, Header, Para, Space, Str, stringify
 
-from sobiraka.models import Page, PageHref, Volume
+from sobiraka.models import Counter, Page, PageHref, Volume
 from sobiraka.runtime import RT
-from sobiraka.utils import LatexBlock, on_demand, panflute_to_bytes
+from sobiraka.utils import LatexInline, on_demand, panflute_to_bytes
 from ..abstract import VolumeProcessor
 from ..plugin import PdfTheme, load_pdf_theme
 
@@ -26,6 +27,8 @@ class PdfBuilder(VolumeProcessor):
         self._theme: PdfTheme | None = None
         if self.volume.config.pdf.theme is not None:
             self._theme = load_pdf_theme(self.volume.config.pdf.theme)
+
+        self._numeration = Counter()
 
     async def run(self):
         self.output.parent.mkdir(parents=True, exist_ok=True)
@@ -136,26 +139,44 @@ class PdfBuilder(VolumeProcessor):
             print('\033[0m', end='', file=sys.stderr)
 
     def make_internal_url(self, href: PageHref, *, page: Page) -> str:
-        result = '#' + href.target.id
+        result = href.target.id
         if href.anchor:
             result += '--' + href.anchor
+        result = urllib.parse.quote(result).replace('%', '')
         return result
 
     async def process_header(self, header: Header, page: Page) -> tuple[Element, ...]:
-        header, = list(await super().process_header(header, page))
-        nodes = [header]
+        header, = await super().process_header(header, page)
 
-        if header.level == 1:
-            full_id = page.id
-        else:
-            full_id = page.id + '--' + header.identifier
-        nodes.insert(0, LatexBlock(fr'''
-            \hypertarget{{{full_id}}}{{}}
-            \bookmark[level={header.level},dest={full_id}]{{{stringify(header)}}}
-        '''))
+        volume: Volume = page.volume
+        config = page.volume.config
 
-        if page.antilevel > 1:
-            nodes.insert(0, LatexBlock(r'\newpage'))
-            nodes.append(LatexBlock(r'\newpage'))
+        if config.pdf.numeration:
+            # Wait until all previous pages are processed
+            n = volume.pages.index(page)
+            await gather(*map(self.process1, volume.pages[:n]))
 
-        return tuple(nodes)
+            # Increase the numeration counter and print it
+            self._numeration.increase(header.level)
+            header.content = Str(f'{self._numeration}.'), Space(), *header.content
+
+        latex: list[Element] = []
+
+        dest = self.make_internal_url(PageHref(page, header.identifier if header.level > 1 else None), page=page)
+        latex += LatexInline(fr'\hypertarget{{{dest}}}{{}}'), Str('\n')
+        latex += LatexInline(fr'\bookmark[level={header.level},dest={dest}]{{ {stringify(header)} }}'), Str('\n')
+
+        tag = {
+            1: 'section',
+            2: 'subsection',
+            3: 'subsubsection',
+            4: 'paragraph',
+            5: 'subparagraph',
+        }[header.level]
+        latex += LatexInline(fr'\{tag}{{'), Space()
+
+        latex += header.content
+
+        latex += Space(), LatexInline('}')
+
+        return (Para(*latex),)

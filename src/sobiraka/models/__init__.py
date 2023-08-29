@@ -1,4 +1,5 @@
 from .anchor import Anchor, Anchors
+from .counter import Counter
 from .filesystem import FileSystem, GitFileSystem, RealFileSystem
 from .href import Href, PageHref, UrlHref
 from .issue import AmbiguosLink, BadLink, Issue, MisspelledWords, PhraseBeginsWithLowerCase
