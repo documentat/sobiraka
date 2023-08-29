@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 from asyncio import create_subprocess_exec
 from pathlib import Path
@@ -11,8 +12,8 @@ from panflute import Element, Header, stringify
 from sobiraka.models import Page, PageHref, Volume
 from sobiraka.runtime import RT
 from sobiraka.utils import LatexBlock, on_demand, panflute_to_bytes
-from .abstract import VolumeProcessor
-from .plugin import PdfTheme, load_pdf_theme
+from ..abstract import VolumeProcessor
+from ..plugin import PdfTheme, load_pdf_theme
 
 
 class PdfBuilder(VolumeProcessor):
@@ -108,6 +109,9 @@ class PdfBuilder(VolumeProcessor):
             await pandoc.wait()
             assert pandoc.returncode == 0
             self._latex[page] = await pandoc.stdout.read()
+
+            self._latex[page] = re.sub(rb'% BEGIN STRIP\n+', b'', self._latex[page])
+            self._latex[page] = re.sub(rb'\n+% END STRIP', b'', self._latex[page])
 
         if RT.TMP:
             (RT.TMP / 'content' / page.path_in_project.with_suffix('.tex')).write_bytes(self._latex[page])
