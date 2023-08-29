@@ -77,8 +77,7 @@ class TabulArrayProcessor(Dispatcher):
                             set_cell = r'\SetCell'
                             if cell_square_bracket_options:
                                 set_cell += '[' + ','.join(cell_square_bracket_options) + ']'
-                            if cell_curly_bracket_options:
-                                set_cell += '{' + ','.join(cell_curly_bracket_options) + '}'
+                            set_cell += '{' + ','.join(cell_curly_bracket_options) + '}'
                             para.content += Space(), LatexInline(set_cell)
 
                         para.content += LatexInline('{'), Space()
