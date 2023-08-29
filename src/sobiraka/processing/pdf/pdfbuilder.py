@@ -80,6 +80,11 @@ class PdfBuilder(VolumeProcessor):
             latex_output.write(b'\n\n' + (80 * b'%'))
         latex_output.write(b'\n\n\\begin{document}\n\\begin{sloppypar}')
 
+        if self._theme.cover is not None:
+            latex_output.write(b'\n\n' + (80 * b'%'))
+            latex_output.write(b'\n\n%%% cover\n\n')
+            latex_output.write(self._theme.cover.read_bytes())
+
         for page in volume.pages:
             await self.generate_latex_for_page(page)
             latex_output.write(b'\n\n' + (80 * b'%'))
