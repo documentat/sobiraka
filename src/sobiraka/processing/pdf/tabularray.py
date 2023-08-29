@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from itertools import chain
 from typing import Sequence
 
 from panflute import BulletList, Element, LineBreak, Para, Plain, Space, Str, Strong, Table, TableBody, TableCell, \
@@ -39,6 +38,9 @@ class TabulArrayProcessor(Dispatcher):
         # pylint: disable=too-many-branches
         # pylint: disable=too-many-locals
         # pylint: disable=too-many-statements
+
+        table = await self.process_container(table, page)
+        assert isinstance(table, Table)
 
         para = Para()
         result = [para]
@@ -123,9 +125,6 @@ class TabulArrayProcessor(Dispatcher):
              \end{tblr}
         '''))
 
-        for i in range(len(result)):
-            result[i] = await self.process_para(result[i], page)
-        result = tuple(chain(*result))
         return tuple(result)
 
 
