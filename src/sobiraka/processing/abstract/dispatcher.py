@@ -158,141 +158,141 @@ class Dispatcher:
     async def process_default(self, elem: Element, page: Page) -> tuple[Element, ...]:
         return (await self.process_container(elem, page),)
 
-    async def process_block_quote(self, elem: BlockQuote, page: Page) -> tuple[Element, ...]:
-        return await self.process_default(elem, page)
+    async def process_block_quote(self, blockquote: BlockQuote, page: Page) -> tuple[Element, ...]:
+        return await self.process_default(blockquote, page)
 
-    async def process_bullet_list(self, elem: BulletList, page: Page) -> tuple[Element, ...]:
-        return await self.process_default(elem, page)
+    async def process_bullet_list(self, bullet_list: BulletList, page: Page) -> tuple[Element, ...]:
+        return await self.process_default(bullet_list, page)
 
-    async def process_caption(self, elem: Caption, page: Page) -> tuple[Element, ...]:
-        return await self.process_default(elem, page)
+    async def process_caption(self, caption: Caption, page: Page) -> tuple[Element, ...]:
+        return await self.process_default(caption, page)
 
-    async def process_citation(self, elem: Citation, page: Page) -> tuple[Element, ...]:
-        return await self.process_default(elem, page)
+    async def process_citation(self, citation: Citation, page: Page) -> tuple[Element, ...]:
+        return await self.process_default(citation, page)
 
-    async def process_cite(self, elem: Cite, page: Page) -> tuple[Element, ...]:
-        return await self.process_default(elem, page)
+    async def process_cite(self, cite: Cite, page: Page) -> tuple[Element, ...]:
+        return await self.process_default(cite, page)
 
-    async def process_code(self, elem: Code, page: Page) -> tuple[Element, ...]:
-        return await self.process_default(elem, page)
+    async def process_code(self, code: Code, page: Page) -> tuple[Element, ...]:
+        return await self.process_default(code, page)
 
-    async def process_code_block(self, elem: CodeBlock, page: Page) -> tuple[Element, ...]:
-        return await self.process_default(elem, page)
+    async def process_code_block(self, code: CodeBlock, page: Page) -> tuple[Element, ...]:
+        return await self.process_default(code, page)
 
-    async def process_definition(self, elem: Definition, page: Page) -> tuple[Element, ...]:
-        return await self.process_default(elem, page)
+    async def process_definition(self, definition: Definition, page: Page) -> tuple[Element, ...]:
+        return await self.process_default(definition, page)
 
-    async def process_definition_item(self, elem: DefinitionItem, page: Page) -> tuple[Element, ...]:
-        return await self.process_default(elem, page)
+    async def process_definition_item(self, definition_item: DefinitionItem, page: Page) -> tuple[Element, ...]:
+        return await self.process_default(definition_item, page)
 
-    async def process_definition_list(self, elem: DefinitionList, page: Page) -> tuple[Element, ...]:
-        return await self.process_default(elem, page)
+    async def process_definition_list(self, definition_list: DefinitionList, page: Page) -> tuple[Element, ...]:
+        return await self.process_default(definition_list, page)
 
-    async def process_div(self, elem: Div, page: Page) -> tuple[Element, ...]:
-        return await self.process_default(elem, page)
+    async def process_div(self, div: Div, page: Page) -> tuple[Element, ...]:
+        return await self.process_default(div, page)
 
-    async def process_emph(self, elem: Emph, page: Page) -> tuple[Element, ...]:
-        return await self.process_default(elem, page)
+    async def process_emph(self, emph: Emph, page: Page) -> tuple[Element, ...]:
+        return await self.process_default(emph, page)
 
-    async def process_header(self, elem: Header, page: Page) -> tuple[Element, ...]:
-        return await self.process_default(elem, page)
+    async def process_header(self, header: Header, page: Page) -> tuple[Element, ...]:
+        return await self.process_default(header, page)
 
-    async def process_horizontal_rule(self, elem: HorizontalRule, page: Page) -> tuple[Element, ...]:
-        return await self.process_default(elem, page)
+    async def process_horizontal_rule(self, rule: HorizontalRule, page: Page) -> tuple[Element, ...]:
+        return await self.process_default(rule, page)
 
-    async def process_image(self, elem: Image, page: Page) -> tuple[Element, ...]:
-        return await self.process_default(elem, page)
+    async def process_image(self, image: Image, page: Page) -> tuple[Element, ...]:
+        return await self.process_default(image, page)
 
-    async def process_line_block(self, elem: LineBlock, page: Page) -> tuple[Element, ...]:
-        return await self.process_default(elem, page)
+    async def process_line_block(self, line_block: LineBlock, page: Page) -> tuple[Element, ...]:
+        return await self.process_default(line_block, page)
 
-    async def process_line_break(self, elem: LineBreak, page: Page) -> tuple[Element, ...]:
-        return await self.process_default(elem, page)
+    async def process_line_break(self, line_break: LineBreak, page: Page) -> tuple[Element, ...]:
+        return await self.process_default(line_break, page)
 
-    async def process_line_item(self, elem: LineItem, page: Page) -> tuple[Element, ...]:
-        return await self.process_default(elem, page)
+    async def process_line_item(self, line_item: LineItem, page: Page) -> tuple[Element, ...]:
+        return await self.process_default(line_item, page)
 
-    async def process_link(self, elem: Link, page: Page) -> tuple[Element, ...]:
-        return await self.process_default(elem, page)
+    async def process_link(self, link: Link, page: Page) -> tuple[Element, ...]:
+        return await self.process_default(link, page)
 
-    async def process_list_item(self, elem: ListItem, page: Page) -> tuple[Element, ...]:
-        return await self.process_default(elem, page)
+    async def process_list_item(self, item: ListItem, page: Page) -> tuple[Element, ...]:
+        return await self.process_default(item, page)
 
-    async def process_math(self, elem: Math, page: Page) -> tuple[Element, ...]:
-        return await self.process_default(elem, page)
+    async def process_math(self, math: Math, page: Page) -> tuple[Element, ...]:
+        return await self.process_default(math, page)
 
-    async def process_note(self, elem: Note, page: Page) -> tuple[Element, ...]:
-        return await self.process_default(elem, page)
+    async def process_note(self, note: Note, page: Page) -> tuple[Element, ...]:
+        return await self.process_default(note, page)
 
     async def process_null(self, elem: Null, page: Page) -> tuple[Element, ...]:
         return await self.process_default(elem, page)
 
-    async def process_ordered_list(self, elem: OrderedList, page: Page) -> tuple[Element, ...]:
-        return await self.process_default(elem, page)
+    async def process_ordered_list(self, ordered_list: OrderedList, page: Page) -> tuple[Element, ...]:
+        return await self.process_default(ordered_list, page)
 
-    async def process_para(self, elem: Para, page: Page) -> tuple[Element, ...]:
-        return await self.process_default(elem, page)
+    async def process_para(self, para: Para, page: Page) -> tuple[Element, ...]:
+        return await self.process_default(para, page)
 
-    async def process_plain(self, elem: Plain, page: Page) -> tuple[Element, ...]:
-        return await self.process_default(elem, page)
+    async def process_plain(self, plain: Plain, page: Page) -> tuple[Element, ...]:
+        return await self.process_default(plain, page)
 
-    async def process_quoted(self, elem: Quoted, page: Page) -> tuple[Element, ...]:
-        return await self.process_default(elem, page)
+    async def process_quoted(self, quoted: Quoted, page: Page) -> tuple[Element, ...]:
+        return await self.process_default(quoted, page)
 
-    async def process_raw_block(self, elem: RawBlock, page: Page) -> tuple[Element, ...]:
-        return await self.process_default(elem, page)
+    async def process_raw_block(self, raw: RawBlock, page: Page) -> tuple[Element, ...]:
+        return await self.process_default(raw, page)
 
-    async def process_raw_inline(self, elem: RawInline, page: Page) -> tuple[Element, ...]:
-        return await self.process_default(elem, page)
+    async def process_raw_inline(self, raw: RawInline, page: Page) -> tuple[Element, ...]:
+        return await self.process_default(raw, page)
 
-    async def process_small_caps(self, elem: SmallCaps, page: Page) -> tuple[Element, ...]:
-        return await self.process_default(elem, page)
+    async def process_small_caps(self, small_caps: SmallCaps, page: Page) -> tuple[Element, ...]:
+        return await self.process_default(small_caps, page)
 
-    async def process_soft_break(self, elem: SoftBreak, page: Page) -> tuple[Element, ...]:
-        return await self.process_default(elem, page)
+    async def process_soft_break(self, soft_break: SoftBreak, page: Page) -> tuple[Element, ...]:
+        return await self.process_default(soft_break, page)
 
-    async def process_space(self, elem: Space, page: Page) -> tuple[Element, ...]:
-        return await self.process_default(elem, page)
+    async def process_space(self, space: Space, page: Page) -> tuple[Element, ...]:
+        return await self.process_default(space, page)
 
-    async def process_span(self, elem: Span, page: Page) -> tuple[Element, ...]:
-        return await self.process_default(elem, page)
+    async def process_span(self, span: Span, page: Page) -> tuple[Element, ...]:
+        return await self.process_default(span, page)
 
     async def process_str(self, elem: Str, page: Page) -> tuple[Element, ...]:
         return await self.process_default(elem, page)
 
-    async def process_strikeout(self, elem: Strikeout, page: Page) -> tuple[Element, ...]:
-        return await self.process_default(elem, page)
+    async def process_strikeout(self, strikeout: Strikeout, page: Page) -> tuple[Element, ...]:
+        return await self.process_default(strikeout, page)
 
-    async def process_strong(self, elem: Strong, page: Page) -> tuple[Element, ...]:
-        return await self.process_default(elem, page)
+    async def process_strong(self, strong: Strong, page: Page) -> tuple[Element, ...]:
+        return await self.process_default(strong, page)
 
-    async def process_subscript(self, elem: Subscript, page: Page) -> tuple[Element, ...]:
-        return await self.process_default(elem, page)
+    async def process_subscript(self, subscript: Subscript, page: Page) -> tuple[Element, ...]:
+        return await self.process_default(subscript, page)
 
-    async def process_superscript(self, elem: Superscript, page: Page) -> tuple[Element, ...]:
-        return await self.process_default(elem, page)
+    async def process_superscript(self, superscript: Superscript, page: Page) -> tuple[Element, ...]:
+        return await self.process_default(superscript, page)
 
-    async def process_table(self, elem: Table, page: Page) -> tuple[Element, ...]:
-        return await self.process_default(elem, page)
+    async def process_table(self, table: Table, page: Page) -> tuple[Element, ...]:
+        return await self.process_default(table, page)
 
-    async def process_table_body(self, elem: TableBody, page: Page) -> tuple[Element, ...]:
-        return await self.process_default(elem, page)
+    async def process_table_body(self, body: TableBody, page: Page) -> tuple[Element, ...]:
+        return await self.process_default(body, page)
 
-    async def process_table_cell(self, elem: TableCell, page: Page) -> tuple[Element, ...]:
-        return await self.process_default(elem, page)
+    async def process_table_cell(self, cell: TableCell, page: Page) -> tuple[Element, ...]:
+        return await self.process_default(cell, page)
 
-    async def process_table_foot(self, elem: TableFoot, page: Page) -> tuple[Element, ...]:
-        return await self.process_default(elem, page)
+    async def process_table_foot(self, foot: TableFoot, page: Page) -> tuple[Element, ...]:
+        return await self.process_default(foot, page)
 
-    async def process_table_head(self, elem: TableHead, page: Page) -> tuple[Element, ...]:
-        return await self.process_default(elem, page)
+    async def process_table_head(self, head: TableHead, page: Page) -> tuple[Element, ...]:
+        return await self.process_default(head, page)
 
-    async def process_table_row(self, elem: TableRow, page: Page) -> tuple[Element, ...]:
-        return await self.process_default(elem, page)
+    async def process_table_row(self, row: TableRow, page: Page) -> tuple[Element, ...]:
+        return await self.process_default(row, page)
 
-    async def process_underline(self, elem: Underline, page: Page) -> tuple[Element, ...]:
-        return await self.process_default(elem, page)
+    async def process_underline(self, underline: Underline, page: Page) -> tuple[Element, ...]:
+        return await self.process_default(underline, page)
 
     # pylint: disable=unused-argument
-    async def process_role_doc(self, elem: Code, page: Page) -> tuple[Element, ...]:
-        return (Emph(Str(elem.text)),)
+    async def process_role_doc(self, code: Code, page: Page) -> tuple[Element, ...]:
+        return (Emph(Str(code.text)),)

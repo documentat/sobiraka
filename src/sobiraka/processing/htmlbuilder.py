@@ -198,14 +198,14 @@ class HtmlBuilder(ProjectProcessor):
         resources = self.output / page.volume.config.html.resources_prefix
         return Path(relpath(resources, start=start.parent))
 
-    async def process_header(self, elem: Header, page: Page) -> tuple[Element, ...]:
-        elems = await super().process_header(elem, page)
-        if elem.level == 1:
+    async def process_header(self, header: Header, page: Page) -> tuple[Element, ...]:
+        elems = await super().process_header(header, page)
+        if header.level == 1:
             return ()
         return elems
 
-    async def process_image(self, elem: Image, page: Page) -> tuple[Image, ...]:
-        path = Path(elem.url.replace('$LANG', page.volume.lang or ''))
+    async def process_image(self, image: Image, page: Page) -> tuple[Image, ...]:
+        path = Path(image.url.replace('$LANG', page.volume.lang or ''))
 
         if path.is_absolute():
             source_path = page.volume.config.paths.resources / path.relative_to('/')
@@ -218,8 +218,8 @@ class HtmlBuilder(ProjectProcessor):
 
         if target_path not in self._additional_tasks:
             self._additional_tasks.append(create_task(self.copy_file_from_project(source_path, target_path)))
-        elem.url = relpath(target_path, start=self.get_target_path(page).parent)
-        return (elem,)
+        image.url = relpath(target_path, start=self.get_target_path(page).parent)
+        return (image,)
 
 
 class GlobalToc_HTML(GlobalToc):

@@ -7,23 +7,23 @@ from sobiraka.processing.plugin import HtmlTheme
 class BookTheme(HtmlTheme):
     # pylint: disable=unused-argument
 
-    async def process_header(self, elem: Header, page: Page) -> tuple[Element, ...]:
-        if elem.level >= 2:
-            elem.content += (Space(),
-                             Link(Str('#'), url=f'#{elem.identifier}', classes=['anchor']))
-        return (elem,)
+    async def process_header(self, header: Header, page: Page) -> tuple[Element, ...]:
+        if header.level >= 2:
+            header.content += (Space(),
+                               Link(Str('#'), url=f'#{header.identifier}', classes=['anchor']))
+        return (header,)
 
-    async def process_div_note(self, elem: Div, page: Page) -> tuple[Element, ...]:
+    async def process_div_note(self, div: Div, page: Page) -> tuple[Element, ...]:
         return (RawBlock('<blockquote class="book-hint info">'),
-                *elem.content,
+                *div.content,
                 RawBlock('</blockquote>'))
 
-    async def process_div_warning(self, elem: Div, page: Page) -> tuple[Element, ...]:
+    async def process_div_warning(self, div: Div, page: Page) -> tuple[Element, ...]:
         return (RawBlock('<blockquote class="book-hint warning">'),
-                *elem.content,
+                *div.content,
                 RawBlock('</blockquote>'))
 
-    async def process_div_danger(self, elem: Div, page: Page) -> tuple[Element, ...]:
+    async def process_div_danger(self, div: Div, page: Page) -> tuple[Element, ...]:
         return (RawBlock('<blockquote class="book-hint danger">'),
-                *elem.content,
+                *div.content,
                 RawBlock('</blockquote>'))

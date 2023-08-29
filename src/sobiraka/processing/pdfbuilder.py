@@ -137,17 +137,17 @@ class PdfBuilder(VolumeProcessor):
             result += '--' + href.anchor
         return result
 
-    async def process_header(self, elem: Header, page: Page) -> tuple[Element, ...]:
-        elem, = list(await super().process_header(elem, page))
-        nodes = [elem]
+    async def process_header(self, header: Header, page: Page) -> tuple[Element, ...]:
+        header, = list(await super().process_header(header, page))
+        nodes = [header]
 
-        if elem.level == 1:
+        if header.level == 1:
             full_id = page.id
         else:
-            full_id = page.id + '--' + elem.identifier
+            full_id = page.id + '--' + header.identifier
         nodes.insert(0, LatexBlock(fr'''
             \hypertarget{{{full_id}}}{{}}
-            \bookmark[level={elem.level},dest={full_id}]{{{stringify(elem)}}}
+            \bookmark[level={header.level},dest={full_id}]{{{stringify(header)}}}
         '''))
 
         if page.antilevel > 1:

@@ -114,19 +114,19 @@ class Processor(Dispatcher):
         save_debug_json('s1', page, self.doc[page])
         return page
 
-    async def process_header(self, elem: Header, page: Page) -> tuple[Element, ...]:
-        if not elem.identifier:
-            elem.identifier = stringify(elem)
-            elem.identifier = elem.identifier.lower()
-            elem.identifier = re.sub(r'\W+', '-', elem.identifier)
+    async def process_header(self, header: Header, page: Page) -> tuple[Element, ...]:
+        if not header.identifier:
+            header.identifier = stringify(header)
+            header.identifier = header.identifier.lower()
+            header.identifier = re.sub(r'\W+', '-', header.identifier)
 
-        anchor = Anchor(elem.identifier, stringify(elem), elem)
+        anchor = Anchor(header.identifier, stringify(header), header)
         self.anchors[page].append(anchor)
 
-        if elem.level == 1:
-            self.titles[page] = stringify(elem)
+        if header.level == 1:
+            self.titles[page] = stringify(header)
 
-        return (elem,)
+        return (header,)
 
     @on_demand
     async def process2(self, page: Page):
@@ -149,22 +149,22 @@ class Processor(Dispatcher):
     # --------------------------------------------------------------------------------
     # Internal links
 
-    async def process_link(self, elem: Link, page: Page):
-        if re.match(r'^\w+:', elem.url):
-            self.links[page].append(UrlHref(elem.url))
+    async def process_link(self, link: Link, page: Page):
+        if re.match(r'^\w+:', link.url):
+            self.links[page].append(UrlHref(link.url))
         else:
             if page.path_in_volume.suffix == '.rst':
-                self.issues[page].append(BadLink(elem.url))
+                self.issues[page].append(BadLink(link.url))
                 return
-            await self._process_internal_link(elem, elem.url, page)
+            await self._process_internal_link(link, link.url, page)
 
-    async def process_role_doc(self, elem: Code, page: Page):
-        if m := re.fullmatch(r'(.+) < (.+) >', elem.text, flags=re.X):
+    async def process_role_doc(self, code: Code, page: Page):
+        if m := re.fullmatch(r'(.+) < (.+) >', code.text, flags=re.X):
             label = m.group(1).strip()
             target_text = m.group(2)
         else:
             label = None
-            target_text = elem.text
+            target_text = code.text
 
         link = Link(Str(label))
         await self._process_internal_link(link, target_text, page)

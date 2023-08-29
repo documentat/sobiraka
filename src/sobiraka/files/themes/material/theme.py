@@ -13,17 +13,17 @@ from sobiraka.processing.plugin import HtmlTheme
 class MaterialTheme(HtmlTheme):
     # pylint: disable=unused-argument
 
-    async def process_header(self, elem: Header, page: Page) -> tuple[Element, ...]:
-        if elem.level >= 2:
-            elem.content += (Space(),
-                             Link(Str('¶'), url=f'#{elem.identifier}', classes=['headerlink']))
-        return (elem,)
+    async def process_header(self, header: Header, page: Page) -> tuple[Element, ...]:
+        if header.level >= 2:
+            header.content += (Space(),
+                               Link(Str('¶'), url=f'#{header.identifier}', classes=['headerlink']))
+        return (header,)
 
-    async def process_code_block(self, elem: CodeBlock, page: Page) -> tuple[Element, ...]:
-        syntax, = elem.classes or ('text',)
+    async def process_code_block(self, code: CodeBlock, page: Page) -> tuple[Element, ...]:
+        syntax, = code.classes or ('text',)
         pygments_lexer = get_lexer_by_name(syntax)
         pygments_formatter = HtmlFormatter(nowrap=True)
-        pygments_output = highlight(elem.text, pygments_lexer, pygments_formatter)
+        pygments_output = highlight(code.text, pygments_lexer, pygments_formatter)
 
         code_block_id = f'code-{uuid4()}'
 
@@ -36,20 +36,20 @@ class MaterialTheme(HtmlTheme):
         result = RawBlock(html.getvalue())
         return (result,)
 
-    async def process_div_note(self, elem: Div, page: Page) -> tuple[Element, ...]:
+    async def process_div_note(self, div: Div, page: Page) -> tuple[Element, ...]:
         return (RawBlock('<div class="admonition note">'),
                 RawBlock('<p class="admonition-title">Note</p>'),
-                *elem.content,
+                *div.content,
                 RawBlock('</div>'))
 
-    async def process_div_warning(self, elem: Div, page: Page) -> tuple[Element, ...]:
+    async def process_div_warning(self, div: Div, page: Page) -> tuple[Element, ...]:
         return (RawBlock('<div class="admonition warning">'),
                 RawBlock('<p class="admonition-title">Warning</p>'),
-                *elem.content,
+                *div.content,
                 RawBlock('</div>'))
 
-    async def process_div_danger(self, elem: Div, page: Page) -> tuple[Element, ...]:
+    async def process_div_danger(self, div: Div, page: Page) -> tuple[Element, ...]:
         return (RawBlock('<div class="admonition danger">'),
                 RawBlock('<p class="admonition-title">Danger</p>'),
-                *elem.content,
+                *div.content,
                 RawBlock('</div>'))
