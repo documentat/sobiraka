@@ -1,5 +1,4 @@
 from abc import ABCMeta
-from contextlib import suppress
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -17,15 +16,13 @@ def load_pdf_theme(theme_dir: Path) -> PdfTheme:
         theme = load_plugin(theme_dir / 'theme.py', base_class=PdfTheme)()
     except FileNotFoundError:
         theme = PdfTheme()
-
-    with suppress(AssertionError):
-        sty = theme_dir / 'theme.sty'
-        assert sty.exists()
-        theme.sty = sty
-
-    with suppress(AssertionError):
-        cover = theme_dir / 'cover.tex'
-        assert cover.exists()
-        theme.cover = cover
-
+    theme.sty = _try_find_file(theme_dir, 'theme.sty')
+    theme.cover = _try_find_file(theme_dir, 'cover.tex')
     return theme
+
+
+def _try_find_file(base: Path, filename: str) -> Path | None:
+    path = base / filename
+    if path.exists():
+        return path
+    return None
