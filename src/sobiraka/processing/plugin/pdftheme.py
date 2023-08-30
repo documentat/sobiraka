@@ -9,6 +9,7 @@ from .plugin import Plugin, load_plugin
 class PdfTheme(Plugin, metaclass=ABCMeta):
     sty: Path = None
     cover: Path = None
+    toc: Path = None
 
 
 def load_pdf_theme(theme_dir: Path) -> PdfTheme:
@@ -18,6 +19,7 @@ def load_pdf_theme(theme_dir: Path) -> PdfTheme:
         theme = PdfTheme()
     theme.sty = _try_find_file(theme_dir, 'theme.sty')
     theme.cover = _try_find_file(theme_dir, 'cover.tex')
+    theme.toc = _try_find_file(theme_dir, 'toc.tex')
     return theme
 
 

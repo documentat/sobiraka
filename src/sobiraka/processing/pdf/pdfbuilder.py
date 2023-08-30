@@ -44,18 +44,21 @@ class PdfBuilder(VolumeProcessor):
         with open(xelatex_workdir / 'build.tex', 'wb') as latex_output:
             await self.generate_latex(latex_output)
 
-        xelatex = await create_subprocess_exec(
-            'xelatex',
-            'build.tex',
-            '-halt-on-error',
-            cwd=xelatex_workdir,
-            env=os.environ | {'TEXINPUTS': f'{self.volume.project.fs.resolve(self.volume.config.paths.resources)}:'},
-            stdin=DEVNULL,
-            stdout=DEVNULL)
-        await xelatex.wait()
-        if xelatex.returncode != 0:
-            self.print_xelatex_error(xelatex_workdir / 'build.log')
-            sys.exit(1)
+        env = os.environ | {'TEXINPUTS': f'{self.volume.project.fs.resolve(self.volume.config.paths.resources)}:'}
+        for n in range(1, 4):
+            print(f'Running XeLaTeX ({n})...', file=sys.stderr)
+            xelatex = await create_subprocess_exec(
+                'xelatex',
+                'build.tex',
+                '-halt-on-error',
+                cwd=xelatex_workdir,
+                env=env,
+                stdin=DEVNULL,
+                stdout=DEVNULL)
+            await xelatex.wait()
+            if xelatex.returncode != 0:
+                self.print_xelatex_error(xelatex_workdir / 'build.log')
+                sys.exit(1)
         copyfile(xelatex_workdir / 'build.pdf', self.output)
 
     async def generate_latex(self, latex_output: BinaryIO):
@@ -84,6 +87,11 @@ class PdfBuilder(VolumeProcessor):
             latex_output.write(b'\n\n' + (80 * b'%'))
             latex_output.write(b'\n\n%%% cover\n\n')
             latex_output.write(self._theme.cover.read_bytes())
+
+        if self._theme.toc is not None:
+            latex_output.write(b'\n\n' + (80 * b'%'))
+            latex_output.write(b'\n\n%%% cover\n\n')
+            latex_output.write(self._theme.toc.read_bytes())
 
         for page in volume.pages:
             await self.generate_latex_for_page(page)
