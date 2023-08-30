@@ -71,10 +71,10 @@ class PdfBuilder(VolumeProcessor):
         if self.print_issues():
             sys.exit(1)
 
-        if self._theme.sty is not None:
+        if self._theme.style is not None:
             latex_output.write(b'\n\n' + (80 * b'%'))
             latex_output.write(b'\n\n%%% ' + self._theme.__class__.__name__.encode('utf-8') + b'\n\n')
-            latex_output.write(self._theme.sty.read_bytes())
+            latex_output.write(self._theme.style.read_bytes())
             latex_output.write(b'\n\n' + (80 * b'%'))
         if volume.config.pdf.header:
             latex_output.write(b'\n\n')
