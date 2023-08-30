@@ -8,11 +8,11 @@ from shutil import copyfile
 from subprocess import DEVNULL, PIPE
 from typing import BinaryIO
 
-from panflute import Element, Header, Para, Space, Str, stringify
+from panflute import Element, Header, Space, Str, stringify
 
 from sobiraka.models import Counter, Page, PageHref, Volume
 from sobiraka.runtime import RT
-from sobiraka.utils import LatexInline, on_demand, panflute_to_bytes
+from sobiraka.utils import LatexInline, WrapperPara, on_demand, panflute_to_bytes
 from ..abstract import VolumeProcessor
 from ..plugin import PdfTheme, load_pdf_theme
 
@@ -152,6 +152,7 @@ class PdfBuilder(VolumeProcessor):
 
     async def process_header(self, header: Header, page: Page) -> tuple[Element, ...]:
         header, = await super().process_header(header, page)
+        assert isinstance(header, Header)
 
         volume: Volume = page.volume
         config = page.volume.config
@@ -184,4 +185,4 @@ class PdfBuilder(VolumeProcessor):
 
         latex += Space(), LatexInline('}')
 
-        return (Para(*latex),)
+        return (WrapperPara(header, *latex),)
