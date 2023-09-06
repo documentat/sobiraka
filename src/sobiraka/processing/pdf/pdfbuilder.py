@@ -12,9 +12,10 @@ from panflute import Element, Header, Space, Str, stringify
 
 from sobiraka.models import Counter, Page, PageHref, Volume
 from sobiraka.runtime import RT
-from sobiraka.utils import LatexInline, WrapperPara, on_demand, panflute_to_bytes
+from sobiraka.utils import LatexInline, on_demand, panflute_to_bytes
 from ..abstract import VolumeProcessor
 from ..plugin import PdfTheme, load_pdf_theme
+from ..replacement import HeaderReplPara
 
 
 class PdfBuilder(VolumeProcessor):
@@ -193,4 +194,4 @@ class PdfBuilder(VolumeProcessor):
 
         latex += Space(), LatexInline('}')
 
-        return (WrapperPara(header, *latex),)
+        return (HeaderReplPara(header, *latex),)

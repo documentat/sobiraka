@@ -3,12 +3,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Sequence
 
-from panflute import BulletList, Element, LineBreak, Para, Plain, Space, Str, Strong, Table, TableBody, TableCell, \
-    stringify
+from panflute import BulletList, Element, LineBreak, Plain, Space, Str, Strong, Table, TableBody, TableCell, stringify
 
 from sobiraka.models import Page
 from sobiraka.utils import LatexBlock, LatexInline
 from ..abstract import Dispatcher
+from ..replacement import TableReplPara
 
 
 class TabulArrayProcessor(Dispatcher):
@@ -42,7 +42,7 @@ class TabulArrayProcessor(Dispatcher):
         table = await self.process_container(table, page)
         assert isinstance(table, Table)
 
-        para = Para()
+        para = TableReplPara(table)
         result = [para]
 
         table_square_bracket_options = list(self._table_square_bracket_options(table))
@@ -99,11 +99,11 @@ class TabulArrayProcessor(Dispatcher):
                                         LatexBlock(r'\begin{tcolorbox}[size=tight,opacityframe=0,opacityback=0]'), \
                                             block_item, \
                                             LatexBlock(r'\end{tcolorbox}'), \
-                                            Para()
+                                            TableReplPara(table)
                                     para = result[-1]
                                 else:
                                     result.append(block_item)
-                                    result.append(Para())
+                                    result.append(TableReplPara(table))
                                     para = result[-1]
                             para.content += LatexInline('% END STRIP'), Str('\n')
 
