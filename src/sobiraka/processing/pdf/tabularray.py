@@ -24,8 +24,8 @@ class TabulArrayProcessor(Dispatcher):
         para = TableReplPara(table)
         result = [para]
 
-        table_square_bracket_options = list(self._table_square_bracket_options(table))
-        table_curly_bracket_options = list(self._table_curly_bracket_options(table))
+        table_square_bracket_options = list(self.tabularray_table_square_bracket_options(table))
+        table_curly_bracket_options = list(self.tabularray_table_curly_bracket_options(table))
         para.content.append(LatexInline(r'\begin{tblr}'
                                         + '[' + ','.join(table_square_bracket_options) + ']'
                                         + '{' + ','.join(table_curly_bracket_options) + '}'))
@@ -49,8 +49,8 @@ class TabulArrayProcessor(Dispatcher):
                         cell = cell_placement.cell
                         assert cell.colspan == 1, 'This class does not support multi-column cells yet.'
 
-                        cell_square_bracket_options = list(self._cell_square_bracket_options(cell_placement))
-                        cell_curly_bracket_options = list(self._cell_curly_bracket_options(cell_placement))
+                        cell_square_bracket_options = list(self.tabularray_cell_square_bracket_options(cell_placement))
+                        cell_curly_bracket_options = list(self.tabularray_cell_curly_bracket_options(cell_placement))
                         if cell.rowspan > 1:
                             cell_square_bracket_options.append(f'r={cell.rowspan}')
                             do_not_break_table = True
@@ -106,24 +106,24 @@ class TabulArrayProcessor(Dispatcher):
 
         return tuple(result)
 
-    def _table_colspec(self, table: Table) -> Sequence[str]:
+    def tabularray_colspec(self, table: Table) -> Sequence[str]:
         return 'X' * table.cols
 
-    def _table_square_bracket_options(self, table: Table) -> Sequence[str]:
+    def tabularray_table_square_bracket_options(self, table: Table) -> Sequence[str]:
         # pylint: disable=unused-argument
         yield 'long=true'
         yield 'theme=empty'
 
-    def _table_curly_bracket_options(self, table: Table) -> Sequence[str]:
-        yield 'colspec={' + ''.join(self._table_colspec(table)) + '}'
+    def tabularray_table_curly_bracket_options(self, table: Table) -> Sequence[str]:
+        yield 'colspec={' + ''.join(self.tabularray_colspec(table)) + '}'
         yield 'rowhead=1'
         yield 'cells={valign=t}'
 
-    def _cell_square_bracket_options(self, cell_placement: CellPlacement) -> Sequence[str]:
+    def tabularray_cell_square_bracket_options(self, cell_placement: CellPlacement) -> Sequence[str]:
         # pylint: disable=unused-argument
         return []
 
-    def _cell_curly_bracket_options(self, cell_placement: CellPlacement) -> Sequence[str]:
+    def tabularray_cell_curly_bracket_options(self, cell_placement: CellPlacement) -> Sequence[str]:
         # pylint: disable=unused-argument
         return []
 
