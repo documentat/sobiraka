@@ -188,7 +188,3 @@ def _grid(table: Table) -> list[list[CellPlacement | CellContinuation]]:
                 counted_i += 1
 
     return grid
-
-
-def _cell_color(cell_placement: CellPlacement) -> str:
-    return 'lightgray' if cell_placement.counted_i % 2 == 0 else 'darkgray'
