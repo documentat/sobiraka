@@ -273,6 +273,8 @@ class Dispatcher:
         return await self.process_default(superscript, page)
 
     async def process_table(self, table: Table, page: Page) -> tuple[Element, ...]:
+        head, = await self.process_table_head(table.head, page)
+        assert head is table.head
         return await self.process_default(table, page)
 
     async def process_table_body(self, body: TableBody, page: Page) -> tuple[Element, ...]:
