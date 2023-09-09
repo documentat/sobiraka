@@ -133,8 +133,8 @@ class CellPlacement:
     cell: TableCell | None
     i: int = None
     j: int = None
-    content_i: int = None
-    content_j: int = None
+    counted_i: int = None
+    counted_j: int = None
 
     def __repr__(self):
         return f'<PLACE({self.i},{self.j}) {repr(stringify(self.cell)[:20])}>'
@@ -175,20 +175,20 @@ def _grid(table: Table) -> list[list[CellPlacement | CellContinuation]]:
             grid[i][j].j = j
 
     for i in range(rownum):
-        content_j = 0
+        counted_j = 0
         for j in range(colnum):
             if isinstance(grid[i][j], CellPlacement):
-                grid[i][j].content_j = content_j
-                content_j += 1
+                grid[i][j].counted_j = counted_j
+                counted_j += 1
     for j in range(colnum):
-        content_i = 0
+        counted_i = 0
         for i in range(rownum):
             if isinstance(grid[i][j], CellPlacement):
-                grid[i][j].content_i = content_i
-                content_i += 1
+                grid[i][j].counted_i = counted_i
+                counted_i += 1
 
     return grid
 
 
 def _cell_color(cell_placement: CellPlacement) -> str:
-    return 'lightgray' if cell_placement.content_i % 2 == 0 else 'darkgray'
+    return 'lightgray' if cell_placement.counted_i % 2 == 0 else 'darkgray'
