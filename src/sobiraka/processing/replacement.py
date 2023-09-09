@@ -4,6 +4,7 @@ from panflute import Block, Header, Para, Table
 
 T = TypeVar('T', bound=Block)
 
+
 class _ReplPara(Para, Generic[T]):
     tag = 'Para'
 
@@ -13,8 +14,8 @@ class _ReplPara(Para, Generic[T]):
 
 
 class HeaderReplPara(_ReplPara[Header]):
-    pass
+    """An auto-generated paragraph that replaces or wraps a Header."""
 
 
 class TableReplPara(_ReplPara[Table]):
-    pass
+    """An auto-generated paragraph that replaces or wraps a Table."""

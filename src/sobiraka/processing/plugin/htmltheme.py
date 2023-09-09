@@ -10,6 +10,15 @@ from .plugin import Plugin, load_plugin
 
 @dataclass
 class HtmlTheme(Plugin, metaclass=ABCMeta):
+    """
+    A theme for generating HTML.
+
+    It provides a Jinja template that will be used for rendering each HTML page
+    and, optionally, a directory with static files required for the template.
+
+    Additionally, the theme may contain its own implementation of functions for additional AST processing.
+    The implementation will be called via Dispatcher.process_container().
+    """
     page_template: jinja2.Template
     static_dir: Path
 

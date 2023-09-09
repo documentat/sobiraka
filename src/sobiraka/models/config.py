@@ -54,7 +54,7 @@ class Config_HTML:
     resources_force_copy: tuple[str, ...] = ()
 
     theme: Path = RT.FILES / 'themes' / 'simple'
-    # TODO: describe what should be there
+    """Path to the theme that should be used when generating HTML."""
 
     theme_data: dict[str, Any] = field(default=dict)
 
@@ -67,8 +67,10 @@ class Config_PDF:
     """Path to the file containing LaTeX header directives for the volume, if provided."""
 
     theme: Path = None
+    """Path to the theme that should be used when generating LaTeX."""
 
     numeration: bool = False
+    """Whether to add automatic numbers to all the headers."""
 
 
 @dataclass(kw_only=True, frozen=True)

@@ -11,6 +11,11 @@ from sobiraka.processing.plugin import HtmlTheme
 
 
 class MaterialTheme(HtmlTheme):
+    """
+    Material-inspired HTML theme, based on https://bashtage.github.io/sphinx-material/.
+    Support multilanguage projects.
+    Supports some configuration options.
+    """
     # pylint: disable=unused-argument
 
     async def process_header(self, header: Header, page: Page) -> tuple[Element, ...]:

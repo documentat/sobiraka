@@ -5,6 +5,10 @@ from sobiraka.processing.plugin import HtmlTheme
 
 
 class BookTheme(HtmlTheme):
+    """
+    A clean and simple HTML theme, based on https://github.com/alex-shpak/hugo-book.
+    Supports multilanguage projects.
+    """
     # pylint: disable=unused-argument
 
     async def process_header(self, header: Header, page: Page) -> tuple[Element, ...]:
