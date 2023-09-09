@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Sequence
 
-from panflute import BulletList, Element, LineBreak, Plain, Space, Str, Strong, Table, TableBody, TableCell, stringify
+from panflute import BulletList, Element, LineBreak, Plain, Space, Str, Table, TableBody, TableCell, stringify
 
 from sobiraka.models import Page
 from sobiraka.utils import LatexBlock, LatexInline
@@ -28,8 +28,7 @@ class TabulArrayProcessor(Dispatcher):
         head_row = table.head.content[0]
         for i, head_cell in enumerate(head_row.content):
             assert head_cell.colspan == 1, 'This class does not support multi-column cells yet.'
-            result[-1].content.append(Strong(*head_cell.content[0].content))
-            result[-1].content.append(Space())
+            result[-1].content += *head_cell.content[0].content, Space()
             if i < len(head_row.content) - 1:
                 result[-1].content += LatexInline('&'), Str('\n')
         result[-1].content += Str('\n'), LatexInline('\\\\'), Str('\n')
