@@ -13,27 +13,6 @@ from ..replacement import TableReplPara
 
 class TabulArrayProcessor(Dispatcher):
 
-    def _table_colspec(self, table: Table) -> Sequence[str]:
-        return 'X' * table.cols
-
-    def _table_square_bracket_options(self, table: Table) -> Sequence[str]:
-        # pylint: disable=unused-argument
-        yield 'long=true'
-        yield 'theme=empty'
-
-    def _table_curly_bracket_options(self, table: Table) -> Sequence[str]:
-        yield 'colspec={' + ''.join(self._table_colspec(table)) + '}'
-        yield 'rowhead=1'
-        yield 'cells={valign=t}'
-
-    def _cell_square_bracket_options(self, cell_placement: CellPlacement) -> Sequence[str]:
-        # pylint: disable=unused-argument
-        return []
-
-    def _cell_curly_bracket_options(self, cell_placement: CellPlacement) -> Sequence[str]:
-        # pylint: disable=unused-argument
-        return []
-
     async def process_table(self, table: Table, page: Page) -> tuple[Element, ...]:
         # pylint: disable=too-many-branches
         # pylint: disable=too-many-locals
@@ -126,6 +105,27 @@ class TabulArrayProcessor(Dispatcher):
         '''))
 
         return tuple(result)
+
+    def _table_colspec(self, table: Table) -> Sequence[str]:
+        return 'X' * table.cols
+
+    def _table_square_bracket_options(self, table: Table) -> Sequence[str]:
+        # pylint: disable=unused-argument
+        yield 'long=true'
+        yield 'theme=empty'
+
+    def _table_curly_bracket_options(self, table: Table) -> Sequence[str]:
+        yield 'colspec={' + ''.join(self._table_colspec(table)) + '}'
+        yield 'rowhead=1'
+        yield 'cells={valign=t}'
+
+    def _cell_square_bracket_options(self, cell_placement: CellPlacement) -> Sequence[str]:
+        # pylint: disable=unused-argument
+        return []
+
+    def _cell_curly_bracket_options(self, cell_placement: CellPlacement) -> Sequence[str]:
+        # pylint: disable=unused-argument
+        return []
 
 
 @dataclass
