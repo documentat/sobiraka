@@ -76,6 +76,17 @@ class PdfBuilder(VolumeProcessor):
         if self.print_issues():
             sys.exit(1)
 
+        variables = {
+            'TITLE': volume.config.title,
+            'LANG': volume.lang,
+            **volume.config.variables,
+        }
+        latex_output.write(b'\n\n' + (80 * b'%'))
+        latex_output.write(b'\n\n%%% Variables\n\n')
+        for key, value in variables.items():
+            key = key.replace('_', '')
+            latex_output.write(fr'\newcommand{{\{key}}}{{{value}}}'.encode('utf-8') + b'\n')
+
         if self._theme.style is not None:
             latex_output.write(b'\n\n' + (80 * b'%'))
             latex_output.write(b'\n\n%%% ' + self._theme.__class__.__name__.encode('utf-8') + b'\n\n')
