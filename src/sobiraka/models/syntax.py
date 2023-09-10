@@ -9,6 +9,6 @@ class Syntax(Enum):
     def as_pandoc_format(self) -> str:
         match self:
             case self.MD:
-                return 'markdown-smart'
+                return 'markdown-smart-raw_html-raw_tex'
             case self.RST:
                 return 'rst-auto_identifiers'
