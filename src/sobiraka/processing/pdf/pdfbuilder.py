@@ -209,8 +209,9 @@ class PdfBuilder(VolumeProcessor):
         # Generate our hypertargets and bookmarks manually, to avoid any weird behavior with TOCs
         href = PageHref(page, header.identifier if header.level > 1 else None)
         dest = self.make_internal_url(href, page=page)
+        label = stringify(header).replace('%', r'\%')
         result += LatexInline(fr'\hypertarget{{{dest}}}{{}}'), Str('\n')
-        result += LatexInline(fr'\bookmark[level={header.level},dest={dest}]{{ {stringify(header)} }}'), Str('\n')
+        result += LatexInline(fr'\bookmark[level={header.level},dest={dest}]{{ {label} }}'), Str('\n')
 
         # Add the appropriate header tag and an opening curly bracket, e.g., '\section{'.
         tag = {
@@ -223,7 +224,13 @@ class PdfBuilder(VolumeProcessor):
         result += LatexInline(fr'\{tag}{{'), Space()
 
         # Put all the content of the original header here
-        result += header.content
+        # For some reason, Pandoc does not escape `%` when it is a separate word,
+        # so we escape it ourselves here
+        for item in header.content:
+            if isinstance(item, Str) and item.text == '%':
+                result.append(LatexInline(r'\%'))
+            else:
+                result.append(item)
 
         # Close the curly bracket
         result += Space(), LatexInline('}')
