@@ -92,41 +92,42 @@ class TabulArrayProcessor(Dispatcher):
             + ('[' + ','.join(cell_square_bracket_options) + ']' if cell_square_bracket_options else '')
             + '{' + ','.join(cell_curly_bracket_options) + '}')
 
-        # Open the bracket for the cell content
-        result[-1].content += LatexInline('{'), Space()
+        if len(cell.content) > 0:
+            # Open the bracket for the cell content
+            result[-1].content += LatexInline('{'), Space()
 
-        # Check whether the cell's content is a plain element or a block
-        if len(cell.content) == 1 and isinstance(cell.content[0], Plain):
-            # For a plain element, copy all items as is, except for line breaks
-            # Each line break inside the cell is replaced with `\\`
-            for inline_item in cell.content[0].content:
-                if isinstance(inline_item, LineBreak):
-                    result[-1].content += Space(), LatexInline('\\\\'), Space()
-                else:
-                    result[-1].content.append(inline_item)
+            # Check whether the cell's content is a plain element or a block
+            if len(cell.content) == 1 and isinstance(cell.content[0], Plain):
+                # For a plain element, copy all items as is, except for line breaks
+                # Each line break inside the cell is replaced with `\\`
+                for inline_item in cell.content[0].content:
+                    if isinstance(inline_item, LineBreak):
+                        result[-1].content += Space(), LatexInline('\\\\'), Space()
+                    else:
+                        result[-1].content.append(inline_item)
 
-        else:
-            # For a block element, we have to pause the table creation
-            # and let Pandoc generate a whole paragraph as if it was separate.
-            # We surround it with the 'BEGIN STRIP'/'END STRIP' notes,
-            # which will be later processed by PdfBuilder to remove unnecessary newlines.
-            # From the LaTeX point of view, the content is wrapped into a no-background `tcolorbox`.
-            # Note that after this operation `result[-1]` points to a new Para.
-            result[-1].content += Str('\n'), LatexInline('% BEGIN STRIP')
-            for block_item in cell.content:
-                if isinstance(block_item, BulletList):
-                    result += \
-                        LatexBlock(r'\begin{tcolorbox}[size=tight,opacityframe=0,opacityback=0]'), \
-                            block_item, \
-                            LatexBlock(r'\end{tcolorbox}'), \
-                            TableReplPara(table)
-                else:
-                    result.append(block_item)
-                    result.append(TableReplPara(table))
-            result[-1].content += LatexInline('% END STRIP'), Str('\n')
+            else:
+                # For a block element, we have to pause the table creation
+                # and let Pandoc generate a whole paragraph as if it was separate.
+                # We surround it with the 'BEGIN STRIP'/'END STRIP' notes,
+                # which will be later processed by PdfBuilder to remove unnecessary newlines.
+                # From the LaTeX point of view, the content is wrapped into a no-background `tcolorbox`.
+                # Note that after this operation `result[-1]` points to a new Para.
+                result[-1].content += Str('\n'), LatexInline('% BEGIN STRIP')
+                for block_item in cell.content:
+                    if isinstance(block_item, BulletList):
+                        result += \
+                            LatexBlock(r'\begin{tcolorbox}[size=tight,opacityframe=0,opacityback=0]'), \
+                                block_item, \
+                                LatexBlock(r'\end{tcolorbox}'), \
+                                TableReplPara(table)
+                    else:
+                        result.append(block_item)
+                        result.append(TableReplPara(table))
+                result[-1].content += LatexInline('% END STRIP'), Str('\n')
 
-        # Close the bracket for the cell content
-        result[-1].content += Space(), LatexInline('}')
+            # Close the bracket for the cell content
+            result[-1].content += Space(), LatexInline('}')
 
     def tabularray_colspec(self, table: Table) -> Sequence[str]:
         return 'X' * table.cols
