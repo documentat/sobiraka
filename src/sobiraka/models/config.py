@@ -32,6 +32,9 @@ class Config_Paths:
     resources: Path | None = None
     """Absolute path to the directory containing the resources, such as images."""
 
+    partials: Path | None = None
+    """Absolute path to the directory containing partials that can be included into pages."""
+
 
 @dataclass(kw_only=True, frozen=True)
 class Config_HTML:

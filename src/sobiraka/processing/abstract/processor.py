@@ -15,16 +15,13 @@ from more_itertools import padded
 from panflute import Code, Doc, Element, Header, Link, Str, stringify
 
 from sobiraka.models import Anchor, Anchors, BadLink, DirPage, Href, Issue, Page, PageHref, Project, UrlHref, Volume
-from sobiraka.utils import UniqueList, on_demand, save_debug_json
+from sobiraka.utils import UniqueList, convert_or_none, on_demand, save_debug_json
 from .dispatcher import Dispatcher
 
 
 class Processor(Dispatcher):
     def __init__(self):
-        self.jinja = jinja2.Environment(
-            comment_start_string='{{#',
-            comment_end_string='#}}',
-            enable_async=True)
+        self.jinja: dict[Volume, jinja2.Environment] = {}
 
         self.doc: dict[Page, Doc] = {}
         """
@@ -79,7 +76,15 @@ class Processor(Dispatcher):
         }
 
         page_text = page.text
-        page_text = await self.jinja.from_string(page_text).render_async(variables)
+
+        if page.volume not in self.jinja:
+            self.jinja[page.volume] = jinja2.Environment(
+                comment_start_string='{{#',
+                comment_end_string='#}}',
+                enable_async=True,
+                loader=convert_or_none(jinja2.FileSystemLoader, page.volume.config.paths.partials),
+            )
+        page_text = await self.jinja[page.volume].from_string(page_text).render_async(variables)
 
         pandoc = await create_subprocess_exec(
             'pandoc',
