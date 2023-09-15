@@ -12,6 +12,7 @@ from typing import BinaryIO
 from panflute import Element, Header, Space, Str, stringify
 
 from sobiraka.models import Counter, Page, PageHref, Volume
+from sobiraka.models.exceptions import DisableLink
 from sobiraka.runtime import RT
 from sobiraka.utils import LatexInline, on_demand, panflute_to_bytes
 from ..abstract import VolumeProcessor
@@ -179,6 +180,8 @@ class PdfBuilder(VolumeProcessor):
         The function avoids using any non-ASCII characters, as well as the ``%`` character,
         so that the result can be used for PDF bookmarks.
         """
+        if href.target.volume is not page.volume:
+            raise DisableLink
         result = href.target.id
         if href.anchor:
             result += '--' + href.anchor

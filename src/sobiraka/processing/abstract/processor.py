@@ -11,10 +11,10 @@ from typing import Awaitable
 
 import jinja2
 import panflute
-from more_itertools import padded
 from panflute import Code, Doc, Element, Header, Link, Str, stringify
 
 from sobiraka.models import Anchor, Anchors, BadLink, DirPage, Href, Issue, Page, PageHref, Project, UrlHref, Volume
+from sobiraka.models.exceptions import DisableLink
 from sobiraka.utils import UniqueList, convert_or_none, on_demand, save_debug_json
 from .dispatcher import Dispatcher
 
@@ -176,34 +176,44 @@ class Processor(Dispatcher):
         return (link,)
 
     async def _process_internal_link(self, elem: Link, target_text: str, page: Page):
-        target_path_str, target_anchor = padded(target_text.split('#', maxsplit=1), None, 2)
-        if target_path_str:
-            try:
-                if target_path_str.startswith('/'):
-                    target_path = page.volume.relative_root / Path(target_path_str[1:])
-                else:
+        try:
+            m = re.fullmatch(r'(?: \$ ([A-z0-9\-_]+)? )? (/)? ([^#]+)? (?: [#] (.+) )?$', target_text, re.VERBOSE)
+            volume_name, is_absolute, target_path_str, target_anchor = m.groups()
+
+            if (volume_name, is_absolute, target_path_str) == (None, None, None):
+                target = page
+
+            else:
+                volume = page.volume
+                if volume_name is not None:
+                    volume = page.volume.project.get_volume(volume_name)
+                    is_absolute = True
+
+                target_path = Path(target_path_str or '.')
+                if not is_absolute:
                     if isinstance(page, DirPage):
-                        target_path = (page.path_in_volume / target_path_str).resolve()
+                        target_path = (page.path_in_volume / target_path).resolve()
                     else:
-                        target_path = Path(normpath(page.path_in_volume.parent / target_path_str))
-                target = page.volume.pages_by_path[target_path]
-            except (KeyError, ValueError):
-                self.issues[page].append(BadLink(target_text))
-                return
-        else:
-            target = page
+                        target_path = Path(normpath(page.path_in_volume.parent / target_path))
 
-        href = PageHref(target, target_anchor)
-        self.links[page].append(href)
+                target = volume.pages_by_path[target_path]
 
-        self.process2_tasks[page].append(self.process2_internal_link(elem,
-                                                                     href=href,
-                                                                     target_text=target_text,
-                                                                     page=page))
+            href = PageHref(target, target_anchor)
+            self.links[page].append(href)
 
-    async def process2_internal_link(self, elem: Link, *, href: PageHref, target_text: str, page: Page):
+            self.process2_tasks[page].append(self.process2_internal_link(elem, href, target_text, page))
+
+        except (KeyError, ValueError):
+            self.issues[page].append(BadLink(target_text))
+
+    async def process2_internal_link(self, elem: Link, href: PageHref, target_text: str, page: Page):
         await self.process1(href.target)
-        elem.url = self.make_internal_url(href, page=page)
+        try:
+            elem.url = self.make_internal_url(href, page=page)
+        except DisableLink:
+            i = elem.parent.content.index(elem)
+            elem.parent.content[i:i + 1] = elem.content
+            return
 
         if href.anchor:
             try:

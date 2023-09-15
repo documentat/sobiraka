@@ -38,15 +38,15 @@ class Volume:
         ...
 
     @overload
-    def __init__(self, lang: str, codename: str, paths: tuple[Path, ...]):
+    def __init__(self, lang: str | None, codename: str, paths: tuple[Path, ...]):
         ...
 
     @overload
-    def __init__(self, lang: str, codename: str, pages_by_path: dict[Path, Page]):
+    def __init__(self, lang: str | None, codename: str, pages_by_path: dict[Path, Page]):
         ...
 
     @overload
-    def __init__(self, lang: str, codename: str, config: Config):
+    def __init__(self, lang: str | None, codename: str, config: Config):
         ...
 
     @overload

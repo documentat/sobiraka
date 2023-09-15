@@ -1,0 +1,2 @@
+class DisableLink(Exception):
+    pass
