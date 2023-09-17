@@ -1,6 +1,6 @@
-from typing import Generic, TypeVar
+from typing import Generic, Iterable, TypeVar
 
-from panflute import Block, Header, Para, Table
+from panflute import Block, Header, Inline, Para, Table
 
 T = TypeVar('T', bound=Block)
 
@@ -8,8 +8,8 @@ T = TypeVar('T', bound=Block)
 class _ReplPara(Para, Generic[T]):
     tag = 'Para'
 
-    def __init__(self, original_elem: T, *args):
-        super().__init__(*args)
+    def __init__(self, original_elem: T, items: Iterable[Inline] = ()):
+        super().__init__(*items)
         self.original_elem: T = original_elem
 
 

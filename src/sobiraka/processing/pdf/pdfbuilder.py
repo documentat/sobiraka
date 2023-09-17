@@ -251,4 +251,4 @@ class PdfBuilder(VolumeProcessor):
         # Close the curly bracket
         result += Space(), LatexInline('}')
 
-        return (HeaderReplPara(header, *result),)
+        return (HeaderReplPara(header, result),)
