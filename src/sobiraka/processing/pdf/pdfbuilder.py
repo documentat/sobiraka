@@ -4,7 +4,7 @@ import sys
 import urllib.parse
 from asyncio import create_subprocess_exec, gather
 from pathlib import Path
-from shutil import copyfile
+from shutil import copyfile, rmtree
 from subprocess import DEVNULL, PIPE
 from types import NoneType
 from typing import BinaryIO
@@ -43,7 +43,7 @@ class PdfBuilder(VolumeProcessor):
         xelatex_workdir.mkdir(parents=True, exist_ok=True)
         for item in xelatex_workdir.iterdir():
             if item.is_dir():
-                item.rmdir()
+                rmtree(item)
             else:
                 item.unlink()
 
@@ -55,8 +55,9 @@ class PdfBuilder(VolumeProcessor):
             print(f'Running XeLaTeX ({n})...', file=sys.stderr)
             xelatex = await create_subprocess_exec(
                 'xelatex',
-                'build.tex',
+                '-shell-escape',
                 '-halt-on-error',
+                'build.tex',
                 cwd=xelatex_workdir,
                 env=env,
                 stdin=DEVNULL,
