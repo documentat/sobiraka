@@ -66,7 +66,10 @@ async def async_main():
         elif cmd is cmd_pdf:
             project = load_project(args.project)
             volume = project.get_volume(args.volume)
-            exit_code = await PdfBuilder(volume, args.target).run()
+            target: Path = args.target
+            if target.suffix.lower() != '.pdf':
+                target /= f'{volume.config.title}.pdf'
+            exit_code = await PdfBuilder(volume, target).run()
 
         elif cmd is cmd_lint:
             project = load_project(args.project)
