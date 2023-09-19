@@ -224,11 +224,12 @@ class PdfBuilder(VolumeProcessor):
                 header.content = Str(f'{self._numeration}.'), Space(), *header.content
 
         # Generate our hypertargets and bookmarks manually, to avoid any weird behavior with TOCs
-        href = PageHref(page, header.identifier if header.level > 1 else None)
-        dest = self.make_internal_url(href, page=page)
-        label = stringify(header).replace('%', r'\%')
-        result += LatexInline(fr'\hypertarget{{{dest}}}{{}}'), Str('\n')
-        result += LatexInline(fr'\bookmark[level={header.level},dest={dest}]{{ {label} }}'), Str('\n')
+        if 'notoc' not in header.classes:
+            href = PageHref(page, header.identifier if header.level > 1 else None)
+            dest = self.make_internal_url(href, page=page)
+            label = stringify(header).replace('%', r'\%')
+            result += LatexInline(fr'\hypertarget{{{dest}}}{{}}'), Str('\n')
+            result += LatexInline(fr'\bookmark[level={header.level},dest={dest}]{{ {label} }}'), Str('\n')
 
         # Add the appropriate header tag and an opening curly bracket, e.g., '\section{'.
         tag = {
@@ -238,6 +239,8 @@ class PdfBuilder(VolumeProcessor):
             4: 'paragraph',
             5: 'subparagraph',
         }[header.level]
+        if 'notoc' in header.classes:
+            tag += '*'
         result += LatexInline(fr'\{tag}{{'), Space()
 
         # Put all the content of the original header here
