@@ -105,12 +105,12 @@ class PdfBuilder(VolumeProcessor):
 
         if self._theme.cover is not None:
             latex_output.write(b'\n\n' + (80 * b'%'))
-            latex_output.write(b'\n\n%%% cover\n\n')
+            latex_output.write(b'\n\n%%% Cover\n\n')
             latex_output.write(self._theme.cover.read_bytes())
 
         if self._theme.toc is not None:
             latex_output.write(b'\n\n' + (80 * b'%'))
-            latex_output.write(b'\n\n%%% cover\n\n')
+            latex_output.write(b'\n\n%%% Table of contents\n\n')
             latex_output.write(self._theme.toc.read_bytes())
 
         for page in volume.pages:
