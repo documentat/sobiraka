@@ -1,13 +1,12 @@
 import re
 import sys
 from abc import abstractmethod
-from asyncio import create_subprocess_exec, gather
+from asyncio import Task, create_subprocess_exec, create_task, gather
 from collections import defaultdict
 from io import BytesIO
 from os.path import normpath
 from pathlib import Path
 from subprocess import PIPE
-from typing import Awaitable
 
 import jinja2
 import panflute
@@ -54,7 +53,7 @@ class Processor(Dispatcher):
 
         self.issues: dict[Page, UniqueList[Issue]] = defaultdict(UniqueList)
 
-        self.process2_tasks: dict[Page, list[Awaitable]] = defaultdict(list)
+        self.process2_tasks: dict[Page, list[Task]] = defaultdict(list)
         """:meta private:"""
 
     @abstractmethod
@@ -201,7 +200,9 @@ class Processor(Dispatcher):
             href = PageHref(target, target_anchor)
             self.links[page].append(href)
 
-            self.process2_tasks[page].append(self.process2_internal_link(elem, href, target_text, page))
+            self.process2_tasks[page].append(create_task(
+                self.process2_internal_link(elem, href, target_text, page)
+            ))
 
         except (KeyError, ValueError):
             self.issues[page].append(BadLink(target_text))
