@@ -71,6 +71,7 @@ class PdfBuilder(VolumeProcessor):
     async def generate_latex(self, latex_output: BinaryIO):
         volume = self.volume
         project = self.volume.project
+        config = self.volume.config
 
         for page in volume.pages:
             self.generate_latex_for_page(page).start()
@@ -79,9 +80,9 @@ class PdfBuilder(VolumeProcessor):
             sys.exit(1)
 
         variables = {
-            'TITLE': volume.config.title,
+            'TITLE': config.title,
             'LANG': volume.lang,
-            **volume.config.variables,
+            **config.variables,
         }
         latex_output.write(b'\n\n' + (80 * b'%'))
         latex_output.write(b'\n\n%%% Variables\n\n')
@@ -94,10 +95,10 @@ class PdfBuilder(VolumeProcessor):
             latex_output.write(b'\n\n%%% ' + self._theme.__class__.__name__.encode('utf-8') + b'\n\n')
             latex_output.write(self._theme.style.read_bytes())
 
-        if volume.config.pdf.header:
+        if config.pdf.header:
             latex_output.write(b'\n\n')
             latex_output.write(b'\n\n%%% Project\'s custom header \n\n')
-            latex_output.write(project.fs.read_bytes(volume.config.pdf.header))
+            latex_output.write(project.fs.read_bytes(config.pdf.header))
 
         latex_output.write(b'\n\n' + (80 * b'%'))
         latex_output.write(b'\n\n\\begin{document}\n\\begin{sloppypar}')
