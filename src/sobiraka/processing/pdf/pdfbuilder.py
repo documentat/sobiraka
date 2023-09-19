@@ -108,7 +108,7 @@ class PdfBuilder(VolumeProcessor):
             latex_output.write(b'\n\n%%% Cover\n\n')
             latex_output.write(self._theme.cover.read_bytes())
 
-        if self._theme.toc is not None:
+        if config.pdf.toc and self._theme.toc is not None:
             latex_output.write(b'\n\n' + (80 * b'%'))
             latex_output.write(b'\n\n%%% Table of contents\n\n')
             latex_output.write(self._theme.toc.read_bytes())

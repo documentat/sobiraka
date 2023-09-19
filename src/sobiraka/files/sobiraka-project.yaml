@@ -75,6 +75,7 @@ $defs:
         properties:
           header: { type: string }
           theme: { type: string }
+          toc: { type: boolean }
           numeration: { type: boolean }
 
       lint:

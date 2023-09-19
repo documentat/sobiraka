@@ -72,6 +72,9 @@ class Config_PDF:
     theme: Path = None
     """Path to the theme that should be used when generating LaTeX."""
 
+    toc: bool = True
+    """Whether to add a table of contents."""
+
     numeration: bool = False
     """Whether to add automatic numbers to all the headers."""
 

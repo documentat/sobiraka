@@ -96,6 +96,7 @@ def _load_volume(lang: str | None, codename: str, volume_data: dict, fs: FileSys
         pdf=Config_PDF(
             header=convert_or_none(Path, _('pdf.header')),
             theme=_find_theme_dir(_('pdf.theme', 'simple'), fs=fs),
+            toc=_('pdf.toc', True),
             numeration=_('pdf.numeration', False),
         ),
         lint=Config_Lint(
