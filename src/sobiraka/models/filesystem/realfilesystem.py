@@ -1,6 +1,6 @@
 from pathlib import Path
 from shutil import copyfile
-from typing import Iterable
+from typing import BinaryIO, Iterable, TextIO
 
 from wcmatch.glob import glob
 
@@ -25,6 +25,12 @@ class RealFileSystem(FileSystem):
 
     def is_dir(self, path: Path) -> bool:
         return self.resolve(path).is_dir()
+
+    def open_bytes(self, path: Path) -> BinaryIO:
+        return open(self.resolve(path), 'rb')
+
+    def open_text(self, path: Path) -> TextIO:
+        return open(self.resolve(path), 'rt', encoding='utf-8')
 
     def read_bytes(self, path: Path) -> bytes:
         return self.resolve(path).read_bytes()

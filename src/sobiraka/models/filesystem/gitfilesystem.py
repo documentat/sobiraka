@@ -1,7 +1,8 @@
 import os
+from io import BytesIO, StringIO
 from os.path import relpath
 from pathlib import Path
-from typing import Iterable
+from typing import BinaryIO, Iterable, TextIO
 
 from wcmatch.glob import globmatch
 
@@ -26,13 +27,20 @@ class GitFileSystem(FileSystem):
     def is_dir(self, path: Path) -> bool:
         return isinstance(self.commit.tree[str(path)], Tree)
 
+    def open_bytes(self, path: Path) -> BinaryIO:
+        data = self.read_bytes(path)
+        return BytesIO(data)
+
+    def open_text(self, path: Path) -> TextIO:
+        data = self.read_text(path)
+        return StringIO(data)
+
     def read_bytes(self, path: Path) -> bytes:
         blob = self.commit.tree / str(path)
         return blob.data_stream.read()
 
     def read_text(self, path: Path) -> str:
-        blob = self.commit.tree / str(path)
-        return blob.data_stream.read().decode('utf-8')
+        return self.read_bytes(path).decode('utf-8')
 
     def copy(self, source: Path, target: Path):
         raise NotImplementedError

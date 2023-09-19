@@ -1,6 +1,6 @@
 from abc import ABCMeta, abstractmethod
 from pathlib import Path
-from typing import Iterable
+from typing import BinaryIO, Iterable, TextIO
 
 from wcmatch.glob import GLOBSTAR, NODIR
 
@@ -18,10 +18,16 @@ class FileSystem(metaclass=ABCMeta):
     def is_dir(self, path: Path) -> bool: ...
 
     @abstractmethod
-    def read_bytes(self, path: Path) -> bytes: ...
+    def open_bytes(self, path: Path) -> BinaryIO: ...
 
     @abstractmethod
-    def read_text(self, path: Path) -> str: ...
+    def open_text(self, path: Path) -> TextIO: ...
+
+    def read_bytes(self, path: Path) -> bytes:
+        return self.open_bytes(path).read()
+
+    def read_text(self, path: Path) -> str:
+        return self.open_text(path).read()
 
     @abstractmethod
     def copy(self, source: Path, target: Path): ...
