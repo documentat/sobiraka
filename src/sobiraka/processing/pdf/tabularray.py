@@ -85,8 +85,8 @@ class TabulArrayProcessor(Dispatcher):
         # Write the \SetCell[]{} command
         # Let the user override both the square-bracket options and curly-bracket options for the cell
         # Note that the {} brackets are obligatory, even when empty
-        cell_square_bracket_options = list(self.tabularray_cell_square_bracket_options(cell_placement))
-        cell_curly_bracket_options = list(self.tabularray_cell_curly_bracket_options(cell_placement))
+        cell_square_bracket_options = list(self.tabularray_cell_square_bracket_options(table, cell_placement))
+        cell_curly_bracket_options = list(self.tabularray_cell_curly_bracket_options(table, cell_placement))
         result[-1].content += Space(), LatexInline(
             r'\SetCell'
             + ('[' + ','.join(cell_square_bracket_options) + ']' if cell_square_bracket_options else '')
@@ -142,7 +142,7 @@ class TabulArrayProcessor(Dispatcher):
         yield f'rowhead={len(table.head.content)}'
         yield 'cells={valign=t}'
 
-    def tabularray_cell_square_bracket_options(self, cell_placement: CellPlacement) -> Sequence[str]:
+    def tabularray_cell_square_bracket_options(self, table: Table, cell_placement: CellPlacement) -> Sequence[str]:
         # pylint: disable=unused-argument
         cell = cell_placement.cell
         if cell.rowspan > 1:
@@ -150,7 +150,7 @@ class TabulArrayProcessor(Dispatcher):
         if cell.colspan > 1:
             yield f'c={cell.colspan}'
 
-    def tabularray_cell_curly_bracket_options(self, cell_placement: CellPlacement) -> Sequence[str]:
+    def tabularray_cell_curly_bracket_options(self, table: Table, cell_placement: CellPlacement) -> Sequence[str]:
         # pylint: disable=unused-argument
         return []
 
