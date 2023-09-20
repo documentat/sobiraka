@@ -2,9 +2,7 @@ from __future__ import annotations
 
 from abc import ABCMeta, abstractmethod
 from dataclasses import dataclass, field
-from itertools import chain
 from os.path import relpath
-from textwrap import dedent
 from typing import TYPE_CHECKING
 
 from sobiraka.utils import render
@@ -22,7 +20,7 @@ class TableOfContents(metaclass=ABCMeta):
 
 class CrossPageToc(TableOfContents, metaclass=ABCMeta):
     @abstractmethod
-    def get_roots(self) -> tuple[Page, ...]:
+    def get_root(self) -> Page:
         ...
 
     @abstractmethod
@@ -45,11 +43,8 @@ class CrossPageToc(TableOfContents, metaclass=ABCMeta):
     def syntax(self) -> Syntax:
         ...
 
-    async def items(self, *, skip_root: bool = True) -> list[TocTreeItem]:
-        items = await self._make_items(self.get_roots())
-        if skip_root:
-            items = list(chain(*(root_item.children for root_item in items)))
-        return items
+    async def items(self) -> list[TocTreeItem]:
+        return await self._make_items(self.get_root().children)
 
     async def _make_items(self, pages: tuple[Page, ...]) -> list[TocTreeItem]:
         items: list[TocTreeItem] = []
@@ -73,18 +68,6 @@ class CrossPageToc(TableOfContents, metaclass=ABCMeta):
             case Syntax.RST:
                 return await self._render_plaintext('{indent}- :doc:`{title} <{path}>`')
 
-    async def _render_plaintext(self, line_template: str) -> str:
-        text = ''
-        for root in self.get_roots():
-            for page in (root, *root.children_recursive):
-                text += line_template.format(
-                    indent="  " * page.level,
-                    title=await self.get_title(page),
-                    path=self.get_href(page))
-                text += '\n'
-        text = dedent(text)
-        return text
-
     async def _render_html(self) -> str:
         template = '''
             <ul>
@@ -106,6 +89,19 @@ class CrossPageToc(TableOfContents, metaclass=ABCMeta):
             '''
         html = await render(template, toc=self)
         return html
+
+    async def _render_plaintext(self, line_template: str, level: int = 0, items: list[TocTreeItem] = None) -> str:
+        if items is None:
+            items = await self.items()
+        text = ''
+        for item in items:
+            text += line_template.format(
+                indent="  " * level,
+                title=item.title,
+                path=item.href)
+            text += '\n'
+            text += await self._render_plaintext(line_template, level + 1, item.children)
+        return text
 
 
 @dataclass(eq=True)
@@ -136,8 +132,8 @@ class GlobalToc(CrossPageToc, metaclass=ABCMeta):
     volume: Volume
     current: Page
 
-    def get_roots(self) -> tuple[Page, ...]:
-        return tuple(page for page in self.volume.pages if page.parent is None)
+    def get_root(self) -> Page:
+        return self.volume.root_page
 
     async def get_title(self, page: Page) -> str:
         return await self.processor.get_title(page)
@@ -154,8 +150,8 @@ class SubtreeToc(CrossPageToc):
     processor: Processor
     current: Page | None
 
-    def get_roots(self) -> tuple[Page, ...]:
-        return self.current.children
+    def get_root(self) -> Page:
+        return self.current
 
     async def get_title(self, page: Page) -> str:
         return await self.processor.get_title(page)

@@ -25,7 +25,7 @@ class TestToc(ProjectTestCase, metaclass=ABCMeta):
         fs = Mock(FileSystem)
         return Project(fs, {
             Path('src'): Volume({
-                Path() / f'0-index.{self.ext}': IndexPage('# ('),
+                Path() / f'0-index.{self.ext}': IndexPage('# root'),
                 Path() / 'part1' / f'0-index.{self.ext}': IndexPage('# part1'),
                 Path() / 'part1' / 'chapter1' / f'0-index.{self.ext}': IndexPage('# chapter1'),
                 Path() / 'part1' / 'chapter1' / 'section1' / f'0-index.{self.ext}': IndexPage('# section1'),
@@ -86,11 +86,11 @@ class TestGlobalToc(TestToc, AbstractTestWithRtTmp):
     def _init_processor(self):
         return HtmlBuilder(self.project, RT.TMP)
 
-    async def test_get_roots(self):
-        expected: tuple[Page, ...] = (self.project.pages_by_path[Path('src/0-index.md')],)
+    async def test_get_root(self):
+        expected = self.project.pages_by_path[Path('src/0-index.md')]
         toc = GlobalToc_HTML(self.processor, self.project.get_volume(), NotImplemented)
-        actual = toc.get_roots()
-        self.assertSequenceEqual(expected, actual)
+        actual = toc.get_root()
+        self.assertIs(expected, actual)
 
     async def test_global_toc_items(self):
         expected = [
