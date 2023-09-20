@@ -6,3 +6,4 @@ class RT:
     FILES: Path = files('sobiraka') / 'files'
     TMP: Path | None = None
     AWAITABLES: dict[tuple[callable, tuple, tuple], Awaitable] = {}
+    IDS: dict[int, str] = {}

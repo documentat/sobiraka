@@ -3,6 +3,7 @@ import sys
 from abc import abstractmethod
 from asyncio import Task, create_subprocess_exec, create_task, gather
 from collections import defaultdict
+from contextlib import suppress
 from io import BytesIO
 from os.path import normpath
 from pathlib import Path
@@ -10,10 +11,11 @@ from subprocess import PIPE
 
 import jinja2
 import panflute
-from panflute import Code, Doc, Element, Header, Link, Str, stringify
+from panflute import Code, Doc, Element, Header, Link, Para, Space, Str, Table, stringify
 
 from sobiraka.models import Anchor, Anchors, BadLink, DirPage, Href, Issue, Page, PageHref, Project, UrlHref, Volume
 from sobiraka.models.exceptions import DisableLink
+from sobiraka.runtime import RT
 from sobiraka.utils import UniqueList, convert_or_none, on_demand, save_debug_json
 from .dispatcher import Dispatcher
 
@@ -131,6 +133,27 @@ class Processor(Dispatcher):
             self.titles[page] = stringify(header)
 
         return (header,)
+
+    async def process_para(self, para: Para, page: Page) -> tuple[Element, ...]:
+        with suppress(AssertionError):
+            assert len(para.content) >= 1
+            assert isinstance(para.content[0], Str)
+            assert para.content[0].text.startswith('//')
+
+            text = ''
+            for elem in para.content:
+                assert isinstance(elem, (Str, Space))
+                text += stringify(elem)
+
+            if m := re.fullmatch(r'// table-id: (\S+)', text):
+                table_id = m.group(1)
+                table = para.next
+                if not isinstance(table, Table):
+                    raise RuntimeError(f'Wait, where is the table? [{table_id}]')
+                RT.IDS[id(table)] = table_id
+                return ()
+
+        return await super().process_para(para, page)
 
     @on_demand
     async def process2(self, page: Page):
