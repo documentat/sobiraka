@@ -188,6 +188,7 @@ class PdfBuilder(VolumeProcessor):
         if href.anchor:
             result += '--' + href.anchor
         result = urllib.parse.quote(result).replace('%', '')
+        result = '#' + result
         return result
 
     async def process_header(self, header: Header, page: Page) -> tuple[Element, ...]:
@@ -227,7 +228,7 @@ class PdfBuilder(VolumeProcessor):
         # Generate our hypertargets and bookmarks manually, to avoid any weird behavior with TOCs
         if 'notoc' not in header.classes:
             href = PageHref(page, header.identifier if header.level > 1 else None)
-            dest = self.make_internal_url(href, page=page)
+            dest = re.sub(r'^#', '', self.make_internal_url(href, page=page))
             label = stringify(header).replace('%', r'\%')
             result += LatexInline(fr'\hypertarget{{{dest}}}{{}}'), Str('\n')
             result += LatexInline(fr'\bookmark[level={header.level},dest={dest}]{{ {label} }}'), Str('\n')
