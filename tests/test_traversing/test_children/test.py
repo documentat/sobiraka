@@ -78,21 +78,6 @@ class TestChildren(ProjectDirTestCase):
             with self.subTest(page):
                 self.assertEqual(expected, page.children)
 
-    def test_children_recursive(self):
-        data: dict[Page, tuple[Page, ...]] = {
-            self.index_root: (self.document1, self.index_sub, self.document2, self.index_subsub, self.document3, self.document4, self.document5),
-            self.document1: (),
-            self.index_sub: (self.document2, self.index_subsub, self.document3, self.document4, self.document5),
-            self.document2: (),
-            self.index_subsub: (self.document3, self.document4, self.document5),
-            self.document3: (),
-            self.document4: (),
-            self.document5: (),
-        }
-        for page, expected in data.items():
-            with self.subTest(page):
-                self.assertEqual(expected, page.children_recursive)
-
 
 del ProjectDirTestCase
 

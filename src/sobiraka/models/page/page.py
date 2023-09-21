@@ -189,14 +189,6 @@ class Page:
                 children.append(page)
         return tuple(children)
 
-    @cached_property
-    def children_recursive(self) -> tuple[Page, ...]:
-        children: list[Page] = []
-        for page in self.volume.pages:
-            if page is not self and self in page.breadcrumbs:
-                children.append(page)
-        return tuple(children)
-
     def id_segment(self) -> str:
         if self.is_root():
             return 'r'
