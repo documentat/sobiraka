@@ -44,16 +44,16 @@ class CrossPageToc(TableOfContents, metaclass=ABCMeta):
         ...
 
     async def items(self) -> list[TocTreeItem]:
-        return await self._make_items(self.get_root().children)
+        return await self._make_items(root=self.get_root())
 
-    async def _make_items(self, pages: tuple[Page, ...]) -> list[TocTreeItem]:
+    async def _make_items(self, *, root: Page) -> list[TocTreeItem]:
         items: list[TocTreeItem] = []
-        for page in pages:
+        for page in root.children:
             title = await self.get_title(page)
             href = self.get_href(page)
             is_current = self.is_current(page)
             is_selected = self.is_selected(page)
-            children = await self._make_items(page.children)
+            children = await self._make_items(root=page)
             items.append(TocTreeItem(title, href, is_current=is_current, is_selected=is_selected, children=children))
         return items
 
