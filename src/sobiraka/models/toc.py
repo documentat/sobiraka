@@ -43,19 +43,21 @@ class CrossPageToc(TableOfContents, metaclass=ABCMeta):
     def syntax(self) -> Syntax:
         ...
 
-    async def items(self) -> list[TocTreeItem]:
-        return await self._make_items(root=self.get_root())
-
-    async def _make_items(self, *, root: Page) -> list[TocTreeItem]:
+    async def items(self, *, parent: Page = None) -> list[TocTreeItem]:
+        if parent is None:
+            parent = self.get_root()
         items: list[TocTreeItem] = []
-        for page in root.children:
-            title = await self.get_title(page)
-            href = self.get_href(page)
-            is_current = self.is_current(page)
-            is_selected = self.is_selected(page)
-            children = await self._make_items(root=page)
-            items.append(TocTreeItem(title, href, is_current=is_current, is_selected=is_selected, children=children))
+        for page in parent.children:
+            items.append(await self._make_item(page))
+            items[-1].children = await self.items(parent=page)
         return items
+
+    async def _make_item(self, page: Page) -> TocTreeItem:
+        title = await self.get_title(page)
+        href = self.get_href(page)
+        is_current = self.is_current(page)
+        is_selected = self.is_selected(page)
+        return TocTreeItem(title, href, is_current=is_current, is_selected=is_selected)
 
     async def __call__(self) -> str:
         from .syntax import Syntax
