@@ -119,7 +119,7 @@ class HtmlBuilder(ProjectProcessor):
             body=html.decode('utf-8').strip(),
 
             now=datetime.now(),
-            toc=GlobalToc_HTML(self, volume, page),
+            toc=GlobalToc_HTML(self, volume, page, volume.config.html.combined_toc),
             local_toc=LocalToc(self, page),
             Language=iso639.Language,
 

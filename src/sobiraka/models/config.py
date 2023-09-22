@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from enum import Enum
 from pathlib import Path
 from typing import Any
 
@@ -36,6 +37,12 @@ class Config_Paths:
     """Absolute path to the directory containing partials that can be included into pages."""
 
 
+class CombinedToc(Enum):
+    NEVER = 'never'
+    CURRENT = 'current'
+    ALWAYS = 'always'
+
+
 @dataclass(kw_only=True, frozen=True)
 class Config_HTML:
     """Settings related to :class:`.HtmlBuilder`."""
@@ -60,6 +67,8 @@ class Config_HTML:
     """Path to the theme that should be used when generating HTML."""
 
     theme_data: dict[str, Any] = field(default=dict)
+
+    combined_toc: CombinedToc = CombinedToc.NEVER
 
 
 @dataclass(kw_only=True, frozen=True)

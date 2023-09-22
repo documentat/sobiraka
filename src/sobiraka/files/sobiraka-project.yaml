@@ -69,6 +69,8 @@ $defs:
               type: string
           theme: { type: string }
           theme_data: { type: object }
+          combined_toc:
+            enum: [never, current, always]
 
       pdf:
         additionalProperties: false

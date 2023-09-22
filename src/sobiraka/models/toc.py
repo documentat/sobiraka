@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 from os.path import relpath
 from typing import TYPE_CHECKING
 
+from sobiraka.models.config import CombinedToc
 from sobiraka.utils import render
 
 if TYPE_CHECKING:
@@ -16,6 +17,15 @@ class TableOfContents(metaclass=ABCMeta):
     @abstractmethod
     async def items(self) -> list[TocTreeItem]:
         ...
+
+    async def iterate_all_items(self) -> list[TocTreeItem]:
+        result: list[TocTreeItem] = []
+        items = await self.items()
+        while len(items) > 0:
+            item = items.pop(0)
+            result.append(item)
+            items[0:0] = item.children
+        return result
 
 
 class CrossPageToc(TableOfContents, metaclass=ABCMeta):
@@ -49,7 +59,7 @@ class CrossPageToc(TableOfContents, metaclass=ABCMeta):
         items: list[TocTreeItem] = []
         for page in parent.children:
             items.append(await self._make_item(page))
-            items[-1].children = await self.items(parent=page)
+            items[-1].children += await self.items(parent=page)
         return items
 
     async def _make_item(self, page: Page) -> TocTreeItem:
@@ -133,6 +143,7 @@ class GlobalToc(CrossPageToc, metaclass=ABCMeta):
     processor: Processor
     volume: Volume
     current: Page
+    combined_toc: CombinedToc = CombinedToc.NEVER
 
     def get_root(self) -> Page:
         return self.volume.root_page
@@ -145,6 +156,13 @@ class GlobalToc(CrossPageToc, metaclass=ABCMeta):
 
     def is_selected(self, page: Page) -> bool:
         return page in self.current.breadcrumbs
+
+    async def _make_item(self, page: Page) -> TocTreeItem:
+        item = await super()._make_item(page)
+        if self.combined_toc is CombinedToc.ALWAYS or (self.combined_toc is CombinedToc.CURRENT and item.is_current):
+            local_toc = LocalToc(self.processor, page, href_prefix='' if item.is_current else item.href)
+            item.children += await local_toc.items()
+        return item
 
 
 @dataclass
@@ -175,6 +193,7 @@ class SubtreeToc(CrossPageToc):
 class LocalToc(TableOfContents):
     processor: Processor
     page: Page
+    href_prefix: str = field(kw_only=True, default='')
 
     async def items(self) -> list[TocTreeItem]:
         root = TocTreeItem(title='', href='')
@@ -182,7 +201,7 @@ class LocalToc(TableOfContents):
         current_level: int = 0
 
         for anchor in self.processor.anchors[self.page]:
-            item = TocTreeItem(title=anchor.label, href=f'#{anchor.identifier}')
+            item = TocTreeItem(title=anchor.label, href=f'{self.href_prefix}#{anchor.identifier}')
             if anchor.header.level == current_level:
                 breadcrumbs[-2].children.append(item)
                 breadcrumbs[-1] = item
