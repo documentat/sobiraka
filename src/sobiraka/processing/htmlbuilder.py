@@ -6,7 +6,7 @@ from asyncio import Task, create_subprocess_exec, create_task, gather, to_thread
 from datetime import datetime
 from functools import partial
 from itertools import chain
-from os.path import normpath, relpath
+from os.path import relpath
 from pathlib import Path
 from shutil import copyfile, rmtree
 from subprocess import PIPE
@@ -205,19 +205,19 @@ class HtmlBuilder(ProjectProcessor):
         return elems
 
     async def process_image(self, image: Image, page: Page) -> tuple[Image, ...]:
-        path = Path(image.url.replace('$LANG', page.volume.lang or ''))
+        config = page.volume.config
 
-        if path.is_absolute():
-            source_path = page.volume.config.paths.resources / path.relative_to('/')
-        else:
-            source_path = Path(normpath(page.path_in_project.parent / path))
+        # Run the default path processing
+        image, = await super().process_image(image, page)
+        assert isinstance(image, Image)
 
-        target_path = self.output \
-                      / page.volume.config.html.resources_prefix \
-                      / source_path.relative_to(page.volume.config.paths.resources)
-
+        # Schedule copying the image file to the output directory
+        source_path = config.paths.resources / image.url
+        target_path = self.output / config.html.resources_prefix / image.url
         if target_path not in self._additional_tasks:
             self._additional_tasks.append(create_task(self.copy_file_from_project(source_path, target_path)))
+
+        # Use the path relative to the page path
         image.url = relpath(target_path, start=self.get_target_path(page).parent)
         return (image,)
 

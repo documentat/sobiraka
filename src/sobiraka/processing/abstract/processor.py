@@ -11,7 +11,7 @@ from subprocess import PIPE
 
 import jinja2
 import panflute
-from panflute import Code, Doc, Element, Header, Link, Para, Space, Str, Table, stringify
+from panflute import Code, Doc, Element, Header, Image, Link, Para, Space, Str, Table, stringify
 
 from sobiraka.models import Anchor, Anchors, BadLink, DirPage, Href, Issue, Page, PageHref, Project, UrlHref, Volume
 from sobiraka.models.exceptions import DisableLink
@@ -133,6 +133,18 @@ class Processor(Dispatcher):
             self.titles[page] = stringify(header)
 
         return (header,)
+
+    async def process_image(self, image: Image, page: Page) -> tuple[Element, ...]:
+        """
+        Get the image path, process variables inside it, and make it relative to the project directory.
+        """
+        path = Path(image.url.replace('$LANG', page.volume.lang or ''))
+        if path.is_absolute():
+            path = path.relative_to('/')
+        else:
+            path = Path(normpath(page.path_in_project.parent / path)).relative_to(page.volume.config.paths.resources)
+        image.url = str(path)
+        return (image,)
 
     async def process_para(self, para: Para, page: Page) -> tuple[Element, ...]:
         with suppress(AssertionError):
