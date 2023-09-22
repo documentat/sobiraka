@@ -34,6 +34,6 @@ def load_plugin(plugin_file: Path, base_class: type[P] = Plugin) -> type[P]:
             if isclass(klass) and issubclass(klass, base_class):
                 if klass is not base_class:
                     klasses.append(klass)
-    assert len(klasses) == 1
+    assert len(klasses) == 1, klasses
     klass = klasses[0]
     return klass
