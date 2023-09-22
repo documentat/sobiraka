@@ -8,7 +8,8 @@ from utilspie.collectionsutils import frozendict
 
 from sobiraka.runtime import RT
 from sobiraka.utils import convert_or_none, merge_dicts
-from .config import CombinedToc, Config, Config_HTML, Config_Lint, Config_Lint_Checks, Config_PDF, Config_Paths
+from .config import CombinedToc, Config, Config_Content, Config_HTML, Config_Lint, Config_Lint_Checks, Config_PDF, \
+    Config_Paths
 from .filesystem import FileSystem, RealFileSystem
 from .namingscheme import NamingScheme
 from .project import Project
@@ -86,6 +87,9 @@ def _load_volume(lang: str | None, codename: str, volume_data: dict, fs: FileSys
             resources=convert_or_none(Path, _('paths.resources')),
             partials=convert_or_none(Path, _('paths.partials')),
         ),
+        content=Config_Content(
+            numeration=_('content.numeration', False),
+        ),
         html=Config_HTML(
             prefix=_('html.prefix', '$AUTOPREFIX'),
             resources_prefix=_('html.resources_prefix', '_resources'),
@@ -98,7 +102,6 @@ def _load_volume(lang: str | None, codename: str, volume_data: dict, fs: FileSys
             header=convert_or_none(Path, _('pdf.header')),
             theme=_find_theme_dir(_('pdf.theme', 'simple'), fs=fs),
             toc=_('pdf.toc', True),
-            numeration=_('pdf.numeration', False),
         ),
         lint=Config_Lint(
             dictionaries=tuple(_('lint.dictionaries', [])),

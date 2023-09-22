@@ -58,6 +58,11 @@ $defs:
           resources: { type: string }
           partials: { type: string }
 
+      content:
+        additionalProperties: false
+        properties:
+          numeration: { type: boolean }
+
       html:
         additionalProperties: false
         properties:
@@ -78,7 +83,6 @@ $defs:
           header: { type: string }
           theme: { type: string }
           toc: { type: boolean }
-          numeration: { type: boolean }
 
       lint:
         additionalProperties: false

@@ -137,6 +137,10 @@ paths:
 
 Регулярные выражения должны быть совместимы со стандартной функцией [`re.fullmatch()`](https://docs.python.org/3/library/re.html#re.fullmatch) с включённым флагом [`re.VERBOSE`](https://docs.python.org/3/library/re.html#re.X).
 
+### `content.numeration` {#volume.content.numeration}
+
+Если `true`, то в начало каждого заголовка в документации будет добавлен его порядковый номер.
+
 ### `html.combined_toc` {#volume.html.combined_toc}
 
 Эта опция позволяет встраивать локальное оглавление страницы внутрь глобального оглавления.
@@ -202,10 +206,6 @@ paths:
 ### `pdf.toc` {#volume.pdf.toc}
 
 Если `true` (по умолчанию), то в PDF будет включено оглавление, автоматически сгенерированное при помощи LaTeX.
-
-### `pdf.numeration` {#volume.pdf.numeration}
-
-Если `true`, то в начало каждого заголовка в документации будет добавлен его порядковый номер.
 
 ### `lint.dictionaries` {#volume.lint.dictionaries}
 

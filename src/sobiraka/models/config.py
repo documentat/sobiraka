@@ -37,6 +37,14 @@ class Config_Paths:
     """Absolute path to the directory containing partials that can be included into pages."""
 
 
+@dataclass(kw_only=True, frozen=True)
+class Config_Content:
+    """Format-agnostic content settings."""
+
+    numeration: bool = False
+    """Whether to add automatic numbers to all the headers."""
+
+
 class CombinedToc(Enum):
     NEVER = 'never'
     CURRENT = 'current'
@@ -83,9 +91,6 @@ class Config_PDF:
 
     toc: bool = True
     """Whether to add a table of contents."""
-
-    numeration: bool = False
-    """Whether to add automatic numbers to all the headers."""
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -136,6 +141,8 @@ class Config:
 
     html: Config_HTML = field(default_factory=Config_HTML, kw_only=True)
     """Settings related to :class:`.HtmlBuilder`."""
+
+    content: Config_Content = field(default=Config_Content, kw_only=True)
 
     pdf: Config_PDF = field(default_factory=Config_PDF, kw_only=True)
     """Settings related to :class:`.PdfBuilder`."""
