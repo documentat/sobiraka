@@ -158,6 +158,9 @@ class Dispatcher:
     async def process_default(self, elem: Element, page: Page) -> tuple[Element, ...]:
         return (await self.process_container(elem, page),)
 
+    async def process_doc(self, doc: Doc, page: Page) -> None:
+        await self.process_container(doc, page)
+
     async def process_block_quote(self, blockquote: BlockQuote, page: Page) -> tuple[Element, ...]:
         return await self.process_default(blockquote, page)
 

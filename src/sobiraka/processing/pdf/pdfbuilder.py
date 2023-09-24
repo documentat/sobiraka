@@ -125,7 +125,7 @@ class PdfBuilder(VolumeProcessor):
         # If a theme is set, run additional processing of the whole document
         # Note that if the theme does not contain custom logic implementation, we skip this step as useless
         if type(self._theme) not in (NoneType, PdfTheme):
-            await self._theme.process_container(self.doc[page], page)
+            await self._theme.process_doc(self.doc[page], page)
 
         if len(self.doc[page].content) == 0:
             self._latex[page] = b''

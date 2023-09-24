@@ -95,7 +95,7 @@ class HtmlBuilder(ProjectProcessor):
 
         theme = self._themes[volume]
         if theme.__class__ is not HtmlTheme:
-            await theme.process_container(self.doc[page], page)
+            await theme.process_doc(self.doc[page], page)
 
         pandoc = await create_subprocess_exec(
             'pandoc',
