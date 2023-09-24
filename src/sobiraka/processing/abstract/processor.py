@@ -159,11 +159,14 @@ class Processor(Dispatcher):
         """
         Get the image path, process variables inside it, and make it relative to the project directory.
         """
-        path = Path(image.url.replace('$LANG', page.volume.lang or ''))
+        volume = page.volume
+
+        path = Path(image.url.replace('$LANG', volume.lang or ''))
         if path.is_absolute():
             path = path.relative_to('/')
         else:
-            path = Path(normpath(page.path_in_project.parent / path)).relative_to(page.volume.config.paths.resources)
+            path = Path(normpath(page.path_in_project.parent / path))
+            assert path.parts[:len(volume.config.paths.resources.parts)] == volume.config.paths.resources.parts, path
         image.url = str(path)
         return (image,)
 

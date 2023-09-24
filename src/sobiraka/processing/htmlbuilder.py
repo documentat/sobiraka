@@ -3,6 +3,7 @@ from __future__ import annotations
 import os.path
 import re
 from asyncio import Task, create_subprocess_exec, create_task, gather, to_thread
+from collections import defaultdict
 from datetime import datetime
 from functools import partial
 from itertools import chain
@@ -28,6 +29,7 @@ class HtmlBuilder(ProjectProcessor):
         self.hide_index_html: bool = hide_index_html
 
         self._additional_tasks: list[Task] = []
+        self._new_image_urls: dict[Page, list[tuple[Image, str]]] = defaultdict(list)
         self._results: set[Path] = set()
 
         self._themes: dict[Volume, HtmlTheme] = {}
@@ -96,6 +98,10 @@ class HtmlBuilder(ProjectProcessor):
         theme = self._themes[volume]
         if theme.__class__ is not HtmlTheme:
             await theme.process_doc(self.doc[page], page)
+
+        # Apply postponed image URL changes
+        for image, new_url in self._new_image_urls[page]:
+            image.url = new_url
 
         pandoc = await create_subprocess_exec(
             'pandoc',
@@ -207,7 +213,8 @@ class HtmlBuilder(ProjectProcessor):
     async def process_image(self, image: Image, page: Page) -> tuple[Image, ...]:
         config = page.volume.config
 
-        # Run the default path processing
+        # Run the default processing
+        # It is important to run it first, since it normalizes the path
         image, = await super().process_image(image, page)
         assert isinstance(image, Image)
 
@@ -218,7 +225,10 @@ class HtmlBuilder(ProjectProcessor):
             self._additional_tasks.append(create_task(self.copy_file_from_project(source_path, target_path)))
 
         # Use the path relative to the page path
-        image.url = relpath(target_path, start=self.get_target_path(page).parent)
+        # (we postpone the actual change in the element to not confuse the HtmlTheme custom code later)
+        new_url = relpath(target_path, start=self.get_target_path(page).parent)
+        self._new_image_urls[page].append((image, new_url))
+
         return (image,)
 
 
