@@ -168,6 +168,9 @@ class Processor(Dispatcher):
         return (image,)
 
     async def process_para(self, para: Para, page: Page) -> tuple[Element, ...]:
+        para, = await super().process_para(para, page)
+        assert isinstance(para, Para)
+
         with suppress(AssertionError):
             assert len(para.content) >= 1
             assert isinstance(para.content[0], Str)
@@ -186,7 +189,7 @@ class Processor(Dispatcher):
                 RT.IDS[id(table)] = table_id
                 return ()
 
-        return await super().process_para(para, page)
+        return (para,)
 
     @on_demand
     async def process2(self, page: Page):
