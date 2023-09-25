@@ -76,11 +76,20 @@ class Processor(Dispatcher):
         This method is called by :obj:`.Page.loaded`.
         """
         from sobiraka.models import SubtreeToc
+        from sobiraka.processing import HtmlBuilder
+        from sobiraka.processing import PdfBuilder
 
-        variables = page.volume.config.variables | {
-            'toc': SubtreeToc(self, page),
-            'LANG': page.volume.lang,
-        }
+        variables = page.volume.config.variables | dict(
+            HTML=isinstance(self, HtmlBuilder),
+            PDF=isinstance(self, PdfBuilder),
+
+            page=page,
+            volume=page.volume,
+            project=page.volume.project,
+            LANG=page.volume.lang,
+
+            toc=SubtreeToc(self, page),
+        )
 
         page_text = page.text
 
