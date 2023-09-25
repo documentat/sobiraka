@@ -11,6 +11,7 @@ from subprocess import PIPE
 
 import jinja2
 import panflute
+from jinja2 import StrictUndefined
 from panflute import Code, Doc, Element, Header, Image, Link, Para, Space, Str, Table, stringify
 
 from sobiraka.models import Anchor, Anchors, BadLink, Counter, DirPage, Href, Issue, Page, PageHref, Project, UrlHref, \
@@ -87,6 +88,7 @@ class Processor(Dispatcher):
             self.jinja[page.volume] = jinja2.Environment(
                 comment_start_string='{{#',
                 comment_end_string='#}}',
+                undefined=StrictUndefined,
                 enable_async=True,
                 loader=convert_or_none(jinja2.FileSystemLoader, page.volume.config.paths.partials),
             )

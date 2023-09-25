@@ -22,4 +22,4 @@ class DirPage(Page):
     # pylint: disable=method-cache-max-size-none
     @property
     def text(self) -> str:
-        return '# ' + self.path_in_volume.stem + '\n\n{{ toc.md }}'
+        return '# ' + self.path_in_volume.stem + '\n\n{{ toc }}'
