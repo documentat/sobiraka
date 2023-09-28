@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os.path
 import re
+import sys
 from asyncio import Task, create_subprocess_exec, create_task, gather, to_thread
 from collections import defaultdict
 from datetime import datetime
@@ -37,26 +38,35 @@ class HtmlBuilder(ProjectProcessor):
             self._themes[volume] = load_html_theme(volume.config.html.theme)
 
     async def run(self):
+        project = self.project
+
         self.output.mkdir(parents=True, exist_ok=True)
 
-        # Copy the theme's static directory
-        for volume in self.project.volumes:
+        for volume in project.volumes:
             theme = self._themes[volume]
+
+            # Copy the theme's static directory
             for source_path in theme.static_dir.rglob('**/*'):
                 if source_path.is_file():
                     target_path = self.output / '_static' / source_path.relative_to(theme.static_dir)
                     self._additional_tasks.append(create_task(self.copy_file_from_theme(source_path, target_path)))
 
-        # Copy additional static files
-        for volume in self.project.volumes:
+            # Copy additional static files
             for filename in volume.config.html.resources_force_copy:
                 source_path = (volume.config.paths.resources or volume.config.paths.root) / filename
                 target_path = self.output / volume.config.html.resources_prefix / filename
                 self._additional_tasks.append(create_task(self.copy_file_from_project(source_path, target_path)))
 
+            # Compile SASS styles
+            for source_path, target_path in theme.sass_files.items():
+                source_path = project.fs.resolve(theme.theme_dir / source_path)
+                target_path = self.output / '_static' / target_path
+                if target_path not in self._results:
+                    self._additional_tasks.append(create_task(self.compile_sass(source_path, target_path)))
+
         # Generate the HTML pages in no particular order
         generating: list[Task] = []
-        for page in self.project.pages:
+        for page in project.pages:
             generating.append(create_task(self.generate_html_for_page(page)))
         await gather(*generating)
 
@@ -78,16 +88,6 @@ class HtmlBuilder(ProjectProcessor):
             file.unlink()
         for directory in dirs_to_delete:
             rmtree(directory, ignore_errors=True)
-
-    async def copy_file_from_theme(self, source: Path, target: Path):
-        await makedirs(target.parent, exist_ok=True)
-        await to_thread(copyfile, source, target)
-        self._results.add(target)
-
-    async def copy_file_from_project(self, source: Path, target: Path):
-        await makedirs(target.parent, exist_ok=True)
-        await to_thread(self.project.fs.copy, source, target)
-        self._results.add(target)
 
     async def generate_html_for_page(self, page: Page) -> str:
         volume = page.volume
@@ -230,6 +230,30 @@ class HtmlBuilder(ProjectProcessor):
         self._new_image_urls[page].append((image, new_url))
 
         return (image,)
+
+    ################################################################################
+    # Functions used for additional tasks
+
+    async def copy_file_from_theme(self, source: Path, target: Path):
+        await makedirs(target.parent, exist_ok=True)
+        await to_thread(copyfile, source, target)
+        self._results.add(target)
+
+    async def copy_file_from_project(self, source: Path, target: Path):
+        await makedirs(target.parent, exist_ok=True)
+        await to_thread(self.project.fs.copy, source, target)
+        self._results.add(target)
+
+    async def compile_sass(self, source: Path, destination: Path):
+        await makedirs(destination.parent, exist_ok=True)
+
+        sass = await create_subprocess_exec('sass', '--style=compressed', f'{source}:{destination}')
+        await sass.wait()
+        if sass.returncode != 0:
+            print('SASS compilation failed.', file=sys.stderr)
+            sys.exit(1)
+
+        self._results.add(destination)
 
 
 class GlobalToc_HTML(GlobalToc):

@@ -1,6 +1,6 @@
 from abc import ABCMeta
 from contextlib import suppress
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 import jinja2
@@ -19,8 +19,10 @@ class HtmlTheme(Plugin, metaclass=ABCMeta):
     Additionally, the theme may contain its own implementation of functions for additional AST processing.
     The implementation will be called via Dispatcher.process_container().
     """
-    page_template: jinja2.Template
+    theme_dir: Path
     static_dir: Path
+    page_template: jinja2.Template
+    sass_files: dict[str, str] = field(default_factory=dict)
 
 
 def load_html_theme(theme_dir: Path) -> HtmlTheme:
@@ -38,4 +40,4 @@ def load_html_theme(theme_dir: Path) -> HtmlTheme:
     with suppress(FileNotFoundError):
         theme_class = load_plugin(theme_dir / 'theme.py', base_class=HtmlTheme)
 
-    return theme_class(page_template, static_dir)
+    return theme_class(theme_dir, static_dir, page_template)
