@@ -12,6 +12,8 @@ from sobiraka.utils import validate_dictionary
 
 
 async def async_main():
+    # pylint: disable=too-many-branches
+    # pylint: disable=too-many-locals
     # pylint: disable=too-many-statements
 
     parser = ArgumentParser()
@@ -21,13 +23,13 @@ async def async_main():
 
     cmd_html = commands.add_parser('html', help='Build HTML site.')
     cmd_html.add_argument('project', type=absolute_path)
-    cmd_html.add_argument('target', type=absolute_path)
+    cmd_html.add_argument('--output', type=absolute_path, default=absolute_path('build/html'))
     cmd_html.add_argument('--hide-index-html', action='store_true', help='Remove the "index.html" part from links.')
 
     cmd_pdf = commands.add_parser('pdf', help='Build PDF file.')
     cmd_pdf.add_argument('project', type=absolute_path)
     cmd_pdf.add_argument('volume', nargs='?')
-    cmd_pdf.add_argument('target', type=absolute_path)
+    cmd_pdf.add_argument('--output', type=absolute_path, default=absolute_path('build/pdf'))
 
     cmd_lint = commands.add_parser('lint', help='Check a volume for various issues.')
     cmd_lint.add_argument('project', type=absolute_path)
@@ -44,7 +46,7 @@ async def async_main():
     cmd_check_translations.add_argument('--strict', action='store_true')
 
     cmd_changelog = commands.add_parser('changelog',
-                                   help='Display changes in translation versions between two git commits.')
+                                        help='Display changes in translation versions between two git commits.')
     cmd_changelog.add_argument('project', type=absolute_path)
     cmd_changelog.add_argument('commit1')
     cmd_changelog.add_argument('commit2', default='HEAD')
@@ -61,15 +63,27 @@ async def async_main():
 
         if cmd is cmd_html:
             project = load_project(args.project)
-            exit_code = await HtmlBuilder(project, args.target, hide_index_html=args.hide_index_html).run()
+            exit_code = await HtmlBuilder(project, args.output, hide_index_html=args.hide_index_html).run()
 
         elif cmd is cmd_pdf:
             project = load_project(args.project)
-            volume = project.get_volume(args.volume)
-            target: Path = args.target
-            if target.suffix.lower() != '.pdf':
-                target /= f'{volume.config.title}.pdf'
-            exit_code = await PdfBuilder(volume, target).run()
+            output: Path = args.output
+
+            if args.volume is not None or len(project.volumes) == 1:
+                volume = project.volumes[0]
+                if output.suffix.lower() != '.pdf':
+                    output /= f'{volume.config.title}.pdf'
+                exit_code = await PdfBuilder(volume, output).run()
+
+            else:
+                assert output.suffix.lower() != '.pdf'
+                exit_code = 0
+                for volume in project.volumes:
+                    output_file = output / f'{volume.config.title}.pdf'
+                    print(f'Building {output_file.name!r}...', file=sys.stderr)
+                    exit_code = await PdfBuilder(volume, output_file).run()
+                    if exit_code != 0:
+                        break
 
         elif cmd is cmd_lint:
             project = load_project(args.project)

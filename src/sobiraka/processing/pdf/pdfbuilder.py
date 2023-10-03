@@ -64,6 +64,8 @@ class PdfBuilder(VolumeProcessor):
                 sys.exit(1)
         copyfile(xelatex_workdir / 'build.pdf', self.output)
 
+        return 0
+
     async def generate_latex(self, latex_output: BinaryIO):
         volume = self.volume
         project = self.volume.project

@@ -130,7 +130,7 @@ build-docs:
   image: $CI_REGISTRY_IMAGE/cache/release:by-commit-$CI_COMMIT_SHA
   script:
     - ls -A | grep -v docs | xargs rm -rf
-    - sobiraka html docs/docs.yaml html
+    - sobiraka html docs/docs.yaml --output html
   artifacts:
     paths:
       - html
