@@ -70,9 +70,10 @@ async def async_main():
             output: Path = args.output
 
             if args.volume is not None or len(project.volumes) == 1:
-                volume = project.volumes[0]
+                volume = project.get_volume(args.volume)
                 if output.suffix.lower() != '.pdf':
                     output /= f'{volume.config.title}.pdf'
+                print(f'Building {output.name!r}...', file=sys.stderr)
                 exit_code = await PdfBuilder(volume, output).run()
 
             else:
