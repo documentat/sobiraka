@@ -18,6 +18,7 @@ from aiofiles.os import makedirs
 from panflute import Element, Header, Image
 
 from sobiraka.models import DirPage, GlobalToc, IndexPage, LocalToc, Page, PageHref, Project, Syntax, Volume
+from sobiraka.runtime import RT
 from sobiraka.utils import panflute_to_bytes
 from .abstract import ProjectProcessor
 from .plugin import HtmlTheme, load_html_theme
@@ -97,7 +98,7 @@ class HtmlBuilder(ProjectProcessor):
 
         theme = self._themes[volume]
         if theme.__class__ is not HtmlTheme:
-            await theme.process_doc(self.doc[page], page)
+            await theme.process_doc(RT[page].doc, page)
 
         # Apply postponed image URL changes
         for image, new_url in self._new_image_urls[page]:
@@ -111,7 +112,7 @@ class HtmlBuilder(ProjectProcessor):
             '--no-highlight',
             stdin=PIPE,
             stdout=PIPE)
-        html, _ = await pandoc.communicate(panflute_to_bytes(self.doc[page]))
+        html, _ = await pandoc.communicate(panflute_to_bytes(RT[page].doc))
         assert pandoc.returncode == 0
 
         html = await theme.page_template.render_async(
@@ -121,7 +122,7 @@ class HtmlBuilder(ProjectProcessor):
             volume=volume,
             page=page,
 
-            title=self.titles.get(page, 'Untitled'),  # TODO why is title not there?
+            title=RT[page].title or 'Untitled',  # TODO why is title not there?
             body=html.decode('utf-8').strip(),
 
             now=datetime.now(),

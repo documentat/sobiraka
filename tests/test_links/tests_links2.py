@@ -6,6 +6,7 @@ from panflute import Link
 
 from abstracttests.projecttestcase import ProjectTestCase
 from sobiraka.models import FileSystem, Page, PageHref, Project, Volume
+from sobiraka.runtime import RT
 
 
 class TestLinks2(ProjectTestCase):
@@ -61,11 +62,11 @@ class TestLinks2(ProjectTestCase):
         }
         for target_text, expected_path in data.items():
             with self.subTest(target=target_text):
-                previous_links_count = len(self.processor.links[page])
+                previous_links_count = len(RT[page].links)
                 await self.processor._process_internal_link(Link(), target_text, page)
-                self.assertEqual(previous_links_count + 1, len(self.processor.links[page]))
+                self.assertEqual(previous_links_count + 1, len(RT[page].links))
 
-                href = self.processor.links[page][-1]
+                href = RT[page].links[-1]
                 self.assertIsInstance(href, PageHref)
                 self.assertEqual(expected_path, href.target.path_in_project)
                 self.assertEqual(None, href.anchor)

@@ -21,3 +21,7 @@ class IndexPage(Page):
         if self.is_root():
             return None
         return self.volume.pages_by_path[self.path_in_volume.parent.parent]
+
+    @property
+    def hash(self) -> str:
+        return '2222222222222222222222222222222222222222222222222222222222222222'

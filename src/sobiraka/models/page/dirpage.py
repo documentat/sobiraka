@@ -23,3 +23,7 @@ class DirPage(Page):
     @property
     def text(self) -> str:
         return '# ' + self.path_in_volume.stem + '\n\n{{ toc }}'
+
+    @property
+    def hash(self) -> str:
+        return '1111111111111111111111111111111111111111111111111111111111111111'

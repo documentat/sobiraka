@@ -1,13 +1,11 @@
 from dataclasses import dataclass
 
-from panflute import Header
-
 
 @dataclass(frozen=True)
 class Anchor:
     identifier: str
     label: str
-    header: Header
+    level: int
 
 
 class Anchors(list[Anchor]):

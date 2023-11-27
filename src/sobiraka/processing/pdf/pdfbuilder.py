@@ -4,13 +4,14 @@ import sys
 import urllib.parse
 from asyncio import create_subprocess_exec
 from pathlib import Path
-from shutil import copyfile, rmtree
+from shutil import copyfile
 from subprocess import DEVNULL, PIPE
 from types import NoneType
 from typing import BinaryIO
 
 from panflute import Element, Header, Space, Str, stringify
 
+from sobiraka.cache import CACHE
 from sobiraka.models import Page, PageHref, Volume
 from sobiraka.models.exceptions import DisableLink
 from sobiraka.runtime import RT
@@ -33,20 +34,13 @@ class PdfBuilder(VolumeProcessor):
             self._theme = load_pdf_theme(self.volume.config.pdf.theme)
 
     async def run(self):
-        self.output.parent.mkdir(parents=True, exist_ok=True)
-
         xelatex_workdir = RT.TMP / 'tex'
         xelatex_workdir.mkdir(parents=True, exist_ok=True)
-        for item in xelatex_workdir.iterdir():
-            if item.is_dir():
-                rmtree(item)
-            else:
-                item.unlink()
 
         with open(xelatex_workdir / 'build.tex', 'wb') as latex_output:
             await self.generate_latex(latex_output)
 
-        env = os.environ | {'TEXINPUTS': f'{self.volume.project.fs.resolve(self.volume.config.paths.resources)}:'}
+        resources_dir = self.volume.project.fs.resolve(self.volume.config.paths.resources)
         for n in range(1, 4):
             print(f'Running XeLaTeX ({n})...', file=sys.stderr)
             xelatex = await create_subprocess_exec(
@@ -55,13 +49,15 @@ class PdfBuilder(VolumeProcessor):
                 '-halt-on-error',
                 'build.tex',
                 cwd=xelatex_workdir,
-                env=env,
+                env=os.environ | {'TEXINPUTS': f'{resources_dir}:'},
                 stdin=DEVNULL,
                 stdout=DEVNULL)
             await xelatex.wait()
             if xelatex.returncode != 0:
                 self.print_xelatex_error(xelatex_workdir / 'build.log')
                 sys.exit(1)
+
+        self.output.parent.mkdir(parents=True, exist_ok=True)
         copyfile(xelatex_workdir / 'build.pdf', self.output)
 
         return 0
@@ -115,22 +111,32 @@ class PdfBuilder(VolumeProcessor):
             await self.generate_latex_for_page(page)
             latex_output.write(b'\n\n' + (80 * b'%'))
             latex_output.write(b'\n\n%%% ' + bytes(page.path_in_project) + b'\n\n')
-            latex_output.write(self._latex[page])
+            latex_output.write(RT[page].latex)
 
         latex_output.write(b'\n\n' + (80 * b'%'))
         latex_output.write(b'\n\n\\end{sloppypar}\n\\end{document}')
 
     @on_demand
     async def generate_latex_for_page(self, page: Page):
+        try:
+            RT[page].dependencies = CACHE[page].dependencies
+        except KeyError:
+            await self.process1(page)
+
+        try:
+            RT[page].latex = CACHE[page].load_latex(RT[page].dependencies)
+            return
+        except KeyError:
+            pass
         await self.process2(page)
 
         # If a theme is set, run additional processing of the whole document
         # Note that if the theme does not contain custom logic implementation, we skip this step as useless
         if type(self._theme) not in (NoneType, PdfTheme):
-            await self._theme.process_doc(self.doc[page], page)
+            await self._theme.process_doc(RT[page].doc, page)
 
-        if len(self.doc[page].content) == 0:
-            self._latex[page] = b''
+        if len(RT[page].doc.content) == 0:
+            RT[page].latex = b''
 
         else:
             pandoc = await create_subprocess_exec(
@@ -140,20 +146,19 @@ class PdfBuilder(VolumeProcessor):
                 '--wrap', 'none',
                 stdin=PIPE,
                 stdout=PIPE)
-            pandoc.stdin.write(panflute_to_bytes(self.doc[page]))
+            pandoc.stdin.write(panflute_to_bytes(RT[page].doc))
             pandoc.stdin.close()
             await pandoc.wait()
             assert pandoc.returncode == 0
-            self._latex[page] = await pandoc.stdout.read()
+            RT[page].latex = await pandoc.stdout.read()
 
             # When a PdfTheme prepends or appends some code to a Para,
             # it may leave the 'BEGIN STRIP'/'END STRIP' notes,
             # which we will now use to remove unnecessary empty lines
-            self._latex[page] = re.sub(rb'% BEGIN STRIP\n+', b'', self._latex[page])
-            self._latex[page] = re.sub(rb'\n+% END STRIP', b'', self._latex[page])
+            RT[page].latex = re.sub(rb'% BEGIN STRIP\n+', b'', RT[page].latex)
+            RT[page].latex = re.sub(rb'\n+% END STRIP', b'', RT[page].latex)
 
-        if RT.TMP:
-            (RT.TMP / 'content' / page.path_in_project.with_suffix('.tex')).write_bytes(self._latex[page])
+        CACHE[page].latex = RT[page]
 
     @staticmethod
     def print_xelatex_error(log_path: Path):

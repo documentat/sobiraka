@@ -1,7 +1,7 @@
 import re
 import sys
 from abc import abstractmethod
-from asyncio import Task, create_subprocess_exec, create_task, gather
+from asyncio import Task, create_subprocess_exec, gather
 from collections import defaultdict
 from contextlib import suppress
 from io import BytesIO
@@ -12,13 +12,13 @@ from subprocess import PIPE
 import jinja2
 import panflute
 from jinja2 import StrictUndefined
-from panflute import Code, Doc, Element, Header, Image, Link, Para, Space, Str, Table, stringify
+from panflute import Code, Element, Header, Image, Link, Para, Space, Str, Table, stringify
 
-from sobiraka.models import Anchor, Anchors, BadLink, Counter, DirPage, Href, Issue, Page, PageHref, Project, UrlHref, \
-    Volume
+from sobiraka.cache import CACHE
+from sobiraka.models import Anchor, BadLink, Counter, DirPage, Page, PageHref, Project, UrlHref, Volume
 from sobiraka.models.exceptions import DisableLink
 from sobiraka.runtime import RT
-from sobiraka.utils import UniqueList, convert_or_none, on_demand, save_debug_json
+from sobiraka.utils import convert_or_none, on_demand
 from .dispatcher import Dispatcher
 
 
@@ -27,42 +27,13 @@ class Processor(Dispatcher):
     def __init__(self):
         self.jinja: dict[Volume, jinja2.Environment] = {}
 
-        self.doc: dict[Page, Doc] = {}
-        """
-        The document tree, as parsed by `Pandoc <https://pandoc.org/>`_ 
-        and `Panflute <http://scorreia.com/software/panflute/>`_.
-        
-        Do not rely on the value for page here until :func:`load()` is awaited for that page.
-        """
-
-        self.titles: dict[Page, str | None] = {}
-        """Page titles.
-        
-        Do not rely on the value for page here until :func:`process1()` is awaited for that page."""
-
-        self.links: dict[Page, list[Href]] = defaultdict(list)
-        """All links present on the page, both internal and external.-
-        
-        Do not rely on the value for page here until :func:`process1()` is awaited for that page."""
-
-        self.anchors: dict[Page, Anchors] = defaultdict(Anchors)
-        """Dictionary containing anchors and corresponding readable titles.
-        
-        Do not rely on the value for page here until :func:`process1()` is awaited for that page.
-        
-        Note that sometime a user leaves anchors empty or specifies identical anchors for multiple headers by mistake.
-        However, this is not considered a critical issue as long as no page contains links to this anchor.
-        For that reason, all the titles for an anchor are stored as a list (in order of appearance on the page),
-        and it is up to :func:`.process2_link()` to report an issue if necessary.
-        """
-
-        self.issues: dict[Page, UniqueList[Issue]] = defaultdict(UniqueList)
-
         self.process2_tasks: dict[Page, list[Task]] = defaultdict(list)
-        """:meta private:"""
 
         # Counters for automatic header numeration
         self.numeration: dict[Volume, Counter] = defaultdict(Counter)
+
+    def __repr__(self):
+        return f'<{self.__class__.__name__} at {hex(id(self))}>'
 
     @abstractmethod
     def get_pages(self) -> tuple[Page, ...]:
@@ -75,6 +46,12 @@ class Processor(Dispatcher):
 
         This method is called by :obj:`.Page.loaded`.
         """
+        try:
+            RT[page] = CACHE[page].preprocessed
+            return
+        except KeyError:
+            pass
+
         from sobiraka.models import SubtreeToc
         from sobiraka.processing import HtmlBuilder
         from sobiraka.processing import PdfBuilder
@@ -112,15 +89,15 @@ class Processor(Dispatcher):
         json_bytes, _ = await pandoc.communicate(page_text.encode('utf-8'))
         assert pandoc.returncode == 0
 
-        self.doc[page] = panflute.load(BytesIO(json_bytes))
-        save_debug_json('s0', page, self.doc[page])
+        RT[page].doc = panflute.load(BytesIO(json_bytes))
+        CACHE[page].preprocessed = RT[page]
 
     async def get_title(self, page: Page) -> str:
         # TODO: maybe make get_title() a separate @on_demand step?
         await self.process1(page)
-        if page not in self.titles:
-            self.titles[page] = page.id_segment()
-        return self.titles[page]
+        if RT[page].title is None:
+            RT[page].title = page.id_segment()
+        return RT[page].title
 
     @on_demand
     async def process1(self, page: Page) -> Page:
@@ -132,8 +109,8 @@ class Processor(Dispatcher):
         This method is called by :obj:`.Page.processed1`.
         """
         await self.load_page(page)
-        await self.process_doc(self.doc[page], page)
-        save_debug_json('s1', page, self.doc[page])
+        await self.process_doc(RT[page].doc, page)
+        CACHE[page].dependencies = RT[page].dependencies
         return page
 
     async def process_header(self, header: Header, page: Page) -> tuple[Element, ...]:
@@ -157,12 +134,12 @@ class Processor(Dispatcher):
                 header.content = Str(f'{self.numeration[volume]}.'), Space(), *header.content
 
         # Remember the anchor
-        anchor = Anchor(header.identifier, stringify(header), header)
-        self.anchors[page].append(anchor)
+        anchor = Anchor(header.identifier, stringify(header), header.level)
+        RT[page].anchors.append(anchor)
 
         # If this is a top level header, use it as the page title
         if header.level == 1:
-            self.titles[page] = stringify(header)
+            RT[page].title = stringify(header)
 
         return (header,)
 
@@ -207,16 +184,31 @@ class Processor(Dispatcher):
 
     @on_demand
     async def process2(self, page: Page):
+        try:
+            RT[page].dependencies = CACHE[page].dependencies
+        except KeyError:
+            await self.process1(page)
+
+        try:
+            RT[page] = CACHE[page].load_processed(RT[page].dependencies)
+            return
+        except KeyError:
+            pass
+
+        await gather(self.process1(page),
+                     *(self.process1(dep) for dep in RT[page].dependencies))
+
         await self.process1(page)
         await gather(*self.process2_tasks[page])
-        save_debug_json('s2', page, self.doc[page])
+
+        CACHE[page].processed = RT[page]
 
     def print_issues(self) -> bool:
         issues_found: bool = False
         for page in self.get_pages():
-            if self.issues[page]:
+            if RT[page].issues:
                 message = f'Issues in {page.path_in_project}:'
-                for issue in self.issues[page]:
+                for issue in RT[page].issues:
                     message += f'\n    {issue}'
                 message += '\n'
                 print(message, file=sys.stderr)
@@ -228,10 +220,10 @@ class Processor(Dispatcher):
 
     async def process_link(self, link: Link, page: Page):
         if re.match(r'^\w+:', link.url):
-            self.links[page].append(UrlHref(link.url))
+            RT[page].links.append(UrlHref(link.url))
         else:
             if page.path_in_volume.suffix == '.rst':
-                self.issues[page].append(BadLink(link.url))
+                RT[page].issues.append(BadLink(link.url))
                 return
             await self._process_internal_link(link, link.url, page)
 
@@ -271,14 +263,13 @@ class Processor(Dispatcher):
                 target = volume.pages_by_path[target_path]
 
             href = PageHref(target, target_anchor)
-            self.links[page].append(href)
+            RT[page].links.append(href)
 
-            self.process2_tasks[page].append(create_task(
-                self.process2_internal_link(elem, href, target_text, page)
-            ))
+            RT[page].dependencies.add(href.target)
+            self.process2_tasks[page].append(self.process2_internal_link(elem, href, target_text, page))
 
         except (KeyError, ValueError):
-            self.issues[page].append(BadLink(target_text))
+            RT[page].issues.append(BadLink(target_text))
 
     async def process2_internal_link(self, elem: Link, href: PageHref, target_text: str, page: Page):
         await self.process1(href.target)
@@ -291,9 +282,9 @@ class Processor(Dispatcher):
 
         if href.anchor:
             try:
-                autolabel = self.anchors[href.target][href.anchor].label
+                autolabel = RT[href.target].anchors[href.anchor].label
             except (KeyError, AssertionError):
-                self.issues[page].append(BadLink(target_text))
+                RT[page].issues.append(BadLink(target_text))
                 return
         else:
             autolabel = await self.get_title(href.target)

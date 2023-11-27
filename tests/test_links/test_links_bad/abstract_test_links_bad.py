@@ -1,5 +1,6 @@
 from abstracttests.projectdirtestcase import ProjectDirTestCase
 from sobiraka.models import BadLink, Href, Issue, Page, PageHref, UrlHref
+from sobiraka.runtime import RT
 
 
 class AbstractTestLinksBad(ProjectDirTestCase):
@@ -40,7 +41,7 @@ class AbstractTestLinksBad(ProjectDirTestCase):
         }
         for page, expected_issues in data.items():
             with self.subTest(page):
-                self.assertEqual(expected_issues, self.processor.issues[page])
+                self.assertEqual(expected_issues, RT[page].issues)
 
     def test_links(self):
         data: dict[Page, tuple[Href, ...]] = {
@@ -79,7 +80,7 @@ class AbstractTestLinksBad(ProjectDirTestCase):
         }
         for page, expected_links in data.items():
             with self.subTest(page):
-                self.assertSequenceEqual(expected_links, tuple(self.processor.links[page]))
+                self.assertSequenceEqual(expected_links, tuple(RT[page].links))
 
 
 del ProjectDirTestCase

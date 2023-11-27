@@ -6,6 +6,7 @@ from os.path import relpath
 from typing import TYPE_CHECKING
 
 from sobiraka.models.config import CombinedToc
+from sobiraka.runtime import RT
 from sobiraka.utils import render
 
 if TYPE_CHECKING:
@@ -200,18 +201,18 @@ class LocalToc(TableOfContents):
         breadcrumbs: list[TocTreeItem] = [root]
         current_level: int = 0
 
-        for anchor in self.processor.anchors[self.page]:
+        for anchor in RT[self.page].anchors:
             item = TocTreeItem(title=anchor.label, href=f'{self.href_prefix}#{anchor.identifier}')
-            if anchor.header.level == current_level:
+            if anchor.level == current_level:
                 breadcrumbs[-2].children.append(item)
                 breadcrumbs[-1] = item
-            elif anchor.header.level > current_level:
+            elif anchor.level > current_level:
                 breadcrumbs[-1].children.append(item)
                 breadcrumbs.append(item)
-            elif anchor.header.level < current_level:
-                breadcrumbs[anchor.header.level - 1].children.append(item)
-                breadcrumbs[anchor.header.level:] = [item]
-            current_level = anchor.header.level
+            elif anchor.level < current_level:
+                breadcrumbs[anchor.level - 1].children.append(item)
+                breadcrumbs[anchor.level:] = [item]
+            current_level = anchor.level
 
         # TODO: Support sources with zero or multiple top-level headers
         if root.children:

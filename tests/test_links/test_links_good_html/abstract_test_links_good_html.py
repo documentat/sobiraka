@@ -4,6 +4,7 @@ from tempfile import TemporaryDirectory
 from abstracttests.projectdirtestcase import ProjectDirTestCase
 from sobiraka.models import Href, Page, PageHref, UrlHref
 from sobiraka.processing import HtmlBuilder
+from sobiraka.runtime import RT
 
 
 class AbstractTestLinksGoodHtml(ProjectDirTestCase):
@@ -70,7 +71,7 @@ class AbstractTestLinksGoodHtml(ProjectDirTestCase):
         }
         for page, expected_links in data.items():
             with self.subTest(page):
-                self.assertSequenceEqual(tuple(expected_links.keys()), tuple(self.processor.links[page]))
+                self.assertSequenceEqual(tuple(expected_links.keys()), tuple(RT[page].links))
             for href, expected_url in expected_links.items():
                 if isinstance(href, PageHref):
                     with self.subTest(

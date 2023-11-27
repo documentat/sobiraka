@@ -2,19 +2,18 @@ import inspect
 import re
 from abc import ABCMeta
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from unittest import main
 from unittest.mock import Mock
 
 from bs4 import BeautifulSoup
 from bs4.formatter import Formatter
 
-from abstracttests.abstracttestwithrttmp import AbstractTestWithRtTmp
 from abstracttests.projecttestcase import ProjectTestCase
 from sobiraka.models import FileSystem, IndexPage, Page, Project, SubtreeToc, TocTreeItem, Volume
 from sobiraka.processing import HtmlBuilder
 from sobiraka.processing.abstract import ProjectProcessor
 from sobiraka.processing.htmlbuilder import GlobalToc_HTML
-from sobiraka.runtime import RT
 from testutils import assertNoDiff
 
 
@@ -80,11 +79,15 @@ class TestSubtreeToc_RST(TestSubtreeToc):
     ext = 'rst'
 
 
-class TestGlobalToc(TestToc, AbstractTestWithRtTmp):
+class TestGlobalToc(TestToc):
     ext = 'md'
 
+    async def asyncSetUp(self):
+        self.output = Path(self.enterContext(TemporaryDirectory(prefix='sobiraka-test-')))
+        await super().asyncSetUp()
+
     def _init_processor(self):
-        return HtmlBuilder(self.project, RT.TMP)
+        return HtmlBuilder(self.project, self.output)
 
     async def test_get_root(self):
         expected = self.project.pages_by_path[Path('src/0-index.md')]

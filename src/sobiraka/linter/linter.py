@@ -6,6 +6,7 @@ from more_itertools import unique_everseen
 from panflute import Code, ListItem, stringify
 
 from sobiraka.models import Issue, MisspelledWords, Page, PhraseBeginsWithLowerCase
+from sobiraka.runtime import RT
 from .hunspell import run_hunspell
 from .lint_preprocessor import LintPreprocessor
 from .textmodel import Fragment
@@ -26,8 +27,9 @@ class Linter(LintPreprocessor):
             tasks.append(self.check_page(page))
         await gather(*tasks)
 
-        if self.issues:
-            return 1
+        for page in self.get_pages():
+            if RT[page].issues:
+                return 1
         return 0
 
     async def check_page(self, page: Page):
@@ -43,12 +45,12 @@ class Linter(LintPreprocessor):
                 if word not in misspelled_words:
                     misspelled_words.append(word)
             if misspelled_words:
-                self.issues[page].append(MisspelledWords(page.path_in_project, tuple(misspelled_words)))
+                RT[page].issues.append(MisspelledWords(page.path_in_project, tuple(misspelled_words)))
 
         for phrase in tm.phrases:
             if self.volume.config.lint.checks.phrases_must_begin_with_capitals:
                 async for issue in self.check__phrases_must_begin_with_capitals(phrase):
-                    self.issues[page].append(issue)
+                    RT[page].issues.append(issue)
 
     @staticmethod
     async def check__phrases_must_begin_with_capitals(phrase: Fragment) -> AsyncIterable[Issue]:

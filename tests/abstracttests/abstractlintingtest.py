@@ -1,4 +1,5 @@
 from sobiraka.linter import Linter
+from sobiraka.runtime import RT
 from testutils import assertNoDiff
 from .projectdirtestcase import ProjectDirTestCase
 
@@ -14,7 +15,7 @@ class AbstractLintingTest(ProjectDirTestCase[Linter]):
             with self.subTest(page):
                 expected = expected.read_text().splitlines()
                 await self.processor.check()
-                actual_issues = self.processor.issues[page]
+                actual_issues = RT[page].issues
                 actual = list(map(str, actual_issues))
                 assertNoDiff(expected, actual)
 

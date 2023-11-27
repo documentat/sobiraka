@@ -3,6 +3,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 from functools import cached_property
+from hashlib import sha256
 from pathlib import Path
 from typing import TYPE_CHECKING, overload
 
@@ -80,7 +81,7 @@ class Page:
             case Volume() as volume, Path() as path_in_volume, str() as raw_text:
                 self.volume = volume
                 self.path_in_volume = path_in_volume
-                self.__meta, self.__text = _process_raw(raw_text)
+                self._process_raw(raw_text)
 
             case Path() as path_in_volume,:
                 self.path_in_volume = path_in_volume
@@ -92,10 +93,10 @@ class Page:
 
             case Path() as path_in_volume, str() as raw_text:
                 self.path_in_volume = path_in_volume
-                self.__meta, self.__text = _process_raw(raw_text)
+                self._process_raw(raw_text)
 
             case str() as raw_text,:
-                self.__meta, self.__text = _process_raw(raw_text)
+                self._process_raw(raw_text)
 
             case PageMeta() as meta, str() as text:
                 self.__meta = meta
@@ -138,20 +139,32 @@ class Page:
         return (self.volume, self_breadcrumbs_as_indexes) < (other.volume, other_breadcrumbs_as_indexes)
 
     # ------------------------------------------------------------------------------------------------------------------
-    # Getters for the main properties
+    # Reading the source file
+
+    def _process_raw(self, raw_text: str):
+        if m := re.fullmatch(r'--- \n (.+\n)? --- (?: \n+ (.+) )?', raw_text, re.DOTALL | re.VERBOSE):
+            if meta_str := m.group(1):
+                meta = yaml.safe_load(meta_str)
+            else:
+                meta = {}
+            self.__meta = PageMeta(**meta)
+            self.__text = m.group(2)
+        else:
+            self.__meta = PageMeta()
+            self.__text = raw_text
 
     @property
     def meta(self) -> PageMeta:
         if self.__meta is None:
             raw_text = self.volume.project.fs.read_text(self.path_in_project)
-            self.__meta, self.__text = _process_raw(raw_text)
+            self._process_raw(raw_text)
         return self.__meta
 
     @property
     def text(self) -> str:
         if self.__text is None:
             raw_text = self.volume.project.fs.read_text(self.path_in_project)
-            self.__meta, self.__text = _process_raw(raw_text)
+            self._process_raw(raw_text)
         return self.__text
 
     @property
@@ -262,14 +275,10 @@ class Page:
         return TranslationStatus.OUTDATED
 
 
-def _process_raw(raw_text: str) -> tuple[PageMeta, str]:
-    if m := re.fullmatch(r'--- \n (.+\n)? --- (?: \n+ (.+) )?', raw_text, re.DOTALL | re.VERBOSE):
-        if meta_str := m.group(1):
-            meta = yaml.safe_load(meta_str)
-        else:
-            meta = {}
-        return PageMeta(**meta), m.group(2)
-    return PageMeta(), raw_text
+def _hash(data: str | bytes) -> str:
+    if isinstance(data, str):
+        data = data.encode('utf-8')
+    return sha256(data).hexdigest()
 
 
 @dataclass(kw_only=True)

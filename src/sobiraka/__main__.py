@@ -3,11 +3,12 @@ from argparse import ArgumentParser
 from asyncio import run
 from pathlib import Path
 
+from sobiraka.cache import init_cache
 from sobiraka.linter import Linter
 from sobiraka.models.load import load_project
 from sobiraka.processing import HtmlBuilder, PdfBuilder
 from sobiraka.runtime import RT
-from sobiraka.translating import check_translations, changelog
+from sobiraka.translating import changelog, check_translations
 from sobiraka.utils import validate_dictionary
 
 
@@ -18,6 +19,10 @@ async def async_main():
 
     parser = ArgumentParser()
     parser.add_argument('--tmpdir', type=absolute_path, default=absolute_path('build'))
+
+    cache_or_no_cache = parser.add_mutually_exclusive_group()
+    cache_or_no_cache.add_argument('--no-cache', action='store_true')
+    cache_or_no_cache.add_argument('--cache', type=absolute_path, default=absolute_path('.cache'))
 
     commands = parser.add_subparsers(title='commands', dest='command')
 
@@ -53,6 +58,9 @@ async def async_main():
 
     args = parser.parse_args()
     RT.TMP = args.tmpdir
+
+    if not args.no_cache:
+        init_cache(args.cache)  # TODO uses $SRC/.cache
 
     if args.command is None:
         parser.print_help()

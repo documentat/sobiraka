@@ -7,6 +7,7 @@ from unittest import IsolatedAsyncioTestCase, SkipTest
 
 from sobiraka.models import Page, Project
 from sobiraka.processing.abstract import Processor
+from sobiraka.runtime import RT
 
 T = TypeVar('T', bound=Processor)
 
@@ -55,4 +56,4 @@ class ProjectTestCase(IsolatedAsyncioTestCase, Generic[T], metaclass=ABCMeta):
     def test_issues(self):
         for page in self.project.pages:
             with self.subTest(page):
-                self.assertEqual([], self.processor.issues[page])
+                self.assertEqual([], RT[page].issues)
