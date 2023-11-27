@@ -12,7 +12,11 @@ class TestMeta(TestCase):
         page = Page('---\n---\nHello, world!')
         self.assertIsNone(page.meta.version)
 
-    def test_version(self):
+    def test_version_12_0(self):
+        page = Page('---\nversion: 12\n---\nHello, world!')
+        self.assertEqual(Version(12, 0), page.meta.version)
+
+    def test_version_12_3(self):
         page = Page('---\nversion: 12.3\n---\nHello, world!')
         self.assertEqual(Version(12, 3), page.meta.version)
 

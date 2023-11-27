@@ -20,7 +20,7 @@ class Version:
     def parse(cls, text: str) -> Version:
         m = re.match(r'^ (\d+) (?: \.(\d+) )? $', text, re.VERBOSE)
         major = int(m.group(1))
-        minor = int(m.group(2))
+        minor = int(m.group(2) or 0)
         return Version(major, minor)
 
 
