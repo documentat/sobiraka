@@ -59,13 +59,11 @@ class PageCacheHandler:
             _hash(self.page.text),
         ))
 
-    @property
-    def preprocessed(self) -> PageRuntime:
+    def get_preprocessed(self) -> PageRuntime:
         data = CACHE.load(self._key_preprocessed())
         return PageRuntime.load(data, self.page)
 
-    @preprocessed.setter
-    def preprocessed(self, page_rt: PageRuntime):
+    def set_preprocessed(self, page_rt: PageRuntime):
         CACHE.save(self._key_preprocessed(), page_rt.dump())
 
     # ------------------------------------------------------------------
@@ -78,13 +76,11 @@ class PageCacheHandler:
             _hash(self.page.text),
         ))
 
-    @property
-    def dependencies(self) -> set[Page]:
+    def get_dependencies(self) -> set[Page]:
         paths = CACHE.load(self._key_dependencies())
         return set(map(self.page.volume.pages_by_path.__getitem__, paths))
 
-    @dependencies.setter
-    def dependencies(self, dependencies: set[Page]):
+    def set_dependencies(self, dependencies: set[Page]):
         paths = list(p.path_in_volume for p in dependencies)
         CACHE.save(self._key_dependencies(), paths)
 
@@ -100,17 +96,12 @@ class PageCacheHandler:
             else _hash(sorted(list((str(dep.path_in_volume), dep.text) for dep in dependencies))),
         ))
 
-    @property
-    def processed(self):
-        raise RuntimeError('Use load_processed() instead.')
-
-    def load_processed(self, dependencies: set[Page]) -> PageRuntime:
+    def get_processed(self, dependencies: set[Page]) -> PageRuntime:
         key = self._key_processed(dependencies)
         data = CACHE.load(key)
         return PageRuntime.load(data, self.page)
 
-    @processed.setter
-    def processed(self, page_rt: PageRuntime):
+    def set_processed(self, page_rt: PageRuntime):
         key = self._key_processed(page_rt.dependencies)
         CACHE.save(key, page_rt.dump())
 
@@ -125,16 +116,11 @@ class PageCacheHandler:
             else _hash(sorted(list((str(dep.path_in_volume), dep.text) for dep in dependencies))),
         ))
 
-    @property
-    def latex(self):
-        raise RuntimeError('Use load_tex() instead.')
-
-    def load_latex(self, dependencies: set[Page]) -> bytes:
+    def get_latex(self, dependencies: set[Page]) -> bytes:
         key = self._key_latex(dependencies)
         return CACHE.load(key)
 
-    @latex.setter
-    def latex(self, page_rt: PageRuntime):
+    def set_latex(self, page_rt: PageRuntime):
         key = self._key_latex(page_rt.dependencies)
         CACHE.save(key, page_rt.latex)
 

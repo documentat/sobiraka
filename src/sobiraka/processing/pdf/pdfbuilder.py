@@ -119,12 +119,12 @@ class PdfBuilder(VolumeProcessor):
     @on_demand
     async def generate_latex_for_page(self, page: Page):
         try:
-            RT[page].dependencies = CACHE[page].dependencies
+            RT[page].dependencies = CACHE[page].get_dependencies()
         except KeyError:
             await self.process1(page)
 
         try:
-            RT[page].latex = CACHE[page].load_latex(RT[page].dependencies)
+            RT[page].latex = CACHE[page].get_latex(RT[page].dependencies)
             return
         except KeyError:
             pass
@@ -158,7 +158,7 @@ class PdfBuilder(VolumeProcessor):
             RT[page].latex = re.sub(rb'% BEGIN STRIP\n+', b'', RT[page].latex)
             RT[page].latex = re.sub(rb'\n+% END STRIP', b'', RT[page].latex)
 
-        CACHE[page].latex = RT[page]
+        CACHE[page].set_latex(RT[page])
 
     @staticmethod
     def print_xelatex_error(log_path: Path):
