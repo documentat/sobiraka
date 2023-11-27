@@ -136,22 +136,22 @@ def _hash(data) -> str:
     return sha256(pickle.dumps(data)).hexdigest()
 
 
-def init_cache(directory: Path):
+def init_cache(cache_directory: Path):
     app_fingerprint = dirhash(dirname(sobiraka.__file__),
                               hashfunc='sha256',
                               excluded_files=['**/__pycache__/*'],
                               excluded_extensions=['pyc'])
-    cache_fingerprint_file = directory / 'fingerprint.txt'
-    if directory.exists():
+    app_fingerprint_file = cache_directory / 'fingerprint.txt'
+    if cache_directory.exists():
         try:
-            cache_fingerprint = cache_fingerprint_file.read_text()
+            cache_fingerprint = app_fingerprint_file.read_text()
             assert cache_fingerprint == app_fingerprint
         except (FileNotFoundError, AssertionError):
-            rmtree(directory)
-    cache_fingerprint_file.parent.mkdir(parents=True, exist_ok=True)
-    cache_fingerprint_file.write_text(app_fingerprint)
+            rmtree(cache_directory)
+    cache_directory.mkdir(parents=True, exist_ok=True)
+    app_fingerprint_file.write_text(app_fingerprint)
 
-    _cache_impl_context.set(diskcache.Cache(str(directory)))
+    _cache_impl_context.set(diskcache.Cache(str(cache_directory)))
 
 
 CACHE = Cache()
