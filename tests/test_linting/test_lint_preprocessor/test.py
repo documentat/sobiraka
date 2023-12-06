@@ -3,7 +3,7 @@ from unittest import main
 from panflute import Space, Str
 
 from abstracttests.abstractlintingtest import AbstractLintingTest
-from testutils import assertNoDiff
+from helpers import assertNoDiff
 
 
 class TestLintPreprocessor(AbstractLintingTest):

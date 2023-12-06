@@ -1,6 +1,6 @@
+from helpers import assertNoDiff
 from sobiraka.linter import Linter
 from sobiraka.runtime import RT
-from testutils import assertNoDiff
 from .projectdirtestcase import ProjectDirTestCase
 
 

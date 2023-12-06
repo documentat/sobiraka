@@ -4,10 +4,10 @@ from pathlib import Path
 from shutil import copy, copytree
 from subprocess import PIPE, run
 from tempfile import TemporaryDirectory
-from unittest import SkipTest, TestCase, main, skip
+from unittest import TestCase, main
 
+from helpers import clean_directory
 from sobiraka.translating import changelog
-from testutils import clean_directory
 
 
 class TestChangelog(TestCase):

@@ -10,11 +10,11 @@ from bs4 import BeautifulSoup
 from bs4.formatter import Formatter
 
 from abstracttests.projecttestcase import ProjectTestCase
+from helpers import assertNoDiff
 from sobiraka.models import FileSystem, IndexPage, Page, Project, SubtreeToc, TocTreeItem, Volume
 from sobiraka.processing import HtmlBuilder
 from sobiraka.processing.abstract import ProjectProcessor
 from sobiraka.processing.htmlbuilder import GlobalToc_HTML
-from testutils import assertNoDiff
 
 
 class TestToc(ProjectTestCase, metaclass=ABCMeta):
