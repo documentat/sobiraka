@@ -74,6 +74,8 @@ $defs:
               type: string
           theme: { type: string }
           theme_data: { type: object }
+          toc_expansion:
+            enum: [current, always]
           combined_toc:
             enum: [never, current, always]
 

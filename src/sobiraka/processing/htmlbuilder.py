@@ -18,6 +18,7 @@ from aiofiles.os import makedirs
 from panflute import Element, Header, Image
 
 from sobiraka.models import DirPage, GlobalToc, IndexPage, LocalToc, Page, PageHref, Project, Syntax, Volume
+from sobiraka.models.config import TocExpansion
 from sobiraka.runtime import RT
 from sobiraka.utils import panflute_to_bytes
 from .abstract import ProjectProcessor
@@ -265,3 +266,6 @@ class GlobalToc_HTML(GlobalToc):
 
     def syntax(self) -> Syntax:
         return Syntax.HTML
+
+    def _should_expand(self, page: Page) -> bool:
+        return page.volume.config.html.toc_expansion == TocExpansion.ALWAYS or self.is_selected(page)

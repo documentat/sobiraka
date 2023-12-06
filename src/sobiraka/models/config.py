@@ -45,6 +45,11 @@ class Config_Content:
     """Whether to add automatic numbers to all the headers."""
 
 
+class TocExpansion(Enum):
+    CURRENT = 'current'
+    ALWAYS = 'always'
+
+
 class CombinedToc(Enum):
     NEVER = 'never'
     CURRENT = 'current'
@@ -75,6 +80,8 @@ class Config_HTML:
     """Path to the theme that should be used when generating HTML."""
 
     theme_data: dict[str, Any] = field(default=dict)
+
+    toc_expansion: TocExpansion = TocExpansion.ALWAYS
 
     combined_toc: CombinedToc = CombinedToc.NEVER
 

@@ -54,13 +54,18 @@ class CrossPageToc(TableOfContents, metaclass=ABCMeta):
     def syntax(self) -> Syntax:
         ...
 
+    def _should_expand(self, page: Page) -> bool:
+        # pylint: disable=unused-argument
+        return True
+
     async def items(self, *, parent: Page = None) -> list[TocTreeItem]:
         if parent is None:
             parent = self.get_root()
         items: list[TocTreeItem] = []
-        for page in parent.children:
-            items.append(await self._make_item(page))
-            items[-1].children += await self.items(parent=page)
+        if self._should_expand(parent):
+            for page in parent.children:
+                items.append(await self._make_item(page))
+                items[-1].children += await self.items(parent=page)
         return items
 
     async def _make_item(self, page: Page) -> TocTreeItem:
