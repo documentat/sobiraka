@@ -3,6 +3,7 @@ from __future__ import annotations
 from abc import ABCMeta, abstractmethod
 from dataclasses import dataclass, field
 from os.path import relpath
+from textwrap import indent
 from typing import TYPE_CHECKING
 
 from sobiraka.models.config import CombinedToc
@@ -122,7 +123,7 @@ class CrossPageToc(TableOfContents, metaclass=ABCMeta):
         return text
 
 
-@dataclass(eq=True)
+@dataclass
 class TocTreeItem:
     title: str
     href: str
@@ -132,15 +133,20 @@ class TocTreeItem:
 
     def __repr__(self):
         parts = [repr(self.title), repr(self.href)]
+
         if self.is_current:
             parts.append('current')
+
         if self.is_selected:
             parts.append('selected')
+
         if self.children:
-            if len(self.children) == 1:
-                parts.append('1 child item')
-            else:
-                parts.append(f'{len(self.children)} child items')
+            part_children = '[\n'
+            for child in self.children:
+                part_children += indent(repr(child), '  ') + ',\n'
+            part_children += ']'
+            parts.append(part_children)
+
         return f'<{self.__class__.__name__}: {", ".join(parts)}>'
 
 
