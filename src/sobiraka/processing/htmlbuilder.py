@@ -268,4 +268,10 @@ class GlobalToc_HTML(GlobalToc):
         return Syntax.HTML
 
     def _should_expand(self, page: Page) -> bool:
-        return page.volume.config.html.toc_expansion == TocExpansion.ALWAYS or self.is_selected(page)
+        if page.volume.config.html.toc_expansion == TocExpansion.ALWAYS:
+            return True
+        if page.is_root():
+            return True
+        if self.is_selected(page):
+            return True
+        return False
