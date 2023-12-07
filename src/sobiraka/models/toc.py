@@ -74,7 +74,8 @@ class CrossPageToc(TableOfContents, metaclass=ABCMeta):
         href = self.get_href(page)
         is_current = self.is_current(page)
         is_selected = self.is_selected(page)
-        return TocTreeItem(title, href, is_current=is_current, is_selected=is_selected)
+        is_collapsed = len(page.children) > 0 and not self._should_expand(page)
+        return TocTreeItem(title, href, is_current=is_current, is_selected=is_selected, is_collapsed=is_collapsed)
 
     async def __call__(self) -> str:
         from .syntax import Syntax
@@ -129,6 +130,7 @@ class TocTreeItem:
     href: str
     is_current: bool = field(kw_only=True, default=False)
     is_selected: bool = field(kw_only=True, default=False)
+    is_collapsed: bool = field(kw_only=True, default=False)
     children: list[TocTreeItem] = field(kw_only=True, default_factory=list)
 
     def __repr__(self):
@@ -139,6 +141,9 @@ class TocTreeItem:
 
         if self.is_selected:
             parts.append('selected')
+
+        if self.is_collapsed:
+            parts.append('collapsed')
 
         if self.children:
             part_children = '[\n'
