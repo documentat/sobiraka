@@ -1,3 +1,5 @@
+import re
+from math import inf
 from pathlib import Path
 from textwrap import dedent
 from typing import Iterable
@@ -96,6 +98,7 @@ def _load_volume(lang: str | None, codename: str, volume_data: dict, fs: FileSys
             resources_force_copy=_('html.resources_force_copy', ()),
             theme=_find_theme_dir(_('html.theme', 'simple'), fs=fs),
             theme_data=_('html.theme_data', {}),
+            toc_expansion=int(re.sub(r'^infinity$', '0', str(_('html.toc_expansion', 'infinity')))) or inf,
             combined_toc=CombinedToc(_('html.combined_toc', 'never')),
         ),
         pdf=Config_PDF(

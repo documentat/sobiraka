@@ -3,10 +3,6 @@ WORKDIR /tmp/pandoc
 RUN arch=$(arch | sed s:aarch64:arm64: | sed s:x86_64:amd64:) \
     && wget https://github.com/jgm/pandoc/releases/download/2.19/pandoc-2.19-linux-$arch.tar.gz -O- | tar -xz --strip-components=1
 
-FROM alpine:3.18 AS get-fonts
-RUN wget http://rus.paratype.ru/system/attachments/631/original/ptmono.zip -O ptmono.zip && unzip ptmono.zip -d /tmp/fonts && rm ptmono.zip
-RUN wget https://www.latofonts.com/download/lato2ofl-zip/ -O lato.zip && unzip lato.zip -d /tmp/fonts && rm lato.zip
-
 FROM python:3.11-alpine3.18 AS build-package
 COPY setup.py .
 COPY src src
@@ -33,7 +29,6 @@ FROM alpine:3.18 AS common
 RUN apk add --no-cache texlive-full
 RUN apk add --no-cache hunspell
 RUN apk add --no-cache python3~=3.11 py3-pip --repository=http://dl-cdn.alpinelinux.org/alpine/edge/main/
-COPY --from=get-fonts /tmp/fonts /usr/share/fonts/truetype
 COPY --from=get-pandoc /tmp/pandoc /usr/local
 WORKDIR /W
 ENTRYPOINT [""]

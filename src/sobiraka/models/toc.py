@@ -3,6 +3,7 @@ from __future__ import annotations
 from abc import ABCMeta, abstractmethod
 from dataclasses import dataclass, field
 from os.path import relpath
+from textwrap import indent
 from typing import TYPE_CHECKING
 
 from sobiraka.models.config import CombinedToc
@@ -54,13 +55,18 @@ class CrossPageToc(TableOfContents, metaclass=ABCMeta):
     def syntax(self) -> Syntax:
         ...
 
+    def _should_expand(self, page: Page) -> bool:
+        # pylint: disable=unused-argument
+        return True
+
     async def items(self, *, parent: Page = None) -> list[TocTreeItem]:
         if parent is None:
             parent = self.get_root()
         items: list[TocTreeItem] = []
-        for page in parent.children:
-            items.append(await self._make_item(page))
-            items[-1].children += await self.items(parent=page)
+        if self._should_expand(parent):
+            for page in parent.children:
+                items.append(await self._make_item(page))
+                items[-1].children += await self.items(parent=page)
         return items
 
     async def _make_item(self, page: Page) -> TocTreeItem:
@@ -68,7 +74,8 @@ class CrossPageToc(TableOfContents, metaclass=ABCMeta):
         href = self.get_href(page)
         is_current = self.is_current(page)
         is_selected = self.is_selected(page)
-        return TocTreeItem(title, href, is_current=is_current, is_selected=is_selected)
+        is_collapsed = len(page.children) > 0 and not self._should_expand(page)
+        return TocTreeItem(title, href, is_current=is_current, is_selected=is_selected, is_collapsed=is_collapsed)
 
     async def __call__(self) -> str:
         from .syntax import Syntax
@@ -117,25 +124,34 @@ class CrossPageToc(TableOfContents, metaclass=ABCMeta):
         return text
 
 
-@dataclass(eq=True)
+@dataclass
 class TocTreeItem:
     title: str
     href: str
     is_current: bool = field(kw_only=True, default=False)
     is_selected: bool = field(kw_only=True, default=False)
+    is_collapsed: bool = field(kw_only=True, default=False)
     children: list[TocTreeItem] = field(kw_only=True, default_factory=list)
 
     def __repr__(self):
         parts = [repr(self.title), repr(self.href)]
+
         if self.is_current:
             parts.append('current')
+
         if self.is_selected:
             parts.append('selected')
+
+        if self.is_collapsed:
+            parts.append('collapsed')
+
         if self.children:
-            if len(self.children) == 1:
-                parts.append('1 child item')
-            else:
-                parts.append(f'{len(self.children)} child items')
+            part_children = '[\n'
+            for child in self.children:
+                part_children += indent(repr(child), '  ') + ',\n'
+            part_children += ']'
+            parts.append(part_children)
+
         return f'<{self.__class__.__name__}: {", ".join(parts)}>'
 
 

@@ -265,3 +265,6 @@ class GlobalToc_HTML(GlobalToc):
 
     def syntax(self) -> Syntax:
         return Syntax.HTML
+
+    def _should_expand(self, page: Page) -> bool:
+        return self.is_selected(page) or page.level <= page.volume.config.html.toc_expansion
