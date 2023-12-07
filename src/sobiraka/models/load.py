@@ -1,3 +1,5 @@
+import re
+from math import inf
 from pathlib import Path
 from textwrap import dedent
 from typing import Iterable
@@ -9,7 +11,7 @@ from utilspie.collectionsutils import frozendict
 from sobiraka.runtime import RT
 from sobiraka.utils import convert_or_none, merge_dicts
 from .config import CombinedToc, Config, Config_Content, Config_HTML, Config_Lint, Config_Lint_Checks, Config_PDF, \
-    Config_Paths, TocExpansion
+    Config_Paths
 from .filesystem import FileSystem, RealFileSystem
 from .namingscheme import NamingScheme
 from .project import Project
@@ -96,7 +98,7 @@ def _load_volume(lang: str | None, codename: str, volume_data: dict, fs: FileSys
             resources_force_copy=_('html.resources_force_copy', ()),
             theme=_find_theme_dir(_('html.theme', 'simple'), fs=fs),
             theme_data=_('html.theme_data', {}),
-            toc_expansion=TocExpansion(_('html.toc_expansion', 'always')),
+            toc_expansion=int(re.sub(r'^infinity$', '0', str(_('html.toc_expansion', 'infinity')))) or inf,
             combined_toc=CombinedToc(_('html.combined_toc', 'never')),
         ),
         pdf=Config_PDF(

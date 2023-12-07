@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from enum import Enum
+from math import inf
 from pathlib import Path
 from typing import Any
 
@@ -45,11 +46,6 @@ class Config_Content:
     """Whether to add automatic numbers to all the headers."""
 
 
-class TocExpansion(Enum):
-    CURRENT = 'current'
-    ALWAYS = 'always'
-
-
 class CombinedToc(Enum):
     NEVER = 'never'
     CURRENT = 'current'
@@ -81,7 +77,7 @@ class Config_HTML:
 
     theme_data: dict[str, Any] = field(default=dict)
 
-    toc_expansion: TocExpansion = TocExpansion.ALWAYS
+    toc_expansion: int | float = inf
 
     combined_toc: CombinedToc = CombinedToc.NEVER
 
@@ -125,7 +121,7 @@ class Config_Lint:
     and relative paths to specific dictionaries present under the project root.
     """
 
-    exceptions: tuple[Path] = ()
+    exceptions: tuple[Path, ...] = ()
     """
     Relative paths to the files containing word and phrases that should not be treated as incorrect.
     
