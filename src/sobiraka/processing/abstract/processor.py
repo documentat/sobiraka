@@ -153,8 +153,10 @@ class Processor(Dispatcher):
         if path.is_absolute():
             path = path.relative_to('/')
         else:
-            path = Path(normpath(page.path_in_project.parent / path))
-            assert path.parts[:len(volume.config.paths.resources.parts)] == volume.config.paths.resources.parts, path
+            fakeroot = Path('/FAKEROOT')
+            path = fakeroot / page.path_in_project.parent / path
+            path = Path(normpath(path))
+            path = path.relative_to(fakeroot / volume.config.paths.resources)
         image.url = str(path)
         return (image,)
 
