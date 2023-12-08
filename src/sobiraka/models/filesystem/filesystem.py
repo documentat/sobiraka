@@ -1,4 +1,5 @@
 from abc import ABCMeta, abstractmethod
+from contextlib import AbstractContextManager
 from pathlib import Path
 from typing import BinaryIO, Iterable, TextIO
 
@@ -18,16 +19,18 @@ class FileSystem(metaclass=ABCMeta):
     def is_dir(self, path: Path) -> bool: ...
 
     @abstractmethod
-    def open_bytes(self, path: Path) -> BinaryIO: ...
+    def open_bytes(self, path: Path) -> AbstractContextManager[BinaryIO]: ...
 
     @abstractmethod
-    def open_text(self, path: Path) -> TextIO: ...
+    def open_text(self, path: Path) -> AbstractContextManager[TextIO]: ...
 
     def read_bytes(self, path: Path) -> bytes:
-        return self.open_bytes(path).read()
+        with self.open_bytes(path) as file:
+            return file.read()
 
     def read_text(self, path: Path) -> str:
-        return self.open_text(path).read()
+        with self.open_text(path) as file:
+            return file.read()
 
     @abstractmethod
     def copy(self, source: Path, target: Path): ...

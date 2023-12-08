@@ -1,4 +1,5 @@
 import os
+from contextlib import AbstractContextManager, contextmanager
 from io import BytesIO, StringIO
 from os.path import relpath
 from pathlib import Path
@@ -27,13 +28,15 @@ class GitFileSystem(FileSystem):
     def is_dir(self, path: Path) -> bool:
         return isinstance(self.commit.tree[str(path)], Tree)
 
-    def open_bytes(self, path: Path) -> BinaryIO:
+    @contextmanager
+    def open_bytes(self, path: Path) -> AbstractContextManager[BinaryIO]:
         data = self.read_bytes(path)
-        return BytesIO(data)
+        yield BytesIO(data)
 
-    def open_text(self, path: Path) -> TextIO:
+    @contextmanager
+    def open_text(self, path: Path) -> AbstractContextManager[TextIO]:
         data = self.read_text(path)
-        return StringIO(data)
+        yield StringIO(data)
 
     def read_bytes(self, path: Path) -> bytes:
         blob = self.commit.tree / str(path)
