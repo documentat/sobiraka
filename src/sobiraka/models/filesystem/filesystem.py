@@ -9,8 +9,8 @@ GLOB_KWARGS = dict(flags=GLOBSTAR | NODIR, limit=0)
 
 
 class FileSystem(metaclass=ABCMeta):
-    @abstractmethod
-    def resolve(self, path: Path | None) -> Path: ...
+    def resolve(self, path: Path | None) -> Path:
+        raise NotImplementedError
 
     @abstractmethod
     def exists(self, path: Path) -> bool: ...

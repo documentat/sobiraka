@@ -19,9 +19,6 @@ class GitFileSystem(FileSystem):
     def __init__(self, commit: Commit):
         self.commit: Commit = commit
 
-    def resolve(self, path: Path | None) -> Path:
-        raise NotImplementedError
-
     def exists(self, path: Path) -> bool:
         return str(path) in self.commit.tree
 
