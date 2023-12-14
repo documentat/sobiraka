@@ -4,5 +4,6 @@ from .on_demand import on_demand
 from .panflute_utils import panflute_to_bytes
 from .raw import HtmlBlock, HtmlInline, LatexBlock, LatexInline
 from .render import render
+from .super_gather import super_gather
 from .unique_list import UniqueList
 from .validate_dictionary import validate_dictionary

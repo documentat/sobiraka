@@ -18,7 +18,7 @@ from sobiraka.cache import CACHE
 from sobiraka.models import Anchor, BadLink, Counter, DirPage, Page, PageHref, Project, UrlHref, Volume
 from sobiraka.models.exceptions import DisableLink
 from sobiraka.runtime import RT
-from sobiraka.utils import convert_or_none, on_demand
+from sobiraka.utils import convert_or_none, on_demand, super_gather
 from .dispatcher import Dispatcher
 
 
@@ -200,8 +200,7 @@ class Processor(Dispatcher):
         await gather(self.process1(page),
                      *(self.process1(dep) for dep in RT[page].dependencies))
 
-        await self.process1(page)
-        await gather(*self.process2_tasks[page])
+        await super_gather(self.process2_tasks[page])
 
         CACHE[page].set_processed(RT[page])
 
