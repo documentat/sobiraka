@@ -1,7 +1,7 @@
 import re
 import sys
 from abc import abstractmethod
-from asyncio import Task, create_subprocess_exec, gather
+from asyncio import Task, create_subprocess_exec, create_task, gather
 from collections import defaultdict
 from contextlib import suppress
 from io import BytesIO
@@ -268,7 +268,7 @@ class Processor(Dispatcher):
             RT[page].links.append(href)
 
             RT[page].dependencies.add(href.target)
-            self.process2_tasks[page].append(self.process2_internal_link(elem, href, target_text, page))
+            self.process2_tasks[page].append(create_task(self.process2_internal_link(elem, href, target_text, page)))
 
         except (KeyError, ValueError):
             RT[page].issues.append(BadLink(target_text))
