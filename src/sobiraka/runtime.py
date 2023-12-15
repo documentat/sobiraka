@@ -12,7 +12,7 @@ import panflute.io
 from panflute import Doc
 
 from sobiraka.models import Anchor, Anchors, Href, Issue, Page, PageHref, UrlHref
-from sobiraka.utils import UniqueList
+from sobiraka.utils import TocNumber, UniqueList
 
 
 class Runtime:
@@ -40,6 +40,8 @@ RT = Runtime()
 
 @dataclass
 class PageRuntime:
+    # pylint: disable=too-many-instance-attributes
+
     doc: Doc = None
     """
     The document tree, as parsed by `Pandoc <https://pandoc.org/>`_ 
@@ -54,8 +56,13 @@ class PageRuntime:
     Do not rely on the value for page here until `process1()` is awaited for that page.
     """
 
+    number: TocNumber = None
+    """
+    Number of the page global TOC.
+    """
+
     links: list[Href] = field(default_factory=list)
-    """All links present on the page, both internal and external.-
+    """All links present on the page, both internal and external.
     
     Do not rely on the value for page here until `process1()` is awaited for that page."""
 

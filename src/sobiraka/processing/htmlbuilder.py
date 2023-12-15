@@ -94,7 +94,7 @@ class HtmlBuilder(ProjectProcessor):
         volume = page.volume
         project = page.volume.project
 
-        await self.process2(page)
+        await self.process3(page.volume)
 
         theme = self._themes[volume]
         if theme.__class__ is not HtmlTheme:
@@ -122,6 +122,7 @@ class HtmlBuilder(ProjectProcessor):
             volume=volume,
             page=page,
 
+            number=RT[page].number,
             title=RT[page].title or 'Untitled',  # TODO why is title not there?
             body=html.decode('utf-8').strip(),
 
