@@ -13,7 +13,7 @@ import panflute.io
 from panflute import Doc
 
 from sobiraka.models import Anchor, Anchors, Href, Issue, Page, PageHref, UrlHref
-from sobiraka.utils import TocNumber, UniqueList
+from sobiraka.utils import TocNumber, UNNUMBERED, UniqueList
 
 
 class Runtime:
@@ -69,7 +69,7 @@ class PageRuntime:
     Do not rely on the value for page here until `process1()` is awaited for that page.
     """
 
-    number: TocNumber = None
+    number: TocNumber = UNNUMBERED
     """
     Number of the page global TOC.
     """

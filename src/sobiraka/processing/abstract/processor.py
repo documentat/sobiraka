@@ -119,8 +119,8 @@ class Processor(Dispatcher):
         # If this is a top level header, use it as the page title
         if header.level == 1:
             RT[page].title = stringify(header)
-            if 'unnumbered' in header.classes:
-                RT[page].number = UNNUMBERED
+            if 'unnumbered' not in header.classes:
+                RT[page].number = None
 
         else:
             anchor = Anchor.from_header(header)
@@ -200,7 +200,6 @@ class Processor(Dispatcher):
         if volume.config.content.numeration:
             await self.numerate(volume)
 
-    @on_demand
     async def numerate(self, volume: Volume):
         queue: list[tuple[TocNumber, tuple[Page, ...]]] = []
         queue.append((UNNUMBERED, volume.pages))

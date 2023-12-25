@@ -128,7 +128,8 @@ class PdfBuilder(VolumeProcessor):
             return
         except KeyError:
             pass
-        await self.process2(page)
+
+        await self.process3(page.volume)
 
         # If a theme is set, run additional processing of the whole document
         # Note that if the theme does not contain custom logic implementation, we skip this step as useless
@@ -217,6 +218,8 @@ class PdfBuilder(VolumeProcessor):
             href = PageHref(page, header.identifier if header.level > 1 else None)
             dest = re.sub(r'^#', '', self.make_internal_url(href, page=page))
             label = stringify(header).replace('%', r'\%')
+            if page.volume.config.content.numeration:
+                label = '%NUMBER%' + label
             result += LatexInline(fr'\hypertarget{{{dest}}}{{}}'), Str('\n')
             result += LatexInline(fr'\bookmark[level={header.level},dest={dest}]{{ {label} }}'), Str('\n')
 
@@ -235,6 +238,8 @@ class PdfBuilder(VolumeProcessor):
         # Put all the content of the original header here
         # For some reason, Pandoc does not escape `%` when it is a separate word,
         # so we escape it ourselves here
+        if page.volume.config.content.numeration:
+            result.append(LatexInline('%NUMBER%'))
         for item in header.content:
             if isinstance(item, Str) and item.text == '%':
                 result.append(LatexInline(r'\%'))
