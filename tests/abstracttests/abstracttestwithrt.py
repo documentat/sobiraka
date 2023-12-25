@@ -16,3 +16,9 @@ class AbstractTestWithRtTmp(IsolatedAsyncioTestCase):
         await super().asyncTearDown()
 
         RT.TMP = None
+
+
+class AbstractTestWithRtPages(IsolatedAsyncioTestCase):
+    async def asyncSetUp(self):
+        RT.PAGES.set({})
+        await super().asyncSetUp()

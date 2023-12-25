@@ -4,7 +4,7 @@ from asyncio import create_subprocess_exec
 from helpers import assertNoDiff
 from sobiraka.processing import PdfBuilder
 from sobiraka.runtime import RT
-from .abstracttestwithrttmp import AbstractTestWithRtTmp
+from .abstracttestwithrt import AbstractTestWithRtTmp
 from .projectdirtestcase import ProjectDirTestCase
 
 

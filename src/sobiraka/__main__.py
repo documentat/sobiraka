@@ -71,7 +71,8 @@ async def async_main():
 
         if cmd is cmd_html:
             project = load_project(args.project)
-            exit_code = await HtmlBuilder(project, args.output, hide_index_html=args.hide_index_html).run()
+            builder = HtmlBuilder(project, args.output, hide_index_html=args.hide_index_html)
+            exit_code = await RT.run_isolated(builder.run)
 
         elif cmd is cmd_pdf:
             project = load_project(args.project)
@@ -82,7 +83,8 @@ async def async_main():
                 if output.suffix.lower() != '.pdf':
                     output /= f'{volume.config.title}.pdf'
                 print(f'Building {output.name!r}...', file=sys.stderr)
-                exit_code = await PdfBuilder(volume, output).run()
+                builder = PdfBuilder(volume, output)
+                exit_code = await RT.run_isolated(builder.run)
 
             else:
                 assert output.suffix.lower() != '.pdf'
@@ -90,7 +92,8 @@ async def async_main():
                 for volume in project.volumes:
                     output_file = output / f'{volume.config.title}.pdf'
                     print(f'Building {output_file.name!r}...', file=sys.stderr)
-                    exit_code = await PdfBuilder(volume, output_file).run()
+                    builder = PdfBuilder(volume, output_file)
+                    exit_code = await RT.run_isolated(builder.run)
                     if exit_code != 0:
                         break
 
@@ -98,7 +101,7 @@ async def async_main():
             project = load_project(args.project)
             volume = project.get_volume(args.volume)
             linter = Linter(volume)
-            exit_code = await linter.check()
+            exit_code = await RT.run_isolated(linter.check)
             if exit_code != 0:
                 linter.print_issues()
 

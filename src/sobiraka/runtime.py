@@ -2,11 +2,12 @@ from __future__ import annotations
 
 import json
 import os
+from contextvars import ContextVar, copy_context
 from dataclasses import asdict, dataclass, field
 from importlib.resources import files
 from io import StringIO
 from pathlib import Path
-from typing import Awaitable
+from typing import Awaitable, Callable
 
 import panflute.io
 from panflute import Doc
@@ -16,23 +17,35 @@ from sobiraka.utils import TocNumber, UniqueList
 
 
 class Runtime:
+    PAGES: ContextVar[dict[Page, PageRuntime]] = ContextVar('pages')
+
     def __init__(self):
         # pylint: disable=invalid-name
         self.FILES: Path = files('sobiraka') / 'files'
         self.TMP: Path | None = None
-        self.AWAITABLES: dict[tuple[callable, tuple, tuple], Awaitable] = {}
         self.DEBUG: bool = bool(os.environ.get('SOBIRAKA_DEBUG'))
         self.IDS: dict[int, str] = {}
 
-        self._pages: dict[Page, PageRuntime] = {}
+    @classmethod
+    async def run_isolated(cls, func: Callable[..., Awaitable]):
+        async def wrapped_func():
+            RT.PAGES.set({})
+            return await func()
+
+        ctx = copy_context()
+        return await ctx.run(wrapped_func)
 
     def __getitem__(self, page: Page) -> PageRuntime:
-        if page not in self._pages:
-            self._pages[page] = PageRuntime()
-        return self._pages[page]
+        pages = self.PAGES.get()
+
+        if page not in pages:
+            pages[page] = PageRuntime()
+        return pages[page]
 
     def __setitem__(self, page: Page, page_rt: PageRuntime):
-        self._pages[page] = page_rt
+        pages = self.PAGES.get()
+
+        pages[page] = page_rt
 
 
 RT = Runtime()

@@ -1,5 +1,5 @@
-from abstracttests.abstracttestwithrttmp import AbstractTestWithRtTmp
-from abstracttests.projectdirtestcase import ProjectDirTestCase
+from .abstracttestwithrt import AbstractTestWithRtTmp
+from .projectdirtestcase import ProjectDirTestCase
 from helpers import assertNoDiff
 from sobiraka.processing import HtmlBuilder
 from sobiraka.runtime import RT
