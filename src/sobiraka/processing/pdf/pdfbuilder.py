@@ -163,7 +163,7 @@ class PdfBuilder(VolumeProcessor):
 
     @staticmethod
     def print_xelatex_error(log_path: Path):
-        with log_path.open() as file:
+        with log_path.open(encoding='utf-8') as file:
             print('\033[1;31m', end='', file=sys.stderr)
             for line in file:
                 line = line.rstrip()

@@ -27,7 +27,7 @@ def load_project(manifest_path: Path) -> Project:
     The file must be formatted using the schema defined at ``files/sobiraka-project.yaml`` in the sources.
     """
     manifest_path = manifest_path.resolve()
-    with manifest_path.open() as manifest_file:
+    with manifest_path.open(encoding='utf-8') as manifest_file:
         manifest: dict = yaml.safe_load(manifest_file) or {}
     fs = RealFileSystem(manifest_path.parent)
     project = load_project_from_dict(manifest, fs=fs)
