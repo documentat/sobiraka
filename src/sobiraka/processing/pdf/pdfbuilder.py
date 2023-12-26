@@ -73,6 +73,12 @@ class PdfBuilder(VolumeProcessor):
         if self.print_issues():
             sys.exit(1)
 
+        if config.pdf.paths:
+            latex_output.write(b'\n\n' + (80 * b'%'))
+            latex_output.write(b'\n\n%%% Paths\n\n')
+            for key, value in config.pdf.paths.items():
+                latex_output.write(fr'\newcommand{{\{key}}}{{{value}/}}'.encode('utf-8') + b'\n')
+
         variables = {
             'TITLE': config.title,
             'LANG': volume.lang,

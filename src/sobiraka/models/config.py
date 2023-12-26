@@ -95,6 +95,8 @@ class Config_PDF:
     toc: bool = True
     """Whether to add a table of contents."""
 
+    paths: dict[str, Path] = field(default=dict)
+
 
 @dataclass(kw_only=True, frozen=True)
 class Config_Lint_Checks:

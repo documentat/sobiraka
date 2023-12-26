@@ -87,6 +87,7 @@ $defs:
           header: { type: string }
           theme: { type: string }
           toc: { type: boolean }
+          paths: { type: object }
 
       lint:
         additionalProperties: false
