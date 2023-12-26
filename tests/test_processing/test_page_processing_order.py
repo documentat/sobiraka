@@ -3,13 +3,16 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest import IsolatedAsyncioTestCase, main
 
+from abstracttests.abstracttestwithrt import AbstractTestWithRtPages
 from sobiraka.models import Page
 from sobiraka.models.load import load_project
 from sobiraka.processing import PdfBuilder
 
 
-class TestPageProcessingOrder(IsolatedAsyncioTestCase):
+class TestPageProcessingOrder(AbstractTestWithRtPages):
     async def asyncSetUp(self):
+        await super().asyncSetUp()
+
         temp_dir: str = self.enterContext(TemporaryDirectory(prefix='sobiraka-test-'))
         self.dir: Path = Path(temp_dir)
 
@@ -48,6 +51,8 @@ class TestPageProcessingOrder(IsolatedAsyncioTestCase):
         await self.processor.process2(page)
         self.order.append('processed2')
 
+
+del AbstractTestWithRtPages
 
 if __name__ == '__main__':
     main()

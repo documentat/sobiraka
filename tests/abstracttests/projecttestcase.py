@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any, Generic, Iterable, TypeVar
 from unittest import IsolatedAsyncioTestCase, SkipTest
 
+from abstracttests.abstracttestwithrt import AbstractTestWithRtPages
 from sobiraka.models import Page, Project
 from sobiraka.processing.abstract import Processor
 from sobiraka.runtime import RT
@@ -12,7 +13,7 @@ from sobiraka.runtime import RT
 T = TypeVar('T', bound=Processor)
 
 
-class ProjectTestCase(IsolatedAsyncioTestCase, Generic[T], metaclass=ABCMeta):
+class ProjectTestCase(AbstractTestWithRtPages, Generic[T], metaclass=ABCMeta):
     maxDiff = None
 
     async def asyncSetUp(self):

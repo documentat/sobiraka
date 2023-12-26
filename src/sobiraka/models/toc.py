@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 
 from sobiraka.models.config import CombinedToc
 from sobiraka.runtime import RT
-from sobiraka.utils import render
+from sobiraka.utils import TocNumber, render
 
 if TYPE_CHECKING:
     from sobiraka.models import Page, Syntax, Volume
@@ -70,12 +70,14 @@ class CrossPageToc(TableOfContents, metaclass=ABCMeta):
         return items
 
     async def _make_item(self, page: Page) -> TocTreeItem:
-        title = await self.get_title(page)
-        href = self.get_href(page)
-        is_current = self.is_current(page)
-        is_selected = self.is_selected(page)
-        is_collapsed = len(page.children) > 0 and not self._should_expand(page)
-        return TocTreeItem(title, href, is_current=is_current, is_selected=is_selected, is_collapsed=is_collapsed)
+        return TocTreeItem(
+            title=await self.get_title(page),
+            href=self.get_href(page),
+            number=RT[page].number,
+            is_current=self.is_current(page),
+            is_selected=self.is_selected(page),
+            is_collapsed=len(page.children) > 0 and not self._should_expand(page),
+        )
 
     async def __call__(self) -> str:
         from .syntax import Syntax
@@ -128,6 +130,7 @@ class CrossPageToc(TableOfContents, metaclass=ABCMeta):
 class TocTreeItem:
     title: str
     href: str
+    number: TocNumber = field(kw_only=True, default=None)
     is_current: bool = field(kw_only=True, default=False)
     is_selected: bool = field(kw_only=True, default=False)
     is_collapsed: bool = field(kw_only=True, default=False)
@@ -218,7 +221,7 @@ class LocalToc(TableOfContents):
         current_level: int = 0
 
         for anchor in RT[self.page].anchors:
-            item = TocTreeItem(title=anchor.label, href=f'{self.href_prefix}#{anchor.identifier}')
+            item = TocTreeItem(title=anchor.label, href=f'{self.href_prefix}#{anchor.identifier}', number=anchor.number)
             if anchor.level == current_level:
                 breadcrumbs[-2].children.append(item)
                 breadcrumbs[-1] = item
@@ -226,13 +229,8 @@ class LocalToc(TableOfContents):
                 breadcrumbs[-1].children.append(item)
                 breadcrumbs.append(item)
             elif anchor.level < current_level:
-                breadcrumbs[anchor.level - 1].children.append(item)
-                breadcrumbs[anchor.level:] = [item]
+                breadcrumbs[anchor.level - 2].children.append(item)
+                breadcrumbs[anchor.level - 1:] = [item]
             current_level = anchor.level
-
-        # TODO: Support sources with zero or multiple top-level headers
-        if root.children:
-            assert len(root.children) == 1, str(root.children)
-            root.children = root.children[0].children
 
         return root.children
