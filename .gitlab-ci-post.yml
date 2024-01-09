@@ -7,6 +7,13 @@ publish:
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
+    - '# Publishing the HTML version of the release...'
+    - docker pull $CI_REGISTRY_IMAGE/cache/release-html:by-commit-$CI_COMMIT_SHA
+    - docker tag $CI_REGISTRY_IMAGE/cache/release-html:by-commit-$CI_COMMIT_SHA $CI_REGISTRY_IMAGE/sobiraka-html:$CI_COMMIT_SHA
+    - docker tag $CI_REGISTRY_IMAGE/cache/release-html:by-commit-$CI_COMMIT_SHA $CI_REGISTRY_IMAGE/sobiraka-html:$CI_COMMIT_BRANCH
+    - docker push $CI_REGISTRY_IMAGE/sobiraka-html:$CI_COMMIT_SHA
+    - docker push $CI_REGISTRY_IMAGE/sobiraka-html:$CI_COMMIT_BRANCH
+    - '# Publishing the full version of the release...'
     - docker pull $CI_REGISTRY_IMAGE/cache/release:by-commit-$CI_COMMIT_SHA
     - docker tag $CI_REGISTRY_IMAGE/cache/release:by-commit-$CI_COMMIT_SHA $CI_REGISTRY_IMAGE/sobiraka:$CI_COMMIT_SHA
     - docker tag $CI_REGISTRY_IMAGE/cache/release:by-commit-$CI_COMMIT_SHA $CI_REGISTRY_IMAGE/sobiraka:$CI_COMMIT_BRANCH
@@ -22,6 +29,11 @@ publish-latest:
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
+    - '# Publishing the HTML version of the release...'
+    - docker pull $CI_REGISTRY_IMAGE/cache/release-html:by-commit-$CI_COMMIT_SHA
+    - docker tag $CI_REGISTRY_IMAGE/cache/release-html:by-commit-$CI_COMMIT_SHA $CI_REGISTRY_IMAGE/sobiraka-html:latest
+    - docker push $CI_REGISTRY_IMAGE/sobiraka-html:latest
+    - '# Publishing the full version of the release...'
     - docker pull $CI_REGISTRY_IMAGE/cache/release:by-commit-$CI_COMMIT_SHA
     - docker tag $CI_REGISTRY_IMAGE/cache/release:by-commit-$CI_COMMIT_SHA $CI_REGISTRY_IMAGE/sobiraka:latest
     - docker push $CI_REGISTRY_IMAGE/sobiraka:latest

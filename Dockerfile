@@ -25,6 +25,13 @@ FROM install-dependencies AS install-package
 COPY --from=build-package /dist/*.tar.gz .
 RUN /usr/bin/python -m pip install --prefix /prefix *.tar.gz
 
+FROM alpine:3.18 AS common-html
+RUN apk add --no-cache hunspell
+RUN apk add --no-cache python3~=3.11 py3-pip --repository=http://dl-cdn.alpinelinux.org/alpine/edge/main/
+COPY --from=get-pandoc /tmp/pandoc /usr/local
+WORKDIR /W
+ENTRYPOINT [""]
+
 FROM alpine:3.18 AS common
 RUN apk add --no-cache texlive-full
 RUN apk add --no-cache hunspell
@@ -54,6 +61,9 @@ CMD make tests
 FROM tester-src AS linter
 COPY --from=install-dependencies-linter /prefix /usr
 CMD make lint
+
+FROM common-html AS release-html
+COPY --from=install-package /prefix /usr
 
 FROM common AS release
 COPY --from=install-package /prefix /usr
