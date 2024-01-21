@@ -125,7 +125,9 @@ class Volume:
         return hash(id(self))
 
     def __repr__(self):
-        return f'<{self.__class__.__name__}: {self.autoprefix!r}>'
+        if self.autoprefix:
+            return f'<{self.__class__.__name__}: {self.autoprefix!r}>'
+        return f'<{self.__class__.__name__} (unnamed)>'
 
     def __lt__(self, other):
         assert isinstance(other, Volume)
