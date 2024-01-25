@@ -4,7 +4,6 @@ import os.path
 import re
 import sys
 from asyncio import Task, create_subprocess_exec, create_task, gather, to_thread
-from collections import defaultdict
 from datetime import datetime
 from functools import partial
 from itertools import chain
@@ -16,10 +15,10 @@ from subprocess import PIPE
 import iso639
 from aiofiles.os import makedirs
 from panflute import Element, Header, Image
-
 from sobiraka.models import DirPage, GlobalToc, IndexPage, LocalToc, Page, PageHref, Project, Syntax, Volume
 from sobiraka.runtime import RT
 from sobiraka.utils import panflute_to_bytes
+
 from .abstract import ProjectProcessor
 from .plugin import HtmlTheme, load_html_theme
 
@@ -31,7 +30,6 @@ class HtmlBuilder(ProjectProcessor):
         self.hide_index_html: bool = hide_index_html
 
         self._additional_tasks: list[Task] = []
-        self._new_image_urls: dict[Page, list[tuple[Image, str]]] = defaultdict(list)
         self._results: set[Path] = set()
 
         self._themes: dict[Volume, HtmlTheme] = {}
@@ -101,8 +99,10 @@ class HtmlBuilder(ProjectProcessor):
             await theme.process_doc(RT[page].doc, page)
 
         # Apply postponed image URL changes
-        for image, new_url in self._new_image_urls[page]:
+        for image, new_url in RT[page].converted_image_urls:
             image.url = new_url
+        for image, link in RT[page].links_that_follow_images:
+            link.url = image.url
 
         pandoc = await create_subprocess_exec(
             'pandoc',
@@ -229,7 +229,7 @@ class HtmlBuilder(ProjectProcessor):
         # Use the path relative to the page path
         # (we postpone the actual change in the element to not confuse the HtmlTheme custom code later)
         new_url = relpath(target_path, start=self.get_target_path(page).parent)
-        self._new_image_urls[page].append((image, new_url))
+        RT[page].converted_image_urls.append((image, new_url))
 
         return (image,)
 

@@ -10,8 +10,7 @@ from pathlib import Path
 from typing import Awaitable, Callable
 
 import panflute.io
-from panflute import Doc
-
+from panflute import Doc, Image, Link
 from sobiraka.models import Anchor, Anchors, Href, Issue, Page, PageHref, UrlHref
 from sobiraka.utils import TocNumber, UNNUMBERED, UniqueList
 
@@ -95,6 +94,9 @@ class PageRuntime:
     dependencies: set[Page] = field(default_factory=set)
 
     latex: bytes = None
+
+    converted_image_urls: list[tuple[Image, str]] = field(default_factory=list)
+    links_that_follow_images: list[tuple[Image, Link]] = field(default_factory=list)
 
     def dump(self) -> dict:
         data = {}
