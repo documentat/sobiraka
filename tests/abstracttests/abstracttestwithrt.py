@@ -20,5 +20,5 @@ class AbstractTestWithRtTmp(IsolatedAsyncioTestCase):
 
 class AbstractTestWithRtPages(IsolatedAsyncioTestCase):
     async def asyncSetUp(self):
-        RT.PAGES.set({})
+        RT.init_context_vars()
         await super().asyncSetUp()

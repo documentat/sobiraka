@@ -1,19 +1,26 @@
 from __future__ import annotations
 
 import os
+from collections import defaultdict
 from contextvars import ContextVar, copy_context
 from dataclasses import dataclass, field
 from importlib.resources import files
 from pathlib import Path
-from typing import Awaitable, Callable
+from typing import Awaitable, Callable, TYPE_CHECKING, overload
 
 from panflute import Doc, Image, Link
-from sobiraka.models import Anchors, Href, Issue, Page
+
+from sobiraka.models import Anchors
 from sobiraka.utils import TocNumber, UNNUMBERED, UniqueList
+
+if TYPE_CHECKING:
+    from sobiraka.models import Anchor, Href, Issue, Page, Volume
 
 
 class Runtime:
     PAGES: ContextVar[dict[Page, PageRuntime]] = ContextVar('pages')
+    VOLUMES: ContextVar[dict[Volume, VolumeRuntime]] = ContextVar('volumes')
+    ANCHORS: ContextVar[dict[Anchor, AnchorRuntime]] = ContextVar('anchors')
 
     def __init__(self):
         # pylint: disable=invalid-name
@@ -23,28 +30,51 @@ class Runtime:
         self.IDS: dict[int, str] = {}
 
     @classmethod
+    def init_context_vars(cls):
+        RT.VOLUMES.set(defaultdict(VolumeRuntime))
+        RT.PAGES.set(defaultdict(PageRuntime))
+        RT.ANCHORS.set(defaultdict(AnchorRuntime))
+
+    @classmethod
     async def run_isolated(cls, func: Callable[..., Awaitable]):
         async def wrapped_func():
-            RT.PAGES.set({})
+            cls.init_context_vars()
             return await func()
 
         ctx = copy_context()
         return await ctx.run(wrapped_func)
 
+    @overload
+    def __getitem__(self, volume: Volume) -> VolumeRuntime:
+        ...
+
+    @overload
     def __getitem__(self, page: Page) -> PageRuntime:
-        pages = self.PAGES.get()
+        ...
 
-        if page not in pages:
-            pages[page] = PageRuntime()
-        return pages[page]
+    @overload
+    def __getitem__(self, page: Anchor) -> AnchorRuntime:
+        ...
 
-    def __setitem__(self, page: Page, page_rt: PageRuntime):
-        pages = self.PAGES.get()
-
-        pages[page] = page_rt
+    def __getitem__(self, key: Anchor | Page | Volume):
+        from sobiraka.models import Anchor, Page, Volume
+        match key:
+            case Anchor() as anchor:
+                return self.ANCHORS.get()[anchor]
+            case Page() as page:
+                return self.PAGES.get()[page]
+            case Volume() as volume:
+                return self.PAGES.get()[volume]
+            case _:
+                raise KeyError(key)
 
 
 RT = Runtime()
+
+
+@dataclass
+class VolumeRuntime:
+    pass
 
 
 @dataclass
@@ -94,3 +124,8 @@ class PageRuntime:
 
     converted_image_urls: list[tuple[Image, str]] = field(default_factory=list)
     links_that_follow_images: list[tuple[Image, Link]] = field(default_factory=list)
+
+
+@dataclass
+class AnchorRuntime:
+    pass
