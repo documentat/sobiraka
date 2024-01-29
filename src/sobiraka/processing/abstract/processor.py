@@ -14,7 +14,6 @@ import panflute
 from jinja2 import StrictUndefined
 from panflute import Code, Element, Header, Image, Link, Para, Space, Str, Table, stringify
 
-from sobiraka.cache import CACHE
 from sobiraka.models import Anchor, BadLink, DirPage, Page, PageHref, Project, UrlHref, Volume
 from sobiraka.models.exceptions import DisableLink
 from sobiraka.runtime import RT
@@ -43,12 +42,6 @@ class Processor(Dispatcher):
 
         This method is called by :obj:`.Page.loaded`.
         """
-        try:
-            RT[page] = CACHE[page].get_preprocessed()
-            return
-        except KeyError:
-            pass
-
         from sobiraka.models import SubtreeToc
         from sobiraka.processing import HtmlBuilder
         from sobiraka.processing import PdfBuilder
@@ -87,7 +80,6 @@ class Processor(Dispatcher):
         assert pandoc.returncode == 0
 
         RT[page].doc = panflute.load(BytesIO(json_bytes))
-        CACHE[page].set_preprocessed(RT[page])
 
     async def get_title(self, page: Page) -> str:
         # TODO: maybe make get_title() a separate @on_demand step?
@@ -107,7 +99,6 @@ class Processor(Dispatcher):
         """
         await self.load_page(page)
         await self.process_doc(RT[page].doc, page)
-        CACHE[page].set_dependencies(RT[page].dependencies)
         return page
 
     async def process_header(self, header: Header, page: Page) -> tuple[Element, ...]:
@@ -173,23 +164,12 @@ class Processor(Dispatcher):
 
     @on_demand
     async def process2(self, page: Page):
-        try:
-            RT[page].dependencies = CACHE[page].get_dependencies()
-        except KeyError:
-            await self.process1(page)
-
-        try:
-            RT[page] = CACHE[page].get_processed(RT[page].dependencies)
-            return
-        except KeyError:
-            pass
+        await self.process1(page)
 
         await gather(self.process1(page),
                      *(self.process1(dep) for dep in RT[page].dependencies))
 
         await super_gather(self.process2_tasks[page])
-
-        CACHE[page].set_processed(RT[page])
 
     @on_demand
     async def process3(self, volume: Volume):

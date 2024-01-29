@@ -1,17 +1,14 @@
 from __future__ import annotations
 
-import json
 import os
 from contextvars import ContextVar, copy_context
-from dataclasses import asdict, dataclass, field
+from dataclasses import dataclass, field
 from importlib.resources import files
-from io import StringIO
 from pathlib import Path
 from typing import Awaitable, Callable
 
-import panflute.io
 from panflute import Doc, Image, Link
-from sobiraka.models import Anchor, Anchors, Href, Issue, Page, PageHref, UrlHref
+from sobiraka.models import Anchors, Href, Issue, Page
 from sobiraka.utils import TocNumber, UNNUMBERED, UniqueList
 
 
@@ -97,67 +94,3 @@ class PageRuntime:
 
     converted_image_urls: list[tuple[Image, str]] = field(default_factory=list)
     links_that_follow_images: list[tuple[Image, Link]] = field(default_factory=list)
-
-    def dump(self) -> dict:
-        data = {}
-
-        data['doc'] = json.dumps(self.doc.to_json())
-
-        data['title'] = self.title
-
-        data['links'] = []
-        for href in self.links:
-            match href:
-                case PageHref() as page_href:
-                    data['links'].append({
-                        'type': 'PageHref',
-                        'target': str(page_href.target.path_in_volume),
-                        'anchor': page_href.anchor,
-                    })
-                case UrlHref() as url_href:
-                    data['links'].append({
-                        'type': 'UrlHref',
-                        'url': url_href.url,
-                    })
-                case _:
-                    raise TypeError(type(href))
-
-        data['anchors'] = list(map(asdict, self.anchors))
-
-        data['issues'] = []
-        for issue in self.issues:
-            data['issues'].append((issue.__class__.__name__, asdict(issue)))
-
-        data['dependencies'] = sorted(list(str(page.path_in_volume) for page in self.dependencies))
-
-        return data
-
-    @staticmethod
-    def load(data: dict, page: Page) -> PageRuntime:
-        volume = page.volume
-
-        if 'doc' in data:
-            data['doc'] = panflute.load(StringIO(data['doc']))
-
-        if 'links' in data:
-            for i, href in enumerate(data['links']):
-                match href:
-                    case {'type': 'PageHref', 'target': str() as target, 'anchor': str() | None as anchor}:
-                        target = volume.pages_by_path[target]
-                        data['links'][i] = PageHref(target, anchor)
-                    case {'type': 'UrlHref', 'url': str() as url}:
-                        data['links'][i] = UrlHref(url)
-
-        if 'anchors' in data:
-            data['anchors'] = Anchors(Anchor(**anchor_data) for anchor_data in data['anchors'])
-
-        if 'issues' in data:
-            from sobiraka.models import issue
-            for issue_class_name, issue_data in data['issues']:
-                issue_class = getattr(issue, issue_class_name)
-                data['issues'].append(issue_class(**issue_data))
-
-        if 'dependencies' in data:
-            data['dependencies'] = set(volume.pages_by_path[Path(dep_path)] for dep_path in data['dependencies'])
-
-        return PageRuntime(**data)

@@ -11,7 +11,6 @@ from typing import BinaryIO
 
 from panflute import Element, Header, Space, Str, stringify
 
-from sobiraka.cache import CACHE
 from sobiraka.models import Page, PageHref, Volume
 from sobiraka.models.exceptions import DisableLink
 from sobiraka.runtime import RT
@@ -124,17 +123,6 @@ class PdfBuilder(VolumeProcessor):
 
     @on_demand
     async def generate_latex_for_page(self, page: Page):
-        try:
-            RT[page].dependencies = CACHE[page].get_dependencies()
-        except KeyError:
-            await self.process1(page)
-
-        try:
-            RT[page].latex = CACHE[page].get_latex(RT[page].dependencies)
-            return
-        except KeyError:
-            pass
-
         await self.process3(page.volume)
 
         # If a theme is set, run additional processing of the whole document
@@ -164,8 +152,6 @@ class PdfBuilder(VolumeProcessor):
             # which we will now use to remove unnecessary empty lines
             RT[page].latex = re.sub(rb'% BEGIN STRIP\n+', b'', RT[page].latex)
             RT[page].latex = re.sub(rb'\n+% END STRIP', b'', RT[page].latex)
-
-        CACHE[page].set_latex(RT[page])
 
     @staticmethod
     def print_xelatex_error(log_path: Path):
