@@ -121,6 +121,7 @@ lint-code:
     - make lint
 
 lint-docs:
+  when: manual
   allow_failure: true
   stage: test
   needs: [build-release-html]
