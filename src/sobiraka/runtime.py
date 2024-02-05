@@ -4,7 +4,6 @@ import os
 from collections import defaultdict
 from contextvars import ContextVar, copy_context
 from dataclasses import dataclass, field
-from importlib.resources import files
 from pathlib import Path
 from typing import Awaitable, Callable, TYPE_CHECKING, overload
 
@@ -24,7 +23,6 @@ class Runtime:
 
     def __init__(self):
         # pylint: disable=invalid-name
-        self.FILES: Path = files('sobiraka') / 'files'
         self.TMP: Path | None = None
         self.DEBUG: bool = bool(os.environ.get('SOBIRAKA_DEBUG'))
         self.IDS: dict[int, str] = {}

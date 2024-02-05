@@ -1,4 +1,5 @@
 import re
+from importlib.resources import files
 from math import inf
 from pathlib import Path
 from textwrap import dedent
@@ -8,7 +9,6 @@ import jsonschema
 import yaml
 from utilspie.collectionsutils import frozendict
 
-from sobiraka.runtime import RT
 from sobiraka.utils import convert_or_none, merge_dicts
 from .config import CombinedToc, Config, Config_Content, Config_HTML, Config_Lint, Config_Lint_Checks, Config_PDF, \
     Config_Paths
@@ -17,7 +17,7 @@ from .namingscheme import NamingScheme
 from .project import Project
 from .volume import Volume
 
-MANIFEST_SCHEMA = yaml.safe_load((RT.FILES / 'sobiraka-project.yaml').read_text())
+MANIFEST_SCHEMA = yaml.safe_load((files('sobiraka') / 'files' / 'sobiraka-project.yaml').read_text())
 
 
 def load_project(manifest_path: Path) -> Project:
@@ -124,7 +124,7 @@ def _find_theme_dir(name: str, *, fs: FileSystem) -> Path:
         return theme_dir
 
     if len(theme_dir.parts) == 1:
-        theme_dir = RT.FILES / 'themes' / theme_dir
+        theme_dir = files('sobiraka') / 'files' / 'themes' / theme_dir
         if theme_dir.exists() and theme_dir.is_dir():
             return theme_dir
 
