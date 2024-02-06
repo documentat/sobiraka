@@ -180,7 +180,7 @@ paths:
 
 ### `html.resources_force_copy` {#volume.html.resources_force_copy}
 
-Список файлов, которые следует скопировать из [`paths.resources`](#volume.paths.resources) в [`html.resources_prefix`](#volume.html.resources_prefix) принудительно, даже если на них ссылается ни одна страница документации. Например, здесь может быть необходимо указать путь к иконке проекта, на которую может сослаться используемая тема.
+Список файлов, которые следует скопировать из [`paths.resources`](#volume.paths.resources) в [`html.resources_prefix`](#volume.html.resources_prefix) принудительно, даже если на них не ссылается ни одна страница документации. Например, здесь может быть необходимо указать путь к иконке проекта, на которую может сослаться используемая тема.
 
 ### `html.theme` {#volume.html.theme}
 
