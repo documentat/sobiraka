@@ -7,6 +7,7 @@ disable=
     missing-function-docstring,
     missing-module-docstring,
     too-few-public-methods,
+    trailing-comma-tuple,
     use-dict-literal,
 
 [FORMAT]

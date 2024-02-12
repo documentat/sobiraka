@@ -1,143 +1,34 @@
 from __future__ import annotations
 
-from abc import ABCMeta, abstractmethod
 from dataclasses import dataclass, field
-from os.path import relpath
-from textwrap import indent
-from typing import TYPE_CHECKING
+from textwrap import dedent, indent
+from typing import Iterable, TYPE_CHECKING
 
-from sobiraka.models.config import CombinedToc
+import jinja2
+from sobiraka.models.config import Config
 from sobiraka.runtime import RT
-from sobiraka.utils import TocNumber, render
+from sobiraka.utils import TocNumber
+
+from .config import CombinedToc
+from .href import PageHref
 
 if TYPE_CHECKING:
-    from sobiraka.models import Page, Syntax, Volume
+    from sobiraka.models import Page, Volume
     from sobiraka.processing.abstract import Processor
 
 
-class TableOfContents(metaclass=ABCMeta):
-    @abstractmethod
-    async def items(self) -> list[TocTreeItem]:
-        ...
-
-    async def iterate_all_items(self) -> list[TocTreeItem]:
-        result: list[TocTreeItem] = []
-        items = await self.items()
-        while len(items) > 0:
-            item = items.pop(0)
-            result.append(item)
-            items[0:0] = item.children
-        return result
-
-
-class CrossPageToc(TableOfContents, metaclass=ABCMeta):
-    @abstractmethod
-    def get_root(self) -> Page:
-        ...
-
-    @abstractmethod
-    async def get_title(self, page: Page) -> str:
-        ...
-
-    @abstractmethod
-    def get_href(self, page: Page) -> str:
-        ...
-
-    @abstractmethod
-    def is_current(self, page: Page) -> bool:
-        ...
-
-    @abstractmethod
-    def is_selected(self, page: Page) -> bool:
-        ...
-
-    @abstractmethod
-    def syntax(self) -> Syntax:
-        ...
-
-    def _should_expand(self, page: Page) -> bool:
-        # pylint: disable=unused-argument
-        return True
-
-    async def items(self, *, parent: Page = None) -> list[TocTreeItem]:
-        if parent is None:
-            parent = self.get_root()
-        items: list[TocTreeItem] = []
-        if self._should_expand(parent):
-            for page in parent.children:
-                items.append(await self._make_item(page))
-                items[-1].children += await self.items(parent=page)
-        return items
-
-    async def _make_item(self, page: Page) -> TocTreeItem:
-        return TocTreeItem(
-            title=await self.get_title(page),
-            href=self.get_href(page),
-            number=RT[page].number,
-            is_current=self.is_current(page),
-            is_selected=self.is_selected(page),
-            is_collapsed=len(page.children) > 0 and not self._should_expand(page),
-        )
-
-    async def __call__(self) -> str:
-        from .syntax import Syntax
-
-        match self.syntax():
-            case Syntax.HTML:
-                return await self._render_html()
-            case Syntax.MD:
-                return await self._render_plaintext('{indent}- [{title}]({path})')
-            case Syntax.RST:
-                return await self._render_plaintext('{indent}- :doc:`{title} <{path}>`')
-
-    async def _render_html(self) -> str:
-        template = '''
-            <ul>
-                {% for item in toc.items() recursive %}
-                    <li>
-                        {% if item.is_current %}
-                            <strong>{{ item.title }}</strong>
-                        {% else %}
-                            <a href="{{ item.href }}">{{ item.title }}</a>
-                        {% endif %}
-                        {% if item.children %}
-                            <ul>
-                                {{ loop(item.children) }}
-                            </ul>
-                        {% endif %}
-                    </li>
-                {% endfor %}
-            </ul>
-            '''
-        html = await render(template, toc=self)
-        return html
-
-    async def _render_plaintext(self, line_template: str, level: int = 0, items: list[TocTreeItem] = None) -> str:
-        if items is None:
-            items = await self.items()
-        text = ''
-        for item in items:
-            text += line_template.format(
-                indent="  " * level,
-                title=item.title,
-                path=item.href)
-            text += '\n'
-            text += await self._render_plaintext(line_template, level + 1, item.children)
-        return text
-
-
 @dataclass
-class TocTreeItem:
+class TocItem:
     title: str
-    href: str
+    url: str
     number: TocNumber = field(kw_only=True, default=None)
     is_current: bool = field(kw_only=True, default=False)
     is_selected: bool = field(kw_only=True, default=False)
     is_collapsed: bool = field(kw_only=True, default=False)
-    children: list[TocTreeItem] = field(kw_only=True, default_factory=list)
+    children: Toc = field(kw_only=True, default_factory=list)
 
     def __repr__(self):
-        parts = [repr(self.title), repr(self.href)]
+        parts = [repr(self.title), repr(self.url)]
 
         if self.is_current:
             parts.append('current')
@@ -158,79 +49,111 @@ class TocTreeItem:
         return f'<{self.__class__.__name__}: {", ".join(parts)}>'
 
 
-@dataclass
-class GlobalToc(CrossPageToc, metaclass=ABCMeta):
-    processor: Processor
+class Toc(list[TocItem]):
+    def __str__(self):
+        jinja = jinja2.Environment(
+            trim_blocks=True,
+            lstrip_blocks=True,
+            undefined=jinja2.StrictUndefined,
+        )
+        template = jinja.from_string(dedent('''
+            <ul>
+              {% for item in toc recursive %}
+                <li>
+                  {% if item.is_current %}
+                    <strong>{{ item.title }}</strong>
+                  {% else %}
+                    <a href="{{ item.url }}">{{ item.title }}</a>
+                  {% endif %}
+                  {% if item.children %}
+                    <ul>
+                      {{ loop(item.children) | indent(10) }}
+                    </ul>
+                  {% endif %}
+                </li>
+              {% endfor %}
+            </ul>
+            '''.rstrip()))
+        return template.render(toc=self)
+
+
+def toc(
+        base: Volume | Page,
+        *,
+        processor: Processor,
+        current_page: Page | None = None,
+        toc_expansion: int = None,
+        combined_toc: CombinedToc = None,
+) -> Toc:
+    from .page import Page
+    from .volume import Volume
+
+    tree = Toc()
+
     volume: Volume
-    current: Page
-    combined_toc: CombinedToc = CombinedToc.NEVER
+    config: Config
+    pages: Iterable[Page]
 
-    def get_root(self) -> Page:
-        return self.volume.root_page
+    match base:
+        case Volume():
+            volume = base
+            config = volume.config
+            pages = volume.root_page.children
+        case Page():
+            volume = base.volume
+            config = volume.config
+            pages = base.children
+        case _:
+            raise TypeError(base)
 
-    async def get_title(self, page: Page) -> str:
-        return await self.processor.get_title(page)
+    if toc_expansion is None:
+        toc_expansion = config.html.toc_expansion
+    if combined_toc is None:
+        combined_toc = config.html.combined_toc
 
-    def is_current(self, page: Page) -> bool:
-        return page is self.current
+    for page in pages:
+        item = TocItem(title=RT[page].title,
+                       number=RT[page].number,
+                       url=processor.make_internal_url(PageHref(page), page=current_page),
+                       is_current=page is current_page,
+                       is_selected=current_page is not None and page in current_page.breadcrumbs)
 
-    def is_selected(self, page: Page) -> bool:
-        return page in self.current.breadcrumbs
+        if combined_toc is CombinedToc.ALWAYS or (combined_toc is CombinedToc.CURRENT and item.is_current):
+            item.children += local_toc(page, href_prefix='' if item.is_current else item.url)
 
-    async def _make_item(self, page: Page) -> TocTreeItem:
-        item = await super()._make_item(page)
-        if self.combined_toc is CombinedToc.ALWAYS or (self.combined_toc is CombinedToc.CURRENT and item.is_current):
-            local_toc = LocalToc(self.processor, page, href_prefix='' if item.is_current else item.href)
-            item.children += await local_toc.items()
-        return item
+        if len(page.children) > 0:
+            if toc_expansion > 1 or item.is_selected:
+                item.children += toc(page,
+                                     processor=processor,
+                                     current_page=current_page,
+                                     toc_expansion=toc_expansion - 1,
+                                     combined_toc=combined_toc)
+            else:
+                item.is_collapsed = True
 
+        tree.append(item)
 
-@dataclass
-class SubtreeToc(CrossPageToc):
-    processor: Processor
-    current: Page | None
-
-    def get_root(self) -> Page:
-        return self.current
-
-    async def get_title(self, page: Page) -> str:
-        return await self.processor.get_title(page)
-
-    def get_href(self, page: Page) -> str:
-        return relpath(page.path_in_volume, start=self.current.path_in_volume.parent)
-
-    def is_current(self, page: Page) -> bool:
-        return False
-
-    def is_selected(self, page: Page) -> bool:
-        return False
-
-    def syntax(self) -> Syntax:
-        return self.current.syntax
+    return tree
 
 
-@dataclass
-class LocalToc(TableOfContents):
-    processor: Processor
-    page: Page
-    href_prefix: str = field(kw_only=True, default='')
+def local_toc(page: Page, *, href_prefix: str = '') -> Toc:
+    breadcrumbs: list[Toc] = [Toc()]
+    current_level: int = 0
 
-    async def items(self) -> list[TocTreeItem]:
-        root = TocTreeItem(title='', href='')
-        breadcrumbs: list[TocTreeItem] = [root]
-        current_level: int = 0
+    for anchor in RT[page].anchors:
+        item = TocItem(title=anchor.label,
+                       url=f'{href_prefix}#{anchor.identifier}',
+                       number=RT[anchor].number)
 
-        for anchor in RT[self.page].anchors:
-            item = TocTreeItem(title=anchor.label, href=f'{self.href_prefix}#{anchor.identifier}', number=anchor.number)
-            if anchor.level == current_level:
-                breadcrumbs[-2].children.append(item)
-                breadcrumbs[-1] = item
-            elif anchor.level > current_level:
-                breadcrumbs[-1].children.append(item)
-                breadcrumbs.append(item)
-            elif anchor.level < current_level:
-                breadcrumbs[anchor.level - 2].children.append(item)
-                breadcrumbs[anchor.level - 1:] = [item]
-            current_level = anchor.level
+        if anchor.level == current_level:
+            breadcrumbs[-2].append(item)
+            breadcrumbs[-1] = item.children
+        elif anchor.level > current_level:
+            breadcrumbs[-1].append(item)
+            breadcrumbs.append(item.children)
+        elif anchor.level < current_level:
+            breadcrumbs[anchor.level - 2].append(item)
+            breadcrumbs[anchor.level - 1:] = [item.children]
+        current_level = anchor.level
 
-        return root.children
+    return breadcrumbs[0]

@@ -133,7 +133,7 @@ lint-docs:
 build-docs:
   stage: test
   needs: [build-release-html]
-  image: $CI_REGISTRY_IMAGE/cache/release:by-commit-$CI_COMMIT_SHA
+  image: $CI_REGISTRY_IMAGE/cache/release-html:by-commit-$CI_COMMIT_SHA
   script:
     - ls -A | grep -v docs | xargs rm -rf
     - sobiraka --no-cache html docs/docs.yaml --output html

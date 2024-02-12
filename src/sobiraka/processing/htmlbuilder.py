@@ -15,7 +15,7 @@ from subprocess import PIPE
 import iso639
 from aiofiles.os import makedirs
 from panflute import Element, Header, Image
-from sobiraka.models import DirPage, GlobalToc, IndexPage, LocalToc, Page, PageHref, Project, Syntax, Volume
+from sobiraka.models import DirPage, IndexPage, Page, PageHref, Project, Volume
 from sobiraka.runtime import RT
 from sobiraka.utils import panflute_to_bytes
 
@@ -89,6 +89,8 @@ class HtmlBuilder(ProjectProcessor):
             rmtree(directory, ignore_errors=True)
 
     async def generate_html_for_page(self, page: Page) -> str:
+        from ..models.toc import local_toc, toc
+
         volume = page.volume
         project = page.volume.project
 
@@ -127,8 +129,12 @@ class HtmlBuilder(ProjectProcessor):
             body=html.decode('utf-8').strip(),
 
             now=datetime.now(),
-            toc=GlobalToc_HTML(self, volume, page, volume.config.html.combined_toc),
-            local_toc=LocalToc(self, page),
+            toc=lambda **kwargs: toc(processor=self,
+                                     base=volume.root_page,
+                                     current_page=page,
+                                     combined_toc=volume.config.html.combined_toc,
+                                     **kwargs),
+            local_toc=lambda: local_toc(page),
             Language=iso639.Language,
 
             ROOT=self.get_path_to_root(page),
@@ -256,16 +262,3 @@ class HtmlBuilder(ProjectProcessor):
             sys.exit(1)
 
         self._results.add(destination)
-
-
-class GlobalToc_HTML(GlobalToc):
-    processor: HtmlBuilder
-
-    def get_href(self, page: Page) -> str:
-        return str(self.processor.make_internal_url(page, page=self.current))
-
-    def syntax(self) -> Syntax:
-        return Syntax.HTML
-
-    def _should_expand(self, page: Page) -> bool:
-        return self.is_selected(page) or page.level <= page.volume.config.html.toc_expansion

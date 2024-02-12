@@ -4,30 +4,36 @@ from abc import abstractmethod
 from asyncio import Task, create_subprocess_exec, create_task, gather
 from collections import defaultdict
 from contextlib import suppress
+from functools import partial
 from io import BytesIO
 from os.path import normpath
 from pathlib import Path
 from subprocess import PIPE
+from typing import TYPE_CHECKING
 
 import jinja2
 import panflute
 from jinja2 import StrictUndefined
-from panflute import Code, Element, Header, Image, Link, Para, Space, Str, Table, stringify
+from panflute import Cite, Code, Doc, Element, Header, Image, Link, Para, Space, Str, Table, stringify
 
-from sobiraka.cache import CACHE
 from sobiraka.models import Anchor, BadLink, DirPage, Page, PageHref, Project, UrlHref, Volume
 from sobiraka.models.exceptions import DisableLink
 from sobiraka.runtime import RT
 from sobiraka.utils import TocNumber, UNNUMBERED, convert_or_none, on_demand, super_gather
 from .dispatcher import Dispatcher
 
+if TYPE_CHECKING:
+    from ..directive import TocDirective
+
 
 class Processor(Dispatcher):
     # pylint: disable=too-many-instance-attributes
     def __init__(self):
+
         self.jinja: dict[Volume, jinja2.Environment] = {}
 
         self.process2_tasks: dict[Page, list[Task]] = defaultdict(list)
+        self.toc_placeholders: dict[Page, list[TocDirective]] = defaultdict(list)
 
     def __repr__(self):
         return f'<{self.__class__.__name__} at {hex(id(self))}>'
@@ -43,13 +49,6 @@ class Processor(Dispatcher):
 
         This method is called by :obj:`.Page.loaded`.
         """
-        try:
-            RT[page] = CACHE[page].get_preprocessed()
-            return
-        except KeyError:
-            pass
-
-        from sobiraka.models import SubtreeToc
         from sobiraka.processing import HtmlBuilder
         from sobiraka.processing import PdfBuilder
 
@@ -61,8 +60,6 @@ class Processor(Dispatcher):
             volume=page.volume,
             project=page.volume.project,
             LANG=page.volume.lang,
-
-            toc=SubtreeToc(self, page),
         )
 
         page_text = page.text
@@ -86,8 +83,8 @@ class Processor(Dispatcher):
         json_bytes, _ = await pandoc.communicate(page_text.encode('utf-8'))
         assert pandoc.returncode == 0
 
+        RT[page].title = page.stem
         RT[page].doc = panflute.load(BytesIO(json_bytes))
-        CACHE[page].set_preprocessed(RT[page])
 
     async def get_title(self, page: Page) -> str:
         # TODO: maybe make get_title() a separate @on_demand step?
@@ -106,9 +103,31 @@ class Processor(Dispatcher):
         This method is called by :obj:`.Page.processed1`.
         """
         await self.load_page(page)
+        RT[page].doc.walk(partial(self.preprocess, page=page))
         await self.process_doc(RT[page].doc, page)
-        CACHE[page].set_dependencies(RT[page].dependencies)
         return page
+
+    def preprocess(self, para: Para, _: Doc, *, page: Page):
+        try:
+            assert isinstance(para, Para)
+            assert isinstance(para.content[0], Cite)
+        except AssertionError:
+            return None
+
+        argv = [stringify(para.content[0])]
+        for item in para.content[1:]:
+            match item:
+                case Str():
+                    argv.append(item.text)
+                case Space():
+                    pass
+                case _:
+                    raise TypeError(item)
+
+        match argv[0]:
+            case '@toc':
+                from ..directive import TocDirective
+                return TocDirective(self, page, argv)
 
     async def process_header(self, header: Header, page: Page) -> tuple[Element, ...]:
         if not header.identifier:
@@ -125,7 +144,7 @@ class Processor(Dispatcher):
         else:
             anchor = Anchor.from_header(header)
             if 'unnumbered' in header.classes:
-                anchor.number = UNNUMBERED
+                RT[anchor].number = UNNUMBERED
             RT[page].anchors.append(anchor)
 
         return (header,)
@@ -173,23 +192,12 @@ class Processor(Dispatcher):
 
     @on_demand
     async def process2(self, page: Page):
-        try:
-            RT[page].dependencies = CACHE[page].get_dependencies()
-        except KeyError:
-            await self.process1(page)
-
-        try:
-            RT[page] = CACHE[page].get_processed(RT[page].dependencies)
-            return
-        except KeyError:
-            pass
+        await self.process1(page)
 
         await gather(self.process1(page),
                      *(self.process1(dep) for dep in RT[page].dependencies))
 
         await super_gather(self.process2_tasks[page])
-
-        CACHE[page].set_processed(RT[page])
 
     @on_demand
     async def process3(self, volume: Volume):
@@ -200,6 +208,10 @@ class Processor(Dispatcher):
         if volume.config.content.numeration:
             await self.numerate(volume)
 
+        for page in volume.pages:
+            for toc_placeholder in self.toc_placeholders[page]:
+                toc_placeholder.postprocess()
+
     async def numerate(self, volume: Volume):
         queue: list[tuple[TocNumber, tuple[Page, ...]]] = []
         queue.append((UNNUMBERED, volume.pages))
@@ -209,9 +221,6 @@ class Processor(Dispatcher):
                 parent_number, pages = queue.pop(0)
                 page_counter = TocNumber(*parent_number, 0)
                 for page in pages:
-                    # Wait until the page is processed
-                    await self.process2(page)
-
                     # Numerate the page itself
                     if RT[page].number is not UNNUMBERED:
                         page_counter += 1
@@ -220,9 +229,9 @@ class Processor(Dispatcher):
                     # Numerate the page's anchors
                     anchor_counter = TocNumber(*RT[page].number, 0)
                     for anchor in RT[page].anchors:
-                        if anchor.number is not UNNUMBERED:
+                        if RT[anchor].number is not UNNUMBERED:
                             anchor_counter = anchor_counter.increased_at(len(page_counter) + anchor.level - 1)
-                            anchor.number = anchor_counter
+                            RT[anchor].number = anchor_counter
 
                     # Enqueue numerating child pages
                     queue.append((RT[page].number, page.children))
@@ -293,10 +302,13 @@ class Processor(Dispatcher):
             RT[page].links.append(href)
 
             RT[page].dependencies.add(href.target)
-            self.process2_tasks[page].append(create_task(self.process2_internal_link(elem, href, target_text, page)))
+            self.schedule_processing_internal_link(elem, href, target_text, page)
 
         except (KeyError, ValueError):
             RT[page].issues.append(BadLink(target_text))
+
+    def schedule_processing_internal_link(self, elem: Link, href: PageHref, target_text: str, page: Page):
+        self.process2_tasks[page].append(create_task(self.process2_internal_link(elem, href, target_text, page)))
 
     async def process2_internal_link(self, elem: Link, href: PageHref, target_text: str, page: Page):
         await self.process1(href.target)
@@ -309,9 +321,9 @@ class Processor(Dispatcher):
 
         if href.anchor:
             try:
-                anchor = RT[href.target].anchors[href.anchor]
+                anchor = RT[href.target].anchors.by_identifier(href.anchor)
                 if not elem.content:
-                    elem.content = Str(anchor.label)
+                    elem.content = Str(anchor.label),
 
             except (KeyError, AssertionError):
                 RT[page].issues.append(BadLink(target_text))
@@ -319,7 +331,7 @@ class Processor(Dispatcher):
 
         else:
             if not elem.content:
-                elem.content = Str(RT[page].title)
+                elem.content = Str(RT[page].title),
 
     @abstractmethod
     def make_internal_url(self, href: PageHref, *, page: Page) -> str:

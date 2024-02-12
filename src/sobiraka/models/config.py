@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from enum import Enum
+from importlib.resources import files
 from math import inf
 from pathlib import Path
 from typing import Any
@@ -7,7 +8,6 @@ from typing import Any
 from utilspie.collectionsutils import frozendict
 
 from sobiraka.models import NamingScheme
-from sobiraka.runtime import RT
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -72,7 +72,7 @@ class Config_HTML:
 
     resources_force_copy: tuple[str, ...] = ()
 
-    theme: Path = RT.FILES / 'themes' / 'simple'
+    theme: Path = files('sobiraka') / 'files' / 'themes' / 'simple'
     """Path to the theme that should be used when generating HTML."""
 
     theme_data: dict[str, Any] = field(default=dict)

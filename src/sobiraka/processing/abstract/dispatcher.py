@@ -14,7 +14,11 @@ class Dispatcher:
 
     @final
     async def process_element(self, elem: Element, page: Page) -> tuple[Element, ...]:
+        # pylint: disable=cyclic-import
         # pylint: disable=too-many-statements
+
+        from ..directive import Directive
+
         match elem:
             case BlockQuote():
                 result = await self.process_block_quote(elem, page)
@@ -115,6 +119,10 @@ class Dispatcher:
                 result = await self.process_table_row(elem, page)
             case Underline():
                 result = await self.process_underline(elem, page)
+
+            case Directive() as directive:
+                result = await directive.preprocess()
+
             case _:
                 raise TypeError(type(elem))
 

@@ -169,7 +169,10 @@ class Page:
 
     @property
     def syntax(self) -> Syntax:
-        return Syntax(self.path_in_volume.suffix[1:])
+        try:
+            return Syntax(self.path_in_volume.suffix[1:])
+        except ValueError:
+            return Syntax.MD
 
     # ------------------------------------------------------------------------------------------------------------------
     # Paths and the position in the tree

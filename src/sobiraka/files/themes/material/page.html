@@ -143,16 +143,16 @@
                                     </a>
                                 </label>
                                 <ul class="md-nav__list">
-                                    {% for item in toc.items() recursive %}
+                                    {% for item in toc() recursive %}
                                         <li class="md-nav__item">
                                             {% if item.is_current %}
                                                 <span class="md-nav__link caption"><span class="caption-text">{{ item.title }}</span></span>
                                             {% elif item.is_selected %}
-                                                <a class="md-nav__link nav__link--active" href="{{ item.href }}">{{ item.title }}</a>
+                                                <a class="md-nav__link nav__link--active" href="{{ item.url }}">{{ item.title }}</a>
                                             {% elif item.is_collapsed %}
-                                                <a class="md-nav__link" href="{{ item.href }}">►{{ item.title }}</a>
+                                                <a class="md-nav__link" href="{{ item.url }}">►{{ item.title }}</a>
                                             {% else %}
-                                                <a class="md-nav__link" href="{{ item.href }}">{{ item.title }}</a>
+                                                <a class="md-nav__link" href="{{ item.url }}">{{ item.title }}</a>
                                             {% endif %}
 
                                             {% if item.children %}
@@ -168,8 +168,8 @@
                     </div>
                 </div>
 
-                {% set local_toc_items = local_toc.items() %}
-                {%  if local_toc_items %}
+                {% set local_toc = local_toc() %}
+                {%  if local_toc %}
                   <div class="md-sidebar md-sidebar--secondary" data-md-component="toc" style="height: 853px;" data-md-state="">
                     <div class="md-sidebar__scrollwrap">
                       <div class="md-sidebar__inner">
@@ -177,9 +177,9 @@
                           <label class="md-nav__title" for="__toc">{{ theme_data.get("local_toc_title", "Contents") }}</label>
                           <ul class="md-nav__list">
 
-                            {% for item in local_toc.items() recursive %}
+                            {% for item in local_toc recursive %}
                               <li class="md-nav__item">
-                                <a class="md-nav__link" data-md-state="" href="{{ item.href }}">{{ item.title }}</a>
+                                <a class="md-nav__link" data-md-state="" href="{{ item.url }}">{{ item.title }}</a>
                                 {% if item.children %}
                                   <nav class="md-nav md-nav--secondary">
                                     <ul class="md-nav__list">
