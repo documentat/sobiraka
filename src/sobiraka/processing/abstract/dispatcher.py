@@ -121,7 +121,7 @@ class Dispatcher:
                 result = await self.process_underline(elem, page)
 
             case Directive() as directive:
-                result = await directive.preprocess()
+                result = await directive.run()
 
             case _:
                 raise TypeError(type(elem))

@@ -12,6 +12,22 @@ from ..utils import replace_element
 
 
 class Directive(Block, metaclass=ABCMeta):
+    """
+    Base class for a directive in documentation sources.
+
+    A directive is a command that starts with the `@` symbol, has a name and optionally some arguments.
+    It must be placed in what Pandoc considers a separate paragraph
+    (the most sure way to do it is to add newlines before and after).
+
+    During an early step of processing, the code in `Processor` walks through all paragraphs in the document.
+    If a paragraph begins with one of the known directive names, it replaces the paragraph with a `Directive`.
+    Later, when the code in `Dispatcher` finds this element, it calls its `run()` function.
+
+    Directives are convenient for implementing features that need to put generated Pandoc AST elements into pages.
+    For example, `TocDirective` is used a placeholder that is later replaced with other AST elements,
+    all without the need to render the generated content into a temporary Markdown or other syntax.
+    """
+
     def __init__(self, processor: Processor, page: Page, _: list[str]):
         self.processor: Processor = processor
         self.page: Page = page
@@ -20,17 +36,24 @@ class Directive(Block, metaclass=ABCMeta):
         return f'<{self.__class__.__name__} on {str(self.page.path_in_project)!r}>'
 
     @abstractmethod
-    async def preprocess(self) -> tuple[Block, ...]:
+    async def run(self) -> tuple[Block, ...]:
         ...
 
 
 class TocDirective(Directive):
 
-    async def preprocess(self) -> tuple[Block, ...]:
+    async def run(self) -> tuple[Block, ...]:
+        """
+        Do nothing at this stage, except remember the directive's position.
+        The processor will iterate through `TocDirective`'s and call post-processing later.
+        """
         self.processor.toc_placeholders[self.page].append(self)
         return self,
 
     def postprocess(self):
+        """
+        Replace the directive with a bullet list, based on a `toc()` call.
+        """
         from sobiraka.models.toc import toc
 
         toc = toc(processor=self.processor, base=self.page, current_page=self.page)

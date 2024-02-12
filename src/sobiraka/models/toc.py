@@ -5,10 +5,10 @@ from textwrap import dedent, indent
 from typing import Iterable, TYPE_CHECKING
 
 import jinja2
+
 from sobiraka.models.config import Config
 from sobiraka.runtime import RT
 from sobiraka.utils import TocNumber
-
 from .config import CombinedToc
 from .href import PageHref
 
@@ -19,13 +19,37 @@ if TYPE_CHECKING:
 
 @dataclass
 class TocItem:
+    """
+    A single item of a Table Of Contents. May include another `Toc`.
+
+    A `TocItem` is self-contained: it does not reference any `Page` or other objects.
+    Both the `title` and the `url` are pre-baked strings.
+    The API is semi-stable, because custom themes in different projects use it directly.
+
+    It is very unlikely that you want to create a `TocItem` object directly.
+    Use `toc()` or `local_toc()` instead.
+    """
+
     title: str
+    """The human-readable title of the item."""
+
     url: str
+    """The link, most likely a relative URL of the target page."""
+
     number: TocNumber = field(kw_only=True, default=None)
+    """The item's number. If `None` or `UNNUMBERED`, then the number must not be displayed."""
+
     is_current: bool = field(kw_only=True, default=False)
+    """True if the item corresponds to the currently opened page."""
+
     is_selected: bool = field(kw_only=True, default=False)
+    """True if the item corresponds to the currently opened page or any of its parent pages."""
+
     is_collapsed: bool = field(kw_only=True, default=False)
+    """True if the item would have some children but they were omitted due to a depth limit."""
+
     children: Toc = field(kw_only=True, default_factory=list)
+    """List of this item's sub-items."""
 
     def __repr__(self):
         parts = [repr(self.title), repr(self.url)]
@@ -50,6 +74,14 @@ class TocItem:
 
 
 class Toc(list[TocItem]):
+    """
+    A list of Table Of Contents items, either top-level or any other level.
+    Support both iterating and direct rendering (as an HTML list).
+
+    It is very unlikely that you want to create a `Toc` object directly.
+    Use `toc()` or `local_toc()` instead.
+    """
+
     def __str__(self):
         jinja = jinja2.Environment(
             trim_blocks=True,
@@ -85,6 +117,31 @@ def toc(
         toc_expansion: int = None,
         combined_toc: CombinedToc = None,
 ) -> Toc:
+    """
+    Generate a Table Of Contents.
+    This function must be called after the `process3()` has been done for the volume,
+    otherwise the TOC may end up missing anchors, numeration, etc.
+
+    The TOC will contain items based on the given `base`.
+    If given a `Volume`, the function will generate a top-level TOC.
+    If given a `Page`, the function will generate a TOC of the page's child pages.
+
+    The function uses `processor` and `current_page` for generating each item's correct URL.
+    Also, the `current_page` is used for marking `TocItem`s as current or selected.
+
+    The `toc_expansion` limits the depth of the TOC.
+    If it is 1, the items will only include one level of pages.
+    If it is 2 and more, the TOC will include child pages.
+    If a page has children but they would exceed the `toc_expansion` limit, its item is marked as `is_collapsed`.
+
+    Note that in the current implementation, `toc_expansion` only applies to `Page`-based sub-items,
+    while `Anchor`-based sub-items will be generated on any level according to the `combined_toc` argument.
+
+    The `combined_toc` argument indicates whether to include local TOCs as subtrees of the TOC items.
+    You may choose to always include them, never include them, or only include the current page's local TOC.
+
+    If not set explicitly, `toc_expansion` and `combined_toc` will use the values from the volume's `Config_HTML`.
+    """
     from .page import Page
     from .volume import Volume
 
@@ -137,6 +194,12 @@ def toc(
 
 
 def local_toc(page: Page, *, href_prefix: str = '') -> Toc:
+    """
+    Generate a page's local toc, based on the information about anchors collected in `RT`.
+
+    When called from within `toc()`, it is given a `href_prefix` which is prepended to each URL,
+    thus creating a full URL that will lead a user to a specific section of a specific page.
+    """
     breadcrumbs: list[Toc] = [Toc()]
     current_level: int = 0
 
