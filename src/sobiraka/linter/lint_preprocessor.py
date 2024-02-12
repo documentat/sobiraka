@@ -1,4 +1,3 @@
-from asyncio import gather
 from collections import defaultdict
 from typing import Awaitable, Callable
 
@@ -27,12 +26,6 @@ class LintPreprocessor(Processor):
     async def tm(self, page: Page) -> TextModel:
         await self.process2(page)
         return self._tm[page]
-
-    async def preprocess(self):
-        tasks: list[Awaitable] = []
-        for page in self.volume.pages:
-            tasks.append(self.process2(page))
-        await gather(*tasks)
 
     def _atomic(self, page: Page, elem: Element, text: str):
         assert '\n' not in text

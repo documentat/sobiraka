@@ -20,8 +20,6 @@ class Linter(LintPreprocessor):
         return self.volume.pages
 
     async def check(self):
-        await self.preprocess()
-
         tasks: list[Awaitable] = []
         for page in self.volume.pages:
             tasks.append(self.check_page(page))

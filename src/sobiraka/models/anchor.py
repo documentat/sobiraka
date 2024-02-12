@@ -4,16 +4,14 @@ from collections import UserList
 from dataclasses import dataclass, field
 
 from panflute import Header, stringify
-from sobiraka.utils import TocNumber
 
 
-@dataclass
+@dataclass(frozen=True)
 class Anchor:
-    header: Header
+    header: Header = field(hash=False)
     identifier: str
     label: str = field(kw_only=True)
     level: int = field(kw_only=True)
-    number: TocNumber = field(init=False, default=None)
 
     def __repr__(self):
         return f'<{self.__class__.__name__}: {stringify(self.header.content)!r}>'

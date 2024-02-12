@@ -95,7 +95,7 @@ class PageRuntime:
 
     number: TocNumber = UNNUMBERED
     """
-    Number of the page global TOC.
+    Number of the page in the global TOC.
     """
 
     links: list[Href] = field(default_factory=list)
@@ -104,15 +104,6 @@ class PageRuntime:
     Do not rely on the value for page here until `process1()` is awaited for that page."""
 
     anchors: Anchors = field(default_factory=Anchors)
-    """Dictionary containing anchors and corresponding readable titles.
-    
-    Do not rely on the value for page here until `process1()` is awaited for that page.
-    
-    Note that sometime a user leaves anchors empty or specifies identical anchors for multiple headers by mistake.
-    However, this is not considered a critical issue as long as no page contains links to this anchor.
-    For that reason, all the titles for an anchor are stored as a list (in order of appearance on the page),
-    and it is up to `process2_link()` to report an issue if necessary.
-    """
 
     issues: UniqueList[Issue] = field(default_factory=UniqueList)
 
@@ -126,4 +117,7 @@ class PageRuntime:
 
 @dataclass
 class AnchorRuntime:
-    pass
+    number: TocNumber = None
+    """
+    Number of the header in the global TOC.
+    """
