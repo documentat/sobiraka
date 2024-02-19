@@ -84,6 +84,9 @@ class Toc(list[TocItem]):
     Use `toc()` or `local_toc()` instead.
     """
 
+    def __init__(self, *items: TocItem):
+        super().__init__(items)
+
     def __str__(self):
         jinja = jinja2.Environment(
             trim_blocks=True,

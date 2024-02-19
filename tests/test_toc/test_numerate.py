@@ -61,40 +61,40 @@ class TestNumeration(ProjectTestCase[FakeProcessor], AbstractTestWithRtPages):
         return FakeProcessor()
 
     async def test_numeration(self):
-        expected = Toc((
+        expected = Toc(
             TocItem('preface', '1-preface.md'),
             TocItem('intro', '2-intro.md', number=TocNumber(1)),
-            TocItem('installation', '3-installation', children=Toc((
+            TocItem('installation', '3-installation', children=Toc(
                 TocItem('linux', '3-installation/linux.md'),
                 TocItem('macos', '3-installation/macos.md'),
                 TocItem('windows', '3-installation/windows.md'),
-            ))),
-            TocItem('usage', '4-usage', number=TocNumber(2), children=Toc((
+            )),
+            TocItem('usage', '4-usage', number=TocNumber(2), children=Toc(
                 TocItem('cli', '4-usage/cli.md', number=TocNumber(2, 1)),
                 TocItem('ui', '4-usage/ui.md', number=TocNumber(2, 2)),
-            ))),
-            TocItem('troubleshooting', '5-troubleshooting', number=TocNumber(3), children=Toc((
+            )),
+            TocItem('troubleshooting', '5-troubleshooting', number=TocNumber(3), children=Toc(
                 TocItem('cannot start', '5-troubleshooting#cannot-start', number=TocNumber(3, 1)),
                 TocItem('cannot work', '5-troubleshooting#cannot-work', number=TocNumber(3, 2)),
-                TocItem('cannot explain', '5-troubleshooting#cannot-explain', children=Toc((
-                    TocItem('no number here', '5-troubleshooting#no-number-here', children=Toc((
+                TocItem('cannot explain', '5-troubleshooting#cannot-explain', children=Toc(
+                    TocItem('no number here', '5-troubleshooting#no-number-here', children=Toc(
                         TocItem('or here', '5-troubleshooting#or-here'),
-                    ))),
+                    )),
                     TocItem('or even here', '5-troubleshooting#or-even-here'),
-                ))),
+                )),
                 TocItem('cannot stop', '5-troubleshooting#cannot-stop', number=TocNumber(3, 3)),
-                TocItem('advanced', '5-troubleshooting/advanced.md', number=TocNumber(3, 4), children=Toc((
+                TocItem('advanced', '5-troubleshooting/advanced.md', number=TocNumber(3, 4), children=Toc(
                     TocItem('cannot believe how smart i am',
                             '5-troubleshooting/advanced.md#cannot-believe-how-smart-i-am'),
                     TocItem('cannot trust this documentation',
                             '5-troubleshooting/advanced.md#cannot-trust-this-documentation', number=TocNumber(3, 4, 1)),
                     TocItem('cannot possibly need this',
                             '5-troubleshooting/advanced.md#cannot-possibly-need-this', number=TocNumber(3, 4, 2)),
-                ))),
-            ))),
+                )),
+            )),
             TocItem('outro', '6-outro.md', number=TocNumber(4)),
             TocItem('credits', '7-credits.md'),
-        ))
+        )
 
         await self.processor.process3(self.project.get_volume())
         actual = toc(self.project.get_volume(), processor=self.processor)

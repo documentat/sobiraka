@@ -64,10 +64,10 @@ class AbstractTestCrossPageToc(ProjectTestCase):
                     formatter=Formatter(Formatter.HTML, indent=2))
                 expected = re.sub(r'<(a|strong)([^>]*)>\n\s+([^>]+)\n\s+</\1>', r'<\1\2>\3</\1>', expected)
 
-                actual = Toc(toc(self.project.get_volume(),
-                                 processor=self.processor,
-                                 current_page=page,
-                                 toc_expansion=self.toc_expansion))
+                actual = toc(self.project.get_volume(),
+                             processor=self.processor,
+                             current_page=page,
+                             toc_expansion=self.toc_expansion)
                 actual = str(actual)
                 actual = BeautifulSoup(actual, 'html.parser').prettify(formatter=Formatter(Formatter.HTML, indent=2))
                 actual = re.sub(r'<(a|strong)([^>]*)>\n\s+([^>]+)\n\s+</\1>', r'<\1\2>\3</\1>', actual)
@@ -133,97 +133,97 @@ def dataset_paths(ext: str) -> dict[Path, Page]:
 
 
 def expected_paths_from_root(toc_expansion: int | float) -> Toc:
-    return Toc((
-        TocItem('part1', 'part1/index.html', **_children_if(toc_expansion > 1, Toc((
-            TocItem('chapter1', 'part1/chapter1/index.html', **_children_if(toc_expansion > 2, Toc((
-                TocItem('section1', 'part1/chapter1/section1/index.html', **_children_if(toc_expansion > 3, Toc((
+    return Toc(
+        TocItem('part1', 'part1/index.html', **_children_if(toc_expansion > 1, Toc(
+            TocItem('chapter1', 'part1/chapter1/index.html', **_children_if(toc_expansion > 2, Toc(
+                TocItem('section1', 'part1/chapter1/section1/index.html', **_children_if(toc_expansion > 3, Toc(
                     TocItem('article1', 'part1/chapter1/section1/article1.html'),
                     TocItem('article2', 'part1/chapter1/section1/article2.html'),
-                )))),
-                TocItem('section2', 'part1/chapter1/section2/index.html', **_children_if(toc_expansion > 3, Toc((
+                ))),
+                TocItem('section2', 'part1/chapter1/section2/index.html', **_children_if(toc_expansion > 3, Toc(
                     TocItem('article1', 'part1/chapter1/section2/article1.html'),
                     TocItem('article2', 'part1/chapter1/section2/article2.html'),
-                )))),
-            )))),
-            TocItem('chapter2', 'part1/chapter2/index.html', **_children_if(toc_expansion > 2, Toc((
-                TocItem('section1', 'part1/chapter2/section1/index.html', **_children_if(toc_expansion > 3, Toc((
+                ))),
+            ))),
+            TocItem('chapter2', 'part1/chapter2/index.html', **_children_if(toc_expansion > 2, Toc(
+                TocItem('section1', 'part1/chapter2/section1/index.html', **_children_if(toc_expansion > 3, Toc(
                     TocItem('article1', 'part1/chapter2/section1/article1.html'),
                     TocItem('article2', 'part1/chapter2/section1/article2.html'),
-                )))),
-                TocItem('section2', 'part1/chapter2/section2/index.html', **_children_if(toc_expansion > 3, Toc((
+                ))),
+                TocItem('section2', 'part1/chapter2/section2/index.html', **_children_if(toc_expansion > 3, Toc(
                     TocItem('article1', 'part1/chapter2/section2/article1.html'),
                     TocItem('article2', 'part1/chapter2/section2/article2.html'),
-                )))),
-            )))),
-        )))),
-        TocItem('part2', 'part2/index.html', **_children_if(toc_expansion > 1, Toc((
-            TocItem('chapter1', 'part2/chapter1/index.html', **_children_if(toc_expansion > 2, Toc((
-                TocItem('section1', 'part2/chapter1/section1/index.html', **_children_if(toc_expansion > 3, Toc((
+                ))),
+            ))),
+        ))),
+        TocItem('part2', 'part2/index.html', **_children_if(toc_expansion > 1, Toc(
+            TocItem('chapter1', 'part2/chapter1/index.html', **_children_if(toc_expansion > 2, Toc(
+                TocItem('section1', 'part2/chapter1/section1/index.html', **_children_if(toc_expansion > 3, Toc(
                     TocItem('article1', 'part2/chapter1/section1/article1.html'),
                     TocItem('article2', 'part2/chapter1/section1/article2.html'),
-                )))),
-                TocItem('section2', 'part2/chapter1/section2/index.html', **_children_if(toc_expansion > 3, Toc((
+                ))),
+                TocItem('section2', 'part2/chapter1/section2/index.html', **_children_if(toc_expansion > 3, Toc(
                     TocItem('article1', 'part2/chapter1/section2/article1.html'),
                     TocItem('article2', 'part2/chapter1/section2/article2.html'),
-                )))),
-            )))),
-            TocItem('chapter2', 'part2/chapter2/index.html', **_children_if(toc_expansion > 2, Toc((
-                TocItem('section1', 'part2/chapter2/section1/index.html', **_children_if(toc_expansion > 3, Toc((
+                ))),
+            ))),
+            TocItem('chapter2', 'part2/chapter2/index.html', **_children_if(toc_expansion > 2, Toc(
+                TocItem('section1', 'part2/chapter2/section1/index.html', **_children_if(toc_expansion > 3, Toc(
                     TocItem('article1', 'part2/chapter2/section1/article1.html'),
                     TocItem('article2', 'part2/chapter2/section1/article2.html'),
-                )))),
-                TocItem('section2', 'part2/chapter2/section2/index.html', **_children_if(toc_expansion > 3, Toc((
+                ))),
+                TocItem('section2', 'part2/chapter2/section2/index.html', **_children_if(toc_expansion > 3, Toc(
                     TocItem('article1', 'part2/chapter2/section2/article1.html'),
                     TocItem('article2', 'part2/chapter2/section2/article2.html'),
-                )))),
-            )))),
-        )))),
-    ))
+                ))),
+            ))),
+        ))),
+    )
 
 
 def expected_paths_from_p1(toc_expansion: int | float) -> Toc:
-    return Toc((
-        TocItem('chapter1', 'chapter1/index.html', **_children_if(toc_expansion > 1, Toc((
-            TocItem('section1', 'chapter1/section1/index.html', **_children_if(toc_expansion > 2, Toc((
+    return Toc(
+        TocItem('chapter1', 'chapter1/index.html', **_children_if(toc_expansion > 1, Toc(
+            TocItem('section1', 'chapter1/section1/index.html', **_children_if(toc_expansion > 2, Toc(
                 TocItem('article1', 'chapter1/section1/article1.html'),
                 TocItem('article2', 'chapter1/section1/article2.html'),
-            )))),
-            TocItem('section2', 'chapter1/section2/index.html', **_children_if(toc_expansion > 2, Toc((
+            ))),
+            TocItem('section2', 'chapter1/section2/index.html', **_children_if(toc_expansion > 2, Toc(
                 TocItem('article1', 'chapter1/section2/article1.html'),
                 TocItem('article2', 'chapter1/section2/article2.html'),
-            )))),
-        )))),
-        TocItem('chapter2', 'chapter2/index.html', **_children_if(toc_expansion > 1, Toc((
-            TocItem('section1', 'chapter2/section1/index.html', **_children_if(toc_expansion > 2, Toc((
+            ))),
+        ))),
+        TocItem('chapter2', 'chapter2/index.html', **_children_if(toc_expansion > 1, Toc(
+            TocItem('section1', 'chapter2/section1/index.html', **_children_if(toc_expansion > 2, Toc(
                 TocItem('article1', 'chapter2/section1/article1.html'),
                 TocItem('article2', 'chapter2/section1/article2.html'),
-            )))),
-            TocItem('section2', 'chapter2/section2/index.html', **_children_if(toc_expansion > 2, Toc((
+            ))),
+            TocItem('section2', 'chapter2/section2/index.html', **_children_if(toc_expansion > 2, Toc(
                 TocItem('article1', 'chapter2/section2/article1.html'),
                 TocItem('article2', 'chapter2/section2/article2.html'),
-            )))),
-        )))),
-    ))
+            ))),
+        ))),
+    )
 
 
 def expected_paths_from_p1c1(toc_expansion: int | float) -> Toc:
-    return Toc((
-        TocItem('section1', 'section1/index.html', **_children_if(toc_expansion > 1, Toc((
+    return Toc(
+        TocItem('section1', 'section1/index.html', **_children_if(toc_expansion > 1, Toc(
             TocItem('article1', 'section1/article1.html'),
             TocItem('article2', 'section1/article2.html'),
-        )))),
-        TocItem('section2', 'section2/index.html', **_children_if(toc_expansion > 1, Toc((
+        ))),
+        TocItem('section2', 'section2/index.html', **_children_if(toc_expansion > 1, Toc(
             TocItem('article1', 'section2/article1.html'),
             TocItem('article2', 'section2/article2.html'),
-        )))),
-    ))
+        ))),
+    )
 
 
 def expected_paths_from_p1c1s1(toc_expansion: int | float) -> Toc:
-    return Toc((
+    return Toc(
         TocItem('article1', 'article1.html'),
         TocItem('article2', 'article2.html'),
-    ))
+    )
 
 
 def expected_paths_from_p1c1s1a1(toc_expansion: int | float) -> Toc:

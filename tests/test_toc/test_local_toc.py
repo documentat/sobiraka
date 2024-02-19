@@ -37,11 +37,11 @@ class TestLocalToc_Linear(AbstractTestLocalToc):
         ## Paragraph 3
     '''
 
-    expected = Toc((
+    expected = Toc(
         TocItem('Paragraph 1', 'page.html#paragraph-1'),
         TocItem('Paragraph 2', 'page.html#paragraph-2'),
         TocItem('Paragraph 3', 'page.html#paragraph-3'),
-    ))
+    )
 
 
 class TestLocalToc_Linear_CustomAnchors(AbstractTestLocalToc):
@@ -51,11 +51,11 @@ class TestLocalToc_Linear_CustomAnchors(AbstractTestLocalToc):
         ## Paragraph 3 {#para3}
     '''
 
-    expected = Toc((
+    expected = Toc(
         TocItem('Paragraph 1', 'page.html#para1'),
         TocItem('Paragraph 2', 'page.html#para2'),
         TocItem('Paragraph 3', 'page.html#para3'),
-    ))
+    )
 
 
 class TestLocalToc_Deep(AbstractTestLocalToc):
@@ -76,28 +76,28 @@ class TestLocalToc_Deep(AbstractTestLocalToc):
         #### Paragraph 2.2.2
     '''
 
-    expected = Toc((
-        TocItem('Paragraph 1', 'page.html#paragraph-1', children=Toc((
-            TocItem('Paragraph 1.1', 'page.html#paragraph-1.1', children=Toc((
+    expected = Toc(
+        TocItem('Paragraph 1', 'page.html#paragraph-1', children=Toc(
+            TocItem('Paragraph 1.1', 'page.html#paragraph-1.1', children=Toc(
                 TocItem('Paragraph 1.1.1', 'page.html#paragraph-1.1.1'),
                 TocItem('Paragraph 1.1.2', 'page.html#paragraph-1.1.2'),
-            ))),
-            TocItem('Paragraph 1.2', 'page.html#paragraph-1.2', children=Toc((
+            )),
+            TocItem('Paragraph 1.2', 'page.html#paragraph-1.2', children=Toc(
                 TocItem('Paragraph 1.2.1', 'page.html#paragraph-1.2.1'),
                 TocItem('Paragraph 1.2.2', 'page.html#paragraph-1.2.2'),
-            ))),
-        ))),
-        TocItem('Paragraph 2', 'page.html#paragraph-2', children=Toc((
-            TocItem('Paragraph 2.1', 'page.html#paragraph-2.1', children=Toc((
+            )),
+        )),
+        TocItem('Paragraph 2', 'page.html#paragraph-2', children=Toc(
+            TocItem('Paragraph 2.1', 'page.html#paragraph-2.1', children=Toc(
                 TocItem('Paragraph 2.1.1', 'page.html#paragraph-2.1.1'),
                 TocItem('Paragraph 2.1.2', 'page.html#paragraph-2.1.2'),
-            ))),
-            TocItem('Paragraph 2.2', 'page.html#paragraph-2.2', children=Toc((
+            )),
+            TocItem('Paragraph 2.2', 'page.html#paragraph-2.2', children=Toc(
                 TocItem('Paragraph 2.2.1', 'page.html#paragraph-2.2.1'),
                 TocItem('Paragraph 2.2.2', 'page.html#paragraph-2.2.2'),
-            ))),
-        ))),
-    ))
+            )),
+        )),
+    )
 
 
 class TestLocalToc_Deep_CustomAnchors(AbstractTestLocalToc):
@@ -118,28 +118,28 @@ class TestLocalToc_Deep_CustomAnchors(AbstractTestLocalToc):
         #### Paragraph 2.2.2 {#para222}
     '''
 
-    expected = Toc((
-        TocItem('Paragraph 1', 'page.html#para1', children=Toc((
-            TocItem('Paragraph 1.1', 'page.html#para11', children=Toc((
+    expected = Toc(
+        TocItem('Paragraph 1', 'page.html#para1', children=Toc(
+            TocItem('Paragraph 1.1', 'page.html#para11', children=Toc(
                 TocItem('Paragraph 1.1.1', 'page.html#para111'),
                 TocItem('Paragraph 1.1.2', 'page.html#para112'),
-            ))),
-            TocItem('Paragraph 1.2', 'page.html#para12', children=Toc((
+            )),
+            TocItem('Paragraph 1.2', 'page.html#para12', children=Toc(
                 TocItem('Paragraph 1.2.1', 'page.html#para121'),
                 TocItem('Paragraph 1.2.2', 'page.html#para122'),
-            ))),
-        ))),
-        TocItem('Paragraph 2', 'page.html#para2', children=Toc((
-            TocItem('Paragraph 2.1', 'page.html#para21', children=Toc((
+            )),
+        )),
+        TocItem('Paragraph 2', 'page.html#para2', children=Toc(
+            TocItem('Paragraph 2.1', 'page.html#para21', children=Toc(
                 TocItem('Paragraph 2.1.1', 'page.html#para211'),
                 TocItem('Paragraph 2.1.2', 'page.html#para212'),
-            ))),
-            TocItem('Paragraph 2.2', 'page.html#para22', children=Toc((
+            )),
+            TocItem('Paragraph 2.2', 'page.html#para22', children=Toc(
                 TocItem('Paragraph 2.2.1', 'page.html#para221'),
                 TocItem('Paragraph 2.2.2', 'page.html#para222'),
-            ))),
-        ))),
-    ))
+            )),
+        )),
+    )
 
 
 del AbstractTestLocalToc

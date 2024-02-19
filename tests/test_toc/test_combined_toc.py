@@ -35,52 +35,52 @@ class TestCombinedToc(AbstractTestWithRtTmp, AbstractTestWithRtPages):
 
         data = {
             CombinedToc.NEVER:
-                Toc((
-                    TocItem('Section 1', '.', is_selected=True, children=Toc((
+                Toc(
+                    TocItem('Section 1', '.', is_selected=True, children=Toc(
                         TocItem('Page 1.1', '', is_current=True, is_selected=True),
                         TocItem('Page 1.2', 'page2.md'),
-                    ))),
-                    TocItem('Section 2', '../section2', children=Toc((
+                    )),
+                    TocItem('Section 2', '../section2', children=Toc(
                         TocItem('Page 2.1', '../section2/page1.md'),
                         TocItem('Page 2.2', '../section2/page2.md'),
-                    ))),
-                )),
+                    )),
+                ),
 
             CombinedToc.CURRENT:
-                Toc((
-                    TocItem('Section 1', '.', is_selected=True, children=Toc((
-                        TocItem('Page 1.1', '', is_current=True, is_selected=True, children=Toc((
+                Toc(
+                    TocItem('Section 1', '.', is_selected=True, children=Toc(
+                        TocItem('Page 1.1', '', is_current=True, is_selected=True, children=Toc(
                             TocItem('Paragraph 1', '#paragraph-1'),
-                        ))),
+                        )),
                         TocItem('Page 1.2', 'page2.md'),
-                    ))),
-                    TocItem('Section 2', '../section2', children=Toc((
+                    )),
+                    TocItem('Section 2', '../section2', children=Toc(
                         TocItem('Page 2.1', '../section2/page1.md'),
                         TocItem('Page 2.2', '../section2/page2.md'),
-                    ))),
-                )),
+                    )),
+                ),
 
             CombinedToc.ALWAYS:
-                Toc((
-                    TocItem('Section 1', '.', is_selected=True, children=Toc((
+                Toc(
+                    TocItem('Section 1', '.', is_selected=True, children=Toc(
                         TocItem('Paragraph 1', '.#paragraph-1'),
-                        TocItem('Page 1.1', '', is_current=True, is_selected=True, children=Toc((
+                        TocItem('Page 1.1', '', is_current=True, is_selected=True, children=Toc(
                             TocItem('Paragraph 1', '#paragraph-1'),
-                        ))),
-                        TocItem('Page 1.2', 'page2.md', children=Toc((
+                        )),
+                        TocItem('Page 1.2', 'page2.md', children=Toc(
                             TocItem('Paragraph 1', 'page2.md#paragraph-1'),
-                        ))),
-                    ))),
-                    TocItem('Section 2', '../section2', children=Toc((
+                        )),
+                    )),
+                    TocItem('Section 2', '../section2', children=Toc(
                         TocItem('Paragraph 1', '../section2#paragraph-1'),
-                        TocItem('Page 2.1', '../section2/page1.md', children=Toc((
+                        TocItem('Page 2.1', '../section2/page1.md', children=Toc(
                             TocItem('Paragraph 1', '../section2/page1.md#paragraph-1'),
-                        ))),
-                        TocItem('Page 2.2', '../section2/page2.md', children=Toc((
+                        )),
+                        TocItem('Page 2.2', '../section2/page2.md', children=Toc(
                             TocItem('Paragraph 1', '../section2/page2.md#paragraph-1'),
-                        ))),
-                    ))),
-                )),
+                        )),
+                    )),
+                ),
         }
 
         for setting in CombinedToc:
