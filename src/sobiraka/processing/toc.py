@@ -119,7 +119,7 @@ def toc(
         *,
         processor: Processor,
         current_page: Page | None = None,
-        toc_expansion: int = None,
+        toc_depth: int = None,
         combined_toc: CombinedToc = None,
 ) -> Toc:
     """
@@ -134,18 +134,18 @@ def toc(
     The function uses `processor` and `current_page` for generating each item's correct URL.
     Also, the `current_page` is used for marking `TocItem`s as current or selected.
 
-    The `toc_expansion` limits the depth of the TOC.
+    The `toc_depth` limits the depth of the TOC.
     If it is 1, the items will only include one level of pages.
     If it is 2 and more, the TOC will include child pages.
-    If a page has children but they would exceed the `toc_expansion` limit, its item is marked as `is_collapsed`.
+    If a page has children but they would exceed the `toc_depth` limit, its item is marked as `is_collapsed`.
 
-    Note that in the current implementation, `toc_expansion` only applies to `Page`-based sub-items,
+    Note that in the current implementation, `toc_depth` only applies to `Page`-based sub-items,
     while `Anchor`-based sub-items will be generated on any level according to the `combined_toc` argument.
 
     The `combined_toc` argument indicates whether to include local TOCs as subtrees of the TOC items.
     You may choose to always include them, never include them, or only include the current page's local TOC.
 
-    If not set explicitly, `toc_expansion` and `combined_toc` will use the values from the volume's `Config_HTML`.
+    If not set explicitly, `toc_depth` and `combined_toc` will use the values from the volume's `Config_HTML`.
     """
     from sobiraka.models.page import Page
     from sobiraka.models.volume import Volume
@@ -168,8 +168,8 @@ def toc(
         case _:
             raise TypeError(base)
 
-    if toc_expansion is None:
-        toc_expansion = config.html.toc_expansion
+    if toc_depth is None:
+        toc_depth = config.html.toc_depth
     if combined_toc is None:
         combined_toc = config.html.combined_toc
 
@@ -184,11 +184,11 @@ def toc(
             item.children += local_toc(page, href_prefix='' if item.is_current else item.url)
 
         if len(page.children) > 0:
-            if toc_expansion > 1 or item.is_selected:
+            if toc_depth > 1 or item.is_selected:
                 item.children += toc(page,
                                      processor=processor,
                                      current_page=current_page,
-                                     toc_expansion=toc_expansion - 1,
+                                     toc_depth=toc_depth - 1,
                                      combined_toc=combined_toc)
             else:
                 item.is_collapsed = True
