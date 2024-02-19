@@ -15,7 +15,7 @@ from sobiraka.processing import HtmlBuilder
 from sobiraka.processing.toc import Toc, TocItem, toc
 
 
-class AbstractTestCrossPageToc(ProjectTestCase):
+class AbstractTestTocDepth(ProjectTestCase):
     toc_depth: int | float
 
     async def asyncSetUp(self):
@@ -32,7 +32,7 @@ class AbstractTestCrossPageToc(ProjectTestCase):
     def _init_processor(self):
         return HtmlBuilder(self.project, self.output)
 
-    async def test_subtree_toc(self):
+    async def test_toc_depth(self):
         data = {
             Path('0-index.md'): expected_paths_from_root(self.toc_depth),
             Path('part1/0-index.md'): expected_paths_from_p1(self.toc_depth),
@@ -49,7 +49,7 @@ class AbstractTestCrossPageToc(ProjectTestCase):
                              toc_depth=self.toc_depth)
                 self.assertEqual(expected, actual)
 
-    async def test_global_toc_rendered(self):
+    async def test_toc_depth_rendered(self):
         data = {
             Path('0-index.md'): 'from-root.html',
             Path('part1/chapter1/section1/article1.md'): 'from-nonroot.html',
@@ -75,23 +75,23 @@ class AbstractTestCrossPageToc(ProjectTestCase):
                 assertNoDiff(expected.splitlines(), actual.splitlines())
 
 
-class TestCrossPageToc_1(AbstractTestCrossPageToc):
+class TestTocDepth_1(AbstractTestTocDepth):
     toc_depth = 1
 
 
-class TestCrossPageToc_2(AbstractTestCrossPageToc):
+class TestTocDepth_2(AbstractTestTocDepth):
     toc_depth = 2
 
 
-class TestCrossPageToc_3(AbstractTestCrossPageToc):
+class TestTocDepth_3(AbstractTestTocDepth):
     toc_depth = 3
 
 
-class TestCrossPageToc_Infinity(AbstractTestCrossPageToc):
+class TestTocDepth_Infinity(AbstractTestTocDepth):
     toc_depth = inf
 
 
-del ProjectTestCase, AbstractTestCrossPageToc
+del ProjectTestCase, AbstractTestTocDepth
 
 
 ################################################################################
