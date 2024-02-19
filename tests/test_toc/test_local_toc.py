@@ -5,8 +5,8 @@ from unittest.mock import Mock
 
 from abstracttests.abstracttestwithrt import AbstractTestWithRtPages
 from sobiraka.models import FileSystem, Page, Project, Volume
-from sobiraka.models.toc import Toc, TocItem, local_toc
 from sobiraka.processing.abstract import Processor
+from sobiraka.processing.toc import Toc, TocItem, local_toc
 
 
 class AbstractTestLocalToc(AbstractTestWithRtPages):

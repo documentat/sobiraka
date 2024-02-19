@@ -182,7 +182,7 @@ class Page:
         return self.volume.relative_root / self.path_in_volume
 
     def is_root(self) -> bool:
-        return False
+        return self.path_in_volume == Path('.')
 
     @cached_property
     def breadcrumbs(self) -> tuple[Page, ...]:

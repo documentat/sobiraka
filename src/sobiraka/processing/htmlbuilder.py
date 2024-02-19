@@ -89,7 +89,7 @@ class HtmlBuilder(ProjectProcessor):
             rmtree(directory, ignore_errors=True)
 
     async def generate_html_for_page(self, page: Page) -> str:
-        from ..models.toc import local_toc, toc
+        from .toc import local_toc, toc
 
         volume = page.volume
         project = page.volume.project

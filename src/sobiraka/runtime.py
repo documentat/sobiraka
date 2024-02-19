@@ -5,12 +5,11 @@ from collections import defaultdict
 from contextvars import ContextVar, copy_context
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Awaitable, Callable, TYPE_CHECKING, overload
+from typing import Awaitable, Callable, Literal, TYPE_CHECKING, overload
 
 from panflute import Doc, Image, Link
-
 from sobiraka.models import Anchors
-from sobiraka.utils import TocNumber, UNNUMBERED, UniqueList
+from sobiraka.utils import SKIP_NUMERATION, TocNumber, UniqueList, Unnumbered
 
 if TYPE_CHECKING:
     from sobiraka.models import Anchor, Href, Issue, Page, Volume
@@ -93,7 +92,7 @@ class PageRuntime:
     Do not rely on the value for page here until `process1()` is awaited for that page.
     """
 
-    number: TocNumber = UNNUMBERED
+    number: TocNumber | Literal[SKIP_NUMERATION] = Unnumbered()
     """
     Number of the page in the global TOC.
     """
@@ -117,7 +116,7 @@ class PageRuntime:
 
 @dataclass
 class AnchorRuntime:
-    number: TocNumber = None
+    number: TocNumber | Literal[SKIP_NUMERATION] = Unnumbered()
     """
     Number of the header in the global TOC.
     """

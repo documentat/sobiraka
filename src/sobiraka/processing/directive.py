@@ -2,13 +2,12 @@ from abc import ABCMeta, abstractmethod
 from typing import Iterable
 
 from panflute import Block, BulletList, Link, ListItem, Plain, Space, Str
-
 from sobiraka.models import Page
-from sobiraka.utils import UNNUMBERED
+from sobiraka.models.config import Config
+from sobiraka.processing.toc import Toc
+from sobiraka.utils import Unnumbered, replace_element
+
 from .abstract.processor import Processor
-from ..models.config import Config
-from ..models.toc import Toc
-from ..utils import replace_element
 
 
 class Directive(Block, metaclass=ABCMeta):
@@ -54,7 +53,7 @@ class TocDirective(Directive):
         """
         Replace the directive with a bullet list, based on a `toc()` call.
         """
-        from sobiraka.models.toc import toc
+        from sobiraka.processing.toc import toc
 
         toc = toc(processor=self.processor, base=self.page, current_page=self.page)
         bullet_list = BulletList(*self._make_items(toc))
@@ -65,7 +64,7 @@ class TocDirective(Directive):
 
         for item in toc:
             plain = Plain()
-            if config.content.numeration and item.number is not UNNUMBERED:
+            if config.content.numeration and item.number is not Unnumbered:
                 plain.content += Str(str(item.number)), Space()
             plain.content += Link(Str(item.title), url=item.url),
 

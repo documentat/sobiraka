@@ -16,6 +16,9 @@ class Anchor:
     def __repr__(self):
         return f'<{self.__class__.__name__}: {stringify(self.header.content)!r}>'
 
+    def __hash__(self):
+        return id(self)
+
     @staticmethod
     def from_header(header: Header) -> Anchor:
         return Anchor(header, header.identifier, label=stringify(header), level=header.level)

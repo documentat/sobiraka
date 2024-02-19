@@ -20,14 +20,13 @@ class TocNumber:
         return len(self._numbers) > 0
 
     def __eq__(self, other):
-        assert isinstance(other, TocNumber)
-        return self._numbers == other._numbers
+        return isinstance(other, TocNumber) and self._numbers == other._numbers
 
     def __hash__(self):
         return hash(self._numbers)
 
     def __str__(self):
-        return '.'.join(map(str, self._numbers))
+        return self.format('{}')
 
     def __repr__(self):
         return f'<{self.__class__.__name__}: {self}>'
@@ -35,6 +34,12 @@ class TocNumber:
     def __add__(self, value: int) -> TocNumber:
         assert isinstance(value, int)
         return TocNumber(*self._numbers[:-1], self._numbers[-1] + value)
+
+    def format(self, template: str) -> str:
+        return template.format('.'.join(map(str, self._numbers)))
+
+    def increased(self) -> TocNumber:
+        return TocNumber(*self._numbers[:-1], self._numbers[-1] + 1)
 
     def increased_at(self, level: int) -> TocNumber:
         """
@@ -50,19 +55,12 @@ class TocNumber:
         raise ValueError(f'Can\'t increase level {level} in {str(self)!r}.')
 
 
-class _Unnumbered(TocNumber):
-    def __init__(self):
-        super().__init__()
-
-    def __str__(self):
-        return 'UNNUMBERED'
+class Unnumbered(TocNumber):
+    def format(self, template: str) -> str:
+        return ''
 
     def __repr__(self):
-        return 'UNNUMBERED'
-
-    def __add__(self, value: int) -> TocNumber:
-        assert isinstance(value, int)
-        return TocNumber(value)
+        return f'{self.__class__.__name__}()'
 
 
-UNNUMBERED = _Unnumbered()
+SKIP_NUMERATION = 'SKIP_NUMERATION'

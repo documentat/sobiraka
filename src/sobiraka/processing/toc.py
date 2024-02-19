@@ -6,11 +6,10 @@ from typing import Iterable, TYPE_CHECKING
 
 import jinja2
 
-from sobiraka.models.config import Config
+from sobiraka.models.config import CombinedToc, Config
+from sobiraka.models.href import PageHref
 from sobiraka.runtime import RT
-from sobiraka.utils import TocNumber
-from .config import CombinedToc
-from .href import PageHref
+from sobiraka.utils import TocNumber, Unnumbered
 
 if TYPE_CHECKING:
     from sobiraka.models import Page, Volume
@@ -36,8 +35,8 @@ class TocItem:
     url: str
     """The link, most likely a relative URL of the target page."""
 
-    number: TocNumber = field(kw_only=True, default=None)
-    """The item's number. If `None` or `UNNUMBERED`, then the number must not be displayed."""
+    number: TocNumber | None = field(kw_only=True, default=Unnumbered())
+    """The item's number. If `None`, then the number must not be displayed."""
 
     is_current: bool = field(kw_only=True, default=False)
     """True if the item corresponds to the currently opened page."""
@@ -52,7 +51,10 @@ class TocItem:
     """List of this item's sub-items."""
 
     def __repr__(self):
-        parts = [repr(self.title), repr(self.url)]
+        parts: list[str] = [
+            repr(self.number.format('{}. ') + self.title),
+            repr(self.url),
+        ]
 
         if self.is_current:
             parts.append('current')
@@ -142,8 +144,8 @@ def toc(
 
     If not set explicitly, `toc_expansion` and `combined_toc` will use the values from the volume's `Config_HTML`.
     """
-    from .page import Page
-    from .volume import Volume
+    from sobiraka.models.page import Page
+    from sobiraka.models.volume import Volume
 
     tree = Toc()
 

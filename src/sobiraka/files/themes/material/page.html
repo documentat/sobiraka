@@ -148,9 +148,9 @@
                                             {% if item.is_current %}
                                                 <span class="md-nav__link caption"><span class="caption-text">{{ item.title }}</span></span>
                                             {% elif item.is_selected %}
-                                                <a class="md-nav__link nav__link--active" href="{{ item.url }}">{{ item.title }}</a>
+                                                <a class="md-nav__link nav__link--active" href="{{ item.url }}">{{ item.number.format('{}.') }}{{ item.title }}</a>
                                             {% elif item.is_collapsed %}
-                                                <a class="md-nav__link" href="{{ item.url }}">►{{ item.title }}</a>
+                                                <a class="md-nav__link" href="{{ item.url }}">►{{ item.number.format('{}.') }}{{ item.title }}</a>
                                             {% else %}
                                                 <a class="md-nav__link" href="{{ item.url }}">{{ item.title }}</a>
                                             {% endif %}
@@ -200,7 +200,10 @@
                 <div class="md-content">
                     <article class="md-content__inner md-typeset" role="main">
 
-                        <h1>{{ title }}</h1>
+                        <h1>
+                            {{ number.format('{}.') }}
+                            {{ title }}
+                        </h1>
 
                         {{ body }}
 

@@ -11,8 +11,8 @@ from bs4.formatter import Formatter
 from helpers import assertNoDiff
 from sobiraka.models import FileSystem, IndexPage, Page, Project, Volume
 from sobiraka.models.config import Config, Config_HTML
-from sobiraka.models.toc import Toc, TocItem, toc
 from sobiraka.processing import HtmlBuilder
+from sobiraka.processing.toc import Toc, TocItem, toc
 
 
 class AbstractTestCrossPageToc(ProjectTestCase):

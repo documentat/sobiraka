@@ -1,6 +1,6 @@
 from unittest import TestCase, main
 
-from sobiraka.utils import TocNumber, UNNUMBERED
+from sobiraka.utils import TocNumber
 
 
 class TestTocNumber(TestCase):
@@ -9,7 +9,6 @@ class TestTocNumber(TestCase):
             ('1 component', TocNumber(12), '12'),
             ('2 components', TocNumber(12, 34), '12.34'),
             ('3 components', TocNumber(12, 34, 56), '12.34.56'),
-            ('UNNUMBERED', UNNUMBERED, 'UNNUMBERED'),
         )
         for name, number, expected in data:
             with self.subTest(name):
@@ -21,7 +20,6 @@ class TestTocNumber(TestCase):
             ('1 component', TocNumber(12), '12.0'),
             ('2 components', TocNumber(12, 34), '12.34.0'),
             ('3 components', TocNumber(12, 34, 56), '12.34.56.0'),
-            ('UNNUMBERED', UNNUMBERED, '0'),
         )
         for name, number, expected in data:
             with self.subTest(name):
@@ -33,7 +31,6 @@ class TestTocNumber(TestCase):
             ('1 component', TocNumber(12), '13'),
             ('2 components', TocNumber(12, 34), '12.35'),
             ('3 components', TocNumber(12, 34, 56), '12.34.57'),
-            ('UNNUMBERED', UNNUMBERED, '1'),
         )
         for name, number, expected in data:
             with self.subTest(name):
@@ -45,7 +42,6 @@ class TestTocNumber(TestCase):
             ('1 component', TocNumber(12), '14'),
             ('2 components', TocNumber(12, 34), '12.36'),
             ('3 components', TocNumber(12, 34, 56), '12.34.58'),
-            ('UNNUMBERED', UNNUMBERED, '2'),
         )
         for name, number, expected in data:
             with self.subTest(name):
@@ -63,7 +59,6 @@ class TestTocNumber(TestCase):
             (TocNumber(12, 34, 56), 2, '12.35'),
             (TocNumber(12, 34, 56), 3, '12.34.57'),
             (TocNumber(12, 34, 56), 4, '12.34.56.1'),
-            (UNNUMBERED, 1, '1'),
         )
         for number, level, expected in data:
             with self.subTest(f'{number} → {expected}'):

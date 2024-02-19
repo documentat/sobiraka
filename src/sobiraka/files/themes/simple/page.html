@@ -16,9 +16,9 @@
                     {% if item.is_current %}
                         <span class='current'>{{ item.title }}</span>
                     {% elif item.is_selected %}
-                        <a class='selected' href='{{ item.url }}'>{{ item.title }}</a>
+                        {{ item.number.format('{}.') }} <a class='selected' href='{{ item.url }}'>{{ item.title }}</a>
                     {% else %}
-                        <a href='{{ item.url }}'>{{ item.title }}</a>
+                        {{ item.number.format('{}.') }} <a href='{{ item.url }}'>{{ item.title }}</a>
                     {% endif %}
 
                     {% if item.children %}
@@ -54,7 +54,10 @@
     <main>
         <article>
 
-            <h1>{{ title }}</h1>
+            <h1>
+                {{ number.format('{}.') }}
+                {{ title }}
+            </h1>
 
             {% set translations = project.get_all_translations(page) %}
             {% if translations | length > 1 %}

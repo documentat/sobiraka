@@ -1,14 +1,12 @@
-from os.path import relpath
-from os.path import relpath
 from pathlib import Path
 from unittest import main
 from unittest.mock import Mock
 
 from abstracttests.abstracttestwithrt import AbstractTestWithRtPages, AbstractTestWithRtTmp
-from sobiraka.models import FileSystem, Page, PageHref, Project, Volume
+from helpers.fakeprocessor import FakeProcessor
+from sobiraka.models import FileSystem, Page, Project, Volume
 from sobiraka.models.config import CombinedToc
-from sobiraka.models.toc import Toc, TocItem, toc
-from sobiraka.processing.abstract import Processor
+from sobiraka.processing.toc import Toc, TocItem, toc
 
 
 class TestCombinedToc(AbstractTestWithRtTmp, AbstractTestWithRtPages):
@@ -93,13 +91,6 @@ class TestCombinedToc(AbstractTestWithRtTmp, AbstractTestWithRtPages):
                              current_page=self.current_page,
                              combined_toc=setting)
                 self.assertEqual(str(expected), str(actual))
-
-
-class FakeProcessor(Processor):
-    def make_internal_url(self, href: PageHref, *, page: Page) -> str:
-        if page is href.target:
-            return ''
-        return relpath(href.target.path_in_volume, start=page.path_in_volume.parent)
 
 
 if __name__ == '__main__':

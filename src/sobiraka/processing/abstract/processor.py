@@ -19,8 +19,9 @@ from panflute import Cite, Code, Doc, Element, Header, Image, Link, Para, Space,
 from sobiraka.models import Anchor, BadLink, DirPage, Page, PageHref, Project, UrlHref, Volume
 from sobiraka.models.exceptions import DisableLink
 from sobiraka.runtime import RT
-from sobiraka.utils import TocNumber, UNNUMBERED, convert_or_none, on_demand, super_gather
+from sobiraka.utils import SKIP_NUMERATION, convert_or_none, on_demand, super_gather
 from .dispatcher import Dispatcher
+from ..numerate import numerate
 
 if TYPE_CHECKING:
     from ..directive import TocDirective
@@ -138,13 +139,13 @@ class Processor(Dispatcher):
         # If this is a top level header, use it as the page title
         if header.level == 1:
             RT[page].title = stringify(header)
-            if 'unnumbered' not in header.classes:
-                RT[page].number = None
+            if 'unnumbered' in header.classes:
+                RT[page].number = SKIP_NUMERATION
 
         else:
             anchor = Anchor.from_header(header)
             if 'unnumbered' in header.classes:
-                RT[anchor].number = UNNUMBERED
+                RT[anchor].number = SKIP_NUMERATION
             RT[page].anchors.append(anchor)
 
         return (header,)
@@ -206,38 +207,11 @@ class Processor(Dispatcher):
         await gather(*map(self.process2, volume.pages))
 
         if volume.config.content.numeration:
-            await self.numerate(volume)
+            numerate(volume.root_page.children)
 
         for page in volume.pages:
             for toc_placeholder in self.toc_placeholders[page]:
                 toc_placeholder.postprocess()
-
-    async def numerate(self, volume: Volume):
-        queue: list[tuple[TocNumber, tuple[Page, ...]]] = []
-        queue.append((UNNUMBERED, volume.pages))
-
-        while True:
-            try:
-                parent_number, pages = queue.pop(0)
-                page_counter = TocNumber(*parent_number, 0)
-                for page in pages:
-                    # Numerate the page itself
-                    if RT[page].number is not UNNUMBERED:
-                        page_counter += 1
-                        RT[page].number = page_counter
-
-                    # Numerate the page's anchors
-                    anchor_counter = TocNumber(*RT[page].number, 0)
-                    for anchor in RT[page].anchors:
-                        if RT[anchor].number is not UNNUMBERED:
-                            anchor_counter = anchor_counter.increased_at(len(page_counter) + anchor.level - 1)
-                            RT[anchor].number = anchor_counter
-
-                    # Enqueue numerating child pages
-                    queue.append((RT[page].number, page.children))
-
-            except IndexError:
-                break
 
     def print_issues(self) -> bool:
         issues_found: bool = False
