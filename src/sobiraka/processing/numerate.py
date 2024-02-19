@@ -10,6 +10,8 @@ def numerate(pages: Iterable[Page], counter: TocNumber = TocNumber(0)):
         # Skip if has to be skipped
         if RT[page].number == SKIP_NUMERATION:
             RT[page].number = Unnumbered()
+            for anchor in RT[page].anchors:
+                RT[anchor].number = Unnumbered()
             continue
 
         # Numerate the page itself
