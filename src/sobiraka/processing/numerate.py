@@ -2,16 +2,13 @@ from typing import Iterable
 
 from sobiraka.models import Page
 from sobiraka.runtime import RT
-from sobiraka.utils import SKIP_NUMERATION, TocNumber, Unnumbered
+from sobiraka.utils import TocNumber
 
 
 def numerate(pages: Iterable[Page], counter: TocNumber = TocNumber(0)):
     for page in pages:
         # Skip if has to be skipped
-        if RT[page].number == SKIP_NUMERATION:
-            RT[page].number = Unnumbered()
-            for anchor in RT[page].anchors:
-                RT[anchor].number = Unnumbered()
+        if RT[page].skip_numeration:
             continue
 
         # Numerate the page itself
@@ -30,8 +27,7 @@ def numerate(pages: Iterable[Page], counter: TocNumber = TocNumber(0)):
                     continue
                 skipping_lower_than = None
 
-            if RT[anchor].number == SKIP_NUMERATION:
-                RT[anchor].number = Unnumbered()
+            if RT[anchor].skip_numeration:
                 skipping_lower_than = anchor.level
                 continue
 

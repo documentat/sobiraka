@@ -19,7 +19,7 @@ from panflute import Cite, Code, Doc, Element, Header, Image, Link, Para, Space,
 from sobiraka.models import Anchor, BadLink, DirPage, Page, PageHref, Project, UrlHref, Volume
 from sobiraka.models.exceptions import DisableLink
 from sobiraka.runtime import RT
-from sobiraka.utils import SKIP_NUMERATION, convert_or_none, on_demand, super_gather
+from sobiraka.utils import convert_or_none, on_demand, super_gather
 from .dispatcher import Dispatcher
 from ..numerate import numerate
 
@@ -140,12 +140,12 @@ class Processor(Dispatcher):
         if header.level == 1:
             RT[page].title = stringify(header)
             if 'unnumbered' in header.classes:
-                RT[page].number = SKIP_NUMERATION
+                RT[page].skip_numeration = True
 
         else:
             anchor = Anchor.from_header(header)
             if 'unnumbered' in header.classes:
-                RT[anchor].number = SKIP_NUMERATION
+                RT[anchor].skip_numeration = True
             RT[page].anchors.append(anchor)
 
         return (header,)

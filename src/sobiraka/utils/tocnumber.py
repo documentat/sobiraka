@@ -61,6 +61,3 @@ class Unnumbered(TocNumber):
 
     def __repr__(self):
         return f'{self.__class__.__name__}()'
-
-
-SKIP_NUMERATION = 'SKIP_NUMERATION'
