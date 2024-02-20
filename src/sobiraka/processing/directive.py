@@ -7,7 +7,7 @@ from panflute import Block, BulletList, Link, ListItem, Plain, Space, Str
 
 from sobiraka.models import Page
 from sobiraka.models.config import CombinedToc, Config
-from sobiraka.processing.toc import Toc
+from sobiraka.processing.toc import Toc, toc
 from sobiraka.utils import Unnumbered, replace_element
 from .abstract.processor import Processor
 
@@ -49,7 +49,7 @@ class TocDirective(Directive):
         parser = ArgumentParser(add_help=False)
         parser.add_argument('--combined', action='store_true')
         parser.add_argument('--depth', type=int, default=inf)
-        parser.add_argument('--format', type=str, default='{}. ')
+        parser.add_argument('--format', type=str, default='{}.')
 
         args = parser.parse_args(argv)
         self.depth: int = args.depth
@@ -68,20 +68,18 @@ class TocDirective(Directive):
         """
         Replace the directive with a bullet list, based on a `toc()` call.
         """
-        from sobiraka.processing.toc import toc
-
-        toc = toc(self.page,
-                  processor=self.processor,
-                  current_page=self.page,
-                  toc_depth=self.depth,
-                  combined_toc=CombinedToc.ALWAYS if self.combined else CombinedToc.NEVER)
-        bullet_list = BulletList(*self._make_items(toc))
+        toc_items = toc(self.page,
+                        processor=self.processor,
+                        current_page=self.page,
+                        toc_depth=self.depth,
+                        combined_toc=CombinedToc.ALWAYS if self.combined else CombinedToc.NEVER)
+        bullet_list = BulletList(*self._make_items(toc_items))
         replace_element(self, bullet_list)
 
-    def _make_items(self, toc: Toc) -> Iterable[ListItem]:
+    def _make_items(self, toc_items: Toc) -> Iterable[ListItem]:
         config: Config = self.page.volume.config
 
-        for item in toc:
+        for item in toc_items:
             plain = Plain()
             if config.content.numeration and item.number is not Unnumbered:
                 plain.content += Str(item.number.format(self.format)), Space()
