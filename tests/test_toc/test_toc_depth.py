@@ -15,6 +15,12 @@ from sobiraka.models.config import CombinedToc, Config, Config_HTML
 from sobiraka.processing import HtmlBuilder
 from sobiraka.processing.toc import Toc, TocItem, toc
 
+"""
+Test that:
+- `config.html.toc_depth` affects which items are included in the TOC,
+- items with skipped children have the `is_collapsed` property set to True.
+"""
+
 
 class AbstractTestTocDepth(ProjectTestCase[HtmlBuilder]):
     toc_depth: int | float

@@ -12,6 +12,13 @@ from sobiraka.models.config import CombinedToc, Config, Config_Content
 from sobiraka.processing.toc import Toc, TocItem, toc
 from sobiraka.utils import TocNumber, Unnumbered
 
+"""
+Test that:
+- `config.content.numeration` affects whether `toc()` adds numbers to items,
+- numeration works correctly in a combined TOC with multiple levels of anchors,
+- `{-}` skips numeration for the given item and its children.
+"""
+
 
 class TestNumerate(ProjectTestCase[FakeProcessor], AbstractTestWithRtPages):
     numeration_enabled = True

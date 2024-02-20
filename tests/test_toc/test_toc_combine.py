@@ -9,6 +9,10 @@ from sobiraka.models import FileSystem, Page, Project, Volume
 from sobiraka.models.config import CombinedToc
 from sobiraka.processing.toc import Toc, TocItem, toc
 
+"""
+Test that the `combined_toc` argument affects whether local TOCs are embedded into the global TOC.
+"""
+
 
 class AbstractTestTocCombine(ProjectTestCase[FakeProcessor]):
     combine: CombinedToc
