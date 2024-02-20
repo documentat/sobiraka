@@ -6,7 +6,7 @@ from typing import Iterable, TYPE_CHECKING
 
 import jinja2
 
-from sobiraka.models.config import CombinedToc, Config
+from sobiraka.models.config import CombinedToc
 from sobiraka.models.href import PageHref
 from sobiraka.runtime import RT
 from sobiraka.utils import TocNumber, Unnumbered
@@ -35,7 +35,7 @@ class TocItem:
     url: str
     """The link, most likely a relative URL of the target page."""
 
-    number: TocNumber | None = field(kw_only=True, default=Unnumbered())
+    number: TocNumber = field(kw_only=True, default=Unnumbered())
     """The item's number. If `None`, then the number must not be displayed."""
 
     is_current: bool = field(kw_only=True, default=False)
@@ -118,9 +118,9 @@ def toc(
         base: Volume | Page,
         *,
         processor: Processor,
+        toc_depth: int | float,
+        combined_toc: CombinedToc,
         current_page: Page | None = None,
-        toc_depth: int = None,
-        combined_toc: CombinedToc = None,
 ) -> Toc:
     """
     Generate a Table Of Contents.
@@ -144,34 +144,20 @@ def toc(
 
     The `combined_toc` argument indicates whether to include local TOCs as subtrees of the TOC items.
     You may choose to always include them, never include them, or only include the current page's local TOC.
-
-    If not set explicitly, `toc_depth` and `combined_toc` will use the values from the volume's `Config_HTML`.
     """
     from sobiraka.models.page import Page
     from sobiraka.models.volume import Volume
 
-    tree = Toc()
-
-    volume: Volume
-    config: Config
     pages: Iterable[Page]
-
     match base:
         case Volume():
-            volume = base
-            config = volume.config
-            pages = volume.root_page.children
+            pages = base.root_page.children
         case Page():
-            volume = base.volume
-            config = volume.config
             pages = base.children
         case _:
             raise TypeError(base)
 
-    if toc_depth is None:
-        toc_depth = config.html.toc_depth
-    if combined_toc is None:
-        combined_toc = config.html.combined_toc
+    tree = Toc()
 
     for page in pages:
         item = TocItem(title=RT[page].title,

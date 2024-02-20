@@ -1,4 +1,5 @@
 import re
+import shlex
 import sys
 from abc import abstractmethod
 from asyncio import Task, create_subprocess_exec, create_task, gather
@@ -115,17 +116,18 @@ class Processor(Dispatcher):
         except AssertionError:
             return None
 
-        argv = [stringify(para.content[0])]
+        line = ''
         for item in para.content[1:]:
             match item:
                 case Str():
-                    argv.append(item.text)
+                    line += item.text
                 case Space():
-                    pass
+                    line += ' '
                 case _:
                     raise TypeError(item)
+        argv = shlex.split(line)
 
-        match argv[0]:
+        match stringify(para.content[0]):
             case '@toc':
                 from ..directive import TocDirective
                 return TocDirective(self, page, argv)

@@ -5,17 +5,18 @@ from tempfile import TemporaryDirectory
 from unittest import main
 from unittest.mock import Mock
 
-from abstracttests.projecttestcase import ProjectTestCase
 from bs4 import BeautifulSoup
 from bs4.formatter import Formatter
+
+from abstracttests.projecttestcase import ProjectTestCase
 from helpers import assertNoDiff
 from sobiraka.models import FileSystem, IndexPage, Page, Project, Volume
-from sobiraka.models.config import Config, Config_HTML
+from sobiraka.models.config import CombinedToc, Config, Config_HTML
 from sobiraka.processing import HtmlBuilder
 from sobiraka.processing.toc import Toc, TocItem, toc
 
 
-class AbstractTestTocDepth(ProjectTestCase):
+class AbstractTestTocDepth(ProjectTestCase[HtmlBuilder]):
     toc_depth: int | float
 
     async def asyncSetUp(self):
@@ -45,8 +46,9 @@ class AbstractTestTocDepth(ProjectTestCase):
             with self.subTest(page):
                 actual = toc(page,
                              processor=self.processor,
-                             current_page=page,
-                             toc_depth=self.toc_depth)
+                             toc_depth=self.toc_depth,
+                             combined_toc=CombinedToc.NEVER,
+                             current_page=page)
                 self.assertEqual(expected, actual)
 
     async def test_toc_depth_rendered(self):
@@ -66,8 +68,9 @@ class AbstractTestTocDepth(ProjectTestCase):
 
                 actual = toc(self.project.get_volume(),
                              processor=self.processor,
-                             current_page=page,
-                             toc_depth=self.toc_depth)
+                             toc_depth=self.toc_depth,
+                             combined_toc=CombinedToc.NEVER,
+                             current_page=page)
                 actual = str(actual)
                 actual = BeautifulSoup(actual, 'html.parser').prettify(formatter=Formatter(Formatter.HTML, indent=2))
                 actual = re.sub(r'<(a|strong)([^>]*)>\n\s+([^>]+)\n\s+</\1>', r'<\1\2>\3</\1>', actual)
