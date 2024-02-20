@@ -30,9 +30,6 @@ class AbstractTestTocCombine(ProjectTestCase[FakeProcessor]):
             })
         })
 
-    def _init_processor(self):
-        return FakeProcessor()
-
     def test_toc_combine(self):
         self.maxDiff = None
 

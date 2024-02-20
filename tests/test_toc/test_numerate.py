@@ -65,9 +65,6 @@ class TestNumerate(ProjectTestCase[FakeProcessor], AbstractTestWithRtPages):
             })
         })
 
-    def _init_processor(self) -> FakeProcessor:
-        return FakeProcessor()
-
     async def test_numeration(self):
         expected = expected_data(self.numeration_enabled)
 
