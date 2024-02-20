@@ -1,22 +1,21 @@
+from math import inf
 from pathlib import Path
 from unittest import main
 from unittest.mock import Mock
 
-from abstracttests.abstracttestwithrt import AbstractTestWithRtPages, AbstractTestWithRtTmp
+from abstracttests.projecttestcase import ProjectTestCase
 from helpers.fakeprocessor import FakeProcessor
 from sobiraka.models import FileSystem, Page, Project, Volume
 from sobiraka.models.config import CombinedToc
 from sobiraka.processing.toc import Toc, TocItem, toc
 
 
-class AbstractTestTocCombine(AbstractTestWithRtTmp, AbstractTestWithRtPages):
+class AbstractTestTocCombine(ProjectTestCase[FakeProcessor]):
     combine: CombinedToc
     expected: Toc
 
-    async def asyncSetUp(self):
-        await super().asyncSetUp()
-
-        self.project = Project(Mock(FileSystem), {
+    def _init_project(self) -> Project:
+        return Project(Mock(FileSystem), {
             Path('src'): Volume({
                 Path('section1'): Page('# Section 1\n## Paragraph 1'),
                 Path('section1/page1.md'): Page('# Page 1.1\n## Paragraph 1'),  # <- current page
@@ -26,20 +25,19 @@ class AbstractTestTocCombine(AbstractTestWithRtTmp, AbstractTestWithRtPages):
                 Path('section2/page2.md'): Page('# Page 2.2\n## Paragraph 1'),
             })
         })
-        self.volume = self.project.get_volume()
-        self.processor = FakeProcessor()
-        for page in self.volume.pages:
-            await self.processor.process1(page)
 
-        self.current_page = self.volume.pages_by_path[Path('section1/page1.md')]
+    def _init_processor(self):
+        return FakeProcessor()
 
     def test_toc_combine(self):
         self.maxDiff = None
 
-        actual = toc(self.volume,
+        volume = self.project.get_volume()
+        actual = toc(volume,
                      processor=self.processor,
-                     current_page=self.current_page,
-                     combined_toc=self.combine)
+                     toc_depth=inf,
+                     combined_toc=self.combine,
+                     current_page=volume.pages_by_path[Path('section1/page1.md')])
         self.assertEqual(str(self.expected), str(actual))
 
 
@@ -97,7 +95,7 @@ class TestTocCombine_Always(AbstractTestTocCombine):
     )
 
 
-del AbstractTestTocCombine
+del ProjectTestCase, AbstractTestTocCombine
 
 if __name__ == '__main__':
     main()
