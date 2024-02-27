@@ -77,7 +77,7 @@ class Config_HTML:
 
     theme_data: dict[str, Any] = field(default=dict)
 
-    toc_expansion: int | float = inf
+    toc_depth: int | float = inf
 
     combined_toc: CombinedToc = CombinedToc.NEVER
 

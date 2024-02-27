@@ -3,9 +3,10 @@ from abc import ABCMeta, abstractmethod
 from asyncio import gather
 from pathlib import Path
 from typing import Any, Generic, Iterable, TypeVar
-from unittest import IsolatedAsyncioTestCase, SkipTest
+from unittest import SkipTest
 
 from abstracttests.abstracttestwithrt import AbstractTestWithRtPages
+from helpers.fakeprocessor import FakeProcessor
 from sobiraka.models import Page, Project
 from sobiraka.processing.abstract import Processor
 from sobiraka.runtime import RT
@@ -30,7 +31,7 @@ class ProjectTestCase(AbstractTestWithRtPages, Generic[T], metaclass=ABCMeta):
         ...
 
     def _init_processor(self) -> T:
-        return Processor()
+        return FakeProcessor()
 
     def subTest(self, msg: Any = ..., **params: Any):
         if isinstance(msg, Page):

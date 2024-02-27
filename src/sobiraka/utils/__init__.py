@@ -5,6 +5,6 @@ from .panflute_utils import panflute_to_bytes
 from .raw import HtmlBlock, HtmlInline, LatexBlock, LatexInline
 from .replace_element import replace_element
 from .super_gather import super_gather
-from .tocnumber import SKIP_NUMERATION, TocNumber, Unnumbered
+from .tocnumber import TocNumber, Unnumbered
 from .unique_list import UniqueList
 from .validate_dictionary import validate_dictionary

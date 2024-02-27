@@ -1,4 +1,5 @@
 import re
+import shlex
 import sys
 from abc import abstractmethod
 from asyncio import Task, create_subprocess_exec, create_task, gather
@@ -19,7 +20,7 @@ from panflute import Cite, Code, Doc, Element, Header, Image, Link, Para, Space,
 from sobiraka.models import Anchor, BadLink, DirPage, Page, PageHref, Project, UrlHref, Volume
 from sobiraka.models.exceptions import DisableLink
 from sobiraka.runtime import RT
-from sobiraka.utils import SKIP_NUMERATION, convert_or_none, on_demand, super_gather
+from sobiraka.utils import convert_or_none, on_demand, super_gather
 from .dispatcher import Dispatcher
 from ..numerate import numerate
 
@@ -115,17 +116,18 @@ class Processor(Dispatcher):
         except AssertionError:
             return None
 
-        argv = [stringify(para.content[0])]
+        line = ''
         for item in para.content[1:]:
             match item:
                 case Str():
-                    argv.append(item.text)
+                    line += item.text
                 case Space():
-                    pass
+                    line += ' '
                 case _:
                     raise TypeError(item)
+        argv = shlex.split(line)
 
-        match argv[0]:
+        match stringify(para.content[0]):
             case '@toc':
                 from ..directive import TocDirective
                 return TocDirective(self, page, argv)
@@ -140,12 +142,12 @@ class Processor(Dispatcher):
         if header.level == 1:
             RT[page].title = stringify(header)
             if 'unnumbered' in header.classes:
-                RT[page].number = SKIP_NUMERATION
+                RT[page].skip_numeration = True
 
         else:
             anchor = Anchor.from_header(header)
             if 'unnumbered' in header.classes:
-                RT[anchor].number = SKIP_NUMERATION
+                RT[anchor].skip_numeration = True
             RT[page].anchors.append(anchor)
 
         return (header,)

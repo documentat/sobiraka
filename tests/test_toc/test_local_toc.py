@@ -8,6 +8,11 @@ from sobiraka.models import FileSystem, Page, Project, Volume
 from sobiraka.processing.abstract import Processor
 from sobiraka.processing.toc import Toc, TocItem, local_toc
 
+"""
+Test that `local_toc()` builds the hierarchy correctly.
+This tests do not use a full project, instead calling `local_toc()` for a single `Page`.
+"""
+
 
 class AbstractTestLocalToc(AbstractTestWithRtPages):
     source: str

@@ -1,6 +1,6 @@
 from unittest import TestCase, main
 
-from sobiraka.utils import TocNumber
+from sobiraka.utils import TocNumber, Unnumbered
 
 
 class TestTocNumber(TestCase):
@@ -9,10 +9,23 @@ class TestTocNumber(TestCase):
             ('1 component', TocNumber(12), '12'),
             ('2 components', TocNumber(12, 34), '12.34'),
             ('3 components', TocNumber(12, 34, 56), '12.34.56'),
+            ('Unnumbered', Unnumbered(), ''),
         )
         for name, number, expected in data:
             with self.subTest(name):
                 actual = str(number)
+                self.assertEqual(expected, actual)
+
+    def test_format(self):
+        data: tuple[tuple[str, TocNumber, str], ...] = (
+            ('1 component', TocNumber(12), '<12>'),
+            ('2 components', TocNumber(12, 34), '<12.34>'),
+            ('3 components', TocNumber(12, 34, 56), '<12.34.56>'),
+            ('Unnumbered', Unnumbered(), ''),
+        )
+        for name, number, expected in data:
+            with self.subTest(name):
+                actual = number.format('<{}>')
                 self.assertEqual(expected, actual)
 
     def test_append_zero(self):
