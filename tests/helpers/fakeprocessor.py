@@ -1,10 +1,10 @@
 from os.path import relpath
 
 from sobiraka.models import Page, PageHref
-from sobiraka.processing.abstract import Processor
+from sobiraka.processing.abstract import ProjectProcessor
 
 
-class FakeProcessor(Processor):
+class FakeProcessor(ProjectProcessor):
     def make_internal_url(self, href: PageHref, *, page: Page) -> str:
         if page is href.target:
             return ''

@@ -4,7 +4,7 @@ from unittest import main
 from unittest.mock import Mock
 
 from abstracttests.abstracttestwithrt import AbstractTestWithRtPages
-from sobiraka.models import FileSystem, Page, Project, Volume
+from sobiraka.models import FileSystem, Page, PageStatus, Project, Volume
 from sobiraka.processing.abstract import Processor
 from sobiraka.processing.toc import Toc, TocItem, local_toc
 
@@ -25,7 +25,7 @@ class AbstractTestLocalToc(AbstractTestWithRtPages):
                     (page := Page(dedent(self.source))),
             }),
         })
-        await Processor().process1(page)
+        await Processor().require(page, PageStatus.PROCESS1)
         actual = local_toc(page, href_prefix='page.html')
         self.assertEqual(self.expected, actual)
 

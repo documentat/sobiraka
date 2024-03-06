@@ -14,7 +14,7 @@ class AbstractLintingTest(ProjectDirTestCase[Linter]):
         for page, expected in self.for_each_expected('.issues'):
             with self.subTest(page):
                 expected = expected.read_text().splitlines()
-                await self.processor.check()
+                await self.processor.run()
                 actual_issues = RT[page].issues
                 actual = list(map(str, actual_issues))
                 assertNoDiff(expected, actual)

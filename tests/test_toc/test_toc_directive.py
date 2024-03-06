@@ -6,12 +6,14 @@ from panflute import BulletList, Element, Link, ListItem, Plain, Space, Str
 
 from abstracttests.projecttestcase import ProjectTestCase
 from helpers.fakeprocessor import FakeProcessor
-from sobiraka.models import FileSystem, Page, Project, Volume
+from sobiraka.models import FileSystem, Page, PageStatus, Project, Volume
 from sobiraka.models.config import Config, Config_Content
 from sobiraka.runtime import RT
 
 
 class AbstractTestTocDirective(ProjectTestCase[FakeProcessor]):
+    REQUIRE = PageStatus.PROCESS3
+
     numeration: bool = False
     directive: str
     expected: Element
@@ -37,10 +39,7 @@ class AbstractTestTocDirective(ProjectTestCase[FakeProcessor]):
         })
 
     async def test_toc_directive(self):
-        # self.assertEqual(self.toc_mock.)
         volume = self.project.get_volume()
-        await self.processor.process3(volume)
-
         actual = RT[volume.root_page].doc.content[0]
         self.assertEqual(self.expected, actual)
 

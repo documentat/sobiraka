@@ -7,7 +7,7 @@ from abstracttests.abstracttestwithrt import AbstractTestWithRtPages
 from abstracttests.projecttestcase import ProjectTestCase
 from helpers.fakefilesystem import FakeFileSystem
 from helpers.fakeprocessor import FakeProcessor
-from sobiraka.models import Page, Project, Volume
+from sobiraka.models import Page, PageStatus, Project, Volume
 from sobiraka.models.config import CombinedToc, Config, Config_Content
 from sobiraka.processing.toc import Toc, TocItem, toc
 from sobiraka.utils import TocNumber, Unnumbered
@@ -21,6 +21,7 @@ Test that:
 
 
 class TestNumerate(ProjectTestCase[FakeProcessor], AbstractTestWithRtPages):
+    REQUIRE = PageStatus.PROCESS3
     numeration_enabled = True
 
     def _init_project(self) -> Project:
@@ -68,7 +69,6 @@ class TestNumerate(ProjectTestCase[FakeProcessor], AbstractTestWithRtPages):
     async def test_numeration(self):
         expected = expected_data(self.numeration_enabled)
 
-        await self.processor.process3(self.project.get_volume())
         actual = toc(self.project.get_volume(),
                      processor=self.processor,
                      toc_depth=inf,

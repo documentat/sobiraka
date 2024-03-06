@@ -10,6 +10,7 @@ setup(
         'beautifulsoup4~=4.12.2',
         'checksumdir~=1.2.0',
         'clint~=0.5.1',
+        'colorama~=0.4.6',
         'diskcache~=5.6.1',
         'gitpython~=3.1.30',
         'jinja2~=3.1.2',

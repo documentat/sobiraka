@@ -8,6 +8,14 @@ class Issue:
 
 
 @dataclass(order=True, frozen=True)
+class BadImage(Issue):
+    target: str
+
+    def __str__(self):
+        return f'Image not found: {self.target}'
+
+
+@dataclass(order=True, frozen=True)
 class BadLink(Issue):
     target: str
 

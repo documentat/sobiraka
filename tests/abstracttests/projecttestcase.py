@@ -1,15 +1,15 @@
 import inspect
 from abc import ABCMeta, abstractmethod
-from asyncio import gather
+from asyncio import create_task
 from pathlib import Path
 from typing import Any, Generic, Iterable, TypeVar
 from unittest import SkipTest
 
 from abstracttests.abstracttestwithrt import AbstractTestWithRtPages
 from helpers.fakeprocessor import FakeProcessor
-from sobiraka.models import Page, Project
+from sobiraka.models import Page, PageStatus, Project
 from sobiraka.processing.abstract import Processor
-from sobiraka.runtime import RT
+from sobiraka.utils import super_gather
 
 T = TypeVar('T', bound=Processor)
 
@@ -17,21 +17,28 @@ T = TypeVar('T', bound=Processor)
 class ProjectTestCase(AbstractTestWithRtPages, Generic[T], metaclass=ABCMeta):
     maxDiff = None
 
+    REQUIRE: PageStatus = PageStatus.PROCESS2
+
     async def asyncSetUp(self):
         await super().asyncSetUp()
 
         self.project = self._init_project()
         self.processor: T = self._init_processor()
 
-        awaitables = tuple(self.processor.process2(page) for page in self.project.pages)
-        await gather(*awaitables)
+        await self._process()
 
     @abstractmethod
     def _init_project(self) -> Project:
         ...
 
     def _init_processor(self) -> T:
-        return FakeProcessor()
+        return FakeProcessor(self.project)
+
+    async def _process(self):
+        tasks = []
+        for page in self.project.pages:
+            tasks.append(create_task(self.processor.require(page, self.REQUIRE)))
+        await super_gather(tasks)
 
     def subTest(self, msg: Any = ..., **params: Any):
         if isinstance(msg, Page):
@@ -54,8 +61,3 @@ class ProjectTestCase(AbstractTestWithRtPages, Generic[T], metaclass=ABCMeta):
                     raise SkipTest
         if not ok:
             raise SkipTest
-
-    def test_issues(self):
-        for page in self.project.pages:
-            with self.subTest(page):
-                self.assertEqual([], RT[page].issues)

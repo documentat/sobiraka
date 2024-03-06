@@ -4,7 +4,7 @@ import os
 from collections import defaultdict
 from contextvars import ContextVar, copy_context
 from pathlib import Path
-from typing import Awaitable, Callable, TYPE_CHECKING, overload
+from typing import Coroutine, TYPE_CHECKING, overload
 
 from .anchorruntime import AnchorRuntime
 from .pageruntime import PageRuntime
@@ -32,10 +32,10 @@ class Runtime:
         RT.ANCHORS.set(defaultdict(AnchorRuntime))
 
     @classmethod
-    async def run_isolated(cls, func: Callable[..., Awaitable]):
+    async def run_isolated(cls, func: Coroutine):
         async def wrapped_func():
             cls.init_context_vars()
-            return await func()
+            return await func
 
         ctx = copy_context()
         return await ctx.run(wrapped_func)

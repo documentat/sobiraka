@@ -7,7 +7,7 @@ from panflute import BlockQuote, BulletList, Caption, Citation, Cite, Code, Code
     Span, Str, Strikeout, Strong, Subscript, Superscript, Table, TableBody, TableCell, TableFoot, TableHead, TableRow, \
     Underline
 
-from sobiraka.models import Page, Volume
+from sobiraka.models import Page, PageStatus, Volume
 from sobiraka.processing.abstract import Processor
 from .exceptions_regexp import exceptions_regexp
 from .textmodel import Fragment, Pos, TextModel
@@ -24,7 +24,7 @@ class LintPreprocessor(Processor):
         self._tm: dict[Page, TextModel] = defaultdict(lambda: TextModel(exceptions_regexp=regexp))
 
     async def tm(self, page: Page) -> TextModel:
-        await self.process2(page)
+        await self.require(page, PageStatus.PROCESS2)
         return self._tm[page]
 
     def _atomic(self, page: Page, elem: Element, text: str):

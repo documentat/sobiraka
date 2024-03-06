@@ -6,7 +6,7 @@ from pathlib import Path
 from sobiraka.cache import init_cache
 from sobiraka.linter import Linter
 from sobiraka.models.load import load_project
-from sobiraka.processing import HtmlBuilder, PdfBuilder
+from sobiraka.processing import HtmlBuilder, PdfBuilder, run_with_progressbar
 from sobiraka.runtime import RT
 from sobiraka.translating import changelog, check_translations
 from sobiraka.utils import validate_dictionary
@@ -72,7 +72,7 @@ async def async_main():
         if cmd is cmd_html:
             project = load_project(args.project)
             builder = HtmlBuilder(project, args.output, hide_index_html=args.hide_index_html)
-            exit_code = await RT.run_isolated(builder.run)
+            exit_code = await RT.run_isolated(run_with_progressbar(builder))
 
         elif cmd is cmd_pdf:
             project = load_project(args.project)
@@ -84,7 +84,7 @@ async def async_main():
                     output /= f'{volume.config.title}.pdf'
                 print(f'Building {output.name!r}...', file=sys.stderr)
                 builder = PdfBuilder(volume, output)
-                exit_code = await RT.run_isolated(builder.run)
+                exit_code = await RT.run_isolated(run_with_progressbar(builder))
 
             else:
                 assert output.suffix.lower() != '.pdf'
@@ -93,7 +93,7 @@ async def async_main():
                     output_file = output / f'{volume.config.title}.pdf'
                     print(f'Building {output_file.name!r}...', file=sys.stderr)
                     builder = PdfBuilder(volume, output_file)
-                    exit_code = await RT.run_isolated(builder.run)
+                    exit_code = await RT.run_isolated(run_with_progressbar(builder))
                     if exit_code != 0:
                         break
 
@@ -101,9 +101,7 @@ async def async_main():
             project = load_project(args.project)
             volume = project.get_volume(args.volume)
             linter = Linter(volume)
-            exit_code = await RT.run_isolated(linter.check)
-            if exit_code != 0:
-                linter.print_issues()
+            exit_code = await RT.run_isolated(run_with_progressbar(linter))
 
         elif cmd is cmd_validate_dictionary:
             exit_code = validate_dictionary(args.dic, autofix=args.autofix)

@@ -1,3 +1,5 @@
+from contextlib import suppress
+
 from abstracttests.projectdirtestcase import ProjectDirTestCase
 from sobiraka.models import BadLink, Href, Issue, Page, PageHref, UrlHref
 from sobiraka.runtime import RT
@@ -24,6 +26,10 @@ class AbstractTestLinksBad(ProjectDirTestCase):
         )
         actual_ids = tuple(page.id for page in self.project.pages)
         self.assertSequenceEqual(expected_ids, actual_ids)
+
+    async def _process(self):
+        with suppress(ExceptionGroup):
+            await super()._process()
 
     def test_issues(self):
         data: dict[Page, list[Issue]] = {

@@ -3,7 +3,7 @@ from __future__ import annotations
 import os.path
 import re
 import sys
-from asyncio import Task, create_subprocess_exec, create_task, gather, to_thread
+from asyncio import Task, create_subprocess_exec, create_task, to_thread
 from datetime import datetime
 from functools import partial
 from itertools import chain
@@ -15,12 +15,13 @@ from subprocess import PIPE
 import iso639
 from aiofiles.os import makedirs
 from panflute import Element, Header, Image
-from sobiraka.models import DirPage, IndexPage, Page, PageHref, Project, Volume
-from sobiraka.runtime import RT
-from sobiraka.utils import panflute_to_bytes
 
+from sobiraka.models import DirPage, IndexPage, Page, PageHref, PageStatus, Project, Volume
+from sobiraka.runtime import RT
+from sobiraka.utils import panflute_to_bytes, super_gather
 from .abstract import ProjectProcessor
 from .plugin import HtmlTheme, load_html_theme
+from ..models.config import Config
 
 
 class HtmlBuilder(ProjectProcessor):
@@ -29,7 +30,7 @@ class HtmlBuilder(ProjectProcessor):
         self.output: Path = output
         self.hide_index_html: bool = hide_index_html
 
-        self._additional_tasks: list[Task] = []
+        self._html_builder_tasks: list[Task] = []
         self._results: set[Path] = set()
 
         self._themes: dict[Volume, HtmlTheme] = {}
@@ -48,30 +49,29 @@ class HtmlBuilder(ProjectProcessor):
             for source_path in theme.static_dir.rglob('**/*'):
                 if source_path.is_file():
                     target_path = self.output / '_static' / source_path.relative_to(theme.static_dir)
-                    self._additional_tasks.append(create_task(self.copy_file_from_theme(source_path, target_path)))
+                    self._html_builder_tasks.append(create_task(self.copy_file_from_theme(source_path, target_path)))
 
             # Copy additional static files
             for filename in volume.config.html.resources_force_copy:
                 source_path = (volume.config.paths.resources or volume.config.paths.root) / filename
                 target_path = self.output / volume.config.html.resources_prefix / filename
-                self._additional_tasks.append(create_task(self.copy_file_from_project(source_path, target_path)))
+                self._html_builder_tasks.append(create_task(self.copy_file_from_project(source_path, target_path)))
 
             # Compile SASS styles
             for source_path, target_path in theme.sass_files.items():
                 source_path = project.fs.resolve(theme.theme_dir / source_path)
                 target_path = self.output / '_static' / target_path
                 if target_path not in self._results:
-                    self._additional_tasks.append(create_task(self.compile_sass(source_path, target_path)))
+                    self._html_builder_tasks.append(create_task(self.compile_sass(source_path, target_path)))
 
         # Generate the HTML pages in no particular order
-        generating: list[Task] = []
         for page in project.pages:
-            generating.append(create_task(self.generate_html_for_page(page)))
-        await gather(*generating)
+            self._html_builder_tasks.append(create_task(self.require(page, PageStatus.PROCESS4),
+                                                        name=f'generate html for {page.path_in_project}'))
 
-        # Wait until all additional files will be copied to the output directory
+        # Wait until all pages will be generated and all additional files will be copied to the output directory
         # This may include tasks that started as a side effect of generating the HTML pages
-        await gather(*self._additional_tasks)
+        await super_gather(self._html_builder_tasks, 'Some tasks failed when building HTML')
 
         # Delete files that were not produced during this build
         all_files = set()
@@ -88,13 +88,11 @@ class HtmlBuilder(ProjectProcessor):
         for directory in dirs_to_delete:
             rmtree(directory, ignore_errors=True)
 
-    async def generate_html_for_page(self, page: Page) -> str:
+    async def process4(self, page: Page):
         from .toc import local_toc, toc
 
         volume = page.volume
         project = page.volume.project
-
-        await self.process3(page.volume)
 
         theme = self._themes[volume]
         if theme.__class__ is not HtmlTheme:
@@ -125,7 +123,7 @@ class HtmlBuilder(ProjectProcessor):
             page=page,
 
             number=RT[page].number,
-            title=RT[page].title or 'Untitled',  # TODO why is title not there?
+            title=RT[page].title,
             body=html.decode('utf-8').strip(),
 
             now=datetime.now(),
@@ -149,7 +147,6 @@ class HtmlBuilder(ProjectProcessor):
         target_file.parent.mkdir(parents=True, exist_ok=True)
         target_file.write_text(html, encoding='utf-8')
         self._results.add(target_file)
-        return html
 
     def get_target_path(self, page: Page) -> Path:
         target_path = Path()
@@ -220,18 +217,20 @@ class HtmlBuilder(ProjectProcessor):
         return elems
 
     async def process_image(self, image: Image, page: Page) -> tuple[Image, ...]:
-        config = page.volume.config
+        config: Config = page.volume.config
 
         # Run the default processing
         # It is important to run it first, since it normalizes the path
         image, = await super().process_image(image, page)
         assert isinstance(image, Image)
+        if image.url is None:
+            return
 
         # Schedule copying the image file to the output directory
         source_path = config.paths.resources / image.url
         target_path = self.output / config.html.resources_prefix / image.url
-        if target_path not in self._additional_tasks:
-            self._additional_tasks.append(create_task(self.copy_file_from_project(source_path, target_path)))
+        if target_path not in self._html_builder_tasks:
+            self._html_builder_tasks.append(create_task(self.copy_file_from_project(source_path, target_path)))
 
         # Use the path relative to the page path
         # (we postpone the actual change in the element to not confuse the HtmlTheme custom code later)

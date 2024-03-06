@@ -21,9 +21,6 @@ _META_PATTERN = re.compile(r'^---\n(.+\n)?---\n', re.DOTALL)
 class Page:
     """
     Representation of a single source file in the documentation.
-
-    During the processing by the :func:`.load_page()`, :func:`.process1()` and :func:`.process2()` functions,
-    some of the page's fields may be altered.
     """
 
     @overload

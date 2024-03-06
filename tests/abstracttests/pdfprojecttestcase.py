@@ -2,6 +2,7 @@ import hashlib
 from asyncio import create_subprocess_exec
 
 from helpers import assertNoDiff
+from sobiraka.models import PageStatus
 from sobiraka.processing import PdfBuilder
 from sobiraka.runtime import RT
 from .abstracttestwithrt import AbstractTestWithRtTmp
@@ -9,6 +10,8 @@ from .projectdirtestcase import ProjectDirTestCase
 
 
 class PdfProjectTestCase(ProjectDirTestCase[PdfBuilder], AbstractTestWithRtTmp):
+    REQUIRE = PageStatus.PROCESS4
+
     def _init_processor(self):
         return PdfBuilder(self.project.volumes[0], RT.TMP / 'test.pdf')
 
@@ -16,7 +19,6 @@ class PdfProjectTestCase(ProjectDirTestCase[PdfBuilder], AbstractTestWithRtTmp):
         for page, expected in self.for_each_expected('.tex', subdir='tex'):
             with self.subTest(page):
                 expected = expected.read_text().splitlines()
-                await self.processor.generate_latex_for_page(page)
                 actual = RT[page].latex.decode('utf-8').splitlines()
                 assertNoDiff(expected, actual)
 

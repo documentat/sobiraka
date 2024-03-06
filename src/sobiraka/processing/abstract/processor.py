@@ -1,8 +1,7 @@
 import re
 import shlex
-import sys
 from abc import abstractmethod
-from asyncio import Task, create_subprocess_exec, create_task, gather
+from asyncio import Task, create_subprocess_exec, create_task
 from collections import defaultdict
 from contextlib import suppress
 from functools import partial
@@ -17,10 +16,12 @@ import panflute
 from jinja2 import StrictUndefined
 from panflute import Cite, Code, Doc, Element, Header, Image, Link, Para, Space, Str, Table, stringify
 
-from sobiraka.models import Anchor, BadLink, DirPage, Page, PageHref, Project, UrlHref, Volume
-from sobiraka.models.exceptions import DisableLink
+from sobiraka.models import Anchor, BadImage, BadLink, DirPage, FileSystem, Page, PageHref, PageStatus, Project, \
+    UrlHref, Volume
+from sobiraka.models.config import Config
+from sobiraka.models.exceptions import DependencyFailed, DisableLink, IssuesOccurred, VolumeFailed
 from sobiraka.runtime import RT
-from sobiraka.utils import convert_or_none, on_demand, super_gather
+from sobiraka.utils import convert_or_none, super_gather
 from .dispatcher import Dispatcher
 from ..numerate import numerate
 
@@ -31,6 +32,16 @@ if TYPE_CHECKING:
 class Processor(Dispatcher):
     # pylint: disable=too-many-instance-attributes
     def __init__(self):
+        self.message: str = None
+        """
+        Text message describing what the processor is currently doing.
+        Will be displayed next to the progressbar.
+        """
+
+        self.tasks: dict[Page | Volume, dict[PageStatus, Task]] = defaultdict(dict)
+        """
+        Dictionary of all tasks that the processor has started. Managed by `create_page_task()`.
+        """
 
         self.jinja: dict[Volume, jinja2.Environment] = {}
 
@@ -41,11 +52,132 @@ class Processor(Dispatcher):
         return f'<{self.__class__.__name__} at {hex(id(self))}>'
 
     @abstractmethod
+    async def run(self):
+        ...
+
+    @abstractmethod
+    def get_project(self) -> Project:
+        ...
+
+    @abstractmethod
+    def get_volumes(self) -> tuple[Volume, ...]:
+        ...
+
+    @abstractmethod
     def get_pages(self) -> tuple[Page, ...]:
         ...
 
-    @on_demand
-    async def load_page(self, page: Page):
+    def create_page_task(self, page: Page, status: PageStatus) -> Task:
+        """
+        Creates (if not created) a Task that runs a function corresponding to the given PageStatus.
+
+        - For any status other than `PROCESS3`, the task is created as `self.tasks[page][status]`.
+
+        - For `PROCESS3`, the task is created as `self.tasks[volume][status]`.
+          For other pages from the same Volume, the same Task will be returned,
+          and no new calls of `process3()` will be made.
+
+        This function is synchronous, so that there is never any confusion
+        about which tasks are created and which are not,
+        no matter how many timed the higher-level `require()` function is called.
+        """
+        key = page.volume if status is PageStatus.PROCESS3 else page
+        try:
+            task = self.tasks[key][status]
+        except KeyError as exc:
+            match status:
+                case PageStatus.PREPARE:
+                    coro = self.prepare(page)
+                case PageStatus.PROCESS1:
+                    coro = self.process1(page)
+                case PageStatus.PROCESS2:
+                    coro = self.process2(page)
+                case PageStatus.PROCESS3:
+                    coro = self.process3(page.volume)
+                case PageStatus.PROCESS4:
+                    coro = self.process4(page)
+                case _:
+                    raise ValueError(status) from exc
+            task = self.tasks[key][status] = create_task(coro, name=f'{status.name} {page.path_in_project}')
+        return task
+
+    async def require(self, page: Page, target_status: PageStatus):
+        """
+        Perform all yet unperformed operations until the `page` will reach the `target_status`.
+        Do nothing if it has that status already.
+        """
+        # pylint: disable=too-many-branches
+
+        # If the page already got the target status, do nothing
+        if RT[page].status is target_status:
+            return
+
+        # If the page already failed, raise the corresponding exception
+        if RT[page].status is PageStatus.FAILURE:
+            raise IssuesOccurred(page, RT[page].issues)
+        if RT[page].status is PageStatus.DEP_FAILURE:
+            raise DependencyFailed(page)
+        if RT[page].status is PageStatus.VOL_FAILURE:
+            raise VolumeFailed(page.volume)
+
+        # Decide which statuses we will have to go through to get to the the target
+        roadmap: list[PageStatus] = list(filter(lambda s: RT[page].status < s <= target_status, PageStatus))
+
+        # If the roadmap includes or ends with PROCESS3 (the volume-wide step),
+        # immediately launch tasks for other pages of the same volume.
+        # Later, we will wait for them to finish before we call `process3()` for the volume.
+        before_process3: list[Task] = []
+        if PageStatus.PROCESS3 in roadmap:
+            for other_page in page.volume.pages:
+                if other_page is not page:
+                    before_process3.append(create_task(self.require(other_page, PageStatus.PROCESS2),
+                                                       name=f'require {other_page.path_in_project}'))
+
+        # Iterate from the current status to the required status
+        for status in PageStatus.range(RT[page].status, target_status):
+
+            # Special treatment for the volume-wide step: make sure that all pages of the volume are ready.
+            # If not, raise VolumeFailed. Note that this type of exception is Ignorable,
+            # i.e., it is not really the current page's fault, and thus it is not interesting for the user.
+            # Basically, we cannot proceed but we won't explain why: someone else will have explained it already.
+            if status is PageStatus.PROCESS3:
+                try:
+                    await super_gather(before_process3, f'Some other pages failed in {page.volume.codename!r}')
+                except* Exception as excs:
+                    RT[page].status = PageStatus.VOL_FAILURE
+                    raise VolumeFailed(page.volume) from excs
+
+            # Start running the appropriate function.
+            # In the (completely normal) case when multiple copies of `require()` are running simultaneously
+            # for the same page and target status, they all will be awaiting the same Task here.
+            # And any future copies of `require()` will go through this line instantaneously,
+            # because the Task will already be finished.
+            try:
+                await self.create_page_task(page, status)
+
+            # The only place that raises IssuesOccured is `require()` itself, see a few lines below.
+            # If we catch it, it means that the step required some other page, but processing that page failed.
+            # It is an IssuesOccurred for that page, but a DependencyFailed for the current one.
+            # The same logic applies to another page's VolumeFailed.
+            except* (IssuesOccurred, VolumeFailed) as excs:
+                RT[page].status = PageStatus.DEP_FAILURE
+                raise DependencyFailed(page) from excs
+
+            # Any other type of exception is unexpected. May even be a Sobiraka bug.
+            # We consider it the current page's failure and set the status accordingly.
+            except* Exception:
+                RT[page].status = PageStatus.FAILURE
+                raise
+
+            # If we are still here, update the status
+            RT[page].status = status
+
+            # If any number of issues was found for the page, we consider it a failure and raise IssuesOccurred.
+            if len(RT[page].issues) != 0:
+                RT[page].status = PageStatus.FAILURE
+                raise IssuesOccurred(page, RT[page].issues)
+
+    async def prepare(self, page: Page):
         """
         Parse syntax tree with Pandoc and save its syntax tree into :obj:`.Page.doc`.
 
@@ -88,14 +220,6 @@ class Processor(Dispatcher):
         RT[page].title = page.stem
         RT[page].doc = panflute.load(BytesIO(json_bytes))
 
-    async def get_title(self, page: Page) -> str:
-        # TODO: maybe make get_title() a separate @on_demand step?
-        await self.process1(page)
-        if RT[page].title is None:
-            RT[page].title = page.id_segment()
-        return RT[page].title
-
-    @on_demand
     async def process1(self, page: Page) -> Page:
         """
         Run first pass of page processing.
@@ -104,7 +228,6 @@ class Processor(Dispatcher):
 
         This method is called by :obj:`.Page.processed1`.
         """
-        await self.load_page(page)
         RT[page].doc.walk(partial(self.preprocess, page=page))
         await self.process_doc(RT[page].doc, page)
         return page
@@ -154,9 +277,13 @@ class Processor(Dispatcher):
 
     async def process_image(self, image: Image, page: Page) -> tuple[Element, ...]:
         """
-        Get the image path, process variables inside it, and make it relative to the project directory.
+        Get the image path, process variables inside it, and make it relative to the resources directory.
+
+        If the file does not exist, create an Issue and set `image.url` to None.
         """
-        volume = page.volume
+        volume: Volume = page.volume
+        config: Config = volume.config
+        fs: FileSystem = volume.project.fs
 
         path = Path(image.url.replace('$LANG', volume.lang or ''))
         if path.is_absolute():
@@ -166,7 +293,13 @@ class Processor(Dispatcher):
             path = fakeroot / page.path_in_project.parent / path
             path = Path(normpath(path))
             path = path.relative_to(fakeroot / volume.config.paths.resources)
-        image.url = str(path)
+
+        if fs.exists(config.paths.resources / path):
+            image.url = str(path)
+        else:
+            RT[page].issues.append(BadImage(image.url))
+            image.url = None
+
         return (image,)
 
     async def process_para(self, para: Para, page: Page) -> tuple[Element, ...]:
@@ -193,21 +326,10 @@ class Processor(Dispatcher):
 
         return (para,)
 
-    @on_demand
     async def process2(self, page: Page):
-        await self.process1(page)
+        await super_gather(self.process2_tasks[page], f'Additional tasks failed for {page.path_in_project}')
 
-        await gather(self.process1(page),
-                     *(self.process1(dep) for dep in RT[page].dependencies))
-
-        await super_gather(self.process2_tasks[page])
-
-    @on_demand
     async def process3(self, volume: Volume):
-        for page in volume.pages:
-            self.process2(page).start()
-        await gather(*map(self.process2, volume.pages))
-
         if volume.config.content.numeration:
             numerate(volume.root_page.children)
 
@@ -215,17 +337,8 @@ class Processor(Dispatcher):
             for toc_placeholder in self.toc_placeholders[page]:
                 toc_placeholder.postprocess()
 
-    def print_issues(self) -> bool:
-        issues_found: bool = False
-        for page in self.get_pages():
-            if RT[page].issues:
-                message = f'Issues in {page.path_in_project}:'
-                for issue in RT[page].issues:
-                    message += f'\n    {issue}'
-                message += '\n'
-                print(message, file=sys.stderr)
-                issues_found = True
-        return issues_found
+    async def process4(self, page: Page):
+        pass
 
     # --------------------------------------------------------------------------------
     # Internal links
@@ -284,10 +397,12 @@ class Processor(Dispatcher):
             RT[page].issues.append(BadLink(target_text))
 
     def schedule_processing_internal_link(self, elem: Link, href: PageHref, target_text: str, page: Page):
-        self.process2_tasks[page].append(create_task(self.process2_internal_link(elem, href, target_text, page)))
+        self.process2_tasks[page].append(create_task(
+            self.process2_internal_link(elem, href, target_text, page)
+        ))
 
     async def process2_internal_link(self, elem: Link, href: PageHref, target_text: str, page: Page):
-        await self.process1(href.target)
+        await self.require(href.target, PageStatus.PROCESS1)
         try:
             elem.url = self.make_internal_url(href, page=page)
         except DisableLink:
@@ -321,6 +436,12 @@ class ProjectProcessor(Processor):
         super().__init__()
         self.project: Project = project
 
+    def get_project(self) -> Project:
+        return self.project
+
+    def get_volumes(self) -> tuple[Volume, ...]:
+        return self.project.volumes
+
     def get_pages(self) -> tuple[Page, ...]:
         return self.project.pages
 
@@ -330,6 +451,12 @@ class VolumeProcessor(Processor):
     def __init__(self, volume: Volume):
         super().__init__()
         self.volume: Volume = volume
+
+    def get_project(self) -> Project:
+        return self.volume.project
+
+    def get_volumes(self) -> tuple[Volume, ...]:
+        return self.volume,
 
     def get_pages(self) -> tuple[Page, ...]:
         return self.volume.pages

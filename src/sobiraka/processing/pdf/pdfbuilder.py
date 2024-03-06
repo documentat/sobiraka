@@ -2,7 +2,8 @@ import os
 import re
 import sys
 import urllib.parse
-from asyncio import create_subprocess_exec
+from asyncio import Task, create_subprocess_exec, create_task
+from contextlib import suppress
 from pathlib import Path
 from shutil import copyfile
 from subprocess import DEVNULL, PIPE
@@ -11,10 +12,10 @@ from typing import BinaryIO
 
 from panflute import Element, Header, Space, Str, stringify
 
-from sobiraka.models import Page, PageHref, Volume
+from sobiraka.models import Page, PageHref, PageStatus, Volume
 from sobiraka.models.exceptions import DisableLink
 from sobiraka.runtime import RT
-from sobiraka.utils import LatexInline, on_demand, panflute_to_bytes
+from sobiraka.utils import LatexInline, panflute_to_bytes
 from ..abstract import VolumeProcessor
 from ..plugin import PdfTheme, load_pdf_theme
 from ..replacement import HeaderReplPara
@@ -40,8 +41,9 @@ class PdfBuilder(VolumeProcessor):
             await self.generate_latex(latex_output)
 
         resources_dir = self.volume.project.fs.resolve(self.volume.config.paths.resources)
-        for n in range(1, 4):
-            print(f'Running XeLaTeX ({n})...', file=sys.stderr)
+        total_runs = 3
+        for n in range(1, total_runs + 1):
+            self.message = f'Rendering PDF ({n}/{total_runs})...'
             xelatex = await create_subprocess_exec(
                 'xelatex',
                 '-shell-escape',
@@ -66,65 +68,70 @@ class PdfBuilder(VolumeProcessor):
         project = self.volume.project
         config = self.volume.config
 
+        self.message = 'Generating LaTeX...'
+
+        processing: dict[Page, Task] = {}
         for page in volume.pages:
-            self.generate_latex_for_page(page).start()
+            processing[page] = create_task(self.require(page, PageStatus.PROCESS4),
+                                           name=f'generate latex for {page.path_in_project}')
 
-        if self.print_issues():
-            sys.exit(1)
+        try:
+            if config.pdf.paths:
+                latex_output.write(b'\n\n' + (80 * b'%'))
+                latex_output.write(b'\n\n%%% Paths\n\n')
+                for key, value in config.pdf.paths.items():
+                    latex_output.write(fr'\newcommand{{\{key}}}{{{value}/}}'.encode('utf-8') + b'\n')
 
-        if config.pdf.paths:
+            variables = {
+                'TITLE': config.title,
+                'LANG': volume.lang,
+                **config.variables,
+            }
             latex_output.write(b'\n\n' + (80 * b'%'))
-            latex_output.write(b'\n\n%%% Paths\n\n')
-            for key, value in config.pdf.paths.items():
-                latex_output.write(fr'\newcommand{{\{key}}}{{{value}/}}'.encode('utf-8') + b'\n')
+            latex_output.write(b'\n\n%%% Variables\n\n')
+            for key, value in variables.items():
+                key = key.replace('_', '')
+                latex_output.write(fr'\newcommand{{\{key}}}{{{value}}}'.encode('utf-8') + b'\n')
 
-        variables = {
-            'TITLE': config.title,
-            'LANG': volume.lang,
-            **config.variables,
-        }
-        latex_output.write(b'\n\n' + (80 * b'%'))
-        latex_output.write(b'\n\n%%% Variables\n\n')
-        for key, value in variables.items():
-            key = key.replace('_', '')
-            latex_output.write(fr'\newcommand{{\{key}}}{{{value}}}'.encode('utf-8') + b'\n')
+            if self._theme.style is not None:
+                latex_output.write(b'\n\n' + (80 * b'%'))
+                latex_output.write(b'\n\n%%% ' + self._theme.__class__.__name__.encode('utf-8') + b'\n\n')
+                latex_output.write(self._theme.style.read_bytes())
 
-        if self._theme.style is not None:
+            if config.pdf.header:
+                latex_output.write(b'\n\n')
+                latex_output.write(b'\n\n%%% Project\'s custom header \n\n')
+                latex_output.write(project.fs.read_bytes(config.pdf.header))
+
             latex_output.write(b'\n\n' + (80 * b'%'))
-            latex_output.write(b'\n\n%%% ' + self._theme.__class__.__name__.encode('utf-8') + b'\n\n')
-            latex_output.write(self._theme.style.read_bytes())
+            latex_output.write(b'\n\n\\begin{document}\n\\begin{sloppypar}')
 
-        if config.pdf.header:
-            latex_output.write(b'\n\n')
-            latex_output.write(b'\n\n%%% Project\'s custom header \n\n')
-            latex_output.write(project.fs.read_bytes(config.pdf.header))
+            if self._theme.cover is not None:
+                latex_output.write(b'\n\n' + (80 * b'%'))
+                latex_output.write(b'\n\n%%% Cover\n\n')
+                latex_output.write(self._theme.cover.read_bytes())
 
-        latex_output.write(b'\n\n' + (80 * b'%'))
-        latex_output.write(b'\n\n\\begin{document}\n\\begin{sloppypar}')
+            if config.pdf.toc and self._theme.toc is not None:
+                latex_output.write(b'\n\n' + (80 * b'%'))
+                latex_output.write(b'\n\n%%% Table of contents\n\n')
+                latex_output.write(self._theme.toc.read_bytes())
 
-        if self._theme.cover is not None:
+            for page in volume.pages:
+                await processing[page]
+                latex_output.write(b'\n\n' + (80 * b'%'))
+                latex_output.write(b'\n\n%%% ' + bytes(page.path_in_project) + b'\n\n')
+                latex_output.write(RT[page].latex)
+
             latex_output.write(b'\n\n' + (80 * b'%'))
-            latex_output.write(b'\n\n%%% Cover\n\n')
-            latex_output.write(self._theme.cover.read_bytes())
+            latex_output.write(b'\n\n\\end{sloppypar}\n\\end{document}')
 
-        if config.pdf.toc and self._theme.toc is not None:
-            latex_output.write(b'\n\n' + (80 * b'%'))
-            latex_output.write(b'\n\n%%% Table of contents\n\n')
-            latex_output.write(self._theme.toc.read_bytes())
+        finally:
+            for task in processing.values():
+                task.cancel()
+                with suppress(Exception):
+                    await task
 
-        for page in volume.pages:
-            await self.generate_latex_for_page(page)
-            latex_output.write(b'\n\n' + (80 * b'%'))
-            latex_output.write(b'\n\n%%% ' + bytes(page.path_in_project) + b'\n\n')
-            latex_output.write(RT[page].latex)
-
-        latex_output.write(b'\n\n' + (80 * b'%'))
-        latex_output.write(b'\n\n\\end{sloppypar}\n\\end{document}')
-
-    @on_demand
-    async def generate_latex_for_page(self, page: Page):
-        await self.process3(page.volume)
-
+    async def process4(self, page: Page):
         # If a theme is set, run additional processing of the whole document
         # Note that if the theme does not contain custom logic implementation, we skip this step as useless
         if type(self._theme) not in (NoneType, PdfTheme):

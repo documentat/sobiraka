@@ -2,13 +2,15 @@ from dataclasses import dataclass, field
 
 from panflute import Doc, Image, Link
 
-from sobiraka.models import Anchors, Href, Issue, Page
+from sobiraka.models import Anchors, Href, Issue, Page, PageStatus
 from sobiraka.utils import TocNumber, UniqueList, Unnumbered
 
 
 @dataclass
 class PageRuntime:
     # pylint: disable=too-many-instance-attributes
+
+    status: PageStatus = PageStatus.INITIALIZE
 
     doc: Doc = None
     """
