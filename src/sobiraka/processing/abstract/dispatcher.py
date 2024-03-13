@@ -17,7 +17,7 @@ class Dispatcher:
         # pylint: disable=cyclic-import
         # pylint: disable=too-many-statements
 
-        from ..directive import Directive
+        from sobiraka.processing.directive.directive import Directive
 
         match elem:
             case BlockQuote():
