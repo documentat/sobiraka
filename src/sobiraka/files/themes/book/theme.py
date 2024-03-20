@@ -18,16 +18,25 @@ class BookTheme(HtmlTheme):
         return (header,)
 
     async def process_div_note(self, div: Div, page: Page) -> tuple[Element, ...]:
+        div, = await super().process_div(div, page)
+        assert isinstance(div, Div)
+
         return (RawBlock('<blockquote class="book-hint info">'),
                 *div.content,
                 RawBlock('</blockquote>'))
 
     async def process_div_warning(self, div: Div, page: Page) -> tuple[Element, ...]:
+        div, = await super().process_div(div, page)
+        assert isinstance(div, Div)
+
         return (RawBlock('<blockquote class="book-hint warning">'),
                 *div.content,
                 RawBlock('</blockquote>'))
 
     async def process_div_danger(self, div: Div, page: Page) -> tuple[Element, ...]:
+        div, = await super().process_div(div, page)
+        assert isinstance(div, Div)
+
         return (RawBlock('<blockquote class="book-hint danger">'),
                 *div.content,
                 RawBlock('</blockquote>'))
