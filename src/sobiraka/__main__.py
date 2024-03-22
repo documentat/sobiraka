@@ -27,17 +27,17 @@ async def async_main():
     commands = parser.add_subparsers(title='commands', dest='command')
 
     cmd_html = commands.add_parser('html', help='Build HTML site.')
-    cmd_html.add_argument('project', type=absolute_path)
+    cmd_html.add_argument('config', metavar='CONFIG', type=absolute_path)
     cmd_html.add_argument('--output', type=absolute_path, default=absolute_path('build/html'))
     cmd_html.add_argument('--hide-index-html', action='store_true', help='Remove the "index.html" part from links.')
 
     cmd_pdf = commands.add_parser('pdf', help='Build PDF file.')
-    cmd_pdf.add_argument('project', type=absolute_path)
+    cmd_pdf.add_argument('config', metavar='CONFIG', type=absolute_path)
     cmd_pdf.add_argument('volume', nargs='?')
     cmd_pdf.add_argument('--output', type=absolute_path, default=absolute_path('build/pdf'))
 
     cmd_lint = commands.add_parser('lint', help='Check a volume for various issues.')
-    cmd_lint.add_argument('project', type=absolute_path)
+    cmd_lint.add_argument('config', metavar='CONFIG', type=absolute_path)
     cmd_lint.add_argument('volume', nargs='?')
 
     cmd_validate_dictionary = commands.add_parser('validate_dictionary',
@@ -47,12 +47,12 @@ async def async_main():
 
     cmd_check_translations = commands.add_parser('check_translations',
                                                  help='Display translation status of the project.')
-    cmd_check_translations.add_argument('project', type=absolute_path)
+    cmd_check_translations.add_argument('config', metavar='CONFIG', type=absolute_path)
     cmd_check_translations.add_argument('--strict', action='store_true')
 
     cmd_changelog = commands.add_parser('changelog',
                                         help='Display changes in translation versions between two git commits.')
-    cmd_changelog.add_argument('project', type=absolute_path)
+    cmd_changelog.add_argument('config', metavar='CONFIG', type=absolute_path)
     cmd_changelog.add_argument('commit1')
     cmd_changelog.add_argument('commit2', default='HEAD')
 
@@ -70,12 +70,12 @@ async def async_main():
         cmd = commands.choices.get(args.command)
 
         if cmd is cmd_html:
-            project = load_project(args.project)
+            project = load_project(args.config)
             builder = HtmlBuilder(project, args.output, hide_index_html=args.hide_index_html)
             exit_code = await RT.run_isolated(run_with_progressbar(builder))
 
         elif cmd is cmd_pdf:
-            project = load_project(args.project)
+            project = load_project(args.config)
             output: Path = args.output
 
             if args.volume is not None or len(project.volumes) == 1:
@@ -98,7 +98,7 @@ async def async_main():
                         break
 
         elif cmd is cmd_lint:
-            project = load_project(args.project)
+            project = load_project(args.config)
             volume = project.get_volume(args.volume)
             linter = Linter(volume)
             exit_code = await RT.run_isolated(run_with_progressbar(linter))
@@ -107,11 +107,11 @@ async def async_main():
             exit_code = validate_dictionary(args.dic, autofix=args.autofix)
 
         elif cmd is cmd_check_translations:
-            project = load_project(args.project)
+            project = load_project(args.config)
             exit_code = check_translations(project, strict=args.strict)
 
         elif cmd is cmd_changelog:
-            exit_code = changelog(args.project, args.commit1, args.commit2)
+            exit_code = changelog(args.config, args.commit1, args.commit2)
 
         else:
             raise NotImplementedError(args.command)
