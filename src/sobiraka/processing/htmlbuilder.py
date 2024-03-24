@@ -184,12 +184,19 @@ class HtmlBuilder(ProjectProcessor):
 
         if href.target is page:
             result = ''
+
         else:
             source_path = self.get_target_path(page)
             target_path = self.get_target_path(href.target)
+            add_slash = False
+
             if self.hide_index_html and target_path.name == 'index.html':
                 target_path = target_path.parent
+                add_slash = True
+
             result = relpath(target_path, start=source_path.parent)
+            if add_slash:
+                result += '/'
 
         if href.anchor:
             result += '#' + href.anchor
