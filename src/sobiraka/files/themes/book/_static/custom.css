@@ -1,3 +1,13 @@
 pre code.hljs {
     padding: 0;
 }
+
+.markdown .book-hint.example {
+    border-color: #7fb783;
+    background-color: rgba(102, 255, 105, 0.1);
+}
+
+.markdown pre {
+    white-space: pre-wrap;
+    text-indent: 4ex hanging each-line;
+}

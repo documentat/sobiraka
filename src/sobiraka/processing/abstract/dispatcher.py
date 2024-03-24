@@ -6,7 +6,7 @@ from panflute import BlockQuote, BulletList, Caption, Citation, Cite, Code, Code
     SoftBreak, Space, Span, Str, Strikeout, Strong, Subscript, Superscript, Table, TableBody, TableCell, TableFoot, \
     TableHead, TableRow, Underline
 
-from sobiraka.models import Page
+from sobiraka.models import Page, Syntax
 
 
 class Dispatcher:
@@ -31,7 +31,7 @@ class Dispatcher:
             case Cite():
                 result = await self.process_cite(elem, page)
             case Code() as code:
-                if page.path_in_volume.suffix == '.rst' and (role := code.attributes.get('role')):
+                if page.syntax == Syntax.RST and (role := code.attributes.get('role')):
                     result = await getattr(self, f'process_role_{role}')(code, page)
                 else:
                     result = await self.process_code(code, page)

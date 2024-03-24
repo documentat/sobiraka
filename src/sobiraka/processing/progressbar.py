@@ -79,7 +79,7 @@ def print_issues(processor: Processor) -> bool:
     failures: list[Page] = []
     dep_failures: list[Page] = []
 
-    for page in processor.get_project().pages:
+    for page in processor.get_pages():
         if RT[page].status is PageStatus.FAILURE:
             issues_count += len(RT[page].issues)
             failures.append(page)

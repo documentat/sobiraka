@@ -21,7 +21,7 @@ from sobiraka.models import Anchor, BadImage, BadLink, DirPage, FileSystem, Page
 from sobiraka.models.config import Config
 from sobiraka.models.exceptions import DependencyFailed, DisableLink, IssuesOccurred, VolumeFailed
 from sobiraka.runtime import RT
-from sobiraka.utils import convert_or_none, super_gather
+from sobiraka.utils import super_gather
 from .dispatcher import Dispatcher
 from ..numerate import numerate
 
@@ -186,27 +186,32 @@ class Processor(Dispatcher):
         from sobiraka.processing import HtmlBuilder
         from sobiraka.processing import PdfBuilder
 
-        variables = page.volume.config.variables | dict(
+        volume: Volume = page.volume
+        config: Config = page.volume.config
+        project: Project = page.volume.project
+        fs: FileSystem = page.volume.project.fs
+
+        variables = config.variables | dict(
             HTML=isinstance(self, HtmlBuilder),
             PDF=isinstance(self, PdfBuilder),
 
             page=page,
-            volume=page.volume,
-            project=page.volume.project,
-            LANG=page.volume.lang,
+            volume=volume,
+            project=project,
+            LANG=volume.lang,
         )
 
         page_text = page.text
 
-        if page.volume not in self.jinja:
-            self.jinja[page.volume] = jinja2.Environment(
+        if volume not in self.jinja:
+            self.jinja[volume] = jinja2.Environment(
                 comment_start_string='{{#',
                 comment_end_string='#}}',
                 undefined=StrictUndefined,
                 enable_async=True,
-                loader=convert_or_none(jinja2.FileSystemLoader, page.volume.config.paths.partials),
+                loader=config.paths.partials and jinja2.FileSystemLoader(fs.resolve(config.paths.partials)),
             )
-        page_text = await self.jinja[page.volume].from_string(page_text).render_async(variables)
+        page_text = await self.jinja[volume].from_string(page_text).render_async(variables)
 
         pandoc = await create_subprocess_exec(
             'pandoc',
@@ -256,6 +261,7 @@ class Processor(Dispatcher):
                 return TocDirective(self, page, argv)
 
     async def process_header(self, header: Header, page: Page) -> tuple[Element, ...]:
+        # Generate an identifier if is not done automatically, e.g., in RST
         if not header.identifier:
             header.identifier = stringify(header)
             header.identifier = header.identifier.lower()
@@ -422,7 +428,7 @@ class Processor(Dispatcher):
 
         else:
             if not elem.content:
-                elem.content = Str(RT[page].title),
+                elem.content = Str(RT[href.target].title),
 
     @abstractmethod
     def make_internal_url(self, href: PageHref, *, page: Page) -> str:
