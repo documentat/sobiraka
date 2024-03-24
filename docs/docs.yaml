@@ -1,7 +1,8 @@
-title: Sobiraka
+title: Собирака
 paths:
   root: src
   include: ['**/*.md']
+  partials: partials
 html:
   theme: book
 lint:
