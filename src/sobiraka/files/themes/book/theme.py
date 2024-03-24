@@ -25,6 +25,14 @@ class BookTheme(HtmlTheme):
                 *div.content,
                 RawBlock('</blockquote>'))
 
+    async def process_div_example(self, div: Div, page: Page) -> tuple[Element, ...]:
+        div, = await super().process_div(div, page)
+        assert isinstance(div, Div)
+
+        return (RawBlock('<blockquote class="book-hint example">'),
+                *div.content,
+                RawBlock('</blockquote>'))
+
     async def process_div_warning(self, div: Div, page: Page) -> tuple[Element, ...]:
         div, = await super().process_div(div, page)
         assert isinstance(div, Div)
