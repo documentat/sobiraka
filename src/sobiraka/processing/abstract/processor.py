@@ -183,8 +183,7 @@ class Processor(Dispatcher):
 
         This method is called by :obj:`.Page.loaded`.
         """
-        from sobiraka.processing import HtmlBuilder
-        from sobiraka.processing import PdfBuilder
+        from sobiraka.processing import HtmlBuilder, PdfBuilder
 
         volume: Volume = page.volume
         config: Config = page.volume.config

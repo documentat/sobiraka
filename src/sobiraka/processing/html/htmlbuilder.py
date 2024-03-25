@@ -17,11 +17,11 @@ from aiofiles.os import makedirs
 from panflute import Element, Header, Image
 
 from sobiraka.models import DirPage, IndexPage, Page, PageHref, PageStatus, Project, Volume
+from sobiraka.models.config import Config
 from sobiraka.runtime import RT
 from sobiraka.utils import panflute_to_bytes, super_gather
-from .abstract import ProjectProcessor
-from .plugin import HtmlTheme, load_html_theme
-from ..models.config import Config
+from ..abstract import ProjectProcessor
+from ..plugin import HtmlTheme, load_html_theme
 
 
 class HtmlBuilder(ProjectProcessor):
@@ -89,7 +89,7 @@ class HtmlBuilder(ProjectProcessor):
             rmtree(directory, ignore_errors=True)
 
     async def process4(self, page: Page):
-        from .toc import local_toc, toc
+        from ..toc import local_toc, toc
 
         volume = page.volume
         project = page.volume.project
