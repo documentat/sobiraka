@@ -76,8 +76,8 @@ class TextModel:
         Normally, a text is split into phrases by periods, exclamation points, etc.
         However, the 'exceptions' dictionary may contain some words
         that contain periods in them ('e.g.', 'H.265', 'www.example.com').
-        This function first splits the line into phrases using :meth:`phrase_bounds()`,
-        but then moves their bounds for each exception that was accidentally split.
+        This function first calls `naive_phrases()` and then moves the phrase bounds
+        for each exception that was accidentally split.
 
         If `remove_exceptions=True`, the exceptions will be replaced with spaces in the result.
         This is used to generate phrases that can be sent to another linter.

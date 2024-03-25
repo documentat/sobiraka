@@ -1,8 +1,8 @@
 import re
 from textwrap import dedent
-from unittest import main, TestCase
+from unittest import TestCase, main
 
-from sobiraka.linter.textmodel import TextModel
+from sobiraka.processing.txt import TextModel
 
 
 class TestTextModel(TestCase):

@@ -7,30 +7,25 @@ from panflute import BlockQuote, BulletList, Caption, Citation, Cite, Code, Code
     Span, Str, Strikeout, Strong, Subscript, Superscript, Table, TableBody, TableCell, TableFoot, TableHead, TableRow, \
     Underline
 
-from sobiraka.models import Page, PageStatus, Volume
-from sobiraka.processing.abstract import Processor
-from .exceptions_regexp import exceptions_regexp
+from sobiraka.models import Page
+from sobiraka.processing.abstract import Dispatcher
 from .textmodel import Fragment, Pos, TextModel
 
 
-class LintPreprocessor(Processor):
+class PlainTextDispatcher(Dispatcher):
     # pylint: disable=too-many-public-methods
 
-    def __init__(self, volume: Volume):
-        super().__init__()
-        self.volume: Volume = volume
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.tm: dict[Page, TextModel] = defaultdict(self._new_text_model)
 
-        regexp = exceptions_regexp(self.volume)
-        self._tm: dict[Page, TextModel] = defaultdict(lambda: TextModel(exceptions_regexp=regexp))
-
-    async def tm(self, page: Page) -> TextModel:
-        await self.require(page, PageStatus.PROCESS2)
-        return self._tm[page]
+    def _new_text_model(self) -> TextModel:
+        return TextModel()
 
     def _atomic(self, page: Page, elem: Element, text: str):
         assert '\n' not in text
 
-        tm = self._tm[page]
+        tm = self.tm[page]
 
         start = tm.end_pos
         tm.lines[-1] += text
@@ -42,7 +37,7 @@ class LintPreprocessor(Processor):
     async def _container(self, page: Page, elem: Element, *,
                          allow_new_line: bool = False,
                          process: Callable[[], Awaitable[None]] = None):
-        tm = self._tm[page]
+        tm = self.tm[page]
 
         start = tm.end_pos
         pos = len(tm.fragments)
@@ -60,7 +55,7 @@ class LintPreprocessor(Processor):
         tm.fragments.insert(pos, fragment)
 
     def _ensure_new_line(self, page: Page):
-        tm = self._tm[page]
+        tm = self.tm[page]
         if tm.lines[-1] != '':
             tm.lines.append('')
 
@@ -77,14 +72,14 @@ class LintPreprocessor(Processor):
         self._atomic(page, elem, elem.text)
 
     async def process_line_break(self, line_break: LineBreak, page: Page):
-        tm = self._tm[page]
+        tm = self.tm[page]
         pos = Pos(len(tm.lines) - 1, len(tm.lines[-1]))
         fragment = Fragment(tm, pos, pos, line_break)
         tm.fragments.append(fragment)
         tm.lines.append('')
 
     async def process_soft_break(self, soft_break: SoftBreak, page: Page):
-        tm = self._tm[page]
+        tm = self.tm[page]
         pos = Pos(len(tm.lines) - 1, len(tm.lines[-1]))
         fragment = Fragment(tm, pos, pos, soft_break)
         tm.fragments.append(fragment)
@@ -206,7 +201,7 @@ class LintPreprocessor(Processor):
     # Line blocks
 
     async def process_line_block(self, line_block: LineBlock, page: Page):
-        tm = self._tm[page]
+        tm = self.tm[page]
 
         async def process():
             for i, line_item in enumerate(line_block.content):
