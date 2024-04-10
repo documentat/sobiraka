@@ -42,7 +42,7 @@ pdf:
 Собирака объявляет в LaTeX следующие команды-переменные:
 
 - `\TITLE` — заголовок тома (см. настройку [`title`](../5-reference/1-configuration.md#volume.title));
-- `\LANG` — идентификатор языка тома (см. [](../1-concepts/2-multilang.md));
+- `\LANG` — идентификатор языка тома (см. [](../1-overview/04-multilang.md));
 - все переменные, заданные с помощью настройки [`variables`](../5-reference/1-configuration.md#volume.variables).
 
 ::: example
