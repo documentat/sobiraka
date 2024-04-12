@@ -9,33 +9,28 @@ COPY src src
 RUN python setup.py sdist
 
 FROM python:3.11-alpine3.18 AS install-dependencies
-RUN ln -s /usr/local/bin/python /usr/bin/python
 COPY --from=build-package /sobiraka.egg-info/requires.txt .
-RUN /usr/bin/python -m pip install --prefix /prefix --requirement requires.txt
+RUN pip install --prefix /prefix --requirement requires.txt
 
 FROM python:3.11-alpine3.18 AS install-dependencies-tester
-RUN ln -s /usr/local/bin/python /usr/bin/python
-RUN /usr/bin/python -m pip install --prefix /prefix coverage~=7.0.0
+RUN pip install --prefix /prefix coverage~=7.0.0
 
 FROM python:3.11-alpine3.18 AS install-dependencies-linter
-RUN ln -s /usr/local/bin/python /usr/bin/python
-RUN /usr/bin/python -m pip install --prefix /prefix pylint~=2.17.4
+RUN pip install --prefix /prefix pylint~=2.17.4
 
 FROM install-dependencies AS install-package
 COPY --from=build-package /dist/*.tar.gz .
-RUN /usr/bin/python -m pip install --prefix /prefix *.tar.gz
+RUN pip install --prefix /prefix *.tar.gz
 
-FROM alpine:3.18 AS common-html
+FROM python:3.11-alpine3.18 AS common-html
 RUN apk add --no-cache hunspell
-RUN apk add --no-cache python3~=3.11 py3-pip --repository=http://dl-cdn.alpinelinux.org/alpine/edge/main/
 COPY --from=get-pandoc /tmp/pandoc /usr/local
 WORKDIR /W
 ENTRYPOINT [""]
 
-FROM alpine:3.18 AS common
+FROM python:3.11-alpine3.18 AS common
 RUN apk add --no-cache texlive-full
 RUN apk add --no-cache hunspell
-RUN apk add --no-cache python3~=3.11 py3-pip --repository=http://dl-cdn.alpinelinux.org/alpine/edge/main/
 COPY --from=get-pandoc /tmp/pandoc /usr/local
 WORKDIR /W
 ENTRYPOINT [""]
@@ -48,22 +43,22 @@ RUN addgroup mygroup -g $GID
 RUN adduser myuser -u $UID -G mygroup -D
 USER myuser
 ENV PATH=/home/myuser/.local/bin:$PATH
-COPY --from=install-dependencies /prefix /usr
-COPY --from=install-dependencies-tester /prefix /usr
+COPY --from=install-dependencies /prefix /usr/local
+COPY --from=install-dependencies-tester /prefix /usr/local
 CMD make tests
 
 FROM tester-src AS tester-dist
-COPY --from=install-package /prefix /usr
+COPY --from=install-package /prefix /usr/local
 COPY Makefile .
 COPY tests tests
 CMD make tests
 
 FROM tester-src AS linter
-COPY --from=install-dependencies-linter /prefix /usr
+COPY --from=install-dependencies-linter /prefix /usr/local
 CMD make lint
 
 FROM common-html AS release-html
-COPY --from=install-package /prefix /usr
+COPY --from=install-package /prefix /usr/local
 
 FROM common AS release
-COPY --from=install-package /prefix /usr
+COPY --from=install-package /prefix /usr/local
