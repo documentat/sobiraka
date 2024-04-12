@@ -10,8 +10,9 @@ import yaml
 from utilspie.collectionsutils import frozendict
 
 from sobiraka.utils import convert_or_none, merge_dicts
-from .config import CombinedToc, Config, Config_Content, Config_HTML, Config_Lint, Config_Lint_Checks, Config_PDF, \
-    Config_Paths
+
+from .config import CombinedToc, Config, Config_Content, Config_HTML, Config_HTML_Search, Config_Lint, \
+    Config_Lint_Checks, Config_PDF, Config_Paths, SearchIndexerName
 from .filesystem import FileSystem, RealFileSystem
 from .namingscheme import NamingScheme
 from .project import Project
@@ -100,6 +101,10 @@ def _load_volume(lang: str | None, codename: str, volume_data: dict, fs: FileSys
             theme_data=_('html.theme_data', {}),
             toc_depth=int(re.sub(r'^infinity$', '0', str(_('html.toc_depth', 'infinity')))) or inf,
             combined_toc=CombinedToc(_('html.combined_toc', 'never')),
+            search=Config_HTML_Search(
+                engine=convert_or_none(SearchIndexerName, _('html.search.engine')),
+                index_path=_('html.search.index_path'),
+            ),
         ),
         pdf=Config_PDF(
             header=convert_or_none(Path, _('pdf.header')),

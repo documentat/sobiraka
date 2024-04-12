@@ -52,9 +52,22 @@ class CombinedToc(Enum):
     ALWAYS = 'always'
 
 
+
+class SearchIndexerName(Enum):
+    PAGEFIND = 'pagefind'
+
+
+@dataclass(kw_only=True, frozen=True)
+class Config_HTML_Search:
+    engine: SearchIndexerName = None
+    index_path: str = None
+
+
 @dataclass(kw_only=True, frozen=True)
 class Config_HTML:
     """Settings related to :class:`.HtmlBuilder`."""
+
+    # pylint: disable=too-many-instance-attributes
 
     prefix: str = '$AUTOPREFIX'
     """
@@ -80,6 +93,8 @@ class Config_HTML:
     toc_depth: int | float = inf
 
     combined_toc: CombinedToc = CombinedToc.NEVER
+
+    search: Config_HTML_Search = field(default_factory=Config_HTML_Search)
 
 
 @dataclass(kw_only=True, frozen=True)

@@ -4,6 +4,8 @@ paths:
   include: ['**/*.md']
 html:
   theme: book
+  search:
+    engine: pagefind
 lint:
   dictionaries:
     - en_US

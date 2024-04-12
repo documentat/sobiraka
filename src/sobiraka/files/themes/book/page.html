@@ -16,6 +16,13 @@
     <link rel="stylesheet" href="{{ STATIC }}/custom.css">
     <script src="{{ STATIC }}/custom.js"></script>
 
+    <script src="{{ ROOT }}/_pagefind/pagefind-ui.js"></script>
+    <script>
+        window.addEventListener('DOMContentLoaded', (event) => {
+            new PagefindUI({ element: ".book-search" });
+        });
+    </script>
+
     <title>{{ title }} | {{ volume.config.title }}</title>
 </head>
 <body dir="ltr">
@@ -31,6 +38,8 @@
                     <a class="flex align-center" href="{{ ROOT_PAGE }}"><span>{{ volume.config.title }}</span>
                     </a>
                 </h2>
+
+                <div class="book-search"></div>
 
                 {% set translations = project.get_all_translations(page) %}
                 {% if translations | length > 1 %}

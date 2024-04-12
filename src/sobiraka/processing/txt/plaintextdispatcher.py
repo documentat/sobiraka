@@ -98,7 +98,6 @@ class PlainTextDispatcher(Dispatcher):
         await self._container(page, image)
 
     async def process_link(self, link: Link, page: Page):
-        await super().process_link(link, page)
         await self._container(page, link)
 
     async def process_plain(self, plain: Plain, page: Page):

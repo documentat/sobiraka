@@ -3,9 +3,8 @@ from __future__ import annotations
 import os.path
 import re
 import sys
-from asyncio import Task, create_subprocess_exec, create_task, to_thread
+from asyncio import Task, TaskGroup, create_subprocess_exec, create_task, to_thread
 from datetime import datetime
-from functools import partial
 from itertools import chain
 from os.path import relpath
 from pathlib import Path
@@ -15,11 +14,12 @@ from subprocess import PIPE
 import iso639
 from aiofiles.os import makedirs
 from panflute import Element, Header, Image
-
 from sobiraka.models import DirPage, IndexPage, Page, PageHref, PageStatus, Project, Volume
-from sobiraka.models.config import Config
+from sobiraka.models.config import Config, SearchIndexerName
 from sobiraka.runtime import RT
 from sobiraka.utils import panflute_to_bytes, super_gather
+
+from .search import PagefindIndexer, SearchIndexer
 from ..abstract import ProjectProcessor
 from ..plugin import HtmlTheme, load_html_theme
 
@@ -32,18 +32,27 @@ class HtmlBuilder(ProjectProcessor):
 
         self._html_builder_tasks: list[Task] = []
         self._results: set[Path] = set()
+        self._indexers: dict[Volume, SearchIndexer] = {}
 
         self._themes: dict[Volume, HtmlTheme] = {}
         for volume in project.volumes:
             self._themes[volume] = load_html_theme(volume.config.html.theme)
 
     async def run(self):
+        # pylint: disable=too-many-branches
+        # pylint: disable=too-many-locals
+
         project = self.project
 
         self.output.mkdir(parents=True, exist_ok=True)
 
         for volume in project.volumes:
+            config: Config = volume.config
             theme = self._themes[volume]
+
+            # Initialize search indexer
+            if config.html.search.engine is not None:
+                self._indexers[volume] = await self.prepare_search_indexer(volume)
 
             # Copy the theme's static directory
             for source_path in theme.static_dir.rglob('**/*'):
@@ -73,6 +82,11 @@ class HtmlBuilder(ProjectProcessor):
         # This may include tasks that started as a side effect of generating the HTML pages
         await super_gather(self._html_builder_tasks, 'Some tasks failed when building HTML')
 
+        # Finalize all search indexers
+        for indexer in self._indexers.values():
+            await indexer.finalize()
+            self._results |= indexer.results()
+
         # Delete files that were not produced during this build
         all_files = set()
         all_dirs = set()
@@ -89,20 +103,28 @@ class HtmlBuilder(ProjectProcessor):
             rmtree(directory, ignore_errors=True)
 
     async def process4(self, page: Page):
-        from ..toc import local_toc, toc
-
-        volume = page.volume
-        project = page.volume.project
-
-        theme = self._themes[volume]
+        theme = self._themes[page.volume]
         if theme.__class__ is not HtmlTheme:
             await theme.process_doc(RT[page].doc, page)
 
-        # Apply postponed image URL changes
+        self.apply_postponed_image_changes(page)
+
+        async with TaskGroup() as tg:
+            tg.create_task(self.save_html(page, theme))
+            if indexer := self._indexers.get(page.volume):
+                tg.create_task(indexer.process_doc(RT[page].doc, page))
+
+    def apply_postponed_image_changes(self, page: Page):
         for image, new_url in RT[page].converted_image_urls:
             image.url = new_url
         for image, link in RT[page].links_that_follow_images:
             link.url = image.url
+
+    async def save_html(self, page: Page, theme: HtmlTheme):
+        from ..toc import local_toc, toc
+
+        volume = page.volume
+        project = page.volume.project
 
         pandoc = await create_subprocess_exec(
             'pandoc',
@@ -149,6 +171,9 @@ class HtmlBuilder(ProjectProcessor):
         self._results.add(target_file)
 
     def get_target_path(self, page: Page) -> Path:
+        volume: Volume = page.volume
+        config: Config = page.volume.config
+
         target_path = Path()
         for part in page.path_in_volume.parts:
             target_path /= re.sub(r'^(\d+-)?', '', part)
@@ -163,20 +188,23 @@ class HtmlBuilder(ProjectProcessor):
             case _:
                 raise TypeError(page.__class__.__name__)
 
-        prefix = page.volume.config.html.prefix or '$AUTOPREFIX'
-        prefix = re.sub(r'\$\w+', partial(self.replace_in_prefix, page), prefix)
+        prefix = config.html.prefix or '$AUTOPREFIX'
+        prefix = self.expand_path_vars(prefix, volume)
         prefix = os.path.join(*prefix.split('/'))
 
         target_path = self.output / prefix / target_path
         return target_path
 
     @classmethod
-    def replace_in_prefix(cls, page: Page, m: re.Match) -> str:
-        return {
-            '$LANG': page.volume.lang or '',
-            '$VOLUME': page.volume.codename,
-            '$AUTOPREFIX': page.volume.autoprefix,
-        }[m.group()]
+    def expand_path_vars(cls, text: str, volume: Volume) -> str:
+        def _substitution(m: re.Match) -> str:
+            return {
+                '$LANG': volume.lang or '',
+                '$VOLUME': volume.codename or 'all',
+                '$AUTOPREFIX': volume.autoprefix,
+            }[m.group()]
+
+        return re.sub(r'\$\w+', _substitution, text)
 
     def make_internal_url(self, href: PageHref | Page, *, page: Page) -> str:
         if isinstance(href, Page):
@@ -245,6 +273,24 @@ class HtmlBuilder(ProjectProcessor):
         RT[page].converted_image_urls.append((image, new_url))
 
         return (image,)
+
+    async def prepare_search_indexer(self, volume: Volume) -> SearchIndexer:
+        # Select the search indexer implementation
+        config: Config = volume.config
+        indexer_class = {
+            SearchIndexerName.PAGEFIND: PagefindIndexer,
+        }[config.html.search.engine]
+
+        # Select the index file path
+        if config.html.search.index_path is not None:
+            index_path = self.output / self.expand_path_vars(config.html.search.index_path, volume)
+        else:
+            index_path = self.output / indexer_class.default_index_path(volume)
+
+        # Initialize the indexer
+        indexer = indexer_class(self, volume, index_path)
+        await indexer.initialize()
+        return indexer
 
     ################################################################################
     # Functions used for additional tasks

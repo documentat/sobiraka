@@ -80,6 +80,12 @@ $defs:
               - enum: [infinity]
           combined_toc:
             enum: [never, current, always]
+          search:
+            additionalProperties: false
+            properties:
+              engine:
+                enum: [pagefind]
+              index_path: { type: string }
 
       pdf:
         additionalProperties: false
