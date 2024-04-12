@@ -16,7 +16,7 @@ FROM python:3.11-alpine3.19 AS install-dependencies-tester
 RUN pip install --prefix /prefix coverage~=7.0.0
 
 FROM python:3.11-alpine3.19 AS install-dependencies-linter
-RUN pip install --prefix /prefix pylint~=2.17.4
+RUN pip install --prefix /prefix pylint~=3.1.0
 
 FROM install-dependencies AS install-package
 COPY --from=build-package /dist/*.tar.gz .
