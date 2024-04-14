@@ -142,6 +142,7 @@ class HtmlBuilder(ProjectProcessor):
 
             project=project,
             volume=volume,
+            config=volume.config,
             page=page,
 
             number=RT[page].number,

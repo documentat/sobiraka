@@ -12,7 +12,7 @@ from utilspie.collectionsutils import frozendict
 from sobiraka.utils import convert_or_none, merge_dicts
 
 from .config import CombinedToc, Config, Config_Content, Config_HTML, Config_HTML_Search, Config_Lint, \
-    Config_Lint_Checks, Config_PDF, Config_Paths, SearchIndexerName
+    Config_Lint_Checks, Config_PDF, Config_Pagefind_Translations, Config_Paths, SearchIndexerName
 from .filesystem import FileSystem, RealFileSystem
 from .namingscheme import NamingScheme
 from .project import Project
@@ -104,6 +104,7 @@ def _load_volume(lang: str | None, codename: str, volume_data: dict, fs: FileSys
             search=Config_HTML_Search(
                 engine=convert_or_none(SearchIndexerName, _('html.search.engine')),
                 index_path=_('html.search.index_path'),
+                translations=Config_Pagefind_Translations(**_('html.search.translations', {})),
             ),
         ),
         pdf=Config_PDF(

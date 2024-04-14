@@ -6,6 +6,8 @@ html:
   theme: book
   search:
     engine: pagefind
+    translations:
+      placeholder: Поиск по документации
 lint:
   dictionaries:
     - en_US

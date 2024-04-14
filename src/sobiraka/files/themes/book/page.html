@@ -19,11 +19,20 @@
     <script src="{{ ROOT }}/_pagefind/pagefind-ui.js"></script>
     <script>
         window.addEventListener('DOMContentLoaded', (event) => {
-            new PagefindUI({ element: ".book-search" });
+            new PagefindUI({
+              element: ".book-search",
+              translations: {
+                {%- for translation_key, translation_value in config.html.search.translations.__dict__.items() %}
+                  {%- if translation_value is not none %}
+                    {{ translation_key }}: {{ translation_value |tojson()}},
+                  {%- endif %}
+                {%- endfor %}
+              },
+            });
         });
     </script>
 
-    <title>{{ title }} | {{ volume.config.title }}</title>
+    <title>{{ title }} | {{ config.title }}</title>
 </head>
 <body dir="ltr">
 
@@ -35,7 +44,7 @@
 
             <nav>
                 <h2 class="book-brand">
-                    <a class="flex align-center" href="{{ ROOT_PAGE }}"><span>{{ volume.config.title }}</span>
+                    <a class="flex align-center" href="{{ ROOT_PAGE }}"><span>{{ config.title }}</span>
                     </a>
                 </h2>
 

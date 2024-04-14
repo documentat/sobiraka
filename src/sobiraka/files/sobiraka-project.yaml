@@ -86,6 +86,20 @@ $defs:
               engine:
                 enum: [pagefind]
               index_path: { type: string }
+              translations:
+                additionalProperties: false
+                properties:
+                  placeholder: { type: string }
+                  clear_search: { type: string }
+                  load_more: { type: string }
+                  search_label: { type: string }
+                  filters_label: { type: string }
+                  zero_results: { type: string }
+                  many_results: { type: string }
+                  one_result: { type: string }
+                  alt_search: { type: string }
+                  search_suggestion: { type: string }
+                  searching: { type: string }
 
       pdf:
         additionalProperties: false

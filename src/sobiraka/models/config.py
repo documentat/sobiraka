@@ -52,15 +52,31 @@ class CombinedToc(Enum):
     ALWAYS = 'always'
 
 
-
 class SearchIndexerName(Enum):
     PAGEFIND = 'pagefind'
+
+
+@dataclass(kw_only=True, frozen=True)
+class Config_Pagefind_Translations:
+    # pylint: disable=too-many-instance-attributes
+    placeholder: str = None
+    clear_search: str = None
+    load_more: str = None
+    search_label: str = None
+    filters_label: str = None
+    zero_results: str = None
+    many_results: str = None
+    one_result: str = None
+    alt_search: str = None
+    search_suggestion: str = None
+    searching: str = None
 
 
 @dataclass(kw_only=True, frozen=True)
 class Config_HTML_Search:
     engine: SearchIndexerName = None
     index_path: str = None
+    translations: Config_Pagefind_Translations = field(default_factory=Config_Pagefind_Translations)
 
 
 @dataclass(kw_only=True, frozen=True)
