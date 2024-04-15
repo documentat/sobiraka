@@ -3,7 +3,8 @@ from __future__ import annotations
 import os.path
 import re
 import sys
-from asyncio import Task, TaskGroup, create_subprocess_exec, create_task, to_thread
+from asyncio import Task, create_subprocess_exec, create_task, to_thread
+from copy import deepcopy
 from datetime import datetime
 from itertools import chain
 from os.path import relpath
@@ -103,16 +104,16 @@ class HtmlBuilder(ProjectProcessor):
             rmtree(directory, ignore_errors=True)
 
     async def process4(self, page: Page):
+        if indexer := self._indexers.get(page.volume):
+            await indexer.process_doc(RT[page].doc, page)
+
         theme = self._themes[page.volume]
         if theme.__class__ is not HtmlTheme:
             await theme.process_doc(RT[page].doc, page)
 
         self.apply_postponed_image_changes(page)
 
-        async with TaskGroup() as tg:
-            tg.create_task(self.save_html(page, theme))
-            if indexer := self._indexers.get(page.volume):
-                tg.create_task(indexer.process_doc(RT[page].doc, page))
+        await self.save_html(page, theme)
 
     def apply_postponed_image_changes(self, page: Page):
         for image, new_url in RT[page].converted_image_urls:
@@ -125,6 +126,9 @@ class HtmlBuilder(ProjectProcessor):
 
         volume = page.volume
         project = page.volume.project
+
+        evil_copy = deepcopy(RT[page].doc)
+        evil_copy.content.clear()
 
         pandoc = await create_subprocess_exec(
             'pandoc',
