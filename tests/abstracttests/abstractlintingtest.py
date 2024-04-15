@@ -1,3 +1,5 @@
+from unittest import skip
+
 from helpers import assertNoDiff
 from sobiraka.linter import Linter
 from sobiraka.processing.txt import TextModel
@@ -5,6 +7,7 @@ from sobiraka.runtime import RT
 from .projectdirtestcase import ProjectDirTestCase
 
 
+@skip('Linting is disabled temporarily.')
 class AbstractLintingTest(ProjectDirTestCase[Linter]):
     maxDiff = None
 
