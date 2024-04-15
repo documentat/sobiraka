@@ -56,6 +56,15 @@ class SearchIndexerName(Enum):
     PAGEFIND = 'pagefind'
 
 
+class Config_Search_LinkTarget(Enum):
+    H1 = 'h1'
+    H2 = 'h2'
+    H3 = 'h3'
+    H4 = 'h4'
+    H5 = 'h5'
+    H6 = 'h6'
+
+
 @dataclass(kw_only=True, frozen=True)
 class Config_Pagefind_Translations:
     # pylint: disable=too-many-instance-attributes
@@ -76,6 +85,7 @@ class Config_Pagefind_Translations:
 class Config_HTML_Search:
     engine: SearchIndexerName = None
     index_path: str = None
+    link_target: Config_Search_LinkTarget = Config_Search_LinkTarget.H1
     translations: Config_Pagefind_Translations = field(default_factory=Config_Pagefind_Translations)
 
 

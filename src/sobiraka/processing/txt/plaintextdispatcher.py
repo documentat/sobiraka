@@ -7,8 +7,10 @@ from panflute import BlockQuote, BulletList, Caption, Citation, Cite, Code, Code
     Span, Str, Strikeout, Strong, Subscript, Superscript, Table, TableBody, TableCell, TableFoot, TableHead, TableRow, \
     Underline
 
-from sobiraka.models import Page
+from sobiraka.models import Anchor, Page
 from sobiraka.processing.abstract import Dispatcher
+from sobiraka.runtime import RT
+
 from .textmodel import Fragment, Pos, TextModel
 
 
@@ -18,6 +20,9 @@ class PlainTextDispatcher(Dispatcher):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.tm: dict[Page, TextModel] = defaultdict(self._new_text_model)
+
+        self.current_section_anchor: dict[Page, Anchor | None] = defaultdict(lambda: None)
+        self.current_section_start: dict[Page, Pos] = defaultdict(lambda: Pos(0, 0))
 
     def _new_text_model(self) -> TextModel:
         return TextModel()
@@ -73,15 +78,13 @@ class PlainTextDispatcher(Dispatcher):
 
     async def process_line_break(self, line_break: LineBreak, page: Page):
         tm = self.tm[page]
-        pos = Pos(len(tm.lines) - 1, len(tm.lines[-1]))
-        fragment = Fragment(tm, pos, pos, line_break)
+        fragment = Fragment(tm, tm.end_pos, tm.end_pos, line_break)
         tm.fragments.append(fragment)
         tm.lines.append('')
 
     async def process_soft_break(self, soft_break: SoftBreak, page: Page):
         tm = self.tm[page]
-        pos = Pos(len(tm.lines) - 1, len(tm.lines[-1]))
-        fragment = Fragment(tm, pos, pos, soft_break)
+        fragment = Fragment(tm, tm.end_pos, tm.end_pos, soft_break)
         tm.fragments.append(fragment)
         tm.lines.append('')
 
@@ -126,6 +129,11 @@ class PlainTextDispatcher(Dispatcher):
         if tm.lines[-1] == '':
             tm.lines = tm.lines[:-1]
 
+        anchor = self.current_section_anchor[page]
+        start = self.current_section_start[page]
+        end = tm.end_pos
+        tm.sections[anchor] = Fragment(tm, start, max(start, end))
+
     async def process_block_quote(self, blockquote: BlockQuote, page: Page):
         await self._container(page, blockquote, allow_new_line=True)
 
@@ -152,8 +160,15 @@ class PlainTextDispatcher(Dispatcher):
         self._ensure_new_line(page)
 
     async def process_header(self, header: Header, page: Page):
+        tm = self.tm[page]
+        tm.sections[self.current_section_anchor[page]] = Fragment(tm, self.current_section_start[page], tm.end_pos)
+
         await self._container(page, header, allow_new_line=True)
         self._ensure_new_line(page)
+
+        if header.level > 1:
+            self.current_section_anchor[page] = RT[page].anchors.by_header(header)
+            self.current_section_start[page] = tm.end_pos
 
     async def process_para(self, para: Para, page: Page):
         await self._container(page, para, allow_new_line=True)

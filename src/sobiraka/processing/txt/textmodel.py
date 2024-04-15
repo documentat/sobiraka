@@ -8,6 +8,7 @@ from itertools import chain, pairwise
 from typing import Iterable, Sequence
 
 from panflute import Element
+from sobiraka.models import Anchor
 
 SEP = re.compile(r'[?!.]+\s*')
 END = re.compile(r'[?!.]+\s*$')
@@ -17,6 +18,7 @@ END = re.compile(r'[?!.]+\s*$')
 class TextModel:
     lines: list[str] = field(default_factory=lambda: [''])
     fragments: list[Fragment] = field(default_factory=list)
+    sections: dict[Anchor | None, Fragment] = field(default_factory=dict)
     exceptions_regexp: re.Pattern | None = None
 
     @property
@@ -25,6 +27,8 @@ class TextModel:
 
     @property
     def end_pos(self) -> Pos:
+        if len(self.lines) == 0:
+            return Pos(0, 0)
         return Pos(len(self.lines) - 1, len(self.lines[-1]))
 
     @cached_property
@@ -141,6 +145,8 @@ class Fragment:
     @property
     def text(self) -> str:
         if self.start.line == self.end.line:
+            if self.start.char == self.end.char:
+                return ''
             return self.tm.lines[self.start.line][self.start.char:self.end.char]
 
         result = self.tm.lines[self.start.line][self.start.char:]

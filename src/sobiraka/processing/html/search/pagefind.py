@@ -2,8 +2,9 @@ from asyncio.subprocess import Process, create_subprocess_exec
 from pathlib import Path
 from subprocess import PIPE
 
-from panflute import Doc
+from panflute import Doc, stringify
 from sobiraka.models import Page
+from sobiraka.models.config import Config_Search_LinkTarget
 from sobiraka.processing.txt import PlainTextDispatcher
 from sobiraka.runtime import RT
 
@@ -33,18 +34,37 @@ class PagefindIndexer(SearchIndexer, PlainTextDispatcher):
             const { index } = await pagefind.createIndex();
         ''')
 
-    async def process_doc(self, doc: Doc, page: Page):
-        await super().process_doc(doc, page)
+    def _add_record(self, *, url: str, title: str, content: str):
         self.execute_js(f'''
             var {{ errors, file }} = await index.addCustomRecord({{
-                url: {str(self.builder.get_target_path(page).relative_to(self.builder.output))!r},
-                content: {self.tm[page].text!r},
+                url: {url!r},
+                content: {content!r},
                 language: {self.volume.lang or 'en'!r},
                 meta: {{
-                    title: {RT[page].title!r},
+                    title: {title!r},
                 }},
             }});
         ''')
+
+    async def process_doc(self, doc: Doc, page: Page):
+        await super().process_doc(doc, page)
+
+        tm = self.tm[page]
+        url = str(self.builder.get_target_path(page).relative_to(self.builder.output))
+        title = RT[page].title
+
+        match self.search_config.link_target:
+            case Config_Search_LinkTarget.H1:
+                self._add_record(url=url, title=title, content=tm.text)
+
+            case _:
+                for anchor, fragment in tm.sections.items():
+                    if anchor is None:
+                        self._add_record(url=url, title=title, content=fragment.text)
+                    else:
+                        self._add_record(url=f'{url}#{anchor.identifier}',
+                                         title=f'{title} » {stringify(anchor.header)}',
+                                         content=fragment.text)
 
     async def finalize(self):
         (self.index_path / 'fragment').mkdir(parents=True, exist_ok=True)

@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 from panflute import CodeBlock, Image
 from sobiraka.models import Page, Volume
-from sobiraka.models.config import Config
+from sobiraka.models.config import Config, Config_HTML_Search
 from sobiraka.processing.abstract import Dispatcher
 
 if TYPE_CHECKING:
@@ -17,6 +17,7 @@ class SearchIndexer(Dispatcher, metaclass=ABCMeta):
         super().__init__()
         self.builder: HtmlBuilder = builder
         self.volume: Volume = volume
+        self.search_config: Config_HTML_Search = volume.config.html.search
         self.index_path: Path = index_path
 
     @staticmethod
