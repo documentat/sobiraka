@@ -21,6 +21,7 @@
         window.addEventListener('DOMContentLoaded', (event) => {
             new PagefindUI({
               element: ".book-search",
+              baseUrl: new URL({{ ROOT.__str__() |tojson()}}, location),
               translations: {
                 {%- for translation_key, translation_value in config.html.search.translations.__dict__.items() %}
                   {%- if translation_value is not none %}
