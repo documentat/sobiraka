@@ -22,6 +22,8 @@ class NamingScheme:
 
     def get_index_and_stem(self, path: Path | str) -> tuple[int | float, str]:
         name = Path(path).stem
+        if name == '':
+            return inf, ''
         for pattern in self.patterns:
             if m := pattern.fullmatch(name):
                 try:

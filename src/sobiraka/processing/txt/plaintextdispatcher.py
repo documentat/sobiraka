@@ -2,7 +2,7 @@ from collections import defaultdict
 from typing import Awaitable, Callable
 
 from panflute import BlockQuote, BulletList, Caption, Citation, Cite, Code, CodeBlock, Definition, DefinitionItem, \
-    DefinitionList, Div, Element, Emph, Header, HorizontalRule, Image, LineBlock, LineBreak, LineItem, Link, \
+    DefinitionList, Div, Doc, Element, Emph, Header, HorizontalRule, Image, LineBlock, LineBreak, LineItem, Link, \
     ListItem, Math, Note, Null, OrderedList, Para, Plain, Quoted, RawBlock, RawInline, SmallCaps, SoftBreak, Space, \
     Span, Str, Strikeout, Strong, Subscript, Superscript, Table, TableBody, TableCell, TableFoot, TableHead, TableRow, \
     Underline
@@ -117,6 +117,14 @@ class PlainTextDispatcher(Dispatcher):
 
     ################################################################################
     # Block containers
+
+    async def process_doc(self, doc: Doc, page: Page):
+        await self.process_container(doc, page)
+
+        tm = self.tm[page]
+
+        if tm.lines[-1] == '':
+            tm.lines = tm.lines[:-1]
 
     async def process_block_quote(self, blockquote: BlockQuote, page: Page):
         await self._container(page, blockquote, allow_new_line=True)
