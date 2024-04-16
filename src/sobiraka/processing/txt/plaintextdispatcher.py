@@ -24,6 +24,21 @@ class PlainTextDispatcher(Dispatcher):
         self.current_section_anchor: dict[Page, Anchor | None] = defaultdict(lambda: None)
         self.current_section_start: dict[Page, Pos] = defaultdict(lambda: Pos(0, 0))
 
+    async def process_doc(self, doc: Doc, page: Page):
+        await self.process_container(doc, page)
+
+        tm = self.tm[page]
+
+        if tm.lines[-1] == '':
+            tm.lines = tm.lines[:-1]
+
+        anchor = self.current_section_anchor[page]
+        start = self.current_section_start[page]
+        end = tm.end_pos
+        tm.sections[anchor] = Fragment(tm, start, max(start, end))
+
+        tm.freeze()
+
     def _new_text_model(self) -> TextModel:
         return TextModel()
 
@@ -120,19 +135,6 @@ class PlainTextDispatcher(Dispatcher):
 
     ################################################################################
     # Block containers
-
-    async def process_doc(self, doc: Doc, page: Page):
-        await self.process_container(doc, page)
-
-        tm = self.tm[page]
-
-        if tm.lines[-1] == '':
-            tm.lines = tm.lines[:-1]
-
-        anchor = self.current_section_anchor[page]
-        start = self.current_section_start[page]
-        end = tm.end_pos
-        tm.sections[anchor] = Fragment(tm, start, max(start, end))
 
     async def process_block_quote(self, blockquote: BlockQuote, page: Page):
         await self._container(page, blockquote, allow_new_line=True)

@@ -21,6 +21,11 @@ class TextModel:
     sections: dict[Anchor | None, Fragment] = field(default_factory=dict)
     exceptions_regexp: re.Pattern | None = None
 
+    __frozen: bool = field(default=False, init=False)
+
+    def freeze(self):
+        self.__frozen = True
+
     @property
     def text(self) -> str:
         return '\n'.join(self.lines)
@@ -33,6 +38,8 @@ class TextModel:
 
     @cached_property
     def exceptions(self) -> Sequence[Sequence[Fragment]]:
+        assert self.__frozen
+
         exceptions: list[list[Fragment]] = []
         for linenum, line in enumerate(self.lines):
             exceptions.append([])
@@ -52,6 +59,8 @@ class TextModel:
         Return pairs of numbers representing `start` and `end` of each phrase.
         The content of each phrase can then be accessed as `line[start:end]`.
         """
+        assert self.__frozen
+
         result: list[list[Fragment]] = []
 
         for linenum, line in enumerate(self.lines):
@@ -82,6 +91,8 @@ class TextModel:
         If `remove_exceptions=True`, the exceptions will be replaced with spaces in the result.
         This is used to generate phrases that can be sent to another linter.
         """
+        assert self.__frozen
+
         result: list[Fragment] = []
 
         # Each phrase can only be on a single line,
