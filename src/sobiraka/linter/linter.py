@@ -6,18 +6,18 @@ from more_itertools import unique_everseen
 from panflute import Code, ListItem, stringify
 
 from sobiraka.models import Issue, MisspelledWords, Page, PhraseBeginsWithLowerCase
+from sobiraka.processing.abstract import VolumeProcessor
+from sobiraka.processing.txt import Fragment, PlainTextDispatcher, TextModel, exceptions_regexp
 from sobiraka.runtime import RT
 from .hunspell import run_hunspell
-from .lint_preprocessor import LintPreprocessor
-from .textmodel import Fragment
 
 
 # TODO: Reorganize Processor and related abstract classes
 # pylint: disable=abstract-method
-class Linter(LintPreprocessor):
+class Linter(PlainTextDispatcher, VolumeProcessor):
 
-    def get_pages(self) -> tuple[Page, ...]:
-        return self.volume.pages
+    def _new_text_model(self) -> TextModel:
+        return TextModel(exceptions_regexp=exceptions_regexp(self.volume))
 
     async def run(self):
         tasks: list[Awaitable] = []
@@ -31,7 +31,7 @@ class Linter(LintPreprocessor):
         return 0
 
     async def check_page(self, page: Page):
-        tm = self._tm[page]
+        tm = self.tm[page]
 
         if self.volume.config.lint.dictionaries:
             words: list[str] = []
@@ -57,7 +57,7 @@ class Linter(LintPreprocessor):
         if not phrase.text[0].islower():
             return
 
-        for exception in tm.exceptions_by_line[phrase.start.line]:
+        for exception in tm.exceptions[phrase.start.line]:
             if exception.start <= phrase.start < exception.end:
                 return
 

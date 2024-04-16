@@ -3,9 +3,9 @@ from __future__ import annotations
 import os.path
 import re
 import sys
-from asyncio import Task, create_subprocess_exec, create_task, to_thread
+from asyncio import Task, TaskGroup, create_subprocess_exec, create_task, to_thread
+from copy import deepcopy
 from datetime import datetime
-from functools import partial
 from itertools import chain
 from os.path import relpath
 from pathlib import Path
@@ -15,13 +15,14 @@ from subprocess import PIPE
 import iso639
 from aiofiles.os import makedirs
 from panflute import Element, Header, Image
-
-from sobiraka.models import DirPage, IndexPage, Page, PageHref, PageStatus, Project, Volume
+from sobiraka.models import DirPage, FileSystem, IndexPage, Page, PageHref, PageStatus, Project, Volume
+from sobiraka.models.config import Config, SearchIndexerName
 from sobiraka.runtime import RT
 from sobiraka.utils import panflute_to_bytes, super_gather
-from .abstract import ProjectProcessor
-from .plugin import HtmlTheme, load_html_theme
-from ..models.config import Config
+
+from .search import PagefindIndexer, SearchIndexer
+from ..abstract import ProjectProcessor
+from ..plugin import HtmlTheme, load_html_theme
 
 
 class HtmlBuilder(ProjectProcessor):
@@ -32,47 +33,69 @@ class HtmlBuilder(ProjectProcessor):
 
         self._html_builder_tasks: list[Task] = []
         self._results: set[Path] = set()
+        self._indexers: dict[Volume, SearchIndexer] = {}
 
         self._themes: dict[Volume, HtmlTheme] = {}
         for volume in project.volumes:
             self._themes[volume] = load_html_theme(volume.config.html.theme)
 
     async def run(self):
-        project = self.project
-
         self.output.mkdir(parents=True, exist_ok=True)
 
-        for volume in project.volumes:
+        for volume in self.project.volumes:
+            config: Config = volume.config
             theme = self._themes[volume]
 
-            # Copy the theme's static directory
-            for source_path in theme.static_dir.rglob('**/*'):
-                if source_path.is_file():
-                    target_path = self.output / '_static' / source_path.relative_to(theme.static_dir)
-                    self._html_builder_tasks.append(create_task(self.copy_file_from_theme(source_path, target_path)))
+            # Launch page processing tasks
+            for page in volume.pages:
+                self._html_builder_tasks.append(create_task(self.require(page, PageStatus.PROCESS4)))
 
-            # Copy additional static files
-            for filename in volume.config.html.resources_force_copy:
-                source_path = (volume.config.paths.resources or volume.config.paths.root) / filename
-                target_path = self.output / volume.config.html.resources_prefix / filename
-                self._html_builder_tasks.append(create_task(self.copy_file_from_project(source_path, target_path)))
+            # Launch non-page processing tasks
+            self._html_builder_tasks += (
+                create_task(self.copy_static_directory(theme)),
+                create_task(self.copy_additional_static_files(volume)),
+                create_task(self.compile_all_sass(theme)),
+            )
 
-            # Compile SASS styles
-            for source_path, target_path in theme.sass_files.items():
-                source_path = project.fs.resolve(theme.theme_dir / source_path)
-                target_path = self.output / '_static' / target_path
-                if target_path not in self._results:
-                    self._html_builder_tasks.append(create_task(self.compile_sass(source_path, target_path)))
-
-        # Generate the HTML pages in no particular order
-        for page in project.pages:
-            self._html_builder_tasks.append(create_task(self.require(page, PageStatus.PROCESS4),
-                                                        name=f'generate html for {page.path_in_project}'))
+            # Initialize search indexer
+            if config.html.search.engine is not None:
+                self._indexers[volume] = await self.prepare_search_indexer(volume)
 
         # Wait until all pages will be generated and all additional files will be copied to the output directory
         # This may include tasks that started as a side effect of generating the HTML pages
         await super_gather(self._html_builder_tasks, 'Some tasks failed when building HTML')
 
+        # Finalize all search indexers
+        for indexer in self._indexers.values():
+            await indexer.finalize()
+            self._results |= indexer.results()
+
+        self.delete_old_files()
+
+    async def copy_static_directory(self, theme: HtmlTheme):
+        async with TaskGroup() as tg:
+            for source_path in theme.static_dir.rglob('**/*'):
+                if source_path.is_file():
+                    target_path = self.output / '_static' / source_path.relative_to(theme.static_dir)
+                    tg.create_task(self.copy_file_from_theme(source_path, target_path))
+
+    async def copy_additional_static_files(self, volume: Volume):
+        async with TaskGroup() as tg:
+            for filename in volume.config.html.resources_force_copy:
+                source_path = (volume.config.paths.resources or volume.config.paths.root) / filename
+                target_path = self.output / volume.config.html.resources_prefix / filename
+                tg.create_task(self.copy_file_from_project(source_path, target_path))
+
+    async def compile_all_sass(self, theme: HtmlTheme):
+        fs: FileSystem = self.project.fs
+        async with TaskGroup() as tg:
+            for source_path, target_path in theme.sass_files.items():
+                source_path = fs.resolve(theme.theme_dir / source_path)
+                target_path = self.output / '_static' / target_path
+                if target_path not in self._results:
+                    tg.create_task(self.compile_sass(source_path, target_path))
+
+    def delete_old_files(self):
         # Delete files that were not produced during this build
         all_files = set()
         all_dirs = set()
@@ -89,20 +112,31 @@ class HtmlBuilder(ProjectProcessor):
             rmtree(directory, ignore_errors=True)
 
     async def process4(self, page: Page):
-        from .toc import local_toc, toc
+        if indexer := self._indexers.get(page.volume):
+            await indexer.process_doc(RT[page].doc, page)
 
-        volume = page.volume
-        project = page.volume.project
-
-        theme = self._themes[volume]
+        theme = self._themes[page.volume]
         if theme.__class__ is not HtmlTheme:
             await theme.process_doc(RT[page].doc, page)
 
-        # Apply postponed image URL changes
+        self.apply_postponed_image_changes(page)
+
+        await self.save_html(page, theme)
+
+    def apply_postponed_image_changes(self, page: Page):
         for image, new_url in RT[page].converted_image_urls:
             image.url = new_url
         for image, link in RT[page].links_that_follow_images:
             link.url = image.url
+
+    async def save_html(self, page: Page, theme: HtmlTheme):
+        from ..toc import local_toc, toc
+
+        volume = page.volume
+        project = page.volume.project
+
+        evil_copy = deepcopy(RT[page].doc)
+        evil_copy.content.clear()
 
         pandoc = await create_subprocess_exec(
             'pandoc',
@@ -120,6 +154,7 @@ class HtmlBuilder(ProjectProcessor):
 
             project=project,
             volume=volume,
+            config=volume.config,
             page=page,
 
             number=RT[page].number,
@@ -149,6 +184,9 @@ class HtmlBuilder(ProjectProcessor):
         self._results.add(target_file)
 
     def get_target_path(self, page: Page) -> Path:
+        volume: Volume = page.volume
+        config: Config = page.volume.config
+
         target_path = Path()
         for part in page.path_in_volume.parts:
             target_path /= re.sub(r'^(\d+-)?', '', part)
@@ -163,20 +201,23 @@ class HtmlBuilder(ProjectProcessor):
             case _:
                 raise TypeError(page.__class__.__name__)
 
-        prefix = page.volume.config.html.prefix or '$AUTOPREFIX'
-        prefix = re.sub(r'\$\w+', partial(self.replace_in_prefix, page), prefix)
+        prefix = config.html.prefix or '$AUTOPREFIX'
+        prefix = self.expand_path_vars(prefix, volume)
         prefix = os.path.join(*prefix.split('/'))
 
         target_path = self.output / prefix / target_path
         return target_path
 
     @classmethod
-    def replace_in_prefix(cls, page: Page, m: re.Match) -> str:
-        return {
-            '$LANG': page.volume.lang or '',
-            '$VOLUME': page.volume.codename,
-            '$AUTOPREFIX': page.volume.autoprefix,
-        }[m.group()]
+    def expand_path_vars(cls, text: str, volume: Volume) -> str:
+        def _substitution(m: re.Match) -> str:
+            return {
+                '$LANG': volume.lang or '',
+                '$VOLUME': volume.codename or 'all',
+                '$AUTOPREFIX': volume.autoprefix,
+            }[m.group()]
+
+        return re.sub(r'\$\w+', _substitution, text)
 
     def make_internal_url(self, href: PageHref | Page, *, page: Page) -> str:
         if isinstance(href, Page):
@@ -245,6 +286,24 @@ class HtmlBuilder(ProjectProcessor):
         RT[page].converted_image_urls.append((image, new_url))
 
         return (image,)
+
+    async def prepare_search_indexer(self, volume: Volume) -> SearchIndexer:
+        # Select the search indexer implementation
+        config: Config = volume.config
+        indexer_class = {
+            SearchIndexerName.PAGEFIND: PagefindIndexer,
+        }[config.html.search.engine]
+
+        # Select the index file path
+        if config.html.search.index_path is not None:
+            index_path = self.output / self.expand_path_vars(config.html.search.index_path, volume)
+        else:
+            index_path = self.output / indexer_class.default_index_path(volume)
+
+        # Initialize the indexer
+        indexer = indexer_class(self, volume, index_path)
+        await indexer.initialize()
+        return indexer
 
     ################################################################################
     # Functions used for additional tasks

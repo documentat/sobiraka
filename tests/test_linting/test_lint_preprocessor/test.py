@@ -4,6 +4,7 @@ from panflute import Space, Str
 
 from abstracttests.abstractlintingtest import AbstractLintingTest
 from helpers import assertNoDiff
+from sobiraka.processing.txt import TextModel
 
 
 class TestLintPreprocessor(AbstractLintingTest):
@@ -15,7 +16,7 @@ class TestLintPreprocessor(AbstractLintingTest):
                 while expected[-1] == '':
                     expected.pop()
 
-                tm = await self.processor.tm(page)
+                tm: TextModel = self.processor.tm[page]
                 actual = tm.lines
                 while actual[-1] == '':
                     actual.pop()
@@ -28,7 +29,7 @@ class TestLintPreprocessor(AbstractLintingTest):
                 expected = list(filter(None, (f.strip() for f in expected.read_text().splitlines())))
 
                 actual: list[str] = []
-                tm = await self.processor.tm(page)
+                tm: TextModel = self.processor.tm[page]
                 self.assertSequenceEqual(sorted(tm.fragments, key=lambda f: f.start), tm.fragments)
 
                 for f in tm.fragments:

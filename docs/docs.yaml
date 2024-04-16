@@ -4,6 +4,11 @@ paths:
   include: ['**/*.md']
 html:
   theme: book
+  search:
+    engine: pagefind
+    link_target: h2
+    translations:
+      placeholder: Поиск по документации
 lint:
   dictionaries:
     - en_US
