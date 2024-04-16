@@ -3,7 +3,7 @@ from __future__ import annotations
 import os.path
 import re
 import sys
-from asyncio import Task, create_subprocess_exec, create_task, to_thread
+from asyncio import Task, TaskGroup, create_subprocess_exec, create_task, to_thread
 from copy import deepcopy
 from datetime import datetime
 from itertools import chain
@@ -15,7 +15,7 @@ from subprocess import PIPE
 import iso639
 from aiofiles.os import makedirs
 from panflute import Element, Header, Image
-from sobiraka.models import DirPage, IndexPage, Page, PageHref, PageStatus, Project, Volume
+from sobiraka.models import DirPage, FileSystem, IndexPage, Page, PageHref, PageStatus, Project, Volume
 from sobiraka.models.config import Config, SearchIndexerName
 from sobiraka.runtime import RT
 from sobiraka.utils import panflute_to_bytes, super_gather
@@ -40,44 +40,26 @@ class HtmlBuilder(ProjectProcessor):
             self._themes[volume] = load_html_theme(volume.config.html.theme)
 
     async def run(self):
-        # pylint: disable=too-many-branches
-        # pylint: disable=too-many-locals
-
-        project = self.project
-
         self.output.mkdir(parents=True, exist_ok=True)
 
-        for volume in project.volumes:
+        for volume in self.project.volumes:
             config: Config = volume.config
             theme = self._themes[volume]
+
+            # Launch page processing tasks
+            for page in volume.pages:
+                self._html_builder_tasks.append(create_task(self.require(page, PageStatus.PROCESS4)))
+
+            # Launch non-page processing tasks
+            self._html_builder_tasks += (
+                create_task(self.copy_static_directory(theme)),
+                create_task(self.copy_additional_static_files(volume)),
+                create_task(self.compile_all_sass(theme)),
+            )
 
             # Initialize search indexer
             if config.html.search.engine is not None:
                 self._indexers[volume] = await self.prepare_search_indexer(volume)
-
-            # Copy the theme's static directory
-            for source_path in theme.static_dir.rglob('**/*'):
-                if source_path.is_file():
-                    target_path = self.output / '_static' / source_path.relative_to(theme.static_dir)
-                    self._html_builder_tasks.append(create_task(self.copy_file_from_theme(source_path, target_path)))
-
-            # Copy additional static files
-            for filename in volume.config.html.resources_force_copy:
-                source_path = (volume.config.paths.resources or volume.config.paths.root) / filename
-                target_path = self.output / volume.config.html.resources_prefix / filename
-                self._html_builder_tasks.append(create_task(self.copy_file_from_project(source_path, target_path)))
-
-            # Compile SASS styles
-            for source_path, target_path in theme.sass_files.items():
-                source_path = project.fs.resolve(theme.theme_dir / source_path)
-                target_path = self.output / '_static' / target_path
-                if target_path not in self._results:
-                    self._html_builder_tasks.append(create_task(self.compile_sass(source_path, target_path)))
-
-        # Generate the HTML pages in no particular order
-        for page in project.pages:
-            self._html_builder_tasks.append(create_task(self.require(page, PageStatus.PROCESS4),
-                                                        name=f'generate html for {page.path_in_project}'))
 
         # Wait until all pages will be generated and all additional files will be copied to the output directory
         # This may include tasks that started as a side effect of generating the HTML pages
@@ -88,6 +70,32 @@ class HtmlBuilder(ProjectProcessor):
             await indexer.finalize()
             self._results |= indexer.results()
 
+        self.delete_old_files()
+
+    async def copy_static_directory(self, theme: HtmlTheme):
+        async with TaskGroup() as tg:
+            for source_path in theme.static_dir.rglob('**/*'):
+                if source_path.is_file():
+                    target_path = self.output / '_static' / source_path.relative_to(theme.static_dir)
+                    tg.create_task(self.copy_file_from_theme(source_path, target_path))
+
+    async def copy_additional_static_files(self, volume: Volume):
+        async with TaskGroup() as tg:
+            for filename in volume.config.html.resources_force_copy:
+                source_path = (volume.config.paths.resources or volume.config.paths.root) / filename
+                target_path = self.output / volume.config.html.resources_prefix / filename
+                tg.create_task(self.copy_file_from_project(source_path, target_path))
+
+    async def compile_all_sass(self, theme: HtmlTheme):
+        fs: FileSystem = self.project.fs
+        async with TaskGroup() as tg:
+            for source_path, target_path in theme.sass_files.items():
+                source_path = fs.resolve(theme.theme_dir / source_path)
+                target_path = self.output / '_static' / target_path
+                if target_path not in self._results:
+                    tg.create_task(self.compile_sass(source_path, target_path))
+
+    def delete_old_files(self):
         # Delete files that were not produced during this build
         all_files = set()
         all_dirs = set()
