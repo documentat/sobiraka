@@ -57,7 +57,7 @@ class Linter(PlainTextDispatcher, VolumeProcessor):
         if not phrase.text[0].islower():
             return
 
-        for exception in tm.exceptions_by_line[phrase.start.line]:
+        for exception in tm.exceptions[phrase.start.line]:
             if exception.start <= phrase.start < exception.end:
                 return
 

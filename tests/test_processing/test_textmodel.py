@@ -18,8 +18,7 @@ class AbstractTestTextModel(ProjectTestCase):
 
     EXPECTED_TEXT: str = ''
 
-    EXPECTED_EXCEPTIONS_BY_LINE: tuple[tuple[str, ...], ...] = ()
-    EXPECTED_EXCEPTIONS: tuple[str, ...] = ()
+    EXPECTED_EXCEPTIONS: tuple[tuple[str, ...], ...] = ()
 
     EXPECTED_NAIVE_PHRASES: tuple[tuple[str, ...], ...] = ()
     EXPECTED_PHRASES: tuple[str, ...] = ()
@@ -49,14 +48,10 @@ class AbstractTestTextModel(ProjectTestCase):
         actual = self.tm.text
         self.assertEqual(expected, actual)
 
-    def test_exceptions_by_line(self):
-        expected = self.EXPECTED_EXCEPTIONS_BY_LINE
-        actual = tuple(tuple(p.text for p in line) for line in self.tm.exceptions_by_line)
-        actual = tuple(more_itertools.rstrip(actual, lambda x: x == ()))
-        self.assertEqual(self.EXPECTED_EXCEPTIONS_BY_LINE, actual)
-
     def test_exceptions(self):
-        actual = tuple(p.text for p in self.tm.exceptions)
+        expected = self.EXPECTED_EXCEPTIONS
+        actual = tuple(tuple(p.text for p in line) for line in self.tm.exceptions)
+        actual = tuple(more_itertools.rstrip(actual, lambda x: x == ()))
         self.assertEqual(self.EXPECTED_EXCEPTIONS, actual)
 
     def test_naive_phrases(self):
@@ -103,13 +98,9 @@ class TestTextModel_WithException(AbstractTestTextModel):
         Hello World. I am a T.E.X.T.
         Do you know any other T.E.X.Ts?
     '''
-    EXPECTED_EXCEPTIONS_BY_LINE = (
+    EXPECTED_EXCEPTIONS = (
         ('T.E.X.T',),
         ('T.E.X.Ts',),
-    )
-    EXPECTED_EXCEPTIONS = (
-        'T.E.X.T',
-        'T.E.X.Ts',
     )
     EXPECTED_NAIVE_PHRASES = (
         ('Hello World.', 'I am a T.', 'E.', 'X.', 'T.',),

@@ -4,7 +4,7 @@ import re
 from bisect import bisect_left
 from dataclasses import dataclass, field
 from functools import cached_property
-from itertools import chain, pairwise
+from itertools import pairwise
 from typing import Iterable, Sequence
 
 from panflute import Element
@@ -32,20 +32,16 @@ class TextModel:
         return Pos(len(self.lines) - 1, len(self.lines[-1]))
 
     @cached_property
-    def exceptions_by_line(self) -> Sequence[Sequence[Fragment]]:
-        exceptions_by_line: list[list[Fragment]] = []
+    def exceptions(self) -> Sequence[Sequence[Fragment]]:
+        exceptions: list[list[Fragment]] = []
         for linenum, line in enumerate(self.lines):
-            exceptions_by_line.append([])
+            exceptions.append([])
             if self.exceptions_regexp:
                 for m in re.finditer(self.exceptions_regexp, line):
-                    exceptions_by_line[linenum].append(Fragment(self,
-                                                                Pos(linenum, m.start()),
-                                                                Pos(linenum, m.end())))
-        return tuple(tuple(x) for x in exceptions_by_line)
-
-    @property
-    def exceptions(self) -> Sequence[Fragment]:
-        return tuple(chain(*self.exceptions_by_line))
+                    exceptions[linenum].append(Fragment(self,
+                                                        Pos(linenum, m.start()),
+                                                        Pos(linenum, m.end())))
+        return tuple(tuple(x) for x in exceptions)
 
     @cached_property
     def naive_phrases(self) -> Sequence[Sequence[Fragment]]:
@@ -92,7 +88,7 @@ class TextModel:
         # so we work with each line separately
         for linenum in range(len(self.lines)):
             phrases = list(self.naive_phrases[linenum])
-            exceptions = self.exceptions_by_line[linenum]
+            exceptions = self.exceptions[linenum]
 
             for exc in exceptions:
                 # Find the phrases overlapping with the exception from left and right.
@@ -121,7 +117,7 @@ class TextModel:
     def clean_phrases(self) -> Iterable[str]:
         for phrase in self.phrases:
             result = phrase.text
-            for exc in self.exceptions_by_line[phrase.start.line]:
+            for exc in self.exceptions[phrase.start.line]:
                 if phrase.start <= exc.start and exc.end <= phrase.end:
                     start = exc.start.char - phrase.start.char
                     end = exc.end.char - phrase.start.char
