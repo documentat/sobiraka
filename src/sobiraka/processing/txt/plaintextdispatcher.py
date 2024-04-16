@@ -15,34 +15,52 @@ from .textmodel import Fragment, Pos, TextModel
 
 
 class PlainTextDispatcher(Dispatcher):
+    """
+    Base class for features that need to work with text, such as linters or indexers.
+
+    It works as a :class:`Dispatcher`, analyzing each element in the Panflute tree.
+    Unlike some other dispatchers/processors, it is non-destructive: it never modifies or removes elements.
+
+    Once :meth:`process_doc()` is done, you can retrieve the information about the plain text
+    from :data:`tm`, which is a :class:`TextModel` object.
+    """
     # pylint: disable=too-many-public-methods
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
         self.tm: dict[Page, TextModel] = defaultdict(self._new_text_model)
 
-        self.current_section_anchor: dict[Page, Anchor | None] = defaultdict(lambda: None)
-        self.current_section_start: dict[Page, Pos] = defaultdict(lambda: Pos(0, 0))
+        self._current_section_anchor: dict[Page, Anchor | None] = defaultdict(lambda: None)
+        self._current_section_start: dict[Page, Pos] = defaultdict(lambda: Pos(0, 0))
 
     async def process_doc(self, doc: Doc, page: Page):
         await self.process_container(doc, page)
 
+        # If we just started a new line at the end, remove it, we don't need it
         tm = self.tm[page]
-
         if tm.lines[-1] == '':
             tm.lines = tm.lines[:-1]
 
-        anchor = self.current_section_anchor[page]
-        start = self.current_section_start[page]
+        # Close the section related to the latest found header.
+        # If there were no headers, this will close the section related to `None`,
+        # i.e. the main section that began at Pos(0, 0), as defined in the init.
+        anchor = self._current_section_anchor[page]
+        start = self._current_section_start[page]
         end = tm.end_pos
         tm.sections[anchor] = Fragment(tm, start, max(start, end))
 
+        # Indicate that the TextModel data is now final
         tm.freeze()
 
     def _new_text_model(self) -> TextModel:
         return TextModel()
 
     def _atomic(self, page: Page, elem: Element, text: str):
+        """
+        For a single inline element (such as a `Str` or a `Space`),
+        append a given text representation to the current line and create a corresponding :class:`Fragment`.
+        """
         assert '\n' not in text
 
         tm = self.tm[page]
@@ -160,14 +178,18 @@ class PlainTextDispatcher(Dispatcher):
 
     async def process_header(self, header: Header, page: Page):
         tm = self.tm[page]
-        tm.sections[self.current_section_anchor[page]] = Fragment(tm, self.current_section_start[page], tm.end_pos)
 
+        # Close previous section
+        tm.sections[self._current_section_anchor[page]] = Fragment(tm, self._current_section_start[page], tm.end_pos)
+
+        # Process the content inside the header
         await self._container(page, header, allow_new_line=True)
         self._ensure_new_line(page)
 
+        # Start a new section
         if header.level > 1:
-            self.current_section_anchor[page] = RT[page].anchors.by_header(header)
-            self.current_section_start[page] = tm.end_pos
+            self._current_section_anchor[page] = RT[page].anchors.by_header(header)
+            self._current_section_start[page] = tm.end_pos
 
     async def process_para(self, para: Para, page: Page):
         await self._container(page, para, allow_new_line=True)

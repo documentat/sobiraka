@@ -14,30 +14,80 @@ SEP = re.compile(r'[?!.]+\s*')
 END = re.compile(r'[?!.]+\s*$')
 
 
-@dataclass
+@dataclass(kw_only=True)
 class TextModel:
+    """
+    Information about a Page's text.
+
+    Some methods here are only available after you finish editing `lines`, `fragments` and `sections`
+    and call `freeze()`.
+    """
+
     lines: list[str] = field(default_factory=lambda: [''])
-    fragments: list[Fragment] = field(default_factory=list)
-    sections: dict[Anchor | None, Fragment] = field(default_factory=dict)
-    exceptions_regexp: re.Pattern | None = None
+    """
+    Lines of plain text.
+    
+    The lines do not have to match the lines in the source code, but they must not change once added.
+    Other properties and methods, such as `end_pos` and `exceptions`,
+    indirectly reference both the lines numeration and their content, see :class:`Pos`.
+    """
+
+    fragments: list[Fragment] = field(default_factory=list, init=False)
+    """
+    List of text fragments, usually related to specific elements.
+    
+    In :class:`Linter`, this is used to quickly find the first element in a phrase.
+    """
+
+    sections: dict[Anchor | None, Fragment] = field(default_factory=dict, init=False)
+    """
+    Information about how the page is split into sections by headers.
+    
+    A page without headers (except for H1) will have just one section under the key `None`.
+    Otherwise, each new header will end the previous section and start a new one.
+    
+    The header itself is never included into the :class:`Fragment` representing its section.
+    """
+
+    exceptions_regexp: re.Pattern | None = field(default=None)
+    """
+    The regular expression what wil be used for finding `exceptions`.
+    Should be loaded from the volume's configuration.
+    """
 
     __frozen: bool = field(default=False, init=False)
 
     def freeze(self):
+        """
+        Call this to indicate that you are not going to modify `lines`, `fragments` and `sections` anymore.
+        You must call this to be able to use some other methods.
+        """
         self.__frozen = True
 
     @property
     def text(self) -> str:
+        """
+        The plain text representation of the whole page.
+        """
         return '\n'.join(self.lines)
 
     @property
     def end_pos(self) -> Pos:
+        """
+        A :class:`Pos` that points to the end of the last line.
+        """
         if len(self.lines) == 0:
             return Pos(0, 0)
         return Pos(len(self.lines) - 1, len(self.lines[-1]))
 
     @cached_property
     def exceptions(self) -> Sequence[Sequence[Fragment]]:
+        """
+        Find positions of all words or word combinations that match the :data:`exceptions_regexp`.
+
+        The result will contain one sequence per each line in :data:`lines`,
+        each sequence containing :class:`Fragment` objects indicating where the exceptions are found.
+        """
         assert self.__frozen
 
         exceptions: list[list[Fragment]] = []
@@ -56,8 +106,8 @@ class TextModel:
         Split each line into phrases by periods, exclamation or question marks or clusters of them.
         The punctuation marks are included in the phrases, but the spaces after are not.
 
-        Return pairs of numbers representing `start` and `end` of each phrase.
-        The content of each phrase can then be accessed as `line[start:end]`.
+        This is called `naive_phrases` because this is just the first step used by the real `phrases`
+        which takes :data:`exceptions` into consideration and provides more reliable results.
         """
         assert self.__frozen
 
@@ -126,6 +176,10 @@ class TextModel:
 
     @property
     def clean_phrases(self) -> Iterable[str]:
+        """
+        A special representation of :data:`lines`, with all :data:`exceptions` removed.
+        This does not affect any elements' positions due to placing necessary amounts of spaces.
+        """
         for phrase in self.phrases:
             result = phrase.text
             for exc in self.exceptions[phrase.start.line]:
@@ -138,10 +192,22 @@ class TextModel:
 
 @dataclass(frozen=True)
 class Fragment:
+    """
+    A specific fragment of text in a :class:`TextModel`,
+    usually (but not necessarily) related to a single Panflute element.
+    """
+
     tm: TextModel
+    """The model this fragments belong to. Used for getting the text representation."""
+
     start: Pos
+    """The first character position."""
+
     end: Pos
+    """The last character position."""
+
     element: Element | None = None
+    """An optional reference to the element which contents this fragment represents."""
 
     def __repr__(self):
         return f'<[{self.start}-{self.end}] {self.text!r}>'
@@ -157,7 +223,7 @@ class Fragment:
             return self.tm.lines[self.start.line][self.start.char:self.end.char]
 
         result = self.tm.lines[self.start.line][self.start.char:]
-        for line in range(self.start.line+1, self.end.line):
+        for line in range(self.start.line + 1, self.end.line):
             result += '\n' + self.tm.lines[line]
         result += '\n' + self.tm.lines[self.end.line][:self.end.char]
         return result
@@ -165,6 +231,10 @@ class Fragment:
 
 @dataclass(frozen=True, eq=True, order=True)
 class Pos:
+    """
+    An exact position of a character in a :class:`TextModel`.
+    Consists of a line number and a character number within that line.
+    """
     line: int
     char: int
 
