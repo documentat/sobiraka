@@ -1,13 +1,12 @@
 ################################################################################
 # The base for most images
-################################################################################
 
 FROM python:3.11-alpine3.19 AS python-and-nodejs
 RUN apk add --no-cache nodejs npm
 
+
 ################################################################################
 # Install Python and NodeJS dependencies
-################################################################################
 
 # Build Sobiraka
 FROM python:3.11-alpine3.19 AS build-package
@@ -27,11 +26,12 @@ RUN pip install --prefix /prefix pylint~=3.1.0
 
 FROM python-and-nodejs AS install-npm-dependencies
 WORKDIR /opt
-RUN npm install --verbose pagefind
+ADD package.json .
+RUN npm install --verbose
+
 
 ################################################################################
 # Download additional utilities
-################################################################################
 
 FROM alpine:3.19 AS get-pandoc
 WORKDIR /tmp/pandoc
@@ -39,17 +39,17 @@ RUN arch=$(arch | sed s:aarch64:arm64: | sed s:x86_64:amd64:) \
     && wget https://github.com/jgm/pandoc/releases/download/2.19/pandoc-2.19-linux-$arch.tar.gz -O-  \
     | tar -xz --strip-components=1
 
+
 ################################################################################
 # Install Sobiraka
-################################################################################
 
 FROM install-pip-dependencies AS install-package
 COPY --from=build-package /dist/*.tar.gz .
 RUN pip install --prefix /prefix *.tar.gz
 
+
 ################################################################################
 # The base images for all final images
-################################################################################
 
 FROM python-and-nodejs AS common-html
 RUN apk add --no-cache hunspell
@@ -66,9 +66,9 @@ COPY --from=get-pandoc /tmp/pandoc /usr/local
 WORKDIR /W
 ENTRYPOINT [""]
 
+
 ################################################################################
 # Final images
-################################################################################
 
 FROM common AS tester-src
 RUN apk add --no-cache git make poppler-utils
