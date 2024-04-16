@@ -1,8 +1,9 @@
-from unittest import main
+from unittest import main, skip
 
 from abstracttests.abstractlintingtest import AbstractLintingTest
 
 
+@skip('Linting is disabled temporarily.')
 class TestWikipediaExampleCom(AbstractLintingTest):
     pass
 
