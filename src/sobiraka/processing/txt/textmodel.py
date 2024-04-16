@@ -4,44 +4,101 @@ import re
 from bisect import bisect_left
 from dataclasses import dataclass, field
 from functools import cached_property
-from itertools import chain, pairwise
+from itertools import pairwise
 from typing import Iterable, Sequence
 
 from panflute import Element
+from sobiraka.models import Anchor
 
 SEP = re.compile(r'[?!.]+\s*')
 END = re.compile(r'[?!.]+\s*$')
 
 
-@dataclass
+@dataclass(kw_only=True)
 class TextModel:
+    """
+    Information about a Page's text.
+
+    Some methods here are only available after you finish editing `lines`, `fragments` and `sections`
+    and call `freeze()`.
+    """
+
     lines: list[str] = field(default_factory=lambda: [''])
-    fragments: list[Fragment] = field(default_factory=list)
-    exceptions_regexp: re.Pattern | None = None
+    """
+    Lines of plain text.
+    
+    The lines do not have to match the lines in the source code, but they must not change once added.
+    Other properties and methods, such as `end_pos` and `exceptions`,
+    indirectly reference both the lines numeration and their content, see :class:`Pos`.
+    """
+
+    fragments: list[Fragment] = field(default_factory=list, init=False)
+    """
+    List of text fragments, usually related to specific elements.
+    
+    In :class:`Linter`, this is used to quickly find the first element in a phrase.
+    """
+
+    sections: dict[Anchor | None, Fragment] = field(default_factory=dict, init=False)
+    """
+    Information about how the page is split into sections by headers.
+    
+    A page without headers (except for H1) will have just one section under the key `None`.
+    Otherwise, each new header will end the previous section and start a new one.
+    
+    The header itself is never included into the :class:`Fragment` representing its section.
+    """
+
+    exceptions_regexp: re.Pattern | None = field(default=None)
+    """
+    The regular expression what wil be used for finding `exceptions`.
+    Should be loaded from the volume's configuration.
+    """
+
+    __frozen: bool = field(default=False, init=False)
+
+    def freeze(self):
+        """
+        Call this to indicate that you are not going to modify `lines`, `fragments` and `sections` anymore.
+        You must call this to be able to use some other methods.
+        """
+        self.__frozen = True
 
     @property
     def text(self) -> str:
+        """
+        The plain text representation of the whole page.
+        """
         return '\n'.join(self.lines)
 
     @property
     def end_pos(self) -> Pos:
+        """
+        A :class:`Pos` that points to the end of the last line.
+        """
+        if len(self.lines) == 0:
+            return Pos(0, 0)
         return Pos(len(self.lines) - 1, len(self.lines[-1]))
 
     @cached_property
-    def exceptions_by_line(self) -> Sequence[Sequence[Fragment]]:
-        exceptions_by_line: list[list[Fragment]] = []
+    def exceptions(self) -> Sequence[Sequence[Fragment]]:
+        """
+        Find positions of all words or word combinations that match the :data:`exceptions_regexp`.
+
+        The result will contain one sequence per each line in :data:`lines`,
+        each sequence containing :class:`Fragment` objects indicating where the exceptions are found.
+        """
+        assert self.__frozen
+
+        exceptions: list[list[Fragment]] = []
         for linenum, line in enumerate(self.lines):
-            exceptions_by_line.append([])
+            exceptions.append([])
             if self.exceptions_regexp:
                 for m in re.finditer(self.exceptions_regexp, line):
-                    exceptions_by_line[linenum].append(Fragment(self,
-                                                                Pos(linenum, m.start()),
-                                                                Pos(linenum, m.end())))
-        return tuple(tuple(x) for x in exceptions_by_line)
-
-    @property
-    def exceptions(self) -> Sequence[Fragment]:
-        return tuple(chain(*self.exceptions_by_line))
+                    exceptions[linenum].append(Fragment(self,
+                                                        Pos(linenum, m.start()),
+                                                        Pos(linenum, m.end())))
+        return tuple(tuple(x) for x in exceptions)
 
     @cached_property
     def naive_phrases(self) -> Sequence[Sequence[Fragment]]:
@@ -49,9 +106,11 @@ class TextModel:
         Split each line into phrases by periods, exclamation or question marks or clusters of them.
         The punctuation marks are included in the phrases, but the spaces after are not.
 
-        Return pairs of numbers representing `start` and `end` of each phrase.
-        The content of each phrase can then be accessed as `line[start:end]`.
+        This is called `naive_phrases` because this is just the first step used by the real `phrases`
+        which takes :data:`exceptions` into consideration and provides more reliable results.
         """
+        assert self.__frozen
+
         result: list[list[Fragment]] = []
 
         for linenum, line in enumerate(self.lines):
@@ -76,19 +135,21 @@ class TextModel:
         Normally, a text is split into phrases by periods, exclamation points, etc.
         However, the 'exceptions' dictionary may contain some words
         that contain periods in them ('e.g.', 'H.265', 'www.example.com').
-        This function first splits the line into phrases using :meth:`phrase_bounds()`,
-        but then moves their bounds for each exception that was accidentally split.
+        This function first calls `naive_phrases()` and then moves the phrase bounds
+        for each exception that was accidentally split.
 
         If `remove_exceptions=True`, the exceptions will be replaced with spaces in the result.
         This is used to generate phrases that can be sent to another linter.
         """
+        assert self.__frozen
+
         result: list[Fragment] = []
 
         # Each phrase can only be on a single line,
         # so we work with each line separately
         for linenum in range(len(self.lines)):
             phrases = list(self.naive_phrases[linenum])
-            exceptions = self.exceptions_by_line[linenum]
+            exceptions = self.exceptions[linenum]
 
             for exc in exceptions:
                 # Find the phrases overlapping with the exception from left and right.
@@ -115,9 +176,13 @@ class TextModel:
 
     @property
     def clean_phrases(self) -> Iterable[str]:
+        """
+        A special representation of :data:`lines`, with all :data:`exceptions` removed.
+        This does not affect any elements' positions due to placing necessary amounts of spaces.
+        """
         for phrase in self.phrases:
             result = phrase.text
-            for exc in self.exceptions_by_line[phrase.start.line]:
+            for exc in self.exceptions[phrase.start.line]:
                 if phrase.start <= exc.start and exc.end <= phrase.end:
                     start = exc.start.char - phrase.start.char
                     end = exc.end.char - phrase.start.char
@@ -127,10 +192,22 @@ class TextModel:
 
 @dataclass(frozen=True)
 class Fragment:
+    """
+    A specific fragment of text in a :class:`TextModel`,
+    usually (but not necessarily) related to a single Panflute element.
+    """
+
     tm: TextModel
+    """The model this fragments belong to. Used for getting the text representation."""
+
     start: Pos
+    """The first character position."""
+
     end: Pos
+    """The last character position."""
+
     element: Element | None = None
+    """An optional reference to the element which contents this fragment represents."""
 
     def __repr__(self):
         return f'<[{self.start}-{self.end}] {self.text!r}>'
@@ -141,10 +218,12 @@ class Fragment:
     @property
     def text(self) -> str:
         if self.start.line == self.end.line:
+            if self.start.char == self.end.char:
+                return ''
             return self.tm.lines[self.start.line][self.start.char:self.end.char]
 
         result = self.tm.lines[self.start.line][self.start.char:]
-        for line in range(self.start.line+1, self.end.line):
+        for line in range(self.start.line + 1, self.end.line):
             result += '\n' + self.tm.lines[line]
         result += '\n' + self.tm.lines[self.end.line][:self.end.char]
         return result
@@ -152,6 +231,10 @@ class Fragment:
 
 @dataclass(frozen=True, eq=True, order=True)
 class Pos:
+    """
+    An exact position of a character in a :class:`TextModel`.
+    Consists of a line number and a character number within that line.
+    """
     line: int
     char: int
 

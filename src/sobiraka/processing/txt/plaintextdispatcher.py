@@ -2,47 +2,79 @@ from collections import defaultdict
 from typing import Awaitable, Callable
 
 from panflute import BlockQuote, BulletList, Caption, Citation, Cite, Code, CodeBlock, Definition, DefinitionItem, \
-    DefinitionList, Div, Element, Emph, Header, HorizontalRule, Image, LineBlock, LineBreak, LineItem, Link, \
+    DefinitionList, Div, Doc, Element, Emph, Header, HorizontalRule, Image, LineBlock, LineBreak, LineItem, Link, \
     ListItem, Math, Note, Null, OrderedList, Para, Plain, Quoted, RawBlock, RawInline, SmallCaps, SoftBreak, Space, \
     Span, Str, Strikeout, Strong, Subscript, Superscript, Table, TableBody, TableCell, TableFoot, TableHead, TableRow, \
     Underline
 
-from sobiraka.models import Page, PageStatus, Volume
-from sobiraka.processing.abstract import Processor
-from .exceptions_regexp import exceptions_regexp
+from sobiraka.models import Anchor, Page
+from sobiraka.processing.abstract import Dispatcher
+from sobiraka.runtime import RT
+
 from .textmodel import Fragment, Pos, TextModel
 
 
-class LintPreprocessor(Processor):
+class PlainTextDispatcher(Dispatcher):
+    """
+    Base class for features that need to work with text, such as linters or indexers.
+
+    It works as a :class:`Dispatcher`, analyzing each element in the Panflute tree.
+    Unlike some other dispatchers/processors, it is non-destructive: it never modifies or removes elements.
+
+    Once :meth:`process_doc()` is done, you can retrieve the information about the plain text
+    from :data:`tm`, which is a :class:`TextModel` object.
+    """
     # pylint: disable=too-many-public-methods
 
-    def __init__(self, volume: Volume):
-        super().__init__()
-        self.volume: Volume = volume
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
-        regexp = exceptions_regexp(self.volume)
-        self._tm: dict[Page, TextModel] = defaultdict(lambda: TextModel(exceptions_regexp=regexp))
+        self.tm: dict[Page, TextModel] = defaultdict(self._new_text_model)
 
-    async def tm(self, page: Page) -> TextModel:
-        await self.require(page, PageStatus.PROCESS2)
-        return self._tm[page]
+        self._current_section_anchor: dict[Page, Anchor | None] = defaultdict(lambda: None)
+        self._current_section_start: dict[Page, Pos] = defaultdict(lambda: Pos(0, 0))
+
+    async def process_doc(self, doc: Doc, page: Page):
+        await self.process_container(doc, page)
+
+        # If we just started a new line at the end, remove it, we don't need it
+        tm = self.tm[page]
+        if tm.lines[-1] == '':
+            tm.lines = tm.lines[:-1]
+
+        # Close the section related to the latest found header.
+        # If there were no headers, this will close the section related to `None`,
+        # i.e. the main section that began at Pos(0, 0), as defined in the init.
+        anchor = self._current_section_anchor[page]
+        start = self._current_section_start[page]
+        end = tm.end_pos
+        tm.sections[anchor] = Fragment(tm, start, max(start, end))
+
+        # Indicate that the TextModel data is now final
+        tm.freeze()
+
+    def _new_text_model(self) -> TextModel:
+        return TextModel()
 
     def _atomic(self, page: Page, elem: Element, text: str):
+        """
+        For a single inline element (such as a `Str` or a `Space`),
+        append a given text representation to the current line and create a corresponding :class:`Fragment`.
+        """
         assert '\n' not in text
 
-        tm = self._tm[page]
+        tm = self.tm[page]
 
         start = tm.end_pos
         tm.lines[-1] += text
         end = tm.end_pos
 
-        fragment = Fragment(tm, start, end, elem)
-        tm.fragments.append(fragment)
+        tm.fragments.append(Fragment(tm, start, end, elem))
 
     async def _container(self, page: Page, elem: Element, *,
                          allow_new_line: bool = False,
                          process: Callable[[], Awaitable[None]] = None):
-        tm = self._tm[page]
+        tm = self.tm[page]
 
         start = tm.end_pos
         pos = len(tm.fragments)
@@ -56,11 +88,10 @@ class LintPreprocessor(Processor):
         if not allow_new_line:
             assert start.line == end.line, 'Processing an inline container produced extra newlines.'
 
-        fragment = Fragment(tm, start, end, elem)
-        tm.fragments.insert(pos, fragment)
+        tm.fragments.insert(pos, Fragment(tm, start, end, elem))
 
     def _ensure_new_line(self, page: Page):
-        tm = self._tm[page]
+        tm = self.tm[page]
         if tm.lines[-1] != '':
             tm.lines.append('')
 
@@ -77,17 +108,14 @@ class LintPreprocessor(Processor):
         self._atomic(page, elem, elem.text)
 
     async def process_line_break(self, line_break: LineBreak, page: Page):
-        tm = self._tm[page]
-        pos = Pos(len(tm.lines) - 1, len(tm.lines[-1]))
-        fragment = Fragment(tm, pos, pos, line_break)
+        tm = self.tm[page]
+        fragment = Fragment(tm, tm.end_pos, tm.end_pos, line_break)
         tm.fragments.append(fragment)
         tm.lines.append('')
 
     async def process_soft_break(self, soft_break: SoftBreak, page: Page):
-        tm = self._tm[page]
-        pos = Pos(len(tm.lines) - 1, len(tm.lines[-1]))
-        fragment = Fragment(tm, pos, pos, soft_break)
-        tm.fragments.append(fragment)
+        tm = self.tm[page]
+        tm.fragments.append(Fragment(tm, tm.end_pos, tm.end_pos, soft_break))
         tm.lines.append('')
 
     ################################################################################
@@ -103,7 +131,6 @@ class LintPreprocessor(Processor):
         await self._container(page, image)
 
     async def process_link(self, link: Link, page: Page):
-        await super().process_link(link, page)
         await self._container(page, link)
 
     async def process_plain(self, plain: Plain, page: Page):
@@ -150,8 +177,19 @@ class LintPreprocessor(Processor):
         self._ensure_new_line(page)
 
     async def process_header(self, header: Header, page: Page):
+        tm = self.tm[page]
+
+        # Close previous section
+        tm.sections[self._current_section_anchor[page]] = Fragment(tm, self._current_section_start[page], tm.end_pos)
+
+        # Process the content inside the header
         await self._container(page, header, allow_new_line=True)
         self._ensure_new_line(page)
+
+        # Start a new section
+        if header.level > 1:
+            self._current_section_anchor[page] = RT[page].anchors.by_header(header)
+            self._current_section_start[page] = tm.end_pos
 
     async def process_para(self, para: Para, page: Page):
         await self._container(page, para, allow_new_line=True)
@@ -206,7 +244,7 @@ class LintPreprocessor(Processor):
     # Line blocks
 
     async def process_line_block(self, line_block: LineBlock, page: Page):
-        tm = self._tm[page]
+        tm = self.tm[page]
 
         async def process():
             for i, line_item in enumerate(line_block.content):

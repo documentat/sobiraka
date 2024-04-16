@@ -52,9 +52,48 @@ class CombinedToc(Enum):
     ALWAYS = 'always'
 
 
+class SearchIndexerName(Enum):
+    PAGEFIND = 'pagefind'
+
+
+class Config_Search_LinkTarget(Enum):
+    H1 = 'h1'
+    H2 = 'h2'
+    H3 = 'h3'
+    H4 = 'h4'
+    H5 = 'h5'
+    H6 = 'h6'
+
+
+@dataclass(kw_only=True, frozen=True)
+class Config_Pagefind_Translations:
+    # pylint: disable=too-many-instance-attributes
+    placeholder: str = None
+    clear_search: str = None
+    load_more: str = None
+    search_label: str = None
+    filters_label: str = None
+    zero_results: str = None
+    many_results: str = None
+    one_result: str = None
+    alt_search: str = None
+    search_suggestion: str = None
+    searching: str = None
+
+
+@dataclass(kw_only=True, frozen=True)
+class Config_HTML_Search:
+    engine: SearchIndexerName = None
+    index_path: str = None
+    link_target: Config_Search_LinkTarget = Config_Search_LinkTarget.H1
+    translations: Config_Pagefind_Translations = field(default_factory=Config_Pagefind_Translations)
+
+
 @dataclass(kw_only=True, frozen=True)
 class Config_HTML:
     """Settings related to :class:`.HtmlBuilder`."""
+
+    # pylint: disable=too-many-instance-attributes
 
     prefix: str = '$AUTOPREFIX'
     """
@@ -80,6 +119,8 @@ class Config_HTML:
     toc_depth: int | float = inf
 
     combined_toc: CombinedToc = CombinedToc.NEVER
+
+    search: Config_HTML_Search = field(default_factory=Config_HTML_Search)
 
 
 @dataclass(kw_only=True, frozen=True)
