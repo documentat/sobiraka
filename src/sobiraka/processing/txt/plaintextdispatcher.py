@@ -51,8 +51,7 @@ class PlainTextDispatcher(Dispatcher):
         tm.lines[-1] += text
         end = tm.end_pos
 
-        fragment = Fragment(tm, start, end, elem)
-        tm.fragments.append(fragment)
+        tm.fragments.append(Fragment(tm, start, end, elem))
 
     async def _container(self, page: Page, elem: Element, *,
                          allow_new_line: bool = False,
@@ -71,8 +70,7 @@ class PlainTextDispatcher(Dispatcher):
         if not allow_new_line:
             assert start.line == end.line, 'Processing an inline container produced extra newlines.'
 
-        fragment = Fragment(tm, start, end, elem)
-        tm.fragments.insert(pos, fragment)
+        tm.fragments.insert(pos, Fragment(tm, start, end, elem))
 
     def _ensure_new_line(self, page: Page):
         tm = self.tm[page]
@@ -99,8 +97,7 @@ class PlainTextDispatcher(Dispatcher):
 
     async def process_soft_break(self, soft_break: SoftBreak, page: Page):
         tm = self.tm[page]
-        fragment = Fragment(tm, tm.end_pos, tm.end_pos, soft_break)
-        tm.fragments.append(fragment)
+        tm.fragments.append(Fragment(tm, tm.end_pos, tm.end_pos, soft_break))
         tm.lines.append('')
 
     ################################################################################
