@@ -45,7 +45,7 @@
     <link href="{{ STATIC }}/material.css" rel="stylesheet" type="text/css"/>
     <link href="{{ STATIC }}/copybutton.css" rel="stylesheet" type="text/css"/>
     <link href="{{ STATIC }}/css/rtd_sphinx_search.min.css" rel="stylesheet" type="text/css"/>
-    <script data-url_root="{{ ROOT }}/" id="documentation_options" src="{{ STATIC }}/documentation_options.js"></script>
+    <script data-url_root="{{ ROOT }}" id="documentation_options" src="{{ STATIC }}/documentation_options.js"></script>
     <script src="{{ STATIC }}/jquery.js"></script>
     <script src="{{ STATIC }}/underscore.js"></script>
     <script src="{{ STATIC }}/doctools.js"></script>
@@ -63,6 +63,8 @@
     <link href="subpage/index.html" rel="next" title="Level 1 page"/>
     <link href="specimen.html" rel="prev" title="Specimen"/>
     <link href="{{ STATIC }}/images/apple-icon-152x152.png" rel="apple-touch-icon"/>
+
+    {{ head | indent(4) -}}
 
     {% if theme_data.get("enable_custom_css") %}
         <link rel="stylesheet" type="text/css" href="{{ RESOURCES }}/custom.css"/>

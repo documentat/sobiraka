@@ -1,6 +1,8 @@
 from asyncio.subprocess import Process, create_subprocess_exec
 from pathlib import Path
 from subprocess import PIPE
+from textwrap import dedent
+from typing import Sequence
 
 from panflute import Doc, stringify
 from sobiraka.models import Page
@@ -9,6 +11,7 @@ from sobiraka.processing.txt import PlainTextDispatcher
 from sobiraka.runtime import RT
 
 from .searchindexer import SearchIndexer
+from ..head import HeadJsCode, HeadJsFile, HeadTag
 
 
 class PagefindIndexer(SearchIndexer, PlainTextDispatcher):
@@ -83,3 +86,15 @@ class PagefindIndexer(SearchIndexer, PlainTextDispatcher):
 
     def results(self) -> set[Path]:
         return set(self.index_path.rglob('**/*'))
+
+    def head_tags(self) -> Sequence[HeadTag]:
+        yield HeadJsFile(self.index_path.relative_to(self.builder.output) / 'pagefind-ui.js')
+        yield HeadJsCode(dedent(f'''
+            window.addEventListener("DOMContentLoaded", (event) => {{
+                new PagefindUI({{
+                    element: ".book-search",
+                    baseUrl: new URL("%ROOT%", location),
+                    translations: {self.search_config.translations.to_json()},
+                }})
+            }})
+        ''').strip())
