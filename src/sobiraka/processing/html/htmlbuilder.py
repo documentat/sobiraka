@@ -118,7 +118,7 @@ class HtmlBuilder(ProjectProcessor):
 
     async def process4(self, page: Page):
         if indexer := self._indexers.get(page.volume):
-            await indexer.process_doc(RT[page].doc, page)
+            await indexer.add_page(page)
 
         theme = self._themes[page.volume]
         if theme.__class__ is not HtmlTheme:

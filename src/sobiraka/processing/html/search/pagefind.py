@@ -4,7 +4,8 @@ from subprocess import PIPE
 from textwrap import dedent
 from typing import Sequence
 
-from panflute import Doc, stringify
+from panflute import Element, stringify
+
 from sobiraka.models import Page
 from sobiraka.models.config import Config_Search_LinkTarget
 from sobiraka.processing.txt import PlainTextDispatcher
@@ -49,8 +50,8 @@ class PagefindIndexer(SearchIndexer, PlainTextDispatcher):
             }});
         ''')
 
-    async def process_doc(self, doc: Doc, page: Page):
-        await super().process_doc(doc, page)
+    async def add_page(self, page: Page):
+        await super().process_doc(RT[page].doc, page)
 
         tm = self.tm[page]
         url = str(self.builder.get_target_path(page).relative_to(self.builder.output))
@@ -98,3 +99,8 @@ class PagefindIndexer(SearchIndexer, PlainTextDispatcher):
                 }})
             }})
         ''').strip())
+
+    async def process_element(self, elem: Element, page: Page) -> tuple[Element, ...]:
+        if isinstance(elem, self.search_config.skip_elements):
+            return ()
+        return await super().process_element(elem, page)

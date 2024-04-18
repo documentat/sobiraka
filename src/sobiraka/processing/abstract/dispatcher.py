@@ -1,5 +1,3 @@
-from typing import final
-
 from panflute import BlockQuote, BulletList, Caption, Citation, Cite, Code, CodeBlock, Definition, DefinitionItem, \
     DefinitionList, Div, Doc, Element, Emph, Header, HorizontalRule, Image, LineBlock, LineBreak, LineItem, Link, \
     ListContainer, ListItem, Math, Note, Null, OrderedList, Para, Plain, Quoted, RawBlock, RawInline, SmallCaps, \
@@ -12,7 +10,6 @@ from sobiraka.models import Page, Syntax
 class Dispatcher:
     # pylint: disable=too-many-public-methods
 
-    @final
     async def process_element(self, elem: Element, page: Page) -> tuple[Element, ...]:
         # pylint: disable=cyclic-import
         # pylint: disable=too-many-statements

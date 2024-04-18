@@ -86,6 +86,11 @@ $defs:
               engine:
                 enum: [pagefind]
               index_path: { type: string }
+              skip_elements:
+                type: array
+                uniqueItems: true
+                items:
+                  enum: [BlockQuote, BulletList, Caption, Citation, Cite, Code, CodeBlock, Definition, DefinitionItem, DefinitionList, Div, Doc, Emph, Header, HorizontalRule, Image, LineBlock, LineBreak, LineItem, Link, ListContainer, ListItem, Math, Note, Null, OrderedList, Para, Plain, Quoted, RawBlock, RawInline, SmallCaps, SoftBreak, Space, Span, Str, Strikeout, Strong, Subscript, Superscript, Table, TableBody, TableCell, TableFoot, TableHead, TableRow, Underline]
               link_target:
                 enum: [h1, h2, h3, h4, h5, h6]
               translations:
