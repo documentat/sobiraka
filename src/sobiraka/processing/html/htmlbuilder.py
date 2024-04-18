@@ -15,11 +15,13 @@ from subprocess import PIPE
 import iso639
 from aiofiles.os import makedirs
 from panflute import Element, Header, Image
+
 from sobiraka.models import DirPage, FileSystem, IndexPage, Page, PageHref, PageStatus, Project, Volume
 from sobiraka.models.config import Config, SearchIndexerName
 from sobiraka.runtime import RT
 from sobiraka.utils import panflute_to_bytes, super_gather
 
+from .head import Head
 from .search import PagefindIndexer, SearchIndexer
 from ..abstract import ProjectProcessor
 from ..plugin import HtmlTheme, load_html_theme
@@ -33,6 +35,7 @@ class HtmlBuilder(ProjectProcessor):
 
         self._html_builder_tasks: list[Task] = []
         self._results: set[Path] = set()
+        self._head: Head = Head()
         self._indexers: dict[Volume, SearchIndexer] = {}
 
         self._themes: dict[Volume, HtmlTheme] = {}
@@ -59,7 +62,9 @@ class HtmlBuilder(ProjectProcessor):
 
             # Initialize search indexer
             if config.html.search.engine is not None:
-                self._indexers[volume] = await self.prepare_search_indexer(volume)
+                indexer = await self.prepare_search_indexer(volume)
+                self._indexers[volume] = indexer
+                self._head += indexer.head_tags()
 
         # Wait until all pages will be generated and all additional files will be copied to the output directory
         # This may include tasks that started as a side effect of generating the HTML pages
@@ -77,7 +82,7 @@ class HtmlBuilder(ProjectProcessor):
             for source_path in theme.static_dir.rglob('**/*'):
                 if source_path.is_file():
                     target_path = self.output / '_static' / source_path.relative_to(theme.static_dir)
-                    tg.create_task(self.copy_file_from_theme(source_path, target_path))
+                    tg.create_task(self.copy_file_from_location(source_path, target_path))
 
     async def copy_additional_static_files(self, volume: Volume):
         async with TaskGroup() as tg:
@@ -149,6 +154,9 @@ class HtmlBuilder(ProjectProcessor):
         html, _ = await pandoc.communicate(panflute_to_bytes(RT[page].doc))
         assert pandoc.returncode == 0
 
+        root_prefix = str(self.get_root_prefix(page))
+        head = self._head.render(root_prefix)
+
         html = await theme.page_template.render_async(
             builder=self,
 
@@ -161,6 +169,7 @@ class HtmlBuilder(ProjectProcessor):
             title=RT[page].title,
             body=html.decode('utf-8').strip(),
 
+            head=head,
             now=datetime.now(),
             toc=lambda **kwargs: toc(volume.root_page,
                                      processor=self,
@@ -171,7 +180,7 @@ class HtmlBuilder(ProjectProcessor):
             local_toc=lambda: local_toc(page),
             Language=iso639.Language,
 
-            ROOT=self.get_path_to_root(page),
+            ROOT=self.get_root_prefix(page),
             ROOT_PAGE=self.make_internal_url(volume.root_page, page=page),
             STATIC=self.get_path_to_static(page),
             RESOURCES=self.get_path_to_resources(page),
@@ -244,9 +253,12 @@ class HtmlBuilder(ProjectProcessor):
 
         return result
 
-    def get_path_to_root(self, page: Page) -> Path:
+    def get_root_prefix(self, page: Page) -> str:
         start = self.get_target_path(page)
-        return Path(relpath(self.output, start=start.parent))
+        root_prefix = relpath(self.output, start=start.parent)
+        if root_prefix in ('', '.'):
+            return ''
+        return root_prefix + '/'
 
     def get_path_to_static(self, page: Page) -> Path:
         start = self.get_target_path(page)
@@ -308,7 +320,7 @@ class HtmlBuilder(ProjectProcessor):
     ################################################################################
     # Functions used for additional tasks
 
-    async def copy_file_from_theme(self, source: Path, target: Path):
+    async def copy_file_from_location(self, source: Path, target: Path):
         await makedirs(target.parent, exist_ok=True)
         await to_thread(copyfile, source, target)
         self._results.add(target)

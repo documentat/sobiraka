@@ -1,4 +1,6 @@
-from dataclasses import dataclass, field
+import json
+from copy import copy
+from dataclasses import asdict, dataclass, field
 from enum import Enum
 from importlib.resources import files
 from math import inf
@@ -79,6 +81,16 @@ class Config_Pagefind_Translations:
     alt_search: str = None
     search_suggestion: str = None
     searching: str = None
+
+    def to_json(self) -> str:
+        """
+        Returns a JSON object with all non-empty translations.
+        """
+        translations = asdict(self)
+        for key, value in copy(translations).items():
+            if value is None:
+                del translations[key]
+        return json.dumps(translations, ensure_ascii=False)
 
 
 @dataclass(kw_only=True, frozen=True)
