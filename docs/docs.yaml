@@ -6,6 +6,7 @@ html:
   theme: book
   search:
     engine: pagefind
+    skip_elements: [ CodeBlock ]
     link_target: h2
     translations:
       placeholder: Поиск по документации

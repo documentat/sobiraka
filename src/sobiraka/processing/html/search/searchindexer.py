@@ -2,17 +2,15 @@ from abc import ABCMeta, abstractmethod
 from pathlib import Path
 from typing import Sequence, TYPE_CHECKING
 
-from panflute import CodeBlock, Image
 from sobiraka.models import Page, Volume
 from sobiraka.models.config import Config, Config_HTML_Search
-from sobiraka.processing.abstract import Dispatcher
 from sobiraka.processing.html import HeadTag
 
 if TYPE_CHECKING:
     from sobiraka.processing import HtmlBuilder
 
 
-class SearchIndexer(Dispatcher, metaclass=ABCMeta):
+class SearchIndexer(metaclass=ABCMeta):
 
     def __init__(self, builder: 'HtmlBuilder', volume: Volume, index_path: Path):
         super().__init__()
@@ -29,6 +27,10 @@ class SearchIndexer(Dispatcher, metaclass=ABCMeta):
     async def initialize(self):
         pass
 
+    @abstractmethod
+    async def add_page(self, page: Page):
+        ...
+
     async def finalize(self):
         pass
 
@@ -43,12 +45,3 @@ class SearchIndexer(Dispatcher, metaclass=ABCMeta):
         """
         The tags that must be added to the final HTML for the search to work.
         """
-
-    ################################################################################
-    # Ignored elements
-
-    async def process_code_block(self, code: CodeBlock, page: Page):
-        return ()
-
-    async def process_image(self, image: Image, page: Page):
-        return ()

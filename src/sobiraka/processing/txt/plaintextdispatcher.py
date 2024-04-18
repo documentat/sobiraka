@@ -151,6 +151,11 @@ class PlainTextDispatcher(Dispatcher):
     ################################################################################
     # Block containers
 
+    async def process_code_block(self, code: CodeBlock, page: Page):
+        for line in code.text.splitlines():
+            self._atomic(page, code, line)
+            self._ensure_new_line(page)
+
     async def process_block_quote(self, blockquote: BlockQuote, page: Page):
         await self._container(page, blockquote, allow_new_line=True)
 
@@ -260,9 +265,6 @@ class PlainTextDispatcher(Dispatcher):
 
     ################################################################################
     # Ignored elements
-
-    async def process_code_block(self, code: CodeBlock, page: Page):
-        pass
 
     async def process_horizontal_rule(self, rule: HorizontalRule, page: Page):
         pass

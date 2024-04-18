@@ -7,6 +7,7 @@ from math import inf
 from pathlib import Path
 from typing import Any
 
+from panflute import Element
 from utilspie.collectionsutils import frozendict
 
 from sobiraka.models import NamingScheme
@@ -97,6 +98,7 @@ class Config_Pagefind_Translations:
 class Config_HTML_Search:
     engine: SearchIndexerName = None
     index_path: str = None
+    skip_elements: tuple[type[Element], ...] = ()
     link_target: Config_Search_LinkTarget = Config_Search_LinkTarget.H1
     translations: Config_Pagefind_Translations = field(default_factory=Config_Pagefind_Translations)
 

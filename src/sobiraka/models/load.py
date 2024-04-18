@@ -6,6 +6,7 @@ from textwrap import dedent
 from typing import Iterable
 
 import jsonschema
+import panflute
 import yaml
 from utilspie.collectionsutils import frozendict
 
@@ -105,6 +106,7 @@ def _load_volume(lang: str | None, codename: str, volume_data: dict, fs: FileSys
             search=Config_HTML_Search(
                 engine=convert_or_none(SearchIndexerName, _('html.search.engine')),
                 index_path=_('html.search.index_path'),
+                skip_elements=tuple(getattr(panflute.elements, x) for x in _('html.search.skip_elements', ())),
                 link_target=Config_Search_LinkTarget(_('html.search.link_target', 'h1')),
                 translations=Config_Pagefind_Translations(**_('html.search.translations', {})),
             ),
