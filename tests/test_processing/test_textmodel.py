@@ -45,7 +45,7 @@ class AbstractTestTextModel(ProjectTestCase):
 
     def test_text(self):
         expected = dedent(self.EXPECTED_TEXT).strip()
-        actual = self.tm.text
+        actual = self.tm.text.rstrip('\n')
         self.assertEqual(expected, actual)
 
     def test_exceptions(self):
@@ -56,6 +56,7 @@ class AbstractTestTextModel(ProjectTestCase):
 
     def test_naive_phrases(self):
         actual = tuple(tuple(p.text for p in line) for line in self.tm.naive_phrases)
+        actual = tuple(more_itertools.rstrip(actual, lambda x: x == ()))
         self.assertEqual(self.EXPECTED_NAIVE_PHRASES, actual)
 
     def test_phrases(self):

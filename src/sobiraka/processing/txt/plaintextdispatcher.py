@@ -37,10 +37,6 @@ class PlainTextDispatcher(Dispatcher):
 
         await self.process_container(doc, page)
 
-        # If we just started a new line at the end, remove it, we don't need it
-        if tm.lines[-1] == '':
-            tm.lines = tm.lines[:-1]
-
         # Close the section related to the latest found header.
         # If there were no headers, this will close the section related to `None`,
         # i.e. the main section that began at Pos(0, 0), as defined in the init.
