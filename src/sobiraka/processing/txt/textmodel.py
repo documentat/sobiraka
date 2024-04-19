@@ -217,9 +217,10 @@ class Fragment:
 
     @property
     def text(self) -> str:
+        if self.start == self.end:
+            return ''
+
         if self.start.line == self.end.line:
-            if self.start.char == self.end.char:
-                return ''
             return self.tm.lines[self.start.line][self.start.char:self.end.char]
 
         result = self.tm.lines[self.start.line][self.start.char:]
