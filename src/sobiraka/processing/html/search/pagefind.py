@@ -100,7 +100,6 @@ class PagefindIndexer(SearchIndexer, PlainTextDispatcher):
             }})
         ''').strip())
 
-    async def process_element(self, elem: Element, page: Page) -> tuple[Element, ...]:
-        if isinstance(elem, self.search_config.skip_elements):
-            return ()
-        return await super().process_element(elem, page)
+    async def process_element(self, elem: Element, page: Page):
+        if not isinstance(elem, self.search_config.skip_elements):
+            return await super().process_element(elem, page)
