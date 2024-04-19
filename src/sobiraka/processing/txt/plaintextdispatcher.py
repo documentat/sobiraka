@@ -7,10 +7,10 @@ from panflute import BlockQuote, BulletList, Caption, Citation, Cite, Code, Code
     Span, Str, Strikeout, Strong, Subscript, Superscript, Table, TableBody, TableCell, TableFoot, TableHead, TableRow, \
     Underline
 
-from sobiraka.models import Anchor, Page
+from sobiraka.models import Page
 from sobiraka.processing.abstract import Dispatcher
 from sobiraka.runtime import RT
-
+from sobiraka.utils import update_last_dataclass
 from .textmodel import Fragment, Pos, TextModel
 
 
@@ -31,24 +31,20 @@ class PlainTextDispatcher(Dispatcher):
 
         self.tm: dict[Page, TextModel] = defaultdict(self._new_text_model)
 
-        self._current_section_anchor: dict[Page, Anchor | None] = defaultdict(lambda: None)
-        self._current_section_start: dict[Page, Pos] = defaultdict(lambda: Pos(0, 0))
-
     async def process_doc(self, doc: Doc, page: Page):
+        tm = self.tm[page]
+        tm.sections[None] = Fragment(tm, Pos(0, 0), Pos(0, 0))
+
         await self.process_container(doc, page)
 
         # If we just started a new line at the end, remove it, we don't need it
-        tm = self.tm[page]
         if tm.lines[-1] == '':
             tm.lines = tm.lines[:-1]
 
         # Close the section related to the latest found header.
         # If there were no headers, this will close the section related to `None`,
         # i.e. the main section that began at Pos(0, 0), as defined in the init.
-        anchor = self._current_section_anchor[page]
-        start = self._current_section_start[page]
-        end = tm.end_pos
-        tm.sections[anchor] = Fragment(tm, start, max(start, end))
+        update_last_dataclass(tm.sections, end=tm.end_pos)
 
         # Indicate that the TextModel data is now final
         tm.freeze()
@@ -185,7 +181,7 @@ class PlainTextDispatcher(Dispatcher):
         tm = self.tm[page]
 
         # Close previous section
-        tm.sections[self._current_section_anchor[page]] = Fragment(tm, self._current_section_start[page], tm.end_pos)
+        update_last_dataclass(tm.sections, end=tm.end_pos)
 
         # Process the content inside the header
         await self._container(page, header, allow_new_line=True)
@@ -193,8 +189,8 @@ class PlainTextDispatcher(Dispatcher):
 
         # Start a new section
         if header.level > 1:
-            self._current_section_anchor[page] = RT[page].anchors.by_header(header)
-            self._current_section_start[page] = tm.end_pos
+            anchor = RT[page].anchors.by_header(header)
+            tm.sections[anchor] = Fragment(tm, tm.end_pos, tm.end_pos)
 
     async def process_para(self, para: Para, page: Page):
         await self._container(page, para, allow_new_line=True)
