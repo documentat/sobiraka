@@ -67,6 +67,10 @@ class Config_Search_LinkTarget(Enum):
     H5 = 'h5'
     H6 = 'h6'
 
+    @property
+    def level(self) -> int:
+        return int(self.value[-1])
+
 
 @dataclass(kw_only=True, frozen=True)
 class Config_Pagefind_Translations:
