@@ -62,7 +62,7 @@ class PagefindIndexer(SearchIndexer, PlainTextDispatcher):
                 self._add_record(url=url, title=title, content=tm.text)
 
             case _:
-                for anchor, fragment in tm.sections.items():
+                for anchor, fragment in tm.sections_up_to_level(self.search_config.link_target.level).items():
                     if anchor is None:
                         self._add_record(url=url, title=title, content=fragment.text)
                     else:

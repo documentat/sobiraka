@@ -9,6 +9,7 @@ from typing import Iterable, Sequence
 
 from panflute import Element
 from sobiraka.models import Anchor
+from sobiraka.utils import update_last_dataclass
 
 SEP = re.compile(r'[?!.]+\s*')
 END = re.compile(r'[?!.]+\s*$')
@@ -188,6 +189,16 @@ class TextModel:
                     end = exc.end.char - phrase.start.char
                     result = result[:start] + ' ' * len(exc.text) + result[end:]
             yield result
+
+    def sections_up_to_level(self, max_level: int) -> dict[Anchor | None, Fragment]:
+        result: dict[Anchor | None, Fragment] = {}
+        for anchor, fragment in self.sections.items():
+            level = anchor.level if anchor is not None else 1
+            if level <= max_level:
+                result[anchor] = fragment
+            else:
+                update_last_dataclass(result, end=fragment.end)
+        return result
 
 
 @dataclass(frozen=True)
