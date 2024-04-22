@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from math import inf
 from textwrap import dedent, indent
 from typing import Iterable, TYPE_CHECKING
 
@@ -184,7 +185,12 @@ def toc(
     return tree
 
 
-def local_toc(page: Page, *, href_prefix: str = '') -> Toc:
+def local_toc(
+        page: Page,
+        *,
+        toc_depth: int | float = inf,
+        href_prefix: str = '',
+) -> Toc:
     """
     Generate a page's local toc, based on the information about anchors collected in `RT`.
 
@@ -195,6 +201,9 @@ def local_toc(page: Page, *, href_prefix: str = '') -> Toc:
     current_level: int = 0
 
     for anchor in RT[page].anchors:
+        if anchor.level > toc_depth + 1:
+            continue
+
         item = TocItem(title=anchor.label,
                        url=f'{href_prefix}#{anchor.identifier}',
                        number=RT[anchor].number)
