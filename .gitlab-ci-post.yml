@@ -42,7 +42,6 @@ publish-latest:
 
 pages:
   stage: publish
-  needs: [build-docs]
   image: alpine:3.16
   variables:
     GIT_STRATEGY: none
