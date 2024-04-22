@@ -6,12 +6,12 @@ from .page import Page
 class IndexPage(Page):
 
     @property
-    def index(self) -> int | float:
-        return self.volume.config.paths.naming_scheme.get_index(self.path_in_project.parent)
+    def pos(self) -> int | float:
+        return self.volume.config.paths.naming_scheme.parse(self.path_in_project.parent).pos
 
     @property
     def stem(self) -> str:
-        return self.volume.config.paths.naming_scheme.get_stem(self.path_in_project.parent)
+        return self.volume.config.paths.naming_scheme.parse(self.path_in_project.parent).stem
 
     def is_root(self) -> bool:
         return self.path_in_volume.parent == Path('.')

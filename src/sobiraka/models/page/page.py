@@ -131,8 +131,8 @@ class Page:
     def __lt__(self, other):
         assert isinstance(other, Page), TypeError
         assert self.volume.project == other.volume.project
-        self_breadcrumbs_as_indexes = tuple(x.index for x in self.breadcrumbs)
-        other_breadcrumbs_as_indexes = tuple(x.index for x in other.breadcrumbs)
+        self_breadcrumbs_as_indexes = tuple(x.pos for x in self.breadcrumbs)
+        other_breadcrumbs_as_indexes = tuple(x.pos for x in other.breadcrumbs)
         return (self.volume, self_breadcrumbs_as_indexes) < (other.volume, other_breadcrumbs_as_indexes)
 
     # ------------------------------------------------------------------------------------------------------------------
@@ -208,14 +208,14 @@ class Page:
         return self.stem
 
     @property
-    def index(self) -> int | float:
-        return self.volume.config.paths.naming_scheme.get_index(self.path_in_project)
+    def pos(self) -> int | float:
+        return self.volume.config.paths.naming_scheme.parse(self.path_in_project).pos
 
     @property
     def stem(self) -> str:
         if self.path_in_volume == Path():
             return self.volume.codename or ''
-        return self.volume.config.paths.naming_scheme.get_stem(self.path_in_project)
+        return self.volume.config.paths.naming_scheme.parse(self.path_in_project).stem
 
     @cached_property
     def id(self) -> str:
