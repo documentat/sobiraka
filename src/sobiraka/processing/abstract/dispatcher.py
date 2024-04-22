@@ -5,6 +5,7 @@ from panflute import BlockQuote, BulletList, Caption, Citation, Cite, Code, Code
     TableHead, TableRow, Underline
 
 from sobiraka.models import Page, Syntax
+from ..directive import Directive
 
 
 class Dispatcher:
@@ -13,8 +14,6 @@ class Dispatcher:
     async def process_element(self, elem: Element, page: Page) -> tuple[Element, ...]:
         # pylint: disable=cyclic-import
         # pylint: disable=too-many-statements
-
-        from sobiraka.processing.directive.directive import Directive
 
         match elem:
             case BlockQuote():
@@ -117,8 +116,8 @@ class Dispatcher:
             case Underline():
                 result = await self.process_underline(elem, page)
 
-            case Directive() as directive:
-                result = await directive.run()
+            case Directive():
+                result = await self.process_directive(elem, page)
 
             case _:
                 raise TypeError(type(elem))
@@ -306,3 +305,7 @@ class Dispatcher:
     # pylint: disable=unused-argument
     async def process_role_doc(self, code: Code, page: Page) -> tuple[Element, ...]:
         return (Emph(Str(code.text)),)
+
+    async def process_directive(self, directive: Directive, page: Page) -> tuple[Element, ...]:
+        directive.process()
+        return directive,

@@ -1,20 +1,22 @@
 from argparse import ArgumentParser
 from math import inf
-from typing import Iterable
+from typing import Iterable, TYPE_CHECKING
 
-from panflute import Block, BulletList, Link, ListItem, Plain, Space, Str
+from panflute import BulletList, Link, ListItem, Plain, Space, Str
 
 from sobiraka.models import Page
 from sobiraka.models.config import CombinedToc, Config
 from sobiraka.utils import Unnumbered, replace_element
 from .directive import Directive
-from ..abstract import Processor
 from ..toc import Toc, toc
+
+if TYPE_CHECKING:
+    from ..abstract import Processor
 
 
 class TocDirective(Directive):
 
-    def __init__(self, processor: Processor, page: Page, argv: list[str]):
+    def __init__(self, processor: 'Processor', page: Page, argv: list[str]):
         super().__init__(processor, page)
 
         parser = ArgumentParser(add_help=False)
@@ -26,14 +28,6 @@ class TocDirective(Directive):
         self.depth: int = args.depth
         self.combined: bool = args.combined
         self.format: str = args.format
-
-    async def run(self) -> tuple[Block, ...]:
-        """
-        Do nothing at this stage, except remember the directive's position.
-        The processor will iterate through `TocDirective`'s and call post-processing later.
-        """
-        self.processor.toc_placeholders[self.page].append(self)
-        return self,
 
     def postprocess(self):
         """
