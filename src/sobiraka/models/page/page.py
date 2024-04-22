@@ -213,6 +213,8 @@ class Page:
 
     @property
     def stem(self) -> str:
+        if self.path_in_volume == Path():
+            return self.volume.codename or ''
         return self.volume.config.paths.naming_scheme.get_stem(self.path_in_project)
 
     @cached_property

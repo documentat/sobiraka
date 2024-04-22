@@ -19,10 +19,9 @@ class DirPage(Page):
     def syntax(self) -> Syntax:
         return Syntax.MD
 
-    # pylint: disable=method-cache-max-size-none
     @property
     def text(self) -> str:
-        return '# ' + self.path_in_volume.stem + '\n\n@toc'
+        return '# ' + self.stem + '\n\n@toc'
 
     @property
     def hash(self) -> str:
