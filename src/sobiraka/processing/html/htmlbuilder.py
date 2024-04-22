@@ -154,7 +154,7 @@ class HtmlBuilder(ProjectProcessor):
         html, _ = await pandoc.communicate(panflute_to_bytes(RT[page].doc))
         assert pandoc.returncode == 0
 
-        root_prefix = str(self.get_root_prefix(page))
+        root_prefix = self.get_root_prefix(page)
         head = self._head.render(root_prefix)
 
         html = await theme.page_template.render_async(
@@ -180,7 +180,7 @@ class HtmlBuilder(ProjectProcessor):
             local_toc=lambda: local_toc(page),
             Language=iso639.Language,
 
-            ROOT=self.get_root_prefix(page),
+            ROOT=root_prefix,
             ROOT_PAGE=self.make_internal_url(volume.root_page, page=page),
             STATIC=self.get_path_to_static(page),
             RESOURCES=self.get_path_to_resources(page),
@@ -206,7 +206,10 @@ class HtmlBuilder(ProjectProcessor):
             case DirPage():
                 target_path /= 'index.html'
             case Page():
-                target_path = target_path.with_suffix('.html')
+                if page.path_in_volume == Path():
+                    target_path = target_path.parent / 'index.html'
+                else:
+                    target_path = target_path.with_suffix('.html')
             case _:
                 raise TypeError(page.__class__.__name__)
 
