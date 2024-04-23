@@ -9,7 +9,6 @@ from io import BytesIO
 from os.path import normpath
 from pathlib import Path
 from subprocess import PIPE
-from typing import TYPE_CHECKING
 
 import jinja2
 import panflute
@@ -23,14 +22,14 @@ from sobiraka.models.exceptions import DependencyFailed, DisableLink, IssuesOccu
 from sobiraka.runtime import RT
 from sobiraka.utils import super_gather
 from .dispatcher import Dispatcher
+from ..directive import Directive
 from ..numerate import numerate
-
-if TYPE_CHECKING:
-    from ..directive import TocDirective
 
 
 class Processor(Dispatcher):
     # pylint: disable=too-many-instance-attributes
+    # pylint: disable=too-many-public-methods
+
     def __init__(self):
         self.message: str = None
         """
@@ -46,7 +45,7 @@ class Processor(Dispatcher):
         self.jinja: dict[Volume, jinja2.Environment] = {}
 
         self.process2_tasks: dict[Page, list[Task]] = defaultdict(list)
-        self.toc_placeholders: dict[Page, list[TocDirective]] = defaultdict(list)
+        self.directives: dict[Page, list[Directive]] = defaultdict(list)
 
     def __repr__(self):
         return f'<{self.__class__.__name__} at {hex(id(self))}>'
@@ -255,9 +254,16 @@ class Processor(Dispatcher):
         argv = shlex.split(line)
 
         match stringify(para.content[0]):
+            case '@local_toc':
+                from ..directive import LocalTocDirective
+                return LocalTocDirective(self, page, argv)
             case '@toc':
                 from ..directive import TocDirective
                 return TocDirective(self, page, argv)
+
+    async def process_directive(self, directive: Directive, page: Page) -> tuple[Element, ...]:
+        self.directives[page].append(directive)
+        return await super().process_directive(directive, page)
 
     async def process_header(self, header: Header, page: Page) -> tuple[Element, ...]:
         # Generate an identifier if is not done automatically, e.g., in RST
@@ -339,7 +345,7 @@ class Processor(Dispatcher):
             numerate(volume.root_page.children)
 
         for page in volume.pages:
-            for toc_placeholder in self.toc_placeholders[page]:
+            for toc_placeholder in self.directives[page]:
                 toc_placeholder.postprocess()
 
     async def process4(self, page: Page):

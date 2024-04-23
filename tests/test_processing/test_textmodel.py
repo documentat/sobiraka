@@ -5,8 +5,9 @@ from unittest import main
 from unittest.mock import Mock, patch
 
 import more_itertools
-from abstracttests.projecttestcase import ProjectTestCase
 from panflute import stringify
+
+from abstracttests.projecttestcase import ProjectTestCase
 from sobiraka.models import FileSystem, Page, Project, Volume
 from sobiraka.processing.txt import PlainTextDispatcher, TextModel
 from sobiraka.runtime import RT
@@ -25,6 +26,7 @@ class AbstractTestTextModel(ProjectTestCase):
     EXPECTED_CLEAN_PHRASES: tuple[str, ...] = ()
 
     EXPECTED_SECTIONS: dict[str, str] = {}
+    EXPECTED_SECTIONS_UP_TO_LEVEL: dict[int, dict[str, str]] = {}
 
     def _init_project(self) -> Project:
         return Project(Mock(FileSystem), {
@@ -72,6 +74,14 @@ class AbstractTestTextModel(ProjectTestCase):
         actual = dict((anchor and stringify(anchor.header) or '', fragment.text.rstrip())
                       for anchor, fragment in self.tm.sections.items())
         self.assertEqual(expected, actual)
+
+    def test_sections_up_to_level(self):
+        for max_level, expected in self.EXPECTED_SECTIONS_UP_TO_LEVEL.items():
+            with self.subTest(max_level=max_level):
+                expected = {k: dedent(v).strip() for k, v in expected.items()}
+                actual = dict((anchor and stringify(anchor.header) or '', fragment.text.rstrip())
+                              for anchor, fragment in self.tm.sections_up_to_level(max_level).items())
+                self.assertEqual(expected, actual)
 
 
 class TestTextModel_Empty(AbstractTestTextModel):
@@ -180,6 +190,60 @@ class TestTextModel_WithSections(AbstractTestTextModel):
         'Section A1': 'Text A1.',
         'Section B': '',
         'Section B1': 'Text B1.',
+    }
+    EXPECTED_SECTIONS_UP_TO_LEVEL = {
+        1: {
+            '': '''
+                Top-level introduction.
+                Section A
+                Introduction.
+                Section A1
+                Text A1.
+                Section B
+                Section B1
+                Text B1.
+            ''',
+        },
+        2: {
+            '': 'Top-level introduction.',
+            'Section A': '''
+                Introduction.
+                Section A1
+                Text A1.
+            ''',
+            'Section B': '''
+                Section B1
+                Text B1.
+            ''',
+        },
+        3: {
+            '': 'Top-level introduction.',
+            'Section A': 'Introduction.',
+            'Section A1': 'Text A1.',
+            'Section B': '',
+            'Section B1': 'Text B1.',
+        },
+        4: {
+            '': 'Top-level introduction.',
+            'Section A': 'Introduction.',
+            'Section A1': 'Text A1.',
+            'Section B': '',
+            'Section B1': 'Text B1.',
+        },
+        5: {
+            '': 'Top-level introduction.',
+            'Section A': 'Introduction.',
+            'Section A1': 'Text A1.',
+            'Section B': '',
+            'Section B1': 'Text B1.',
+        },
+        6: {
+            '': 'Top-level introduction.',
+            'Section A': 'Introduction.',
+            'Section A1': 'Text A1.',
+            'Section B': '',
+            'Section B1': 'Text B1.',
+        },
     }
 
 

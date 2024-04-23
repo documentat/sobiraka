@@ -1,11 +1,14 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from math import inf
 from textwrap import dedent, indent
 from typing import Iterable, TYPE_CHECKING
 
 import jinja2
+from panflute import Header
 
+from sobiraka.models import Anchor
 from sobiraka.models.config import CombinedToc
 from sobiraka.models.href import PageHref
 from sobiraka.runtime import RT
@@ -28,6 +31,7 @@ class TocItem:
     It is very unlikely that you want to create a `TocItem` object directly.
     Use `toc()` or `local_toc()` instead.
     """
+    # pylint: disable=too-many-instance-attributes
 
     title: str
     """The human-readable title of the item."""
@@ -37,6 +41,9 @@ class TocItem:
 
     number: TocNumber = field(kw_only=True, default=Unnumbered())
     """The item's number. If `None`, then the number must not be displayed."""
+
+    source: Page | Anchor = field(compare=False, default=None)
+    """The source from which the item was generated."""
 
     is_current: bool = field(kw_only=True, default=False)
     """True if the item corresponds to the currently opened page."""
@@ -73,6 +80,11 @@ class TocItem:
             parts.append(part_children)
 
         return f'<{self.__class__.__name__}: {", ".join(parts)}>'
+
+    def walk(self) -> Iterable[TocItem]:
+        for subitem in self.children:
+            yield subitem
+            yield from subitem.walk()
 
 
 class Toc(list[TocItem]):
@@ -112,6 +124,18 @@ class Toc(list[TocItem]):
             </ul>
             '''.rstrip()))
         return template.render(toc=self)
+
+    def walk(self) -> Iterable[TocItem]:
+        for item in self:
+            yield item
+            yield from item.walk()
+
+    def find_item_by_header(self, header: Header) -> TocItem:
+        for item in self.walk():
+            if isinstance(item.source, Anchor):
+                if item.source.header is header:
+                    return item
+        raise KeyError(header)
 
 
 def toc(
@@ -161,13 +185,16 @@ def toc(
 
     for page in pages:
         item = TocItem(title=RT[page].title,
-                       number=RT[page].number,
                        url=processor.make_internal_url(PageHref(page), page=current_page),
+                       number=RT[page].number,
+                       source=page,
                        is_current=page is current_page,
                        is_selected=current_page is not None and page in current_page.breadcrumbs)
 
         if combined_toc is CombinedToc.ALWAYS or (combined_toc is CombinedToc.CURRENT and item.is_current):
-            item.children += local_toc(page, href_prefix='' if item.is_current else item.url)
+            item.children += local_toc(page,
+                                       toc_depth=toc_depth - 1,
+                                       href_prefix='' if item.is_current else item.url)
 
         if len(page.children) > 0:
             if toc_depth > 1 or item.is_selected:
@@ -184,7 +211,12 @@ def toc(
     return tree
 
 
-def local_toc(page: Page, *, href_prefix: str = '') -> Toc:
+def local_toc(
+        page: Page,
+        *,
+        toc_depth: int | float = inf,
+        href_prefix: str = '',
+) -> Toc:
     """
     Generate a page's local toc, based on the information about anchors collected in `RT`.
 
@@ -195,9 +227,13 @@ def local_toc(page: Page, *, href_prefix: str = '') -> Toc:
     current_level: int = 0
 
     for anchor in RT[page].anchors:
+        if anchor.level > toc_depth + 1:
+            continue
+
         item = TocItem(title=anchor.label,
                        url=f'{href_prefix}#{anchor.identifier}',
-                       number=RT[anchor].number)
+                       number=RT[anchor].number,
+                       source=anchor)
 
         if anchor.level == current_level:
             breadcrumbs[-2].append(item)

@@ -61,7 +61,7 @@ ENTRYPOINT [""]
 FROM python-and-nodejs AS common
 RUN apk add --no-cache texlive-full
 RUN apk add --no-cache hunspell
-#COPY --from=install-npm-dependencies /opt/node_modules /node_modules
+COPY --from=install-npm-dependencies /opt/node_modules /node_modules
 COPY --from=get-pandoc /tmp/pandoc /usr/local
 WORKDIR /W
 ENTRYPOINT [""]

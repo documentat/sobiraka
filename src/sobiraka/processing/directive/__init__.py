@@ -1,2 +1,2 @@
 from .directive import Directive
-from .tocdirective import TocDirective
+from .tocdirective import LocalTocDirective, TocDirective
