@@ -1,3 +1,4 @@
+from math import inf
 from pathlib import Path
 from textwrap import dedent
 from unittest import main
@@ -16,6 +17,7 @@ This tests do not use a full project, instead calling `local_toc()` for a single
 
 class AbstractTestLocalToc(AbstractTestWithRtPages):
     source: str
+    toc_depth: int | float = inf
     expected: Toc
 
     async def test_local_toc(self):
@@ -26,7 +28,7 @@ class AbstractTestLocalToc(AbstractTestWithRtPages):
             }),
         })
         await Processor().require(page, PageStatus.PROCESS1)
-        actual = local_toc(page, href_prefix='page.html')
+        actual = local_toc(page, toc_depth=self.toc_depth, href_prefix='page.html')
         self.assertEqual(self.expected, actual)
 
 
@@ -102,6 +104,34 @@ class TestLocalToc_Deep(AbstractTestLocalToc):
                 TocItem('Paragraph 2.2.2', 'page.html#paragraph-2.2.2'),
             )),
         )),
+    )
+
+
+class TestLocalToc_Deep_LimitDepth_3(TestLocalToc_Deep):
+    toc_depth = 3
+
+
+class TestLocalToc_Deep_LimitDepth_2(TestLocalToc_Deep):
+    toc_depth = 2
+
+    expected = Toc(
+        TocItem('Paragraph 1', 'page.html#paragraph-1', children=Toc(
+            TocItem('Paragraph 1.1', 'page.html#paragraph-1.1'),
+            TocItem('Paragraph 1.2', 'page.html#paragraph-1.2'),
+        )),
+        TocItem('Paragraph 2', 'page.html#paragraph-2', children=Toc(
+            TocItem('Paragraph 2.1', 'page.html#paragraph-2.1'),
+            TocItem('Paragraph 2.2', 'page.html#paragraph-2.2'),
+        )),
+    )
+
+
+class TestLocalToc_Deep_LimitDepth_1(TestLocalToc_Deep):
+    toc_depth = 1
+
+    expected = Toc(
+        TocItem('Paragraph 1', 'page.html#paragraph-1'),
+        TocItem('Paragraph 2', 'page.html#paragraph-2'),
     )
 
 

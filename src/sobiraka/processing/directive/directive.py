@@ -1,9 +1,12 @@
-from abc import ABCMeta, abstractmethod
+from abc import ABCMeta
+from typing import TYPE_CHECKING
 
 from panflute import Block
 
 from sobiraka.models import Page
-from ..abstract import Processor
+
+if TYPE_CHECKING:
+    from ..abstract import Processor
 
 
 class Directive(Block, metaclass=ABCMeta):
@@ -16,20 +19,24 @@ class Directive(Block, metaclass=ABCMeta):
 
     During an early step of processing, the code in `Processor` walks through all paragraphs in the document.
     If a paragraph begins with one of the known directive names, it replaces the paragraph with a `Directive`.
-    Later, when the code in `Dispatcher` finds this element, it calls its `run()` function.
+
+    When the code in `Dispatcher` finds this element, it calls its `process()` function.
+    At a later stage of processing, the processor calls each directive's `postprocess()`.
 
     Directives are convenient for implementing features that need to put generated Pandoc AST elements into pages.
     For example, `TocDirective` is used a placeholder that is later replaced with other AST elements,
     all without the need to render the generated content into a temporary Markdown or other syntax.
     """
 
-    def __init__(self, processor: Processor, page: Page):
-        self.processor: Processor = processor
+    def __init__(self, processor: 'Processor', page: Page):
+        self.processor: 'Processor' = processor
         self.page: Page = page
 
     def __repr__(self):
         return f'<{self.__class__.__name__} on {str(self.page.path_in_project)!r}>'
 
-    @abstractmethod
-    async def run(self) -> tuple[Block, ...]:
-        ...
+    def process(self):
+        pass
+
+    def postprocess(self):
+        pass
