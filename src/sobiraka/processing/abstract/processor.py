@@ -254,6 +254,9 @@ class Processor(Dispatcher):
         argv = shlex.split(line)
 
         match stringify(para.content[0]):
+            case '@local_toc':
+                from ..directive import LocalTocDirective
+                return LocalTocDirective(self, page, argv)
             case '@toc':
                 from ..directive import TocDirective
                 return TocDirective(self, page, argv)

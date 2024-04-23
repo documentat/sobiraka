@@ -16,13 +16,14 @@ Test that the `combined_toc` argument affects whether local TOCs are embedded in
 
 class AbstractTestTocCombine(ProjectTestCase[FakeProcessor]):
     combine: CombinedToc
+    toc_depth: int | float = inf
     expected: Toc
 
     def _init_project(self) -> Project:
         return Project(Mock(FileSystem), {
             Path('src'): Volume({
                 Path('section1'): Page('# Section 1\n## Paragraph 1'),
-                Path('section1/page1.md'): Page('# Page 1.1\n## Paragraph 1'),  # <- current page
+                Path('section1/page1.md'): Page('# Page 1.1\n## Paragraph 1\n### Subparagraph'),  # <- current page
                 Path('section1/page2.md'): Page('# Page 1.2\n## Paragraph 1'),
                 Path('section2'): Page('# Section 2\n## Paragraph 1'),
                 Path('section2/page1.md'): Page('# Page 2.1\n## Paragraph 1'),
@@ -36,7 +37,7 @@ class AbstractTestTocCombine(ProjectTestCase[FakeProcessor]):
         volume = self.project.get_volume()
         actual = toc(volume,
                      processor=self.processor,
-                     toc_depth=inf,
+                     toc_depth=self.toc_depth,
                      combined_toc=self.combine,
                      current_page=volume.pages_by_path[Path('section1/page1.md')])
         self.assertEqual(str(self.expected), str(actual))
@@ -56,29 +57,15 @@ class TestTocCombine_Never(AbstractTestTocCombine):
     )
 
 
-class TestTocCombine_Current(AbstractTestTocCombine):
-    combine = CombinedToc.CURRENT
-    expected = Toc(
-        TocItem('Section 1', '.', is_selected=True, children=Toc(
-            TocItem('Page 1.1', '', is_current=True, is_selected=True, children=Toc(
-                TocItem('Paragraph 1', '#paragraph-1'),
-            )),
-            TocItem('Page 1.2', 'page2.md'),
-        )),
-        TocItem('Section 2', '../section2', children=Toc(
-            TocItem('Page 2.1', '../section2/page1.md'),
-            TocItem('Page 2.2', '../section2/page2.md'),
-        )),
-    )
-
-
 class TestTocCombine_Always(AbstractTestTocCombine):
     combine = CombinedToc.ALWAYS
     expected = Toc(
         TocItem('Section 1', '.', is_selected=True, children=Toc(
             TocItem('Paragraph 1', '.#paragraph-1'),
             TocItem('Page 1.1', '', is_current=True, is_selected=True, children=Toc(
-                TocItem('Paragraph 1', '#paragraph-1'),
+                TocItem('Paragraph 1', '#paragraph-1', children=Toc(
+                    TocItem('Subparagraph', '#subparagraph'),
+                )),
             )),
             TocItem('Page 1.2', 'page2.md', children=Toc(
                 TocItem('Paragraph 1', 'page2.md#paragraph-1'),
@@ -93,6 +80,69 @@ class TestTocCombine_Always(AbstractTestTocCombine):
                 TocItem('Paragraph 1', '../section2/page2.md#paragraph-1'),
             )),
         )),
+    )
+
+
+class TestTocCombine_Current(AbstractTestTocCombine):
+    combine = CombinedToc.CURRENT
+    expected = Toc(
+        TocItem('Section 1', '.', is_selected=True, children=Toc(
+            TocItem('Page 1.1', '', is_current=True, is_selected=True, children=Toc(
+                TocItem('Paragraph 1', '#paragraph-1', children=Toc(
+                    TocItem('Subparagraph', '#subparagraph'),
+                )),
+            )),
+            TocItem('Page 1.2', 'page2.md'),
+        )),
+        TocItem('Section 2', '../section2', children=Toc(
+            TocItem('Page 2.1', '../section2/page1.md'),
+            TocItem('Page 2.2', '../section2/page2.md'),
+        )),
+    )
+
+
+class TestTocCombine_Current_LimitDepth_4(TestTocCombine_Current):
+    toc_depth = 4
+
+
+class TestTocCombine_Current_LimitDepth_3(TestTocCombine_Current):
+    toc_depth = 3
+    expected = Toc(
+        TocItem('Section 1', '.', is_selected=True, children=Toc(
+            TocItem('Page 1.1', '', is_current=True, is_selected=True, children=Toc(
+                TocItem('Paragraph 1', '#paragraph-1'),
+            )),
+            TocItem('Page 1.2', 'page2.md'),
+        )),
+        TocItem('Section 2', '../section2', children=Toc(
+            TocItem('Page 2.1', '../section2/page1.md'),
+            TocItem('Page 2.2', '../section2/page2.md'),
+        )),
+    )
+
+
+class TestTocCombine_Current_LimitDepth_2(TestTocCombine_Current):
+    toc_depth = 2
+    expected = Toc(
+        TocItem('Section 1', '.', is_selected=True, children=Toc(
+            TocItem('Page 1.1', '', is_current=True, is_selected=True),
+            TocItem('Page 1.2', 'page2.md'),
+        )),
+        TocItem('Section 2', '../section2', children=Toc(
+            TocItem('Page 2.1', '../section2/page1.md'),
+            TocItem('Page 2.2', '../section2/page2.md'),
+        )),
+    )
+
+
+class TestTocCombine_Current_LimitDepth_1(TestTocCombine_Current):
+    toc_depth = 1
+    expected = Toc(
+        TocItem('Section 1', '.', is_selected=True, children=Toc(
+            TocItem('Page 1.1', '', is_current=True, is_selected=True),
+            TocItem('Page 1.2', 'page2.md'),
+        )),
+        TocItem('Section 2', '../section2'),
     )
 
 
