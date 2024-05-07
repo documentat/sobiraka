@@ -1,7 +1,8 @@
-title: Sobiraka
+title: Собирака
 paths:
   root: src
   include: ['**/*.md']
+  partials: partials
 html:
   theme: book
   search:
@@ -9,7 +10,7 @@ html:
     skip_elements: [ CodeBlock ]
     link_target: h2
     translations:
-      placeholder: Поиск по документации
+      placeholder: Поиск
 lint:
   dictionaries:
     - en_US
