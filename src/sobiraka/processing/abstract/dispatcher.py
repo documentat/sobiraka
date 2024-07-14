@@ -1,6 +1,6 @@
 from panflute import BlockQuote, BulletList, Caption, Citation, Cite, Code, CodeBlock, Definition, DefinitionItem, \
-    DefinitionList, Div, Doc, Element, Emph, Header, HorizontalRule, Image, LineBlock, LineBreak, LineItem, Link, \
-    ListContainer, ListItem, Math, Note, Null, OrderedList, Para, Plain, Quoted, RawBlock, RawInline, SmallCaps, \
+    DefinitionList, Div, Doc, Element, Emph, Figure, Header, HorizontalRule, Image, LineBlock, LineBreak, LineItem, \
+    Link, ListContainer, ListItem, Math, Note, Null, OrderedList, Para, Plain, Quoted, RawBlock, RawInline, SmallCaps, \
     SoftBreak, Space, Span, Str, Strikeout, Strong, Subscript, Superscript, Table, TableBody, TableCell, TableFoot, \
     TableHead, TableRow, Underline
 
@@ -49,6 +49,8 @@ class Dispatcher:
                 result = await self.process_container(elem, page)
             case Emph():
                 result = await self.process_emph(elem, page)
+            case Figure():
+                result = await self.process_figure(elem, page)
             case Header():
                 result = await self.process_header(elem, page)
             case HorizontalRule():
@@ -200,6 +202,9 @@ class Dispatcher:
 
     async def process_emph(self, emph: Emph, page: Page) -> tuple[Element, ...]:
         return await self.process_default(emph, page)
+
+    async def process_figure(self, figure: Figure, page: Page) -> tuple[Element, ...]:
+        return await self.process_default(figure, page)
 
     async def process_header(self, header: Header, page: Page) -> tuple[Element, ...]:
         return await self.process_default(header, page)
