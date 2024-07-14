@@ -36,7 +36,7 @@ RUN npm install --verbose
 FROM alpine:3.19 AS get-pandoc
 WORKDIR /tmp/pandoc
 RUN arch=$(arch | sed s:aarch64:arm64: | sed s:x86_64:amd64:) \
-    && wget https://github.com/jgm/pandoc/releases/download/2.19/pandoc-2.19-linux-$arch.tar.gz -O-  \
+    && wget https://github.com/jgm/pandoc/releases/download/3.2.1/pandoc-3.2.1-linux-$arch.tar.gz -O-  \
     | tar -xz --strip-components=1
 
 

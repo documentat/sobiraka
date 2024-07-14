@@ -16,7 +16,7 @@ setup(
         'jinja2~=3.1.2',
         'jsonschema~=4.17.3',
         'more-itertools~=9.0.0',
-        'panflute~=2.2.3',
+        'panflute~=2.3.1',
         'pygments~=2.16.1',
         'python-iso639~=2023.6.15',
         'pyyaml~=6.0',
