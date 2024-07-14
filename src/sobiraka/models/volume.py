@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import re
 from functools import cached_property
 from pathlib import Path
 from typing import Iterable, overload
@@ -8,6 +7,7 @@ from typing import Iterable, overload
 from more_itertools import unique_justseen
 
 from .config import Config
+from .namingscheme import NamingScheme
 from .page import DirPage, IndexPage, Page
 from .project import Project
 
@@ -142,6 +142,10 @@ class Volume:
     def autoprefix(self) -> str | None:
         return '/'.join(filter(None, (self.lang, self.codename))) or None
 
+    @property
+    def naming_scheme(self) -> NamingScheme:
+        return self.config.paths.naming_scheme
+
     # ------------------------------------------------------------------------------------------------------------------
     # Pages and paths
 
@@ -155,7 +159,7 @@ class Volume:
 
     def _generate_pages(self, paths: Iterable[Path]) -> Iterable[Page]:
         for path_in_volume in paths:
-            if re.fullmatch(r'0(-.*)? | (\d+-)?index', path_in_volume.stem, flags=re.X):
+            if self.naming_scheme.parse(path_in_volume).is_main:
                 yield IndexPage(self, path_in_volume)
             else:
                 yield Page(self, path_in_volume)
@@ -163,6 +167,8 @@ class Volume:
     @cached_property
     def pages_by_path(self) -> dict[Path, Page]:
         assert self.project is not None, 'You must bind the volume to a project before working with pages.'
+
+        from ..utils import sorted_dict
 
         pages_by_path: dict[Path, Page] = {}
         expected_paths: set[Path] = set()
@@ -179,8 +185,7 @@ class Volume:
                 page = DirPage(self, expected_path)
                 pages_by_path[expected_path] = page
 
-        pages_by_path = dict(sorted(pages_by_path.items(),
-                                    key=lambda kv: self.config.paths.naming_scheme.get_sorting_key(kv[0])))
+        pages_by_path = sorted_dict(pages_by_path, key=self.naming_scheme.path_sorting_key)
         return pages_by_path
 
     @property

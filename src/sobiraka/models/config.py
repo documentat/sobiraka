@@ -32,7 +32,7 @@ class Config_Paths:
     Must be compatible with :py:meth:`Path.glob() <pathlib.Path.glob()>`.
     """
 
-    naming_scheme: NamingScheme = NamingScheme()
+    naming_scheme: NamingScheme = field(default_factory=NamingScheme)
 
     resources: Path | None = None
     """Absolute path to the directory containing the resources, such as images."""

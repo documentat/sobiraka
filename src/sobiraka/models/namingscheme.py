@@ -1,44 +1,56 @@
+from __future__ import annotations
+
 import re
+from dataclasses import dataclass
 from math import inf
 from pathlib import Path
-from typing import Sequence
+
+DEFAULT_PATTERNS = (
+    re.compile(r'(?P<is_main> ^$                                 )  # (empty name)   ', re.VERBOSE),
+    re.compile(r'(?P<is_main> index                              )  # index.md       ', re.VERBOSE),
+    re.compile(r'(?P<is_main> (?P<pos> \d+ ) - (?P<stem> index ) )  # 123-index.md   ', re.VERBOSE),
+    re.compile(r'(?P<is_main> (?P<pos> 0 )                       )  # 0.md           ', re.VERBOSE),
+    re.compile(r'(?P<is_main> (?P<pos> 0 ) - .*                  )  # 0-anything.md  ', re.VERBOSE),
+    re.compile(r'(?P<pos> \d+ ) - (?P<stem> .+ )                    # 123-anything.md', re.VERBOSE),
+    re.compile(r'(?P<pos> \d+ )                                     # 123.md         ', re.VERBOSE),
+    re.compile(r'(?P<stem> .+ )                                     # anything.md    ', re.VERBOSE),
+)
 
 
+@dataclass
 class NamingScheme:
-    def __init__(self, patterns: Sequence[str] = (
-            r'(?P<index>\d+) - (?P<stem>.+)',
-            r'(?P<index>\d+)',
-            r'(?P<stem>.+)',
-    )):
-        self.patterns: list[re.Pattern] = []
-        for pattern in patterns:
-            self.patterns.append(re.compile(pattern, re.VERBOSE))
+    patterns: tuple[re.Pattern, ...] = DEFAULT_PATTERNS
 
-    def get_index(self, path: Path | str) -> int | float:
-        return self.get_index_and_stem(path)[0]
+    def __post_init__(self):
+        self.patterns = tuple(
+            pattern if isinstance(pattern, re.Pattern) else re.compile(pattern, re.VERBOSE)
+            for pattern in self.patterns)
 
-    def get_stem(self, path: Path | str) -> str:
-        return self.get_index_and_stem(path)[1]
-
-    def get_index_and_stem(self, path: Path | str) -> tuple[int | float, str]:
+    def parse(self, path: Path | str) -> FileNameData:
         name = Path(path).stem
-        if name == '':
-            return inf, ''
+
         for pattern in self.patterns:
             if m := pattern.fullmatch(name):
-                try:
-                    index = int(m.group('index'))
-                except (IndexError, TypeError):
-                    index = inf
-                try:
-                    stem = m.group('stem')
-                except IndexError:
-                    stem = name
-                return index, stem
+                groupdict = m.groupdict()
+                data = FileNameData(
+                    pos=int(groupdict['pos']) if 'pos' in groupdict else inf,
+                    stem=groupdict.get('stem') or name,
+                    is_main=groupdict.get('is_main') is not None,
+                )
+                return data
+
         raise ValueError(name)
 
-    def get_sorting_key(self, path: Path) -> list[tuple[int | float, str]]:
-        key = []
-        for part in path.parts:
-            key.append(self.get_index_and_stem(part))
-        return key
+    def path_sorting_key(self, path: Path) -> tuple[FileNameData, ...]:
+        return tuple(map(self.parse, path.parts))
+
+
+@dataclass(frozen=True, slots=True)
+class FileNameData:
+    pos: int | float
+    stem: str
+    is_main: bool = False
+
+    def __lt__(self, other):
+        assert isinstance(other, FileNameData)
+        return (not self.is_main, self.pos, self.stem) < (not other.is_main, other.pos, other.stem)

@@ -88,7 +88,7 @@ def _load_volume(lang: str | None, codename: str, volume_data: dict, fs: FileSys
             root=Path(_('paths.root', '.')),
             include=tuple(_('paths.include', ['**/*'])),
             exclude=tuple(_('paths.exclude', '')),
-            naming_scheme=convert_or_none(NamingScheme, _('paths.naming_schema')) or NamingScheme(),
+            naming_scheme=convert_or_none(NamingScheme, _('paths.naming_scheme')) or NamingScheme(),
             resources=convert_or_none(Path, _('paths.resources')),
             partials=convert_or_none(Path, _('paths.partials')),
         ),
