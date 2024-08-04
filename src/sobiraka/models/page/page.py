@@ -237,7 +237,7 @@ class Page:
         """
         The depth of the page's location within its :class:`.Volume`.
 
-        Equals to number of parts in the :data:`id` plus 1.
+        Equals to number of parts in the :data:`path_in_volume` plus 1.
         """
         level = len(self.path_in_volume.parts) + 1
         if self.path_in_volume.stem == '0' or self.path_in_volume.stem.startswith('0-'):
