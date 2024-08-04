@@ -244,19 +244,6 @@ class Page:
             level -= 1
         return level
 
-    @property
-    def antilevel(self) -> int:
-        """
-        A value that shows how far is this page's :data:`level` from the biggest level found in this :class:`.Volume`.
-
-        For the pages with the biggest level, this value always equals to `1`.
-        For other pages, it is always larger than `1`.
-
-        :example: In a volume with only three pages, having levels `1`, `2`, `3`,
-            their corresponding antilevels will be `3`, `2`, `1`.
-        """
-        return self.volume.max_level - self.level + 1
-
     # ------------------------------------------------------------------------------------------------------------------
     # Translation-related properties
 
