@@ -9,7 +9,8 @@ import panflute
 import yaml
 from utilspie.collectionsutils import frozendict
 
-from sobiraka.utils import AbsolutePath, RelativePath, convert_or_none, merge_dicts
+from sobiraka.models.config import Config_Latex_Headers
+from sobiraka.utils import AbsolutePath, RelativePath, convert_or_none, get_default, merge_dicts
 from .config import CombinedToc, Config, Config_Content, Config_Latex, Config_Lint, Config_Lint_Checks, Config_PDF, \
     Config_Pagefind_Translations, Config_Paths, Config_Search_LinkTarget, Config_Web, Config_Web_Search, \
     SearchIndexerName
@@ -113,6 +114,12 @@ def _load_volume(lang: str | None, codename: str, volume_data: dict, fs: FileSys
             theme=_find_theme_dir(_('latex.theme', 'simple'), fs=fs),
             toc=_('latex.toc', True),
             paths=frozendict({k: RelativePath(v) for k, v in _('latex.paths', {}).items()}),
+            headers=Config_Latex_Headers(
+                by_class=frozendict(_('latex.headers.by_class', {})),
+                by_global_level=_load_latex_headers_by_global_level(_('latex.headers.by_global_level', {})),
+                by_page_level=frozendict({int(k): v for k, v in _('latex.headers.by_page_level', {}).items()}),
+                by_element=frozendict(_('latex.headers.by_element', {})),
+            )
         ),
         pdf=Config_PDF(
             theme=_find_theme_dir(_('pdf.theme', 'printable'), fs=fs),
@@ -126,6 +133,12 @@ def _load_volume(lang: str | None, codename: str, volume_data: dict, fs: FileSys
         ),
         variables=frozendict(_('variables', {})),
     ))
+
+
+def _load_latex_headers_by_global_level(values: dict[str, str]) -> frozendict[int, str]:
+    if values:
+        return frozendict({int(k): v for k, v in values.items()})
+    return get_default(Config_Latex_Headers, 'by_global_level')
 
 
 def _find_theme_dir(name: str, *, fs: FileSystem) -> AbsolutePath:

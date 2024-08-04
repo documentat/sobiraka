@@ -17,6 +17,7 @@ class AbstractTestInternalLinks(ProjectTestCase):
         fs = Mock(FileSystem)
         project = Project(fs, {
             RelativePath(): Volume({
+                RelativePath(): Page(),
                 RelativePath('this-page.md'): Page(),
                 RelativePath('other-page.md'): Page(),
             })

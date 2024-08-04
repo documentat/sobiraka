@@ -53,7 +53,6 @@ class TestIncludePatterns(IsolatedAsyncioTestCase):
                 'include': [],
             }
         })
-        self.assertEqual(0, project.volumes[0].max_level)
         self.assertPagePaths(project, ())
 
     async def test_include_all(self):
@@ -62,7 +61,6 @@ class TestIncludePatterns(IsolatedAsyncioTestCase):
                 'include': ['**/*.md'],
             }
         })
-        self.assertEqual(4, project.volumes[0].max_level)
         self.assertPagePaths(project, (
             RelativePath(),
             RelativePath() / 'intro.md',
@@ -87,7 +85,6 @@ class TestIncludePatterns(IsolatedAsyncioTestCase):
                 'include': ['*.md'],
             }
         })
-        self.assertEqual(2, project.volumes[0].max_level)
         self.assertPagePaths(project, (
             RelativePath(),
             RelativePath() / 'intro.md',
@@ -99,7 +96,6 @@ class TestIncludePatterns(IsolatedAsyncioTestCase):
                 'include': ['part2/*.md'],
             }
         })
-        self.assertEqual(3, project.volumes[0].max_level)
         self.assertPagePaths(project, (
             RelativePath(),
             RelativePath() / 'part2',
@@ -114,7 +110,6 @@ class TestIncludePatterns(IsolatedAsyncioTestCase):
                 'include': ['**/chapter3.md'],
             }
         })
-        self.assertEqual(4, project.volumes[0].max_level)
         self.assertPagePaths(project, (
             RelativePath(),
             RelativePath() / 'part1',
@@ -133,7 +128,6 @@ class TestIncludePatterns(IsolatedAsyncioTestCase):
                 'exclude': ['**/part2/*.md'],
             }
         })
-        self.assertEqual(4, project.volumes[0].max_level)
         self.assertPagePaths(project, (
             RelativePath(),
             RelativePath() / 'intro.md',
@@ -155,7 +149,6 @@ class TestIncludePatterns(IsolatedAsyncioTestCase):
                 'exclude': ['**/chapter3.md'],
             }
         })
-        self.assertEqual(4, project.volumes[0].max_level)
         self.assertPagePaths(project, (
             RelativePath(),
             RelativePath() / 'intro.md',

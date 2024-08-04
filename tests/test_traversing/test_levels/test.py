@@ -23,9 +23,6 @@ class TestLevels(ProjectDirTestCase):
         actual_ids = tuple(page.id for page in self.project.pages)
         self.assertSequenceEqual(expected_ids, actual_ids)
 
-    def test_max_level(self):
-        self.assertEqual(4, self.project.volumes[0].max_level)
-
     def test_levels(self):
         for path, level in (
                 (RelativePath() / 'src' / '0-index.rst', 1),
@@ -43,24 +40,6 @@ class TestLevels(ProjectDirTestCase):
         ):
             with self.subTest(path):
                 self.assertEqual(level, self.project.pages_by_path[path].level)
-
-    def test_antilevels(self):
-        for path, antilevel in (
-                (RelativePath() / 'src' / '0-index.rst', 4),
-                (RelativePath() / 'src' / 'part1' / '0-intro.rst', 3),
-                (RelativePath() / 'src' / 'part1' / '1-chapter1.rst', 2),
-                (RelativePath() / 'src' / 'part1' / '2-chapter2.rst', 2),
-                (RelativePath() / 'src' / 'part1' / '3-chapter3.rst', 2),
-                (RelativePath() / 'src' / 'part2' / '0-intro.rst', 3),
-                (RelativePath() / 'src' / 'part2' / '1-chapter1.rst', 2),
-                (RelativePath() / 'src' / 'part2' / '2-chapter2.rst', 2),
-                (RelativePath() / 'src' / 'part2' / '3-chapter3' / '0.rst', 2),
-                (RelativePath() / 'src' / 'part2' / '3-chapter3' / '1-paragraph1.rst', 1),
-                (RelativePath() / 'src' / 'part2' / '3-chapter3' / '2-paragraph2.rst', 1),
-                (RelativePath() / 'src' / 'part2' / '3-chapter3' / '3-paragraph3.rst', 1),
-        ):
-            with self.subTest(path):
-                self.assertEqual(antilevel, self.project.pages_by_path[path].antilevel)
 
 
 del ProjectDirTestCase

@@ -1,3 +1,7 @@
 paths:
   root: src
   resources: resources
+latex:
+  headers:
+    by_global_level:
+      '1': section*

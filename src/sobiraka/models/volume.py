@@ -197,9 +197,3 @@ class Volume:
     @property
     def root_page(self) -> Page:
         return self.pages_by_path[RelativePath('.')]
-
-    @cached_property
-    def max_level(self) -> int:
-        """Maximum value of :obj:`.Page.level` in the volume. Used for calculating :obj:`.Page.antilevel`."""
-        levels = tuple(page.level for page in self.pages)
-        return max(levels) if levels else 0

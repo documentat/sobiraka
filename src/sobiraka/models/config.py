@@ -150,6 +150,21 @@ class Config_Web:
 
 
 @dataclass(kw_only=True, frozen=True)
+class Config_Latex_Headers:
+    by_class: dict[str, str] = field(default_factory=frozendict)
+    by_global_level: dict[int, str] = field(default=frozendict({
+        1: 'part*',
+        2: 'section*',
+        3: 'subsection*',
+        4: 'subsubsection*',
+        5: 'paragraph*',
+        6: 'subparagraph*',
+    }))
+    by_page_level: dict[int, str] = field(default_factory=frozendict)
+    by_element: dict[int, str] = field(default_factory=frozendict)
+
+
+@dataclass(kw_only=True, frozen=True)
 class Config_Latex:
     """Settings related to :class:`.LatexBuilder`."""
 
@@ -163,6 +178,8 @@ class Config_Latex:
     """Whether to add a table of contents."""
 
     paths: dict[str, RelativePath] = field(default=dict)
+
+    headers: Config_Latex_Headers = field(default_factory=Config_Latex_Headers)
 
 
 @dataclass(kw_only=True, frozen=True)
