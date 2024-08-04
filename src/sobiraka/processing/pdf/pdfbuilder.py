@@ -10,7 +10,7 @@ from subprocess import DEVNULL, PIPE
 from types import NoneType
 from typing import BinaryIO
 
-from panflute import Element, Header, Space, Str, stringify
+from panflute import Element, Header, Str, stringify
 
 from sobiraka.models import Page, PageHref, PageStatus, Volume
 from sobiraka.models.exceptions import DisableLink
@@ -220,7 +220,7 @@ class PdfBuilder(VolumeProcessor):
             if page.volume.config.content.numeration:
                 label = '%NUMBER%' + label
             result += LatexInline(fr'\hypertarget{{{dest}}}{{}}'), Str('\n')
-            result += LatexInline(fr'\bookmark[level={header.level},dest={dest}]{{ {label} }}'), Str('\n')
+            result += LatexInline(fr'\bookmark[level={header.level},dest={dest}]{{{label}}}'), Str('\n')
 
         # Add the appropriate header tag and an opening curly bracket, e.g., '\section{'.
         tag = {
@@ -232,7 +232,7 @@ class PdfBuilder(VolumeProcessor):
         }[header.level]
         if 'notoc' in header.classes:
             tag += '*'
-        result += LatexInline(fr'\{tag}{{'), Space()
+        result += LatexInline(fr'\{tag}{{'),
 
         # Put all the content of the original header here
         # For some reason, Pandoc does not escape `%` when it is a separate word,
@@ -246,6 +246,6 @@ class PdfBuilder(VolumeProcessor):
                 result.append(item)
 
         # Close the curly bracket
-        result += Space(), LatexInline('}')
+        result += LatexInline('}'),
 
         return (HeaderReplPara(header, result),)
