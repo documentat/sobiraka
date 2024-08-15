@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, overload
 
 import yaml
 
+from ..namingscheme import NamingScheme
 from ..syntax import Syntax
 from ..version import TranslationStatus, Version
 
@@ -240,8 +241,11 @@ class Page:
         Equals to number of parts in the :data:`path_in_volume` plus 1.
         """
         level = len(self.path_in_volume.parts) + 1
-        if self.path_in_volume.stem == '0' or self.path_in_volume.stem.startswith('0-'):
+
+        naming_scheme: NamingScheme = self.volume.config.paths.naming_scheme
+        if naming_scheme.parse(self.path_in_volume).is_main:
             level -= 1
+
         return level
 
     # ------------------------------------------------------------------------------------------------------------------
