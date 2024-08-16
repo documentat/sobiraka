@@ -65,6 +65,8 @@ class PdfBuilder(VolumeProcessor):
         return 0
 
     async def generate_latex(self, latex_output: BinaryIO):
+        # pylint: disable=too-many-branches
+
         volume = self.volume
         project = self.volume.project
         config = self.volume.config
@@ -86,8 +88,10 @@ class PdfBuilder(VolumeProcessor):
             variables = {
                 'TITLE': config.title,
                 'LANG': volume.lang,
-                **config.variables,
             }
+            for key, value in config.variables.items():
+                if re.fullmatch(r'[A-Za-z_]+', key):
+                    variables[key] = value
             latex_output.write(b'\n\n' + (80 * b'%'))
             latex_output.write(b'\n\n%%% Variables\n\n')
             for key, value in variables.items():
