@@ -32,7 +32,10 @@ class PdfBuilder(VolumeProcessor):
         # Load an optional post-processor a.k.a. PdfTheme
         self._theme: PdfTheme | None = None
         if self.volume.config.pdf.theme is not None:
-            self._theme = load_pdf_theme(self.volume.config.pdf.theme)
+            theme_dir: Path = self.volume.config.pdf.theme
+            if not theme_dir.is_absolute():
+                theme_dir = self.volume.project.fs.resolve(self.volume.config.pdf.theme)
+            self._theme = load_pdf_theme(theme_dir)
 
     async def run(self):
         xelatex_workdir = RT.TMP / 'tex'
@@ -83,6 +86,7 @@ class PdfBuilder(VolumeProcessor):
                 latex_output.write(b'\n\n' + (80 * b'%'))
                 latex_output.write(b'\n\n%%% Paths\n\n')
                 for key, value in config.pdf.paths.items():
+                    value = self.volume.project.fs.resolve(value)
                     latex_output.write(fr'\newcommand{{\{key}}}{{{value}/}}'.encode('utf-8') + b'\n')
 
             variables = {
