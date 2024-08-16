@@ -13,6 +13,7 @@ from typing import BinaryIO
 from panflute import Element, Header, Str, stringify
 
 from sobiraka.models import Page, PageHref, PageStatus, Volume
+from sobiraka.models.config import Config_PDF_Headers
 from sobiraka.models.exceptions import DisableLink
 from sobiraka.runtime import RT
 from sobiraka.utils import LatexInline, panflute_to_bytes
@@ -216,21 +217,16 @@ class PdfBuilder(VolumeProcessor):
         if 'notoc' not in header.classes:
             href = PageHref(page, header.identifier if header.level > 1 else None)
             dest = re.sub(r'^#', '', self.make_internal_url(href, page=page))
+            level = page.level + header.level - 1
             label = stringify(header).replace('%', r'\%')
             if page.volume.config.content.numeration:
                 label = '%NUMBER%' + label
             result += LatexInline(fr'\hypertarget{{{dest}}}{{}}'), Str('\n')
-            result += LatexInline(fr'\bookmark[level={header.level},dest={dest}]{{{label}}}'), Str('\n')
+            result += LatexInline(fr'\bookmark[level={level},dest={dest}]{{{label}}}'), Str('\n')
 
         # Add the appropriate header tag and an opening curly bracket, e.g., '\section{'.
-        tag = {
-            1: 'section',
-            2: 'subsection',
-            3: 'subsubsection',
-            4: 'paragraph',
-            5: 'subparagraph',
-        }[header.level]
-        if 'notoc' in header.classes:
+        tag = self.choose_header_tag(header, page)
+        if 'notoc' in header.classes and tag[-1] != '*':
             tag += '*'
         result += LatexInline(fr'\{tag}{{'),
 
@@ -249,3 +245,19 @@ class PdfBuilder(VolumeProcessor):
         result += LatexInline('}'),
 
         return (HeaderReplPara(header, result),)
+
+    def choose_header_tag(self, header: Header, page: Page) -> str:
+        config_headers: Config_PDF_Headers = page.volume.config.pdf.headers
+
+        for klass in header.classes:
+            with suppress(KeyError):
+                return config_headers.by_class[klass]
+
+        with suppress(KeyError):
+            return config_headers.by_global_level[page.level + header.level - 1]
+
+        if header.level == 1:
+            with suppress(KeyError):
+                return config_headers.by_page_level[page.level]
+
+        return config_headers.by_element[header.level]
