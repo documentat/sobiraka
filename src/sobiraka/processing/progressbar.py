@@ -73,6 +73,8 @@ async def run_with_progressbar(processor: Processor):
         # Await for the task, so that Python prints any unexpected Exceptions that happened
         await running
 
+    return 0
+
 
 def print_issues(processor: Processor) -> bool:
     issues_count: int = 0
