@@ -3,7 +3,8 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 from math import inf
-from pathlib import Path
+
+from sobiraka.utils import RelativePath
 
 DEFAULT_PATTERNS = (
     re.compile(r'(?P<is_main> ^$                                 )  # (empty name)   ', re.VERBOSE),
@@ -26,8 +27,8 @@ class NamingScheme:
             pattern if isinstance(pattern, re.Pattern) else re.compile(pattern, re.VERBOSE)
             for pattern in self.patterns)
 
-    def parse(self, path: Path | str) -> FileNameData:
-        name = Path(path).stem
+    def parse(self, path: RelativePath | str) -> FileNameData:
+        name = RelativePath(path).stem
 
         for pattern in self.patterns:
             if m := pattern.fullmatch(name):
@@ -41,7 +42,7 @@ class NamingScheme:
 
         raise ValueError(name)
 
-    def path_sorting_key(self, path: Path) -> tuple[FileNameData, ...]:
+    def path_sorting_key(self, path: RelativePath) -> tuple[FileNameData, ...]:
         return tuple(map(self.parse, path.parts))
 
 

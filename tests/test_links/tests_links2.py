@@ -1,4 +1,3 @@
-from pathlib import Path
 from unittest import main
 from unittest.mock import Mock
 
@@ -7,58 +6,59 @@ from panflute import Link
 from abstracttests.projecttestcase import ProjectTestCase
 from sobiraka.models import FileSystem, Page, PageHref, Project, Volume
 from sobiraka.runtime import RT
+from sobiraka.utils import RelativePath
 
 
 class TestLinks2(ProjectTestCase):
     def _init_project(self) -> Project:
         fs = Mock(FileSystem)
         return Project(fs, {
-            Path('A'): Volume(None, 'A', {
-                Path() / 'page.md': Page(),
-                Path() / 'section1' / 'page.md': Page(),
-                Path() / 'section1' / 'subsection1' / 'page.md': Page(),  # <-- we will start here
-                Path() / 'section1' / 'subsection1' / 'sibling.md': Page(),
-                Path() / 'section1' / 'subsection1' / 'subsubsection1' / 'page.md': Page(),
-                Path() / 'section1' / 'subsection2' / 'page.md': Page(),
-                Path() / 'section2' / 'page.md': Page(),
+            RelativePath('A'): Volume(None, 'A', {
+                RelativePath() / 'page.md': Page(),
+                RelativePath() / 'section1' / 'page.md': Page(),
+                RelativePath() / 'section1' / 'subsection1' / 'page.md': Page(),  # <-- we will start here
+                RelativePath() / 'section1' / 'subsection1' / 'sibling.md': Page(),
+                RelativePath() / 'section1' / 'subsection1' / 'subsubsection1' / 'page.md': Page(),
+                RelativePath() / 'section1' / 'subsection2' / 'page.md': Page(),
+                RelativePath() / 'section2' / 'page.md': Page(),
             }),
-            Path('B'): Volume(None, 'B', {
-                Path() / 'page.md': Page(),
+            RelativePath('B'): Volume(None, 'B', {
+                RelativePath() / 'page.md': Page(),
             })
         })
 
     async def test_links(self):
-        page = self.project.pages_by_path[Path('A/section1/subsection1/page.md')]
-        data: dict[str, Path] = {
-            '/': Path('A'),
-            '/page.md': Path('A/page.md'),
-            '/section1': Path('A/section1'),
-            '/section1/page.md': Path('A/section1/page.md'),
-            '/section1/subsection1': Path('A/section1/subsection1'),
-            '/section1/subsection1/page.md': Path('A/section1/subsection1/page.md'),
-            '/section1/subsection1/sibling.md': Path('A/section1/subsection1/sibling.md'),
-            '/section1/subsection1/subsubsection1': Path('A/section1/subsection1/subsubsection1'),
-            '/section1/subsection1/subsubsection1/page.md': Path('A/section1/subsection1/subsubsection1/page.md'),
-            '/section1/subsection2': Path('A/section1/subsection2'),
-            '/section1/subsection2/page.md': Path('A/section1/subsection2/page.md'),
-            '/section2': Path('A/section2'),
-            '/section2/page.md': Path('A/section2/page.md'),
-            '../..': Path('A'),
-            '../../page.md': Path('A/page.md'),
-            '..': Path('A/section1'),
-            '../page.md': Path('A/section1/page.md'),
-            '.': Path('A/section1/subsection1'),
-            '': Path('A/section1/subsection1/page.md'),
-            'page.md': Path('A/section1/subsection1/page.md'),
-            'sibling.md': Path('A/section1/subsection1/sibling.md'),
-            'subsubsection1': Path('A/section1/subsection1/subsubsection1'),
-            'subsubsection1/page.md': Path('A/section1/subsection1/subsubsection1/page.md'),
-            '../subsection2': Path('A/section1/subsection2'),
-            '../subsection2/page.md': Path('A/section1/subsection2/page.md'),
-            '../../section2': Path('A/section2'),
-            '../../section2/page.md': Path('A/section2/page.md'),
-            '$A/page.md': Path('A/page.md'),
-            '$B/page.md': Path('B/page.md'),
+        page = self.project.pages_by_path[RelativePath('A/section1/subsection1/page.md')]
+        data: dict[str, RelativePath] = {
+            '/': RelativePath('A'),
+            '/page.md': RelativePath('A/page.md'),
+            '/section1': RelativePath('A/section1'),
+            '/section1/page.md': RelativePath('A/section1/page.md'),
+            '/section1/subsection1': RelativePath('A/section1/subsection1'),
+            '/section1/subsection1/page.md': RelativePath('A/section1/subsection1/page.md'),
+            '/section1/subsection1/sibling.md': RelativePath('A/section1/subsection1/sibling.md'),
+            '/section1/subsection1/subsubsection1': RelativePath('A/section1/subsection1/subsubsection1'),
+            '/section1/subsection1/subsubsection1/page.md': RelativePath('A/section1/subsection1/subsubsection1/page.md'),
+            '/section1/subsection2': RelativePath('A/section1/subsection2'),
+            '/section1/subsection2/page.md': RelativePath('A/section1/subsection2/page.md'),
+            '/section2': RelativePath('A/section2'),
+            '/section2/page.md': RelativePath('A/section2/page.md'),
+            '../..': RelativePath('A'),
+            '../../page.md': RelativePath('A/page.md'),
+            '..': RelativePath('A/section1'),
+            '../page.md': RelativePath('A/section1/page.md'),
+            '.': RelativePath('A/section1/subsection1'),
+            '': RelativePath('A/section1/subsection1/page.md'),
+            'page.md': RelativePath('A/section1/subsection1/page.md'),
+            'sibling.md': RelativePath('A/section1/subsection1/sibling.md'),
+            'subsubsection1': RelativePath('A/section1/subsection1/subsubsection1'),
+            'subsubsection1/page.md': RelativePath('A/section1/subsection1/subsubsection1/page.md'),
+            '../subsection2': RelativePath('A/section1/subsection2'),
+            '../subsection2/page.md': RelativePath('A/section1/subsection2/page.md'),
+            '../../section2': RelativePath('A/section2'),
+            '../../section2/page.md': RelativePath('A/section2/page.md'),
+            '$A/page.md': RelativePath('A/page.md'),
+            '$B/page.md': RelativePath('B/page.md'),
         }
         for target_text, expected_path in data.items():
             with self.subTest(target=target_text):

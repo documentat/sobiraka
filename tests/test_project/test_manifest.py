@@ -1,10 +1,10 @@
 from abc import ABCMeta, abstractmethod
-from pathlib import Path
 from unittest import TestCase, main
 from unittest.mock import Mock
 
 from sobiraka.models import FileSystem, Volume
 from sobiraka.models.load import load_project_from_str
+from sobiraka.utils import RelativePath
 
 
 class _TestManifest(TestCase, metaclass=ABCMeta):
@@ -56,7 +56,7 @@ class TestManifest_1L_1V(_TestManifest):
         self.assertEqual('Documentation', self.volume.config.title)
 
     def test_root(self):
-        self.assertEqual(Path('src/en'), self.volume.relative_root)
+        self.assertEqual(RelativePath('src/en'), self.volume.relative_root)
 
     def test_include(self):
         self.assertEqual(('one', 'two', 'three'), self.volume.config.paths.include)
@@ -272,7 +272,7 @@ class TestManifest_2L_2V(_TestManifest):
                 self.assertEqual(expected, volume.config.title)
 
     def test_root(self):
-        expected_data = Path('src/en'), Path('src/en'), Path('src/ru'), Path('src/ru')
+        expected_data = map(RelativePath, ('src/en', 'src/en', 'src/ru', 'src/ru'))
         for i, (expected, volume) in enumerate(zip(expected_data, self.project.volumes, strict=True)):
             with self.subTest(f'{i} - {expected}'):
                 self.assertEqual(expected, volume.relative_root)

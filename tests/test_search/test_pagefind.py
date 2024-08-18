@@ -1,16 +1,16 @@
-from abc import ABCMeta, abstractmethod
-from pathlib import Path
+from abc import ABCMeta
 from textwrap import dedent
 from unittest import main
 from unittest.mock import MagicMock, Mock, call, patch
 
 from abstracttests.abstracttestwithrt import AbstractTestWithRtTmp
 from abstracttests.projecttestcase import ProjectTestCase
-from sobiraka.models import DirPage, FileSystem, IndexPage, Page, PageStatus, Project, Volume
-from sobiraka.models.config import Config, Config_HTML, Config_HTML_Search, Config_Search_LinkTarget
+from sobiraka.models import FileSystem, Page, PageStatus, Project, Volume
+from sobiraka.models.config import Config_HTML_Search, Config_Search_LinkTarget
 from sobiraka.processing import HtmlBuilder
 from sobiraka.processing.html.search import PagefindIndexer
 from sobiraka.runtime import RT
+from sobiraka.utils import RelativePath
 
 
 @patch(f'{PagefindIndexer.__module__}.{PagefindIndexer.__qualname__}._add_record')
@@ -41,14 +41,14 @@ class AbstractTestPagefindIndexer(ProjectTestCase[HtmlBuilder], AbstractTestWith
 class TestPagefindIndexer_Basic(AbstractTestPagefindIndexer):
     def _init_project(self) -> Project:
         return Project(Mock(FileSystem), {
-            Path('src'): Volume({
+            RelativePath('src'): Volume({
 
-                Path('formatting.md'): Page(dedent('''
+                RelativePath('formatting.md'): Page(dedent('''
                     # Page with formatting
                     Normal, _italic_, **bold**, _**bold italic**_!
                 ''')),
 
-                Path('links.md'): Page(dedent('''
+                RelativePath('links.md'): Page(dedent('''
                     # Page with links
                     Internal link 1: [formatting](formatting.md).
                     Internal link 2: [](formatting.md).
@@ -78,8 +78,8 @@ class TestPagefindIndexer_Basic(AbstractTestPagefindIndexer):
 class AbstractTestPagefindIndexer_UpToLevel(AbstractTestPagefindIndexer, metaclass=ABCMeta):
     def _init_project(self) -> Project:
         return Project(Mock(FileSystem), {
-            Path('src'): Volume({
-                Path(): Page(dedent('''
+            RelativePath('src'): Volume({
+                RelativePath(): Page(dedent('''
                     # H1
                     text1
                     

@@ -6,7 +6,6 @@ from contextvars import ContextVar
 from dataclasses import dataclass
 from hashlib import sha256
 from os.path import dirname
-from pathlib import Path
 from shutil import rmtree
 
 import diskcache
@@ -15,6 +14,7 @@ from checksumdir import dirhash
 import sobiraka
 from sobiraka.models import Page
 from sobiraka.runtime import PageRuntime, RT
+from sobiraka.utils import AbsolutePath
 
 
 class Cache:
@@ -80,7 +80,7 @@ def _hash(data) -> str:
     return sha256(pickle.dumps(data)).hexdigest()
 
 
-def init_cache(cache_directory: Path):
+def init_cache(cache_directory: AbsolutePath):
     app_fingerprint = dirhash(dirname(sobiraka.__file__),
                               hashfunc='sha256',
                               excluded_files=['**/__pycache__/*'],

@@ -1,5 +1,4 @@
-from pathlib import Path
-
+from sobiraka.utils import RelativePath
 from .page import Page
 
 
@@ -14,7 +13,7 @@ class IndexPage(Page):
         return self.volume.config.paths.naming_scheme.parse(self.path_in_project.parent).stem
 
     def is_root(self) -> bool:
-        return self.path_in_volume.parent == Path('.')
+        return self.path_in_volume.parent == RelativePath('.')
 
     @property
     def parent(self) -> Page | None:

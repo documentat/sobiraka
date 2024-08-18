@@ -1,6 +1,7 @@
 from abc import ABCMeta, abstractmethod
 from dataclasses import dataclass
-from pathlib import Path
+
+from sobiraka.utils import RelativePath
 
 
 class HeadTag(metaclass=ABCMeta):
@@ -32,10 +33,10 @@ class HeadCssCode(HeadTag):
 
 @dataclass(frozen=True)
 class HeadCssFile(HeadTag):
-    relative_path: Path
+    path: RelativePath
 
     def render(self, root_prefix: str) -> str:
-        return f'<link rel="stylesheet" href="{root_prefix}{self.relative_path}"/>'
+        return f'<link rel="stylesheet" href="{root_prefix}{self.path}"/>'
 
 
 @dataclass(frozen=True)
@@ -61,10 +62,10 @@ class HeadJsCode(HeadTag):
 
 @dataclass(frozen=True)
 class HeadJsFile(HeadTag):
-    relative_path: Path
+    path: RelativePath
 
     def render(self, root_prefix: str) -> str:
-        return f'<script src="{root_prefix}{self.relative_path}"></script>'
+        return f'<script src="{root_prefix}{self.path}"></script>'
 
 
 @dataclass(frozen=True)

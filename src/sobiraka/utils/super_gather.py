@@ -1,8 +1,6 @@
 from asyncio import Task, gather
 from typing import Sequence
 
-from sobiraka.models.exceptions import Ignorable
-
 
 async def super_gather(tasks: Sequence[Task], error_message: str = 'Not all tasks gathered here'):
     """
@@ -10,6 +8,8 @@ async def super_gather(tasks: Sequence[Task], error_message: str = 'Not all task
     Each task is guaranteed to be awaited till it finishes.
     All exceptions will be collected and reraised as an ExceptionGroup with the given message.
     """
+    from sobiraka.models.exceptions import Ignorable
+
     tasks = list(tasks)
     exceptions = []
 

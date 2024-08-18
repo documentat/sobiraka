@@ -4,20 +4,20 @@ from dataclasses import asdict, dataclass, field
 from enum import Enum
 from importlib.resources import files
 from math import inf
-from pathlib import Path
 from typing import Any
 
 from panflute import Element
 from utilspie.collectionsutils import frozendict
 
 from sobiraka.models import NamingScheme
+from sobiraka.utils import AbsolutePath, RelativePath
 
 
 @dataclass(kw_only=True, frozen=True)
 class Config_Paths:
     """Settings that affect discovering source files."""
 
-    root: Path = None
+    root: RelativePath = None
     """Absolute path to the directory containing the documentation sources."""
 
     include: tuple[str] = ('**/*',)
@@ -34,10 +34,10 @@ class Config_Paths:
 
     naming_scheme: NamingScheme = field(default_factory=NamingScheme)
 
-    resources: Path | None = None
+    resources: RelativePath | None = None
     """Absolute path to the directory containing the resources, such as images."""
 
-    partials: Path | None = None
+    partials: RelativePath | None = None
     """Absolute path to the directory containing partials that can be included into pages."""
 
 
@@ -129,7 +129,7 @@ class Config_HTML:
 
     resources_force_copy: tuple[str, ...] = ()
 
-    theme: Path = files('sobiraka') / 'files' / 'themes' / 'simple'
+    theme: AbsolutePath = files('sobiraka') / 'files' / 'themes' / 'simple'
     """Path to the theme that should be used when generating HTML."""
 
     theme_data: dict[str, Any] = field(default=dict)
@@ -145,16 +145,16 @@ class Config_HTML:
 class Config_PDF:
     """Settings related to :class:`.PdfBuilder`."""
 
-    header: Path | None = None
+    header: RelativePath | None = None
     """Path to the file containing LaTeX header directives for the volume, if provided."""
 
-    theme: Path = None
+    theme: AbsolutePath = None
     """Path to the theme that should be used when generating LaTeX."""
 
     toc: bool = True
     """Whether to add a table of contents."""
 
-    paths: dict[str, Path] = field(default=dict)
+    paths: dict[str, RelativePath] = field(default=dict)
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -182,7 +182,7 @@ class Config_Lint:
     and relative paths to specific dictionaries present under the project root.
     """
 
-    exceptions: tuple[Path, ...] = ()
+    exceptions: tuple[RelativePath, ...] = ()
     """
     Relative paths to the files containing word and phrases that should not be treated as incorrect.
     

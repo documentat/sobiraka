@@ -1,5 +1,4 @@
-from pathlib import Path
-
+from sobiraka.utils import RelativePath
 from .page import Page
 from ..syntax import Syntax
 
@@ -7,7 +6,7 @@ from ..syntax import Syntax
 class DirPage(Page):
 
     def is_root(self) -> bool:
-        return self.path_in_volume == Path('.')
+        return self.path_in_volume == RelativePath('.')
 
     @property
     def parent(self) -> Page | None:

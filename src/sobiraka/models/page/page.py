@@ -4,11 +4,11 @@ import re
 from dataclasses import dataclass
 from functools import cached_property
 from hashlib import sha256
-from pathlib import Path
 from typing import TYPE_CHECKING, overload
 
 import yaml
 
+from sobiraka.utils import RelativePath
 from ..syntax import Syntax
 from ..version import TranslationStatus, Version
 
@@ -24,27 +24,27 @@ class Page:
     """
 
     @overload
-    def __init__(self, volume: Volume, path_in_volume: Path, /):
+    def __init__(self, volume: Volume, path_in_volume: RelativePath, /):
         ...
 
     @overload
-    def __init__(self, volume: Volume, path_in_volume: Path, meta: PageMeta, text: str, /):
+    def __init__(self, volume: Volume, path_in_volume: RelativePath, meta: PageMeta, text: str, /):
         ...
 
     @overload
-    def __init__(self, volume: Volume, path_in_volume: Path, raw_text: str, /):
+    def __init__(self, volume: Volume, path_in_volume: RelativePath, raw_text: str, /):
         ...
 
     @overload
-    def __init__(self, path_in_volume: Path, /):
+    def __init__(self, path_in_volume: RelativePath, /):
         ...
 
     @overload
-    def __init__(self, path_in_volume: Path, meta: PageMeta, text: str, /):
+    def __init__(self, path_in_volume: RelativePath, meta: PageMeta, text: str, /):
         ...
 
     @overload
-    def __init__(self, path_in_volume: Path, raw_text: str, /):
+    def __init__(self, path_in_volume: RelativePath, raw_text: str, /):
         ...
 
     @overload
@@ -59,36 +59,36 @@ class Page:
         from sobiraka.models.volume import Volume
 
         self.volume: Volume | None = None
-        self.path_in_volume: Path | None = None
+        self.path_in_volume: RelativePath | None = None
 
         self.__meta: PageMeta | None = None
         self.__text: str | None = None
 
         match args:
-            case Volume() as volume, Path() as path_in_volume:
+            case Volume() as volume, RelativePath() as path_in_volume:
                 self.volume = volume
                 self.path_in_volume = path_in_volume
 
-            case Volume() as volume, Path() as path_in_volume, PageMeta() as meta, str() as text:
+            case Volume() as volume, RelativePath() as path_in_volume, PageMeta() as meta, str() as text:
                 self.volume = volume
                 self.path_in_volume = path_in_volume
                 self.__meta = meta
                 self.__text = text
 
-            case Volume() as volume, Path() as path_in_volume, str() as raw_text:
+            case Volume() as volume, RelativePath() as path_in_volume, str() as raw_text:
                 self.volume = volume
                 self.path_in_volume = path_in_volume
                 self._process_raw(raw_text)
 
-            case Path() as path_in_volume,:
+            case RelativePath() as path_in_volume,:
                 self.path_in_volume = path_in_volume
 
-            case Path() as path_in_volume, PageMeta() as meta, str() as text:
+            case RelativePath() as path_in_volume, PageMeta() as meta, str() as text:
                 self.path_in_volume = path_in_volume
                 self.__meta = meta
                 self.__text = text
 
-            case Path() as path_in_volume, str() as raw_text:
+            case RelativePath() as path_in_volume, str() as raw_text:
                 self.path_in_volume = path_in_volume
                 self._process_raw(raw_text)
 
@@ -123,7 +123,7 @@ class Page:
         match path:
             case self.volume.autoprefix:
                 return f'<{self.__class__.__name__}: [{self.volume.autoprefix}]/{path}>'
-            case Path('.'):
+            case RelativePath('.'):
                 return f'<{self.__class__.__name__}: />'
             case _:
                 return f'<{self.__class__.__name__}: /{path}>'
@@ -175,11 +175,11 @@ class Page:
     # Paths and the position in the tree
 
     @cached_property
-    def path_in_project(self) -> Path:
+    def path_in_project(self) -> RelativePath:
         return self.volume.relative_root / self.path_in_volume
 
     def is_root(self) -> bool:
-        return self.path_in_volume == Path('.')
+        return self.path_in_volume == RelativePath('.')
 
     @cached_property
     def breadcrumbs(self) -> tuple[Page, ...]:
@@ -213,7 +213,7 @@ class Page:
 
     @property
     def stem(self) -> str:
-        if self.path_in_volume == Path():
+        if self.path_in_volume == RelativePath():
             return self.volume.codename or ''
         return self.volume.config.paths.naming_scheme.parse(self.path_in_project).stem
 

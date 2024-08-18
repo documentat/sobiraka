@@ -1,6 +1,7 @@
 from dataclasses import dataclass
-from pathlib import Path
 from textwrap import shorten
+
+from sobiraka.utils import RelativePath
 
 
 class Issue:
@@ -34,7 +35,7 @@ class AmbiguosLink(Issue):
 
 @dataclass(order=True, frozen=True)
 class MisspelledWords(Issue):
-    path_in_project: Path
+    path_in_project: RelativePath
     words: tuple[str, ...]
 
     def __str__(self):

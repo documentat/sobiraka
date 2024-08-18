@@ -3,12 +3,12 @@ from __future__ import annotations
 import os
 from collections import defaultdict
 from contextvars import ContextVar, copy_context
-from pathlib import Path
 from typing import Coroutine, TYPE_CHECKING, overload
 
 from .anchorruntime import AnchorRuntime
 from .pageruntime import PageRuntime
 from .volumeruntime import VolumeRuntime
+from ..utils import AbsolutePath
 
 if TYPE_CHECKING:
     from sobiraka.models import Anchor, Page, Volume
@@ -21,7 +21,7 @@ class Runtime:
 
     def __init__(self):
         # pylint: disable=invalid-name
-        self.TMP: Path | None = None
+        self.TMP: AbsolutePath | None = None
         self.DEBUG: bool = bool(os.environ.get('SOBIRAKA_DEBUG'))
         self.IDS: dict[int, str] = {}
 

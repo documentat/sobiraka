@@ -1,20 +1,20 @@
-from pathlib import Path
 from unittest import TestCase
 from unittest.mock import Mock
 
 from sobiraka.models import NamingScheme, Page, Project, Volume
 from sobiraka.models.config import Config, Config_Paths
+from sobiraka.utils import AbsolutePath, RelativePath
 
 
 class TestInitVolume(TestCase):
 
     def test_with_paths(self):
         volume = Volume((
-            Path('page1.md'),
-            Path('page2.md'),
-            Path('page3.md'),
+            RelativePath('page1.md'),
+            RelativePath('page2.md'),
+            RelativePath('page3.md'),
         ))
-        volume.project = Mock(Project, base=Path('/project'))
+        volume.project = Mock(Project, base=AbsolutePath('/project'))
 
         with self.subTest('lang'):
             self.assertIsNone(volume.lang)
@@ -27,20 +27,20 @@ class TestInitVolume(TestCase):
 
         with self.subTest('pages'):
             expected = (
-                Path('.'),
-                Path('page1.md'),
-                Path('page2.md'),
-                Path('page3.md'),
+                RelativePath('.'),
+                RelativePath('page1.md'),
+                RelativePath('page2.md'),
+                RelativePath('page3.md'),
             )
             actual = tuple(p.path_in_volume for p in volume.pages)
             self.assertSequenceEqual(expected, actual)
 
         with self.subTest('pages_by_path'):
             expected = (
-                Path('.'),
-                Path('page1.md'),
-                Path('page2.md'),
-                Path('page3.md'),
+                RelativePath('.'),
+                RelativePath('page1.md'),
+                RelativePath('page2.md'),
+                RelativePath('page3.md'),
             )
             actual = tuple(volume.pages_by_path.keys())
             self.assertSequenceEqual(expected, actual)
@@ -48,11 +48,11 @@ class TestInitVolume(TestCase):
     def test_with_config_paths(self):
         config = Config()
         volume = Volume(config, (
-            Path('page1.md'),
-            Path('page2.md'),
-            Path('page3.md'),
+            RelativePath('page1.md'),
+            RelativePath('page2.md'),
+            RelativePath('page3.md'),
         ))
-        volume.project = Mock(Project, base=Path('/project'))
+        volume.project = Mock(Project, base=AbsolutePath('/project'))
 
         with self.subTest('lang'):
             self.assertIsNone(volume.lang)
@@ -65,31 +65,31 @@ class TestInitVolume(TestCase):
 
         with self.subTest('pages'):
             expected = (
-                Path('.'),
-                Path('page1.md'),
-                Path('page2.md'),
-                Path('page3.md'),
+                RelativePath('.'),
+                RelativePath('page1.md'),
+                RelativePath('page2.md'),
+                RelativePath('page3.md'),
             )
             actual = tuple(p.path_in_volume for p in volume.pages)
             self.assertSequenceEqual(expected, actual)
 
         with self.subTest('pages_by_path'):
             expected = (
-                Path('.'),
-                Path('page1.md'),
-                Path('page2.md'),
-                Path('page3.md'),
+                RelativePath('.'),
+                RelativePath('page1.md'),
+                RelativePath('page2.md'),
+                RelativePath('page3.md'),
             )
             actual = tuple(volume.pages_by_path.keys())
             self.assertSequenceEqual(expected, actual)
 
     def test_with_lang_codename_paths(self):
         volume = Volume('en', 'example', (
-            Path('page1.md'),
-            Path('page2.md'),
-            Path('page3.md'),
+            RelativePath('page1.md'),
+            RelativePath('page2.md'),
+            RelativePath('page3.md'),
         ))
-        volume.project = Mock(Project, base=Path('/project'))
+        volume.project = Mock(Project, base=AbsolutePath('/project'))
 
         with self.subTest('lang'):
             self.assertEqual('en', volume.lang)
@@ -102,31 +102,31 @@ class TestInitVolume(TestCase):
 
         with self.subTest('pages'):
             expected = (
-                Path('.'),
-                Path('page1.md'),
-                Path('page2.md'),
-                Path('page3.md'),
+                RelativePath('.'),
+                RelativePath('page1.md'),
+                RelativePath('page2.md'),
+                RelativePath('page3.md'),
             )
             actual = tuple(p.path_in_volume for p in volume.pages)
             self.assertSequenceEqual(expected, actual)
 
         with self.subTest('pages_by_path'):
             expected = (
-                Path('.'),
-                Path('page1.md'),
-                Path('page2.md'),
-                Path('page3.md'),
+                RelativePath('.'),
+                RelativePath('page1.md'),
+                RelativePath('page2.md'),
+                RelativePath('page3.md'),
             )
             actual = tuple(volume.pages_by_path.keys())
             self.assertSequenceEqual(expected, actual)
 
     def test_with_pages(self):
         volume = Volume({
-            Path('page1.md'): (page1 := Page()),
-            Path('page2.md'): (page2 := Page()),
-            Path('page3.md'): (page3 := Page()),
+            RelativePath('page1.md'): (page1 := Page()),
+            RelativePath('page2.md'): (page2 := Page()),
+            RelativePath('page3.md'): (page3 := Page()),
         })
-        volume.project = Mock(Project, base=Path('/project'))
+        volume.project = Mock(Project, base=AbsolutePath('/project'))
 
         with self.subTest('lang'):
             self.assertIsNone(volume.lang)
@@ -139,20 +139,20 @@ class TestInitVolume(TestCase):
 
         with self.subTest('pages'):
             expected = (
-                Path('.'),
-                Path('page1.md'),
-                Path('page2.md'),
-                Path('page3.md'),
+                RelativePath('.'),
+                RelativePath('page1.md'),
+                RelativePath('page2.md'),
+                RelativePath('page3.md'),
             )
             actual = tuple(p.path_in_volume for p in volume.pages)
             self.assertSequenceEqual(expected, actual)
 
         with self.subTest('pages_by_path'):
             expected = (
-                Path('.'),
-                Path('page1.md'),
-                Path('page2.md'),
-                Path('page3.md'),
+                RelativePath('.'),
+                RelativePath('page1.md'),
+                RelativePath('page2.md'),
+                RelativePath('page3.md'),
             )
             actual = tuple(volume.pages_by_path.keys())
             self.assertSequenceEqual(expected, actual)
@@ -160,11 +160,11 @@ class TestInitVolume(TestCase):
     def test_with_config_pages(self):
         config = Config(paths=Mock(Config_Paths, naming_scheme=NamingScheme()))
         volume = Volume(config, {
-            Path('page1.md'): (page1 := Page()),
-            Path('page2.md'): (page2 := Page()),
-            Path('page3.md'): (page3 := Page()),
+            RelativePath('page1.md'): (page1 := Page()),
+            RelativePath('page2.md'): (page2 := Page()),
+            RelativePath('page3.md'): (page3 := Page()),
         })
-        volume.project = Mock(Project, base=Path('/project'))
+        volume.project = Mock(Project, base=AbsolutePath('/project'))
 
         with self.subTest('lang'):
             self.assertIsNone(volume.lang)
@@ -177,31 +177,31 @@ class TestInitVolume(TestCase):
 
         with self.subTest('pages'):
             expected = (
-                Path('.'),
-                Path('page1.md'),
-                Path('page2.md'),
-                Path('page3.md'),
+                RelativePath('.'),
+                RelativePath('page1.md'),
+                RelativePath('page2.md'),
+                RelativePath('page3.md'),
             )
             actual = tuple(p.path_in_volume for p in volume.pages)
             self.assertSequenceEqual(expected, actual)
 
         with self.subTest('pages_by_path'):
             expected = (
-                Path('.'),
-                Path('page1.md'),
-                Path('page2.md'),
-                Path('page3.md'),
+                RelativePath('.'),
+                RelativePath('page1.md'),
+                RelativePath('page2.md'),
+                RelativePath('page3.md'),
             )
             actual = tuple(volume.pages_by_path.keys())
             self.assertSequenceEqual(expected, actual)
 
     def test_with_lang_codename_pages(self):
         volume = Volume('en', 'example', {
-            Path('page1.md'): (page1 := Page()),
-            Path('page2.md'): (page2 := Page()),
-            Path('page3.md'): (page3 := Page()),
+            RelativePath('page1.md'): (page1 := Page()),
+            RelativePath('page2.md'): (page2 := Page()),
+            RelativePath('page3.md'): (page3 := Page()),
         })
-        volume.project = Mock(Project, base=Path('/project'))
+        volume.project = Mock(Project, base=AbsolutePath('/project'))
 
         with self.subTest('lang'):
             self.assertEqual('en', volume.lang)
@@ -214,26 +214,26 @@ class TestInitVolume(TestCase):
 
         with self.subTest('pages'):
             expected = (
-                Path('.'),
-                Path('page1.md'),
-                Path('page2.md'),
-                Path('page3.md'),
+                RelativePath('.'),
+                RelativePath('page1.md'),
+                RelativePath('page2.md'),
+                RelativePath('page3.md'),
             )
             actual = tuple(p.path_in_volume for p in volume.pages)
             self.assertSequenceEqual(expected, actual)
 
         with self.subTest('pages_by_path'):
             expected = (
-                Path('.'),
-                Path('page1.md'),
-                Path('page2.md'),
-                Path('page3.md'),
+                RelativePath('.'),
+                RelativePath('page1.md'),
+                RelativePath('page2.md'),
+                RelativePath('page3.md'),
             )
             actual = tuple(volume.pages_by_path.keys())
             self.assertSequenceEqual(expected, actual)
 
     def test_with_lang_codename_config(self):
-        root = Path('/project')
+        root = AbsolutePath('/project')
         config = Config(paths=Config_Paths(root=root))
         volume = Volume('en', 'example', config)
 

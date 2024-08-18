@@ -1,8 +1,8 @@
 from abc import ABCMeta
 from contextlib import suppress
 from dataclasses import dataclass
-from pathlib import Path
 
+from sobiraka.utils import AbsolutePath
 from .plugin import Plugin, load_plugin
 
 
@@ -17,17 +17,17 @@ class PdfTheme(Plugin, metaclass=ABCMeta):
     The implementation will be called via Dispatcher.process_container().
     """
 
-    style: Path = None
+    style: AbsolutePath = None
     """LaTeX code to be included at the very beginning, even before ``\\begin{document}``."""
 
-    cover: Path = None
+    cover: AbsolutePath = None
     """LaTeX code to be included immediately after the document environment began."""
 
-    toc: Path = None
+    toc: AbsolutePath = None
     """LaTeX code to be included after the cover."""
 
 
-def load_pdf_theme(theme_dir: Path) -> PdfTheme:
+def load_pdf_theme(theme_dir: AbsolutePath) -> PdfTheme:
     theme = PdfTheme()
     with suppress(FileNotFoundError):
         theme = load_plugin(theme_dir / 'theme.py', base_class=PdfTheme)()
@@ -37,7 +37,7 @@ def load_pdf_theme(theme_dir: Path) -> PdfTheme:
     return theme
 
 
-def _try_find_file(base: Path, filename: str) -> Path | None:
+def _try_find_file(base: AbsolutePath, filename: str) -> AbsolutePath | None:
     path = base / filename
     if path.exists():
         return path

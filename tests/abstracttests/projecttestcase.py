@@ -1,7 +1,6 @@
 import inspect
 from abc import ABCMeta, abstractmethod
 from asyncio import create_task
-from pathlib import Path
 from typing import Any, Generic, Iterable, TypeVar
 from unittest import SkipTest
 
@@ -9,7 +8,7 @@ from abstracttests.abstracttestwithrt import AbstractTestWithRtPages
 from helpers.fakeprocessor import FakeProcessor
 from sobiraka.models import Page, PageStatus, Project
 from sobiraka.processing.abstract import Processor
-from sobiraka.utils import super_gather
+from sobiraka.utils import AbsolutePath, super_gather
 
 T = TypeVar('T', bound=Processor)
 
@@ -48,8 +47,8 @@ class ProjectTestCase(AbstractTestWithRtPages, Generic[T], metaclass=ABCMeta):
         else:
             return super().subTest(msg, **params)
 
-    def for_each_expected(self, suffix: str, *, subdir: str = '') -> Iterable[tuple[Page, Path]]:
-        test_dir = Path(inspect.getfile(self.__class__)).parent
+    def for_each_expected(self, suffix: str, *, subdir: str = '') -> Iterable[tuple[Page, AbsolutePath]]:
+        test_dir = AbsolutePath(inspect.getfile(self.__class__)).parent
         ok = True
         for page in self.project.pages:
             expected = test_dir / 'expected' / subdir / page.path_in_volume.with_suffix(suffix)

@@ -1,10 +1,10 @@
 from abc import ABCMeta
 from importlib.util import module_from_spec, spec_from_file_location
 from inspect import isclass
-from pathlib import Path
 from typing import TypeVar
 
 from sobiraka.processing.abstract import Dispatcher
+from sobiraka.utils import AbsolutePath
 
 
 class Plugin(Dispatcher, metaclass=ABCMeta):
@@ -16,7 +16,7 @@ class Plugin(Dispatcher, metaclass=ABCMeta):
 P = TypeVar('P', bound=Plugin)
 
 
-def load_plugin(plugin_file: Path, base_class: type[P] = Plugin) -> type[P]:
+def load_plugin(plugin_file: AbsolutePath, base_class: type[P] = Plugin) -> type[P]:
     """
     Attempt to load a Plugin from given `plugin_file`.
 

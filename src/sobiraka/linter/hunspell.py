@@ -2,11 +2,10 @@ import os
 import re
 from asyncio import create_subprocess_exec
 from importlib.resources import files
-from pathlib import Path
 from subprocess import PIPE
 from typing import AsyncIterable, Sequence
 
-from sobiraka.models import Volume
+from sobiraka.models import RealFileSystem, Volume
 
 
 async def run_hunspell(words: Sequence[str], volume: Volume) -> AsyncIterable[str]:
@@ -15,10 +14,12 @@ async def run_hunspell(words: Sequence[str], volume: Volume) -> AsyncIterable[st
 
     environ = os.environ
     if volume.config.lint.dictionaries:
+        assert isinstance(volume.project.fs, RealFileSystem)
+
         environ = environ.copy()
         environ['DICPATH'] = ':'.join((
             str(files('sobiraka') / 'files' / 'dictionaries'),
-            str(volume.project.fs.resolve(Path('.')))))
+            str(volume.project.fs.base)))
         environ['DICTIONARY'] = ','.join(volume.config.lint.dictionaries)
 
     hunspell = await create_subprocess_exec(

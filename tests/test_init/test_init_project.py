@@ -1,17 +1,17 @@
-from pathlib import Path
 from unittest import TestCase, main
 from unittest.mock import Mock
 
 from sobiraka.models import DirPage, FileSystem, Page, Project, Volume
+from sobiraka.utils import RelativePath
 
 
 class TestInitProject(TestCase):
 
     def test_with_fs_tuple(self):
         fs = Mock(FileSystem)
-        vol1 = Volume((Path('page1.md'), Path('page2.md'), Path('page3.md')))
-        vol2 = Volume((Path('page1.md'), Path('page2.md'), Path('page3.md')))
-        vol3 = Volume((Path('page1.md'), Path('page2.md'), Path('page3.md')))
+        vol1 = Volume((RelativePath('page1.md'), RelativePath('page2.md'), RelativePath('page3.md')))
+        vol2 = Volume((RelativePath('page1.md'), RelativePath('page2.md'), RelativePath('page3.md')))
+        vol3 = Volume((RelativePath('page1.md'), RelativePath('page2.md'), RelativePath('page3.md')))
         project = Project(fs, (
             vol1,
             vol2,
@@ -30,13 +30,13 @@ class TestInitProject(TestCase):
 
     def test_with_fs_dict(self):
         fs = Mock(FileSystem)
-        vol1 = Volume((Path('page1.md'), Path('page2.md'), Path('page3.md')))
-        vol2 = Volume((Path('page1.md'), Path('page2.md'), Path('page3.md')))
-        vol3 = Volume((Path('page1.md'), Path('page2.md'), Path('page3.md')))
+        vol1 = Volume((RelativePath('page1.md'), RelativePath('page2.md'), RelativePath('page3.md')))
+        vol2 = Volume((RelativePath('page1.md'), RelativePath('page2.md'), RelativePath('page3.md')))
+        vol3 = Volume((RelativePath('page1.md'), RelativePath('page2.md'), RelativePath('page3.md')))
         project = Project(fs, {
-            Path('src1'): vol1,
-            Path('src2'): vol2,
-            Path('src3'): vol3,
+            RelativePath('src1'): vol1,
+            RelativePath('src2'): vol2,
+            RelativePath('src3'): vol3,
         })
 
         with self.subTest('fs'):
@@ -50,47 +50,47 @@ class TestInitProject(TestCase):
             self.assertIs(None, project.primary_language)
 
         with self.subTest('relative_roots'):
-            expected = Path('src1'), Path('src2'), Path('src3')
+            expected = RelativePath('src1'), RelativePath('src2'), RelativePath('src3')
             actual = tuple(v.relative_root for v in project.volumes)
             self.assertSequenceEqual(expected, actual)
 
         with self.subTest('roots'):
-            expected = Path('src1'), Path('src2'), Path('src3')
+            expected = RelativePath('src1'), RelativePath('src2'), RelativePath('src3')
             actual = tuple(v.relative_root for v in project.volumes)
             self.assertSequenceEqual(expected, actual)
 
         with self.subTest('pages_by_path'):
             expected = (
-                (Path('src1'), DirPage(vol1, Path('.'))),
-                (Path('src1/page1.md'), Page(vol1, Path('page1.md'))),
-                (Path('src1/page2.md'), Page(vol1, Path('page2.md'))),
-                (Path('src1/page3.md'), Page(vol1, Path('page3.md'))),
-                (Path('src2'), DirPage(vol2, Path('.'))),
-                (Path('src2/page1.md'), Page(vol2, Path('page1.md'))),
-                (Path('src2/page2.md'), Page(vol2, Path('page2.md'))),
-                (Path('src2/page3.md'), Page(vol2, Path('page3.md'))),
-                (Path('src3'), DirPage(vol3, Path('.'))),
-                (Path('src3/page1.md'), Page(vol3, Path('page1.md'))),
-                (Path('src3/page2.md'), Page(vol3, Path('page2.md'))),
-                (Path('src3/page3.md'), Page(vol3, Path('page3.md'))),
+                (RelativePath('src1'), DirPage(vol1, RelativePath('.'))),
+                (RelativePath('src1/page1.md'), Page(vol1, RelativePath('page1.md'))),
+                (RelativePath('src1/page2.md'), Page(vol1, RelativePath('page2.md'))),
+                (RelativePath('src1/page3.md'), Page(vol1, RelativePath('page3.md'))),
+                (RelativePath('src2'), DirPage(vol2, RelativePath('.'))),
+                (RelativePath('src2/page1.md'), Page(vol2, RelativePath('page1.md'))),
+                (RelativePath('src2/page2.md'), Page(vol2, RelativePath('page2.md'))),
+                (RelativePath('src2/page3.md'), Page(vol2, RelativePath('page3.md'))),
+                (RelativePath('src3'), DirPage(vol3, RelativePath('.'))),
+                (RelativePath('src3/page1.md'), Page(vol3, RelativePath('page1.md'))),
+                (RelativePath('src3/page2.md'), Page(vol3, RelativePath('page2.md'))),
+                (RelativePath('src3/page3.md'), Page(vol3, RelativePath('page3.md'))),
             )
             actual = tuple(project.pages_by_path.items())
             self.assertSequenceEqual(expected, actual)
 
         with self.subTest('pages'):
             expected = (
-                DirPage(vol1, Path('.')),
-                Page(vol1, Path('page1.md')),
-                Page(vol1, Path('page2.md')),
-                Page(vol1, Path('page3.md')),
-                DirPage(vol2, Path('.')),
-                Page(vol2, Path('page1.md')),
-                Page(vol2, Path('page2.md')),
-                Page(vol2, Path('page3.md')),
-                DirPage(vol3, Path('.')),
-                Page(vol3, Path('page1.md')),
-                Page(vol3, Path('page2.md')),
-                Page(vol3, Path('page3.md')),
+                DirPage(vol1, RelativePath('.')),
+                Page(vol1, RelativePath('page1.md')),
+                Page(vol1, RelativePath('page2.md')),
+                Page(vol1, RelativePath('page3.md')),
+                DirPage(vol2, RelativePath('.')),
+                Page(vol2, RelativePath('page1.md')),
+                Page(vol2, RelativePath('page2.md')),
+                Page(vol2, RelativePath('page3.md')),
+                DirPage(vol3, RelativePath('.')),
+                Page(vol3, RelativePath('page1.md')),
+                Page(vol3, RelativePath('page2.md')),
+                Page(vol3, RelativePath('page3.md')),
             )
             actual = tuple(project.pages)
             self.assertSequenceEqual(expected, actual)

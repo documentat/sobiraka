@@ -1,7 +1,6 @@
 import re
 from importlib.resources import files
 from math import inf
-from pathlib import Path
 from textwrap import dedent
 from typing import Iterable
 
@@ -10,8 +9,7 @@ import panflute
 import yaml
 from utilspie.collectionsutils import frozendict
 
-from sobiraka.utils import convert_or_none, merge_dicts
-
+from sobiraka.utils import AbsolutePath, RelativePath, convert_or_none, merge_dicts
 from .config import CombinedToc, Config, Config_Content, Config_HTML, Config_HTML_Search, Config_Lint, \
     Config_Lint_Checks, Config_PDF, Config_Pagefind_Translations, Config_Paths, Config_Search_LinkTarget, \
     SearchIndexerName
@@ -23,13 +21,12 @@ from .volume import Volume
 MANIFEST_SCHEMA = yaml.safe_load((files('sobiraka') / 'files' / 'sobiraka-project.yaml').read_text())
 
 
-def load_project(manifest_path: Path) -> Project:
+def load_project(manifest_path: AbsolutePath) -> Project:
     """
     Load a :obj:`.Project` from the YAML file at `manifest_path`.
 
     The file must be formatted using the schema defined at ``files/sobiraka-project.yaml`` in the sources.
     """
-    manifest_path = manifest_path.resolve()
     with manifest_path.open(encoding='utf-8') as manifest_file:
         manifest: dict = yaml.safe_load(manifest_file) or {}
     fs = RealFileSystem(manifest_path.parent)
@@ -85,12 +82,12 @@ def _load_volume(lang: str | None, codename: str, volume_data: dict, fs: FileSys
     return Volume(lang, codename, Config(
         title=_('title'),
         paths=Config_Paths(
-            root=Path(_('paths.root', '.')),
+            root=RelativePath(_('paths.root', '.')),
             include=tuple(_('paths.include', ['**/*'])),
             exclude=tuple(_('paths.exclude', '')),
             naming_scheme=convert_or_none(NamingScheme, _('paths.naming_scheme')) or NamingScheme(),
-            resources=convert_or_none(Path, _('paths.resources')),
-            partials=convert_or_none(Path, _('paths.partials')),
+            resources=convert_or_none(RelativePath, _('paths.resources')),
+            partials=convert_or_none(RelativePath, _('paths.partials')),
         ),
         content=Config_Content(
             numeration=_('content.numeration', False),
@@ -112,29 +109,28 @@ def _load_volume(lang: str | None, codename: str, volume_data: dict, fs: FileSys
             ),
         ),
         pdf=Config_PDF(
-            header=convert_or_none(Path, _('pdf.header')),
+            header=convert_or_none(RelativePath, _('pdf.header')),
             theme=_find_theme_dir(_('pdf.theme', 'simple'), fs=fs),
             toc=_('pdf.toc', True),
-            paths=frozendict({k: Path(v).absolute() for k, v in _('pdf.paths', {}).items()}),
+            paths=frozendict({k: RelativePath(v) for k, v in _('pdf.paths', {}).items()}),
         ),
         lint=Config_Lint(
             dictionaries=tuple(_('lint.dictionaries', [])),
-            exceptions=tuple(map(Path, _('lint.exceptions', []))),
+            exceptions=tuple(map(RelativePath, _('lint.exceptions', []))),
             checks=Config_Lint_Checks(**_('lint.checks', {})),
         ),
         variables=frozendict(_('variables', {})),
     ))
 
 
-def _find_theme_dir(name: str, *, fs: FileSystem) -> Path:
-    theme_dir = Path(name)
-    assert not theme_dir.is_absolute()
+def _find_theme_dir(name: str, *, fs: FileSystem) -> AbsolutePath:
+    theme_dir = RelativePath(name)
 
     if fs.exists(theme_dir) and fs.is_dir(theme_dir):
-        return theme_dir
+        return fs.resolve(theme_dir)
 
     if len(theme_dir.parts) == 1:
-        theme_dir = files('sobiraka') / 'files' / 'themes' / theme_dir
+        theme_dir = AbsolutePath(files('sobiraka')) / 'files' / 'themes' / theme_dir
         if theme_dir.exists() and theme_dir.is_dir():
             return theme_dir
 

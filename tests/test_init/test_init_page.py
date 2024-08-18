@@ -1,17 +1,17 @@
-from pathlib import Path
 from tempfile import TemporaryDirectory
 from textwrap import dedent
 from unittest import TestCase, main
 from unittest.mock import Mock
 
 from sobiraka.models import Page, PageMeta, Project, RealFileSystem, Version, Volume
+from sobiraka.utils import AbsolutePath, RelativePath
 
 
 class TestInitPage(TestCase):
 
     def test_with_volume_path(self):
         with TemporaryDirectory(prefix='sobiraka-test-') as tmpdir:
-            root = Path(tmpdir)
+            root = AbsolutePath(tmpdir)
 
             page_path = root / 'page.md'
             page_path.write_text(dedent('''
@@ -22,13 +22,13 @@ class TestInitPage(TestCase):
             ''').strip())
 
             project = Mock(Project, fs=RealFileSystem(root))
-            volume = Mock(Volume, project=project, relative_root=Path('.'))
-            page = Page(volume, Path('page.md'))
+            volume = Mock(Volume, project=project, relative_root=RelativePath('.'))
+            page = Page(volume, RelativePath('page.md'))
 
             with self.subTest('volume'):
                 self.assertIs(volume, page.volume)
             with self.subTest('path_in_volume'):
-                self.assertEqual(Path('page.md'), page.path_in_volume)
+                self.assertEqual(RelativePath('page.md'), page.path_in_volume)
             with self.subTest('meta'):
                 self.assertEqual(PageMeta(version=Version(1,23)), page.meta)
             with self.subTest('text'):
@@ -36,17 +36,17 @@ class TestInitPage(TestCase):
 
     def test_with_volume_path_meta_text(self):
         with TemporaryDirectory(prefix='sobiraka-test-') as tmpdir:
-            volume_root = Path(tmpdir)
+            volume_root = AbsolutePath(tmpdir)
             page_path = volume_root / 'page.md'
 
             volume = Mock(Volume, root=volume_root)
             meta = PageMeta()
-            page = Page(volume, Path('page.md'), meta, 'Hello, world!')
+            page = Page(volume, RelativePath('page.md'), meta, 'Hello, world!')
 
             with self.subTest('volume'):
                 self.assertIs(volume, page.volume)
             with self.subTest('path_in_volume'):
-                self.assertEqual(Path('page.md'), page.path_in_volume)
+                self.assertEqual(RelativePath('page.md'), page.path_in_volume)
             with self.subTest('meta'):
                 self.assertIs(meta, page.meta)
             with self.subTest('text'):
@@ -54,11 +54,11 @@ class TestInitPage(TestCase):
 
     def test_with_volume_path_text(self):
         with TemporaryDirectory(prefix='sobiraka-test-') as tmpdir:
-            volume_root = Path(tmpdir)
+            volume_root = AbsolutePath(tmpdir)
             page_path = volume_root / 'page.md'
 
             volume = Mock(Volume, root=volume_root)
-            page = Page(volume, Path('page.md'), dedent('''
+            page = Page(volume, RelativePath('page.md'), dedent('''
             ---
             version: 1.23
             ---
@@ -68,14 +68,14 @@ class TestInitPage(TestCase):
             with self.subTest('volume'):
                 self.assertIs(volume, page.volume)
             with self.subTest('path_in_volume'):
-                self.assertEqual(Path('page.md'), page.path_in_volume)
+                self.assertEqual(RelativePath('page.md'), page.path_in_volume)
             with self.subTest('meta'):
                 self.assertEqual(PageMeta(version=Version(1,23)), page.meta)
             with self.subTest('text'):
                 self.assertEqual('Hello, world!', page.text)
 
     def test_with_path(self):
-        path = Path('/example.md')
+        path = RelativePath('example.md')
         page = Page(path)
 
         with self.subTest('volume'):
@@ -90,7 +90,7 @@ class TestInitPage(TestCase):
                 _ = page.text
 
     def test_with_path_meta_text(self):
-        path = Path('/example.md')
+        path = RelativePath('example.md')
         meta = PageMeta()
         page = Page(path, meta, 'Hello, world!')
 
@@ -104,7 +104,7 @@ class TestInitPage(TestCase):
             self.assertEqual('Hello, world!', page.text)
 
     def test_with_path_text(self):
-        path = Path('/example.md')
+        path = RelativePath('example.md')
         page = Page(path, dedent('''
         ---
         version: 1.23

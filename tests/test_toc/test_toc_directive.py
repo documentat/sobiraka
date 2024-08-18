@@ -1,4 +1,3 @@
-from pathlib import Path
 from unittest import main
 from unittest.mock import Mock
 
@@ -9,6 +8,7 @@ from helpers.fakeprocessor import FakeProcessor
 from sobiraka.models import FileSystem, Page, PageStatus, Project, Volume
 from sobiraka.models.config import Config, Config_Content
 from sobiraka.runtime import RT
+from sobiraka.utils import RelativePath
 
 
 class AbstractTestTocDirective(ProjectTestCase[FakeProcessor]):
@@ -20,20 +20,20 @@ class AbstractTestTocDirective(ProjectTestCase[FakeProcessor]):
 
     def _init_project(self) -> Project:
         return Project(Mock(FileSystem), {
-            Path('src'): Volume(
+            RelativePath('src'): Volume(
                 Config(
                     content=Config_Content(
                         numeration=self.numeration,
                     ),
                 ),
                 {
-                    Path(): Page(self.directive),
-                    Path('section1'): Page('# Section 1'),
-                    Path('section1/page1.md'): Page('# Page 1.1\n## Paragraph'),
-                    Path('section1/page2.md'): Page('# Page 1.2\n## Paragraph'),
-                    Path('section2'): Page('# Section 2'),
-                    Path('section2/page1.md'): Page('# Page 2.1\n## Paragraph'),
-                    Path('section2/page2.md'): Page('# Page 2.2\n## Paragraph'),
+                    RelativePath(): Page(self.directive),
+                    RelativePath('section1'): Page('# Section 1'),
+                    RelativePath('section1/page1.md'): Page('# Page 1.1\n## Paragraph'),
+                    RelativePath('section1/page2.md'): Page('# Page 1.2\n## Paragraph'),
+                    RelativePath('section2'): Page('# Section 2'),
+                    RelativePath('section2/page1.md'): Page('# Page 2.1\n## Paragraph'),
+                    RelativePath('section2/page2.md'): Page('# Page 2.2\n## Paragraph'),
                 },
             ),
         })

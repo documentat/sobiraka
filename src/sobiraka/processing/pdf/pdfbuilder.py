@@ -4,7 +4,6 @@ import sys
 import urllib.parse
 from asyncio import Task, create_subprocess_exec, create_task
 from contextlib import suppress
-from pathlib import Path
 from shutil import copyfile
 from subprocess import DEVNULL, PIPE
 from types import NoneType
@@ -15,16 +14,16 @@ from panflute import Element, Header, Str, stringify
 from sobiraka.models import Page, PageHref, PageStatus, Volume
 from sobiraka.models.exceptions import DisableLink
 from sobiraka.runtime import RT
-from sobiraka.utils import LatexInline, panflute_to_bytes
+from sobiraka.utils import AbsolutePath, LatexInline, panflute_to_bytes
 from ..abstract import VolumeProcessor
 from ..plugin import PdfTheme, load_pdf_theme
 from ..replacement import HeaderReplPara
 
 
 class PdfBuilder(VolumeProcessor):
-    def __init__(self, volume: Volume, output: Path):
+    def __init__(self, volume: Volume, output: AbsolutePath):
         super().__init__(volume)
-        self.output: Path = output
+        self.output: AbsolutePath = output
 
         self._latex: dict[Page, bytes] = {}
 
@@ -80,7 +79,7 @@ class PdfBuilder(VolumeProcessor):
                 latex_output.write(b'\n\n' + (80 * b'%'))
                 latex_output.write(b'\n\n%%% Paths\n\n')
                 for key, value in config.pdf.paths.items():
-                    latex_output.write(fr'\newcommand{{\{key}}}{{{value}/}}'.encode('utf-8') + b'\n')
+                    latex_output.write(fr'\newcommand{{\{key}}}{{{value.absolute()}/}}'.encode('utf-8') + b'\n')
 
             variables = {
                 'TITLE': config.title,
@@ -161,7 +160,7 @@ class PdfBuilder(VolumeProcessor):
             RT[page].latex = re.sub(rb'\n+% END STRIP', b'', RT[page].latex)
 
     @staticmethod
-    def print_xelatex_error(log_path: Path):
+    def print_xelatex_error(log_path: AbsolutePath):
         with log_path.open(encoding='utf-8') as file:
             print('\033[1;31m', end='', file=sys.stderr)
             for line in file:

@@ -7,7 +7,6 @@ from contextlib import suppress
 from functools import partial
 from io import BytesIO
 from os.path import normpath
-from pathlib import Path
 from subprocess import PIPE
 
 import jinja2
@@ -20,7 +19,7 @@ from sobiraka.models import Anchor, BadImage, BadLink, DirPage, FileSystem, Page
 from sobiraka.models.config import Config
 from sobiraka.models.exceptions import DependencyFailed, DisableLink, IssuesOccurred, VolumeFailed
 from sobiraka.runtime import RT
-from sobiraka.utils import super_gather
+from sobiraka.utils import AbsolutePath, PathGoesOutsideStartDirectory, RelativePath, absolute_or_relative, super_gather
 from .dispatcher import Dispatcher
 from ..directive import Directive
 from ..numerate import numerate
@@ -296,14 +295,14 @@ class Processor(Dispatcher):
         config: Config = volume.config
         fs: FileSystem = volume.project.fs
 
-        path = Path(image.url.replace('$LANG', volume.lang or ''))
-        if path.is_absolute():
+        path = image.url.replace('$LANG', volume.lang or '')
+        path = absolute_or_relative(path)
+        if isinstance(path, AbsolutePath):
             path = path.relative_to('/')
         else:
-            fakeroot = Path('/FAKEROOT')
-            path = fakeroot / page.path_in_project.parent / path
-            path = Path(normpath(path))
-            path = path.relative_to(fakeroot / volume.config.paths.resources)
+            path = page.path_in_project.parent / path
+            path = RelativePath(normpath(path))
+            path = path.relative_to(volume.config.paths.resources)
 
         if fs.exists(config.paths.resources / path):
             image.url = str(path)
@@ -389,12 +388,12 @@ class Processor(Dispatcher):
                     volume = page.volume.project.get_volume(volume_name)
                     is_absolute = True
 
-                target_path = Path(target_path_str or '.')
+                target_path = RelativePath(target_path_str or '.')
                 if not is_absolute:
                     if isinstance(page, DirPage):
                         target_path = (page.path_in_volume / target_path).resolve()
                     else:
-                        target_path = Path(normpath(page.path_in_volume.parent / target_path))
+                        target_path = RelativePath(normpath(page.path_in_volume.parent / target_path))
 
                 target = volume.pages_by_path[target_path]
 
@@ -404,7 +403,7 @@ class Processor(Dispatcher):
             RT[page].dependencies.add(href.target)
             self.schedule_processing_internal_link(elem, href, target_text, page)
 
-        except (KeyError, ValueError):
+        except (KeyError, ValueError, PathGoesOutsideStartDirectory):
             RT[page].issues.append(BadLink(target_text))
 
     def schedule_processing_internal_link(self, elem: Link, href: PageHref, target_text: str, page: Page):

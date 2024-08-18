@@ -1,9 +1,9 @@
-from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest import IsolatedAsyncioTestCase, main
 
 from sobiraka.models import Project, RealFileSystem
 from sobiraka.models.load import load_project_from_dict
+from sobiraka.utils import AbsolutePath, RelativePath
 
 
 class TestIncludePatterns(IsolatedAsyncioTestCase):
@@ -11,16 +11,16 @@ class TestIncludePatterns(IsolatedAsyncioTestCase):
 
     def prepare_dirs(self):
         temp_dir: str = self.enterContext(TemporaryDirectory(prefix='sobiraka-test-'))
-        self.fs = RealFileSystem(Path(temp_dir))
-        self.root = Path(temp_dir)
+        self.fs = RealFileSystem(AbsolutePath(temp_dir))
+        self.root = AbsolutePath(temp_dir)
 
     async def asyncSetUp(self):
-        self.root: Path
-        self.manifest_path: Path
+        self.root: AbsolutePath
+        self.manifest_path: AbsolutePath
         self.path_to_root: str | None = None
 
         self.prepare_dirs()
-        self.paths: tuple[Path, ...] = (
+        self.paths: tuple[AbsolutePath, ...] = (
             self.root / 'intro.md',
             self.root / 'part1' / 'chapter1.md',
             self.root / 'part1' / 'chapter2.md',
@@ -41,7 +41,7 @@ class TestIncludePatterns(IsolatedAsyncioTestCase):
             manifest['paths']['root'] = self.path_to_root
         return load_project_from_dict(manifest, fs=self.fs)
 
-    def assertPagePaths(self, project: Project, expected_paths: tuple[Path, ...]):
+    def assertPagePaths(self, project: Project, expected_paths: tuple[RelativePath, ...]):
         actual_paths = tuple(p.path_in_volume for p in project.pages)
         self.assertSequenceEqual(expected_paths, actual_paths)
 
@@ -64,21 +64,21 @@ class TestIncludePatterns(IsolatedAsyncioTestCase):
         })
         self.assertEqual(4, project.volumes[0].max_level)
         self.assertPagePaths(project, (
-            Path(),
-            Path() / 'intro.md',
-            Path() / 'part1',
-            Path() / 'part1' / 'chapter1.md',
-            Path() / 'part1' / 'chapter2.md',
-            Path() / 'part1' / 'chapter3.md',
-            Path() / 'part2',
-            Path() / 'part2' / 'chapter1.md',
-            Path() / 'part2' / 'chapter2.md',
-            Path() / 'part2' / 'chapter3.md',
-            Path() / 'part3',
-            Path() / 'part3' / 'subdir',
-            Path() / 'part3' / 'subdir' / 'chapter1.md',
-            Path() / 'part3' / 'subdir' / 'chapter2.md',
-            Path() / 'part3' / 'subdir' / 'chapter3.md',
+            RelativePath(),
+            RelativePath() / 'intro.md',
+            RelativePath() / 'part1',
+            RelativePath() / 'part1' / 'chapter1.md',
+            RelativePath() / 'part1' / 'chapter2.md',
+            RelativePath() / 'part1' / 'chapter3.md',
+            RelativePath() / 'part2',
+            RelativePath() / 'part2' / 'chapter1.md',
+            RelativePath() / 'part2' / 'chapter2.md',
+            RelativePath() / 'part2' / 'chapter3.md',
+            RelativePath() / 'part3',
+            RelativePath() / 'part3' / 'subdir',
+            RelativePath() / 'part3' / 'subdir' / 'chapter1.md',
+            RelativePath() / 'part3' / 'subdir' / 'chapter2.md',
+            RelativePath() / 'part3' / 'subdir' / 'chapter3.md',
         ))
 
     async def test_include_only_top_level(self):
@@ -89,8 +89,8 @@ class TestIncludePatterns(IsolatedAsyncioTestCase):
         })
         self.assertEqual(2, project.volumes[0].max_level)
         self.assertPagePaths(project, (
-            Path(),
-            Path() / 'intro.md',
+            RelativePath(),
+            RelativePath() / 'intro.md',
         ))
 
     async def test_include_only_part2(self):
@@ -101,11 +101,11 @@ class TestIncludePatterns(IsolatedAsyncioTestCase):
         })
         self.assertEqual(3, project.volumes[0].max_level)
         self.assertPagePaths(project, (
-            Path(),
-            Path() / 'part2',
-            Path() / 'part2' / 'chapter1.md',
-            Path() / 'part2' / 'chapter2.md',
-            Path() / 'part2' / 'chapter3.md',
+            RelativePath(),
+            RelativePath() / 'part2',
+            RelativePath() / 'part2' / 'chapter1.md',
+            RelativePath() / 'part2' / 'chapter2.md',
+            RelativePath() / 'part2' / 'chapter3.md',
         ))
 
     async def test_include_only_chapters3(self):
@@ -116,14 +116,14 @@ class TestIncludePatterns(IsolatedAsyncioTestCase):
         })
         self.assertEqual(4, project.volumes[0].max_level)
         self.assertPagePaths(project, (
-            Path(),
-            Path() / 'part1',
-            Path() / 'part1' / 'chapter3.md',
-            Path() / 'part2',
-            Path() / 'part2' / 'chapter3.md',
-            Path() / 'part3',
-            Path() / 'part3' / 'subdir',
-            Path() / 'part3' / 'subdir' / 'chapter3.md',
+            RelativePath(),
+            RelativePath() / 'part1',
+            RelativePath() / 'part1' / 'chapter3.md',
+            RelativePath() / 'part2',
+            RelativePath() / 'part2' / 'chapter3.md',
+            RelativePath() / 'part3',
+            RelativePath() / 'part3' / 'subdir',
+            RelativePath() / 'part3' / 'subdir' / 'chapter3.md',
         ))
 
     async def test_include_all_except_part2(self):
@@ -135,17 +135,17 @@ class TestIncludePatterns(IsolatedAsyncioTestCase):
         })
         self.assertEqual(4, project.volumes[0].max_level)
         self.assertPagePaths(project, (
-            Path(),
-            Path() / 'intro.md',
-            Path() / 'part1',
-            Path() / 'part1' / 'chapter1.md',
-            Path() / 'part1' / 'chapter2.md',
-            Path() / 'part1' / 'chapter3.md',
-            Path() / 'part3',
-            Path() / 'part3' / 'subdir',
-            Path() / 'part3' / 'subdir' / 'chapter1.md',
-            Path() / 'part3' / 'subdir' / 'chapter2.md',
-            Path() / 'part3' / 'subdir' / 'chapter3.md',
+            RelativePath(),
+            RelativePath() / 'intro.md',
+            RelativePath() / 'part1',
+            RelativePath() / 'part1' / 'chapter1.md',
+            RelativePath() / 'part1' / 'chapter2.md',
+            RelativePath() / 'part1' / 'chapter3.md',
+            RelativePath() / 'part3',
+            RelativePath() / 'part3' / 'subdir',
+            RelativePath() / 'part3' / 'subdir' / 'chapter1.md',
+            RelativePath() / 'part3' / 'subdir' / 'chapter2.md',
+            RelativePath() / 'part3' / 'subdir' / 'chapter3.md',
         ))
 
     async def test_include_all_except_chapters3(self):
@@ -157,18 +157,18 @@ class TestIncludePatterns(IsolatedAsyncioTestCase):
         })
         self.assertEqual(4, project.volumes[0].max_level)
         self.assertPagePaths(project, (
-            Path(),
-            Path() / 'intro.md',
-            Path() / 'part1',
-            Path() / 'part1' / 'chapter1.md',
-            Path() / 'part1' / 'chapter2.md',
-            Path() / 'part2',
-            Path() / 'part2' / 'chapter1.md',
-            Path() / 'part2' / 'chapter2.md',
-            Path() / 'part3',
-            Path() / 'part3' / 'subdir',
-            Path() / 'part3' / 'subdir' / 'chapter1.md',
-            Path() / 'part3' / 'subdir' / 'chapter2.md',
+            RelativePath(),
+            RelativePath() / 'intro.md',
+            RelativePath() / 'part1',
+            RelativePath() / 'part1' / 'chapter1.md',
+            RelativePath() / 'part1' / 'chapter2.md',
+            RelativePath() / 'part2',
+            RelativePath() / 'part2' / 'chapter1.md',
+            RelativePath() / 'part2' / 'chapter2.md',
+            RelativePath() / 'part3',
+            RelativePath() / 'part3' / 'subdir',
+            RelativePath() / 'part3' / 'subdir' / 'chapter1.md',
+            RelativePath() / 'part3' / 'subdir' / 'chapter2.md',
         ))
 
 

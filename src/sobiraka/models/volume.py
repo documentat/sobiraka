@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 from functools import cached_property
-from pathlib import Path
 from typing import Iterable, overload
 
 from more_itertools import unique_justseen
 
+from sobiraka.utils import RelativePath
 from .config import Config
 from .namingscheme import NamingScheme
 from .page import DirPage, IndexPage, Page
@@ -22,27 +22,27 @@ class Volume:
         ...
 
     @overload
-    def __init__(self, paths: tuple[Path, ...]):
+    def __init__(self, paths: tuple[RelativePath, ...]):
         ...
 
     @overload
-    def __init__(self, config: Config, paths: tuple[Path, ...]):
+    def __init__(self, config: Config, paths: tuple[RelativePath, ...]):
         ...
 
     @overload
-    def __init__(self, pages_by_path: dict[Path, Page]):
+    def __init__(self, pages_by_path: dict[RelativePath, Page]):
         ...
 
     @overload
-    def __init__(self, config: Config, pages_by_path: dict[Path, Page]):
+    def __init__(self, config: Config, pages_by_path: dict[RelativePath, Page]):
         ...
 
     @overload
-    def __init__(self, lang: str | None, codename: str, paths: tuple[Path, ...]):
+    def __init__(self, lang: str | None, codename: str, paths: tuple[RelativePath, ...]):
         ...
 
     @overload
-    def __init__(self, lang: str | None, codename: str, pages_by_path: dict[Path, Page]):
+    def __init__(self, lang: str | None, codename: str, pages_by_path: dict[RelativePath, Page]):
         ...
 
     @overload
@@ -54,7 +54,7 @@ class Volume:
         ...
 
     @overload
-    def __init__(self, root: Path):
+    def __init__(self, root: RelativePath):
         ...
 
     def __init__(self, *args):
@@ -62,7 +62,7 @@ class Volume:
         self.lang: str | None = None
         self.codename: str | None = None
         self.config: Config = Config()
-        self.relative_root: Path | None = None
+        self.relative_root: RelativePath | None = None
 
         self.__initial_pages: Iterable[Page]
 
@@ -149,15 +149,15 @@ class Volume:
     # ------------------------------------------------------------------------------------------------------------------
     # Pages and paths
 
-    def _find_files(self) -> Iterable[Path]:
-        paths: set[Path] = set()
+    def _find_files(self) -> Iterable[RelativePath]:
+        paths: set[RelativePath] = set()
         for pattern in self.config.paths.include:
             paths |= set(self.project.fs.glob(self.relative_root, pattern))
         for pattern in self.config.paths.exclude:
             paths -= set(self.project.fs.glob(self.relative_root, pattern))
         yield from paths
 
-    def _generate_pages(self, paths: Iterable[Path]) -> Iterable[Page]:
+    def _generate_pages(self, paths: Iterable[RelativePath]) -> Iterable[Page]:
         for path_in_volume in paths:
             if self.naming_scheme.parse(path_in_volume).is_main:
                 yield IndexPage(self, path_in_volume)
@@ -165,13 +165,13 @@ class Volume:
                 yield Page(self, path_in_volume)
 
     @cached_property
-    def pages_by_path(self) -> dict[Path, Page]:
+    def pages_by_path(self) -> dict[RelativePath, Page]:
         assert self.project is not None, 'You must bind the volume to a project before working with pages.'
 
         from ..utils import sorted_dict
 
-        pages_by_path: dict[Path, Page] = {}
-        expected_paths: set[Path] = set()
+        pages_by_path: dict[RelativePath, Page] = {}
+        expected_paths: set[RelativePath] = set()
         for page in self.__initial_pages:
             pages_by_path[page.path_in_volume] = page
             if isinstance(page, IndexPage):
@@ -196,7 +196,7 @@ class Volume:
 
     @property
     def root_page(self) -> Page:
-        return self.pages_by_path[Path('.')]
+        return self.pages_by_path[RelativePath('.')]
 
     @cached_property
     def max_level(self) -> int:

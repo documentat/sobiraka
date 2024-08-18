@@ -1,4 +1,3 @@
-from pathlib import Path
 from tempfile import TemporaryDirectory
 from textwrap import dedent
 from unittest import main
@@ -8,6 +7,7 @@ from helpers.fakefilesystem import FakeFileSystem
 from sobiraka.models import Project
 from sobiraka.models.load import load_project_from_str
 from sobiraka.processing import HtmlBuilder
+from sobiraka.utils import AbsolutePath
 
 
 class TestHtmlImages(ProjectTestCase[HtmlBuilder]):
@@ -30,7 +30,7 @@ class TestHtmlImages(ProjectTestCase[HtmlBuilder]):
 
     def _init_processor(self) -> HtmlBuilder:
         output = self.enterContext(TemporaryDirectory(prefix='sobiraka-test-'))
-        return HtmlBuilder(self.project, Path(output))
+        return HtmlBuilder(self.project, AbsolutePath(output))
 
     async def asyncSetUp(self):
         await super().asyncSetUp()

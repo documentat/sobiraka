@@ -1,5 +1,4 @@
 from math import inf
-from pathlib import Path
 from unittest import main
 from unittest.mock import Mock
 
@@ -8,6 +7,7 @@ from helpers.fakeprocessor import FakeProcessor
 from sobiraka.models import FileSystem, Page, Project, Volume
 from sobiraka.models.config import CombinedToc
 from sobiraka.processing.toc import Toc, TocItem, toc
+from sobiraka.utils import RelativePath
 
 """
 Test that the `combined_toc` argument affects whether local TOCs are embedded into the global TOC.
@@ -21,13 +21,13 @@ class AbstractTestTocCombine(ProjectTestCase[FakeProcessor]):
 
     def _init_project(self) -> Project:
         return Project(Mock(FileSystem), {
-            Path('src'): Volume({
-                Path('section1'): Page('# Section 1\n## Paragraph 1'),
-                Path('section1/page1.md'): Page('# Page 1.1\n## Paragraph 1\n### Subparagraph'),  # <- current page
-                Path('section1/page2.md'): Page('# Page 1.2\n## Paragraph 1'),
-                Path('section2'): Page('# Section 2\n## Paragraph 1'),
-                Path('section2/page1.md'): Page('# Page 2.1\n## Paragraph 1'),
-                Path('section2/page2.md'): Page('# Page 2.2\n## Paragraph 1'),
+            RelativePath('src'): Volume({
+                RelativePath('section1'): Page('# Section 1\n## Paragraph 1'),
+                RelativePath('section1/page1.md'): Page('# Page 1.1\n## Paragraph 1\n### Subparagraph'),  # <- current page
+                RelativePath('section1/page2.md'): Page('# Page 1.2\n## Paragraph 1'),
+                RelativePath('section2'): Page('# Section 2\n## Paragraph 1'),
+                RelativePath('section2/page1.md'): Page('# Page 2.1\n## Paragraph 1'),
+                RelativePath('section2/page2.md'): Page('# Page 2.2\n## Paragraph 1'),
             })
         })
 
@@ -39,7 +39,7 @@ class AbstractTestTocCombine(ProjectTestCase[FakeProcessor]):
                      processor=self.processor,
                      toc_depth=self.toc_depth,
                      combined_toc=self.combine,
-                     current_page=volume.pages_by_path[Path('section1/page1.md')])
+                     current_page=volume.pages_by_path[RelativePath('section1/page1.md')])
         self.assertEqual(str(self.expected), str(actual))
 
 

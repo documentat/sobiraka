@@ -1,20 +1,20 @@
 import re
 from math import inf
 from os.path import splitext
-from pathlib import Path
 from unittest import TestCase, main
 from unittest.mock import Mock
 
 from sobiraka.models import FileNameData, FileSystem, NamingScheme, Project, Volume
 from sobiraka.models.config import Config, Config_Paths
 from sobiraka.models.load import _load_volume
+from sobiraka.utils import RelativePath
 
 
 class AbstractNamingSchemeTest(TestCase):
     naming_scheme: NamingScheme
     parsing_results: dict[str, FileNameData]
-    ordering_original: tuple[Path, ...]
-    ordering_expected: tuple[Path, ...]
+    ordering_original: tuple[RelativePath, ...]
+    ordering_expected: tuple[RelativePath, ...]
 
     def test_parse(self):
         for filename, expected in self.parsing_results.items():
@@ -26,10 +26,10 @@ class AbstractNamingSchemeTest(TestCase):
         project = Project(
             Mock(FileSystem),
             {
-                Path('.'): Volume(
+                RelativePath('.'): Volume(
                     Config(
                         paths=Config_Paths(
-                            root=Path('.'),
+                            root=RelativePath('.'),
                             naming_scheme=self.naming_scheme,
                         )),
                     self.ordering_original),
@@ -54,31 +54,31 @@ class TestDefaultNamingScheme(AbstractNamingSchemeTest):
     }
 
     ordering_original = (
-        Path('2-aaa/3-ddd'),
-        Path('2-kkk.md'),
-        Path('1-ppp.md'),
-        Path('2-aaa/9-sss/5-eee.md'),
-        Path('2-aaa/3-ddd/5-nnn.md'),
-        Path('2-aaa/5-nnn.md'),
-        Path('2-aaa/2-kkk.md'),
-        Path('2-aaa/9-sss/3-www.md'),
-        Path('2-aaa/index.md'),
-        Path('2-aaa/unnumbered.md'),
+        RelativePath('2-aaa/3-ddd'),
+        RelativePath('2-kkk.md'),
+        RelativePath('1-ppp.md'),
+        RelativePath('2-aaa/9-sss/5-eee.md'),
+        RelativePath('2-aaa/3-ddd/5-nnn.md'),
+        RelativePath('2-aaa/5-nnn.md'),
+        RelativePath('2-aaa/2-kkk.md'),
+        RelativePath('2-aaa/9-sss/3-www.md'),
+        RelativePath('2-aaa/index.md'),
+        RelativePath('2-aaa/unnumbered.md'),
     )
     ordering_expected = (
-        Path('.'),
-        Path('1-ppp.md'),
-        Path('2-aaa'),
-        Path('2-aaa/index.md'),
-        Path('2-aaa/2-kkk.md'),
-        Path('2-aaa/3-ddd'),
-        Path('2-aaa/3-ddd/5-nnn.md'),
-        Path('2-aaa/5-nnn.md'),
-        Path('2-aaa/9-sss'),
-        Path('2-aaa/9-sss/3-www.md'),
-        Path('2-aaa/9-sss/5-eee.md'),
-        Path('2-aaa/unnumbered.md'),
-        Path('2-kkk.md'),
+        RelativePath('.'),
+        RelativePath('1-ppp.md'),
+        RelativePath('2-aaa'),
+        RelativePath('2-aaa/index.md'),
+        RelativePath('2-aaa/2-kkk.md'),
+        RelativePath('2-aaa/3-ddd'),
+        RelativePath('2-aaa/3-ddd/5-nnn.md'),
+        RelativePath('2-aaa/5-nnn.md'),
+        RelativePath('2-aaa/9-sss'),
+        RelativePath('2-aaa/9-sss/3-www.md'),
+        RelativePath('2-aaa/9-sss/5-eee.md'),
+        RelativePath('2-aaa/unnumbered.md'),
+        RelativePath('2-kkk.md'),
     )
 
 
@@ -97,28 +97,28 @@ class TestInvertedNamingScheme(AbstractNamingSchemeTest):
     }
 
     ordering_original = (
-        Path('a2/d3'),
-        Path('k2.md'),
-        Path('p1.md'),
-        Path('a2/s9/e5.md'),
-        Path('a2/d3/n5.md'),
-        Path('a2/n5.md'),
-        Path('a2/k2.md'),
-        Path('a2/s9/w3.md'),
+        RelativePath('a2/d3'),
+        RelativePath('k2.md'),
+        RelativePath('p1.md'),
+        RelativePath('a2/s9/e5.md'),
+        RelativePath('a2/d3/n5.md'),
+        RelativePath('a2/n5.md'),
+        RelativePath('a2/k2.md'),
+        RelativePath('a2/s9/w3.md'),
     )
 
     ordering_expected = (
-        Path('.'),
-        Path('p1.md'),
-        Path('a2'),
-        Path('a2/k2.md'),
-        Path('a2/d3'),
-        Path('a2/d3/n5.md'),
-        Path('a2/n5.md'),
-        Path('a2/s9'),
-        Path('a2/s9/w3.md'),
-        Path('a2/s9/e5.md'),
-        Path('k2.md'),
+        RelativePath('.'),
+        RelativePath('p1.md'),
+        RelativePath('a2'),
+        RelativePath('a2/k2.md'),
+        RelativePath('a2/d3'),
+        RelativePath('a2/d3/n5.md'),
+        RelativePath('a2/n5.md'),
+        RelativePath('a2/s9'),
+        RelativePath('a2/s9/w3.md'),
+        RelativePath('a2/s9/e5.md'),
+        RelativePath('k2.md'),
     )
 
 

@@ -1,5 +1,4 @@
 import re
-from pathlib import Path
 from textwrap import dedent
 from unittest import main
 from unittest.mock import Mock, patch
@@ -11,6 +10,7 @@ from abstracttests.projecttestcase import ProjectTestCase
 from sobiraka.models import FileSystem, Page, Project, Volume
 from sobiraka.processing.txt import PlainTextDispatcher, TextModel
 from sobiraka.runtime import RT
+from sobiraka.utils import RelativePath
 
 
 class AbstractTestTextModel(ProjectTestCase):
@@ -30,8 +30,8 @@ class AbstractTestTextModel(ProjectTestCase):
 
     def _init_project(self) -> Project:
         return Project(Mock(FileSystem), {
-            Path(): Volume({
-                Path(): Page(dedent(self.SOURCE).strip()),
+            RelativePath(): Volume({
+                RelativePath(): Page(dedent(self.SOURCE).strip()),
             }),
         })
 

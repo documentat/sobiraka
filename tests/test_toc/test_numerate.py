@@ -1,5 +1,4 @@
 from math import inf
-from pathlib import Path
 from textwrap import dedent
 from unittest import main
 
@@ -10,7 +9,7 @@ from helpers.fakeprocessor import FakeProcessor
 from sobiraka.models import Page, PageStatus, Project, Volume
 from sobiraka.models.config import CombinedToc, Config, Config_Content
 from sobiraka.processing.toc import Toc, TocItem, toc
-from sobiraka.utils import TocNumber, Unnumbered
+from sobiraka.utils import RelativePath, TocNumber, Unnumbered
 
 """
 Test that:
@@ -29,24 +28,24 @@ class TestNumerate(ProjectTestCase[FakeProcessor], AbstractTestWithRtPages):
             content=Config_Content(numeration=self.numeration_enabled),
         )
         return Project(FakeFileSystem(), {
-            Path('src'): Volume(config, {
-                Path(): Page(),
-                Path() / '1-preface.md': Page('# preface {-}'),
-                Path() / '2-intro.md': Page(),
+            RelativePath('src'): Volume(config, {
+                RelativePath(): Page(),
+                RelativePath() / '1-preface.md': Page('# preface {-}'),
+                RelativePath() / '2-intro.md': Page(),
 
                 # Numeration disabled for one chapter
-                Path() / '3-installation': Page('# installation {-}'),
-                Path() / '3-installation' / 'linux.md': Page(),
-                Path() / '3-installation' / 'macos.md': Page(),
-                Path() / '3-installation' / 'windows.md': Page(),
+                RelativePath() / '3-installation': Page('# installation {-}'),
+                RelativePath() / '3-installation' / 'linux.md': Page(),
+                RelativePath() / '3-installation' / 'macos.md': Page(),
+                RelativePath() / '3-installation' / 'windows.md': Page(),
 
                 # Numeration enabled again
-                Path() / '4-usage': Page(),
-                Path() / '4-usage' / 'cli.md': Page(),
-                Path() / '4-usage' / 'ui.md': Page(),
+                RelativePath() / '4-usage': Page(),
+                RelativePath() / '4-usage' / 'cli.md': Page(),
+                RelativePath() / '4-usage' / 'ui.md': Page(),
 
                 # Numeration of chapters and subpages together
-                Path() / '5-troubleshooting': Page(dedent('''
+                RelativePath() / '5-troubleshooting': Page(dedent('''
                     ## cannot start
                     ## cannot work
                     ## cannot explain {-}
@@ -55,14 +54,14 @@ class TestNumerate(ProjectTestCase[FakeProcessor], AbstractTestWithRtPages):
                     ### or even here
                     ## cannot stop
                 ''')),
-                Path() / '5-troubleshooting' / 'advanced.md': Page(dedent('''
+                RelativePath() / '5-troubleshooting' / 'advanced.md': Page(dedent('''
                     ## cannot believe how smart i am {-}
                     ## cannot trust this documentation
                     ## cannot possibly need this
                 ''')),
 
-                Path() / '6-outro.md': Page(),
-                Path() / '7-credits.md': Page('# credits {-}'),
+                RelativePath() / '6-outro.md': Page(),
+                RelativePath() / '7-credits.md': Page('# credits {-}'),
             })
         })
 

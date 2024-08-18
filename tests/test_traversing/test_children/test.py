@@ -1,21 +1,21 @@
-from pathlib import Path
 from unittest import main
 
 from abstracttests.projectdirtestcase import ProjectDirTestCase
 from sobiraka.models import DirPage, IndexPage, Page
+from sobiraka.utils import RelativePath
 
 
 class TestChildren(ProjectDirTestCase):
     async def asyncSetUp(self):
         await super().asyncSetUp()
-        self.index_root = self.project.pages_by_path[Path('src')]
-        self.document1 = self.project.pages_by_path[Path('src') / 'document1.rst']
-        self.index_sub = self.project.pages_by_path[Path('src') / 'sub' / '0-index.rst']
-        self.document2 = self.project.pages_by_path[Path('src') / 'sub' / 'document2.rst']
-        self.index_subsub = self.project.pages_by_path[Path('src') / 'sub' / 'subsub']
-        self.document3 = self.project.pages_by_path[Path('src') / 'sub' / 'subsub' / 'document3.rst']
-        self.document4 = self.project.pages_by_path[Path('src') / 'sub' / 'subsub' / 'document4.rst']
-        self.document5 = self.project.pages_by_path[Path('src') / 'sub' / 'subsub' / 'document5.rst']
+        self.index_root = self.project.pages_by_path[RelativePath('src')]
+        self.document1 = self.project.pages_by_path[RelativePath('src') / 'document1.rst']
+        self.index_sub = self.project.pages_by_path[RelativePath('src') / 'sub' / '0-index.rst']
+        self.document2 = self.project.pages_by_path[RelativePath('src') / 'sub' / 'document2.rst']
+        self.index_subsub = self.project.pages_by_path[RelativePath('src') / 'sub' / 'subsub']
+        self.document3 = self.project.pages_by_path[RelativePath('src') / 'sub' / 'subsub' / 'document3.rst']
+        self.document4 = self.project.pages_by_path[RelativePath('src') / 'sub' / 'subsub' / 'document4.rst']
+        self.document5 = self.project.pages_by_path[RelativePath('src') / 'sub' / 'subsub' / 'document5.rst']
 
     def test_types(self):
         data: dict[Page, type[Page]] = {

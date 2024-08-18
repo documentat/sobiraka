@@ -1,5 +1,4 @@
 from asyncio.subprocess import Process, create_subprocess_exec
-from pathlib import Path
 from subprocess import PIPE
 from textwrap import dedent
 from typing import Sequence
@@ -10,6 +9,7 @@ from sobiraka.models import Page
 from sobiraka.models.config import Config_Search_LinkTarget
 from sobiraka.processing.txt import PlainTextDispatcher
 from sobiraka.runtime import RT
+from sobiraka.utils import RelativePath
 
 from .searchindexer import SearchIndexer
 from ..head import HeadJsCode, HeadJsFile, HeadTag
@@ -85,7 +85,7 @@ class PagefindIndexer(SearchIndexer, PlainTextDispatcher):
         await self.node_process.wait()
         assert self.node_process.returncode == 0, 'Pagefind failure'
 
-    def results(self) -> set[Path]:
+    def results(self) -> set[RelativePath]:
         return set(self.index_path.rglob('**/*'))
 
     def head_tags(self) -> Sequence[HeadTag]:

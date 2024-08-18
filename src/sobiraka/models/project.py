@@ -2,13 +2,13 @@ from __future__ import annotations
 
 from contextlib import suppress
 from functools import cached_property
-from pathlib import Path
 from typing import TYPE_CHECKING, overload
 
 from more_itertools import unique_justseen
 from utilspie.collectionsutils import frozendict
 
 from sobiraka.models import FileSystem
+from sobiraka.utils import AbsolutePath, RelativePath
 
 if TYPE_CHECKING:
     from .page import Page
@@ -25,14 +25,14 @@ class Project:
         ...
 
     @overload
-    def __init__(self, fs: FileSystem, volumes: dict[Path, Volume]):
+    def __init__(self, fs: FileSystem, volumes: dict[RelativePath, Volume]):
         ...
 
     def __init__(self, *args):
         self.fs: FileSystem
         self.volumes: tuple[Volume, ...]
         self.primary_language: str | None = None
-        self.manifest_path: Path | None = None
+        self.manifest_path: AbsolutePath | None = None
 
         match args:
             case FileSystem() as fs, tuple() as volumes:
@@ -86,7 +86,7 @@ class Project:
 
         raise KeyError(*args)
 
-    def get_volume_by_path(self, path_in_project: Path) -> Volume:
+    def get_volume_by_path(self, path_in_project: RelativePath) -> Volume:
         for volume in self.volumes:
             if volume.relative_root in path_in_project.parents:
                 return volume
@@ -107,7 +107,7 @@ class Project:
         return tuple(translations)
 
     @cached_property
-    def pages_by_path(self) -> dict[Path, Page]:
+    def pages_by_path(self) -> dict[RelativePath, Page]:
         pages_by_path = {}
         for volume in self.volumes:
             for path_in_volume, page in volume.pages_by_path.items():

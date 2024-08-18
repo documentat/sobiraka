@@ -1,10 +1,10 @@
 from abc import ABCMeta
 from contextlib import suppress
 from dataclasses import dataclass, field
-from pathlib import Path
 
 import jinja2
 
+from sobiraka.utils import AbsolutePath
 from .plugin import Plugin, load_plugin
 
 
@@ -19,13 +19,13 @@ class HtmlTheme(Plugin, metaclass=ABCMeta):
     Additionally, the theme may contain its own implementation of functions for additional AST processing.
     The implementation will be called via Dispatcher.process_container().
     """
-    theme_dir: Path
-    static_dir: Path
+    theme_dir: AbsolutePath
+    static_dir: AbsolutePath
     page_template: jinja2.Template
     sass_files: dict[str, str] = field(default_factory=dict)
 
 
-def load_html_theme(theme_dir: Path) -> HtmlTheme:
+def load_html_theme(theme_dir: AbsolutePath) -> HtmlTheme:
     jinja_env = jinja2.Environment(
         loader=jinja2.FileSystemLoader(theme_dir),
         enable_async=True,

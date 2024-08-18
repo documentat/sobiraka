@@ -8,7 +8,6 @@ from copy import deepcopy
 from datetime import datetime
 from itertools import chain
 from os.path import relpath
-from pathlib import Path
 from shutil import copyfile, rmtree
 from subprocess import PIPE
 
@@ -19,7 +18,7 @@ from panflute import Element, Header, Image
 from sobiraka.models import DirPage, FileSystem, IndexPage, Page, PageHref, PageStatus, Project, Volume
 from sobiraka.models.config import Config, SearchIndexerName
 from sobiraka.runtime import RT
-from sobiraka.utils import panflute_to_bytes, super_gather
+from sobiraka.utils import AbsolutePath, RelativePath, panflute_to_bytes, super_gather
 
 from .head import Head
 from .search import PagefindIndexer, SearchIndexer
@@ -28,13 +27,13 @@ from ..plugin import HtmlTheme, load_html_theme
 
 
 class HtmlBuilder(ProjectProcessor):
-    def __init__(self, project: Project, output: Path, *, hide_index_html: bool = False):
+    def __init__(self, project: Project, output: AbsolutePath, *, hide_index_html: bool = False):
         super().__init__(project)
-        self.output: Path = output
+        self.output: AbsolutePath = output
         self.hide_index_html: bool = hide_index_html
 
         self._html_builder_tasks: list[Task] = []
-        self._results: set[Path] = set()
+        self._results: set[RelativePath] = set()
         self._head: Head = Head()
         self._indexers: dict[Volume, SearchIndexer] = {}
 
@@ -192,11 +191,11 @@ class HtmlBuilder(ProjectProcessor):
         target_file.write_text(html, encoding='utf-8')
         self._results.add(target_file)
 
-    def get_target_path(self, page: Page) -> Path:
+    def get_target_path(self, page: Page) -> RelativePath:
         volume: Volume = page.volume
         config: Config = page.volume.config
 
-        target_path = Path()
+        target_path = RelativePath()
         for part in page.path_in_volume.parts:
             target_path /= re.sub(r'^(\d+-)?', '', part)
 
@@ -206,7 +205,7 @@ class HtmlBuilder(ProjectProcessor):
             case DirPage():
                 target_path /= 'index.html'
             case Page():
-                if page.path_in_volume == Path():
+                if page.path_in_volume == RelativePath():
                     target_path = target_path.parent / 'index.html'
                 else:
                     target_path = target_path.with_suffix('.html')
@@ -263,15 +262,15 @@ class HtmlBuilder(ProjectProcessor):
             return ''
         return root_prefix + '/'
 
-    def get_path_to_static(self, page: Page) -> Path:
+    def get_path_to_static(self, page: Page) -> RelativePath:
         start = self.get_target_path(page)
         static = self.output / '_static'
-        return Path(relpath(static, start=start.parent))
+        return RelativePath(relpath(static, start=start.parent))
 
-    def get_path_to_resources(self, page: Page) -> Path:
+    def get_path_to_resources(self, page: Page) -> RelativePath:
         start = self.get_target_path(page)
         resources = self.output / page.volume.config.html.resources_prefix
-        return Path(relpath(resources, start=start.parent))
+        return RelativePath(relpath(resources, start=start.parent))
 
     async def process_header(self, header: Header, page: Page) -> tuple[Element, ...]:
         elems = await super().process_header(header, page)
@@ -323,17 +322,17 @@ class HtmlBuilder(ProjectProcessor):
     ################################################################################
     # Functions used for additional tasks
 
-    async def copy_file_from_location(self, source: Path, target: Path):
+    async def copy_file_from_location(self, source: RelativePath, target: AbsolutePath):
         await makedirs(target.parent, exist_ok=True)
         await to_thread(copyfile, source, target)
         self._results.add(target)
 
-    async def copy_file_from_project(self, source: Path, target: Path):
+    async def copy_file_from_project(self, source: RelativePath, target: AbsolutePath):
         await makedirs(target.parent, exist_ok=True)
         await to_thread(self.project.fs.copy, source, target)
         self._results.add(target)
 
-    async def compile_sass(self, source: Path, destination: Path):
+    async def compile_sass(self, source: RelativePath, destination: AbsolutePath):
         await makedirs(destination.parent, exist_ok=True)
 
         sass = await create_subprocess_exec('sass', '--style=compressed', f'{source}:{destination}')

@@ -1,5 +1,4 @@
 from math import inf
-from pathlib import Path
 from textwrap import dedent
 from unittest import main
 from unittest.mock import Mock
@@ -8,6 +7,7 @@ from abstracttests.abstracttestwithrt import AbstractTestWithRtPages
 from sobiraka.models import FileSystem, Page, PageStatus, Project, Volume
 from sobiraka.processing.abstract import Processor
 from sobiraka.processing.toc import Toc, TocItem, local_toc
+from sobiraka.utils import RelativePath
 
 """
 Test that `local_toc()` builds the hierarchy correctly.
@@ -22,8 +22,8 @@ class AbstractTestLocalToc(AbstractTestWithRtPages):
 
     async def test_local_toc(self):
         project = Project(Mock(FileSystem), {
-            Path('src'): Volume({
-                Path('page.md'):
+            RelativePath('src'): Volume({
+                RelativePath('page.md'):
                     (page := Page(dedent(self.source))),
             }),
         })

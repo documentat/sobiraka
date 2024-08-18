@@ -6,19 +6,19 @@ from collections import defaultdict
 from dataclasses import dataclass
 from enum import IntEnum, auto
 from itertools import chain, groupby
-from pathlib import Path
 
 from more_itertools import unique_justseen
 
 from sobiraka.models import DirPage, GitFileSystem, Page, Project, Version
 from sobiraka.models.load import load_project_from_str
+from sobiraka.utils import AbsolutePath, RelativePath
 
 if True:  # pylint: disable=using-constant-test
     os.environ['GIT_PYTHON_REFRESH'] = 'quiet'
     from git import Repo, Blob, Commit
 
 
-def changelog(manifest_path: Path, rev1: str, rev2: str) -> int:
+def changelog(manifest_path: AbsolutePath, rev1: str, rev2: str) -> int:
     # pylint: disable=too-many-locals
 
     repo = Repo(manifest_path.parent)
@@ -30,7 +30,7 @@ def changelog(manifest_path: Path, rev1: str, rev2: str) -> int:
     # To be able to deal with volumes that changed roots between the commits,
     # we need to address the pages not by their path in project,
     # but rather by their volume and path in volume.
-    pages_by_tuple: dict[tuple[str, Path], list[Page]] = defaultdict(list)
+    pages_by_tuple: dict[tuple[str, RelativePath], list[Page]] = defaultdict(list)
     for page in chain(project1.pages, project2.pages):
         pages_by_tuple[page.volume.autoprefix, page.path_in_volume].append(page)
 
@@ -65,7 +65,7 @@ def load_project_from_revision(commit: Commit, manifest_name: str) -> Project:
     return project
 
 
-def load_page_from_blob(project: Project, path_in_project: Path, blob: Blob) -> Page:
+def load_page_from_blob(project: Project, path_in_project: RelativePath, blob: Blob) -> Page:
     volume = project.get_volume_by_path(path_in_project)
     path_in_volume = path_in_project.relative_to(volume.relative_root)
     text = blob.data_stream.read().decode('utf-8')
@@ -75,7 +75,7 @@ def load_page_from_blob(project: Project, path_in_project: Path, blob: Blob) -> 
 @dataclass(order=True)
 class ChangeLogItem:
     status: ChangeLogItemStatus
-    path: Path
+    path: RelativePath
     v1: Version
     v2: Version
 
