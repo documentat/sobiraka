@@ -13,14 +13,14 @@ from panflute import Element, Header, Str, stringify
 
 from sobiraka.models import Page, PageHref, PageStatus, Volume
 from sobiraka.models.exceptions import DisableLink
+from sobiraka.processing.abstract import VolumeProcessor
+from sobiraka.processing.plugin import PdfTheme, load_pdf_theme
+from sobiraka.processing.replacement import HeaderReplPara
 from sobiraka.runtime import RT
 from sobiraka.utils import AbsolutePath, LatexInline, panflute_to_bytes
-from ..abstract import VolumeProcessor
-from ..plugin import PdfTheme, load_pdf_theme
-from ..replacement import HeaderReplPara
 
 
-class PdfBuilder(VolumeProcessor):
+class LatexBuilder(VolumeProcessor):
     def __init__(self, volume: Volume, output: AbsolutePath):
         super().__init__(volume)
         self.output: AbsolutePath = output

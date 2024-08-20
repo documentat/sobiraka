@@ -181,7 +181,7 @@ class Processor(Dispatcher):
 
         This method is called by :obj:`.Page.loaded`.
         """
-        from sobiraka.processing import HtmlBuilder, PdfBuilder
+        from sobiraka.processing import HtmlBuilder, LatexBuilder
 
         volume: Volume = page.volume
         config: Config = page.volume.config
@@ -190,7 +190,7 @@ class Processor(Dispatcher):
 
         variables = config.variables | dict(
             HTML=isinstance(self, HtmlBuilder),
-            PDF=isinstance(self, PdfBuilder),
+            PDF=isinstance(self, LatexBuilder),
 
             page=page,
             volume=volume,

@@ -5,7 +5,7 @@ from asyncio import run
 from sobiraka.cache import init_cache
 from sobiraka.linter import Linter
 from sobiraka.models.load import load_project
-from sobiraka.processing import HtmlBuilder, PdfBuilder, run_with_progressbar
+from sobiraka.processing import HtmlBuilder, LatexBuilder, run_with_progressbar
 from sobiraka.runtime import RT
 from sobiraka.translating import changelog, check_translations
 from sobiraka.utils import AbsolutePath, absolute_or_relative, validate_dictionary
@@ -82,7 +82,7 @@ async def async_main():
                 if output.suffix.lower() != '.pdf':
                     output /= f'{volume.config.title}.pdf'
                 print(f'Building {output.name!r}...', file=sys.stderr)
-                builder = PdfBuilder(volume, output)
+                builder = LatexBuilder(volume, output)
                 exit_code = await RT.run_isolated(run_with_progressbar(builder))
 
             else:
@@ -91,7 +91,7 @@ async def async_main():
                 for volume in project.volumes:
                     output_file = output / f'{volume.config.title}.pdf'
                     print(f'Building {output_file.name!r}...', file=sys.stderr)
-                    builder = PdfBuilder(volume, output_file)
+                    builder = LatexBuilder(volume, output_file)
                     exit_code = await RT.run_isolated(run_with_progressbar(builder))
                     if exit_code != 0:
                         break

@@ -6,9 +6,9 @@ from panflute import BulletList, Element, LineBreak, Plain, Space, Str, Table
 
 from sobiraka.models import Page
 from sobiraka.utils import LatexBlock, LatexInline
-from ..abstract import Dispatcher
-from ..helpers.table import CellContinuation, CellPlacement, make_grid
-from ..replacement import TableReplPara
+from sobiraka.processing.abstract import Dispatcher
+from sobiraka.processing.helpers.table import CellContinuation, CellPlacement, make_grid
+from sobiraka.processing.replacement import TableReplPara
 
 
 class TabulArrayProcessor(Dispatcher):
@@ -108,7 +108,7 @@ class TabulArrayProcessor(Dispatcher):
                 # For a block element, we have to pause the table creation
                 # and let Pandoc generate a whole paragraph as if it was separate.
                 # We surround it with the 'BEGIN STRIP'/'END STRIP' notes,
-                # which will be later processed by PdfBuilder to remove unnecessary newlines.
+                # which will be later processed by LatexBuilder to remove unnecessary newlines.
                 # From the LaTeX point of view, the content is wrapped into a no-background `tcolorbox`.
                 # Note that after this operation `result[-1]` points to a new Para.
                 result[-1].content += Str('\n'), LatexInline('% BEGIN STRIP')

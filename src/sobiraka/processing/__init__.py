@@ -1,4 +1,4 @@
 from .html import HtmlBuilder
+from .latex import LatexBuilder
 from .numerate import numerate
-from .pdf import PdfBuilder
 from .progressbar import print_issues, run_with_progressbar

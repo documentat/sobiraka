@@ -3,17 +3,17 @@ from asyncio import create_subprocess_exec
 
 from helpers import assertNoDiff
 from sobiraka.models import PageStatus
-from sobiraka.processing import PdfBuilder
+from sobiraka.processing import LatexBuilder
 from sobiraka.runtime import RT
 from .abstracttestwithrt import AbstractTestWithRtTmp
 from .projectdirtestcase import ProjectDirTestCase
 
 
-class PdfProjectTestCase(ProjectDirTestCase[PdfBuilder], AbstractTestWithRtTmp):
+class PdfProjectTestCase(ProjectDirTestCase[LatexBuilder], AbstractTestWithRtTmp):
     REQUIRE = PageStatus.PROCESS4
 
     def _init_processor(self):
-        return PdfBuilder(self.project.volumes[0], RT.TMP / 'test.pdf')
+        return LatexBuilder(self.project.volumes[0], RT.TMP / 'test.pdf')
 
     async def test_latex(self):
         for page, expected in self.for_each_expected('.tex', subdir='tex'):
