@@ -51,22 +51,22 @@ class PageCacheHandler:
 
     # ------------------------------------------------------------------
 
-    def _key_latex(self, dependencies: set[Page]):
+    def _key_bytes(self, dependencies: set[Page]):
         return ':'.join((
-            'LATEX',
+            'BYTES',
             _hash(self.page.volume.config),
             str(self.page.path_in_volume),
             ','.join(f'({dep.path_in_volume}={_hash(dep.text)})' for dep in sorted(dependencies)) if RT.DEBUG
             else _hash(sorted(list((str(dep.path_in_volume), dep.text) for dep in dependencies))),
         ))
 
-    def get_latex(self, dependencies: set[Page]) -> bytes:
-        key = self._key_latex(dependencies)
+    def get_bytes(self, dependencies: set[Page]) -> bytes:
+        key = self._key_bytes(dependencies)
         return CACHE.load(key)
 
-    def set_latex(self, page_rt: PageRuntime):
-        key = self._key_latex(page_rt.dependencies)
-        CACHE.save(key, page_rt.latex)
+    def set_bytes(self, page_rt: PageRuntime):
+        key = self._key_bytes(page_rt.dependencies)
+        CACHE.save(key, page_rt.bytes)
 
 
 def _hash(data) -> str:

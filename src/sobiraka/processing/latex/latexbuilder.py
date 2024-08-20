@@ -119,7 +119,7 @@ class LatexBuilder(VolumeProcessor):
                 await processing[page]
                 latex_output.write(b'\n\n' + (80 * b'%'))
                 latex_output.write(b'\n\n%%% ' + bytes(page.path_in_project) + b'\n\n')
-                latex_output.write(RT[page].latex)
+                latex_output.write(RT[page].bytes)
 
             latex_output.write(b'\n\n' + (80 * b'%'))
             latex_output.write(b'\n\n\\end{sloppypar}\n\\end{document}')
@@ -137,7 +137,7 @@ class LatexBuilder(VolumeProcessor):
             await self._theme.process_doc(RT[page].doc, page)
 
         if len(RT[page].doc.content) == 0:
-            RT[page].latex = b''
+            RT[page].bytes = b''
 
         else:
             pandoc = await create_subprocess_exec(
@@ -151,13 +151,13 @@ class LatexBuilder(VolumeProcessor):
             pandoc.stdin.close()
             await pandoc.wait()
             assert pandoc.returncode == 0
-            RT[page].latex = await pandoc.stdout.read()
+            RT[page].bytes = await pandoc.stdout.read()
 
             # When a PdfTheme prepends or appends some code to a Para,
             # it may leave the 'BEGIN STRIP'/'END STRIP' notes,
             # which we will now use to remove unnecessary empty lines
-            RT[page].latex = re.sub(rb'% BEGIN STRIP\n+', b'', RT[page].latex)
-            RT[page].latex = re.sub(rb'\n+% END STRIP', b'', RT[page].latex)
+            RT[page].bytes = re.sub(rb'% BEGIN STRIP\n+', b'', RT[page].bytes)
+            RT[page].bytes = re.sub(rb'\n+% END STRIP', b'', RT[page].bytes)
 
     @staticmethod
     def print_xelatex_error(log_path: AbsolutePath):

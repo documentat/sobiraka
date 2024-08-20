@@ -47,7 +47,7 @@ class PageRuntime:
 
     dependencies: set[Page] = field(default_factory=set)
 
-    latex: bytes = None
+    bytes: bytes = None
 
     converted_image_urls: list[tuple[Image, str]] = field(default_factory=list)
     links_that_follow_images: list[tuple[Image, Link]] = field(default_factory=list)

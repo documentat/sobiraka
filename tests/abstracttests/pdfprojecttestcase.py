@@ -19,7 +19,7 @@ class PdfProjectTestCase(ProjectDirTestCase[LatexBuilder], AbstractTestWithRtTmp
         for page, expected in self.for_each_expected('.tex', subdir='tex'):
             with self.subTest(page):
                 expected = expected.read_text().splitlines()
-                actual = RT[page].latex.decode('utf-8').splitlines()
+                actual = RT[page].bytes.decode('utf-8').splitlines()
                 assertNoDiff(expected, actual)
 
     async def test_pdf(self):
