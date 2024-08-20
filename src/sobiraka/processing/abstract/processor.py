@@ -443,7 +443,7 @@ class ProjectProcessor(Processor):
     # TODO: add ABCMeta to the base Processor class
     # pylint: disable=abstract-method
     def __init__(self, project: Project):
-        super().__init__()
+        Processor.__init__(self)
         self.project: Project = project
 
     def get_project(self) -> Project:
@@ -459,7 +459,7 @@ class ProjectProcessor(Processor):
 class VolumeProcessor(Processor):
     # pylint: disable=abstract-method
     def __init__(self, volume: Volume):
-        super().__init__()
+        Processor.__init__(self)
         self.volume: Volume = volume
 
     def get_project(self) -> Project:

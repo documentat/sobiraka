@@ -14,6 +14,11 @@ class AbsolutePath(Path):
         path = path.absolute()
         return path
 
+    def relative_to(self, start: PathLike | str) -> RelativePath:
+        # pylint: disable=arguments-differ
+        start = AbsolutePath(start)
+        return RelativePath(os.path.relpath(self, start=start))
+
 
 class RelativePath(PurePosixPath):
     def __new__(cls, *args):
@@ -40,7 +45,7 @@ class RelativePath(PurePosixPath):
 
         return RelativePath(*result)
 
-    def relative_to(self, start: PathLike | str):
+    def relative_to(self, start: PathLike | str) -> RelativePath:
         # pylint: disable=arguments-differ
         start = RelativePath(start)
         return RelativePath(os.path.relpath(self, start=start))

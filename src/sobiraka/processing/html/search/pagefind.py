@@ -5,11 +5,11 @@ from typing import Sequence
 
 from panflute import Element, stringify
 
-from sobiraka.models import Page
+from sobiraka.models import Page, Volume
 from sobiraka.models.config import Config_Search_LinkTarget
 from sobiraka.processing.txt import PlainTextDispatcher
 from sobiraka.runtime import RT
-from sobiraka.utils import RelativePath
+from sobiraka.utils import AbsolutePath, RelativePath
 
 from .searchindexer import SearchIndexer
 from ..head import HeadJsCode, HeadJsFile, HeadTag
@@ -24,6 +24,9 @@ class PagefindIndexer(SearchIndexer, PlainTextDispatcher):
     # pylint: disable=abstract-method
 
     node_process: Process = None
+
+    def default_index_path(self, volume: Volume) -> RelativePath:
+        return RelativePath('_pagefind')
 
     def execute_js(self, code: str):
         self.node_process.stdin.write(code.encode('utf-8'))
@@ -54,7 +57,7 @@ class PagefindIndexer(SearchIndexer, PlainTextDispatcher):
         await super().process_doc(RT[page].doc, page)
 
         tm = self.tm[page]
-        url = str(self.builder.get_target_path(page).relative_to(self.builder.output))
+        url = str(self.builder.get_target_path(page))
         title = RT[page].title
 
         match self.search_config.link_target:
@@ -85,11 +88,11 @@ class PagefindIndexer(SearchIndexer, PlainTextDispatcher):
         await self.node_process.wait()
         assert self.node_process.returncode == 0, 'Pagefind failure'
 
-    def results(self) -> set[RelativePath]:
+    def results(self) -> set[AbsolutePath]:
         return set(self.index_path.rglob('**/*'))
 
     def head_tags(self) -> Sequence[HeadTag]:
-        yield HeadJsFile(self.index_path.relative_to(self.builder.output) / 'pagefind-ui.js')
+        yield HeadJsFile(self.index_path_relative / 'pagefind-ui.js')
         yield HeadJsCode(dedent(f'''
             window.addEventListener("DOMContentLoaded", (event) => {{
                 new PagefindUI({{

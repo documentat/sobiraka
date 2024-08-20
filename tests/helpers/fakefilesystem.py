@@ -35,6 +35,7 @@ class FakeFileSystem(FileSystem):
         yield StringIO(self._files[path])
 
     def copy(self, source: RelativePath, target: AbsolutePath):
+        target.parent.mkdir(parents=True, exist_ok=True)
         match self._files[source]:
             case bytes() as data:
                 target.write_bytes(data)
