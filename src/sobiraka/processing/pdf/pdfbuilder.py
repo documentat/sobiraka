@@ -221,15 +221,16 @@ class PdfBuilder(VolumeProcessor):
         # We will generate inline elements into a list. In the end, we will wrap them all in a paragraph.
         result: list[Element] = []
 
+        # Generate the internal link for \hyperref
+        href = PageHref(page, header.identifier if header.level > 1 else None)
+        dest = re.sub(r'^#', '', self.make_internal_url(href, page=page))
+
         # Generate our hypertargets and bookmarks manually, to avoid any weird behavior with TOCs
         if 'notoc' not in header.classes:
-            href = PageHref(page, header.identifier if header.level > 1 else None)
-            dest = re.sub(r'^#', '', self.make_internal_url(href, page=page))
             level = page.level + header.level - 1
             label = stringify(header).replace('%', r'\%')
             if page.volume.config.content.numeration:
                 label = '%NUMBER%' + label
-            result += LatexInline(fr'\hypertarget{{{dest}}}{{}}'), Str('\n')
             result += LatexInline(fr'\bookmark[level={level},dest={dest}]{{{label}}}'), Str('\n')
 
         # Add the appropriate header tag and an opening curly bracket, e.g., '\section{'.
@@ -250,7 +251,10 @@ class PdfBuilder(VolumeProcessor):
                 result.append(item)
 
         # Close the curly bracket
-        result += LatexInline('}'),
+        result += LatexInline('}'), Str('\n')
+
+        # Make it linkable for \hyperref
+        result += LatexInline(fr'\label{{{dest}}}'),
 
         return (HeaderReplPara(header, result),)
 
