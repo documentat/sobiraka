@@ -247,15 +247,15 @@ html:
 
 Если настройка не задана, Pagefind будет использовать все строки по умолчанию.
 
-### `pdf.header` {#volume.pdf.header}
+### `latex.header` {#volume.latex.header}
 
 Путь к файлу, содержимое которого будет включено в начало генерируемого LaTeX-кода. См. [](../4-customization/2-pdf.md).
 
-### `pdf.paths` {#volume.pdf.paths}
+### `latex.paths` {#volume.latex.paths}
 
 Словарь с относительными путями, каждый из которых будет превращён в относительный и передан в LaTeX в качестве переменной. См. [](../4-customization/2-pdf.md).
 
-### `pdf.theme` {#volume.pdf.theme}
+### `latex.theme` {#volume.latex.theme}
 
 Название или путь к директории с PDF-темой. См. [](../4-customization/2-pdf.md).
 
@@ -265,7 +265,7 @@ html:
 
 Если настройка не задана, используется тема `simple`.
 
-### `pdf.toc` {#volume.pdf.toc}
+### `latex.toc` {#volume.latex.toc}
 
 Если `true` (по умолчанию), то в PDF будет включено оглавление, автоматически сгенерированное при помощи LaTeX.
 

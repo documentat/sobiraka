@@ -108,7 +108,7 @@ $defs:
                   search_suggestion: { type: string }
                   searching: { type: string }
 
-      pdf:
+      latex:
         additionalProperties: false
         properties:
           header: { type: string }

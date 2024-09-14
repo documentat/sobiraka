@@ -2,5 +2,5 @@ paths:
   root: src
   include: ['**/*.md']
 
-pdf:
+latex:
   header: header.sty

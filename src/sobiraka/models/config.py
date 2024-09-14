@@ -142,8 +142,8 @@ class Config_HTML:
 
 
 @dataclass(kw_only=True, frozen=True)
-class Config_PDF:
-    """Settings related to :class:`.LateXBuilder`."""
+class Config_Latex:
+    """Settings related to :class:`.LatexBuilder`."""
 
     header: RelativePath | None = None
     """Path to the file containing LaTeX header directives for the volume, if provided."""
@@ -208,7 +208,7 @@ class Config:
 
     content: Config_Content = field(default=Config_Content, kw_only=True)
 
-    pdf: Config_PDF = field(default_factory=Config_PDF, kw_only=True)
+    latex: Config_Latex = field(default_factory=Config_Latex, kw_only=True)
     """Settings related to :class:`.LatexBuilder`."""
 
     lint: Config_Lint = field(default_factory=Config_Lint, kw_only=True)

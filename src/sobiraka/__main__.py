@@ -30,10 +30,10 @@ async def async_main():
     cmd_html.add_argument('--output', type=AbsolutePath, default=AbsolutePath('build/html'))
     cmd_html.add_argument('--hide-index-html', action='store_true', help='Remove the "index.html" part from links.')
 
-    cmd_pdf = commands.add_parser('pdf', help='Build PDF file.')
-    cmd_pdf.add_argument('config', metavar='CONFIG', type=AbsolutePath)
-    cmd_pdf.add_argument('volume', nargs='?')
-    cmd_pdf.add_argument('--output', type=AbsolutePath, default=AbsolutePath('build/pdf'))
+    cmd_latex = commands.add_parser('pdf', help='Build PDF file.')
+    cmd_latex.add_argument('config', metavar='CONFIG', type=AbsolutePath)
+    cmd_latex.add_argument('volume', nargs='?')
+    cmd_latex.add_argument('--output', type=AbsolutePath, default=AbsolutePath('build/pdf'))
 
     cmd_lint = commands.add_parser('lint', help='Check a volume for various issues.')
     cmd_lint.add_argument('config', metavar='CONFIG', type=AbsolutePath)
@@ -73,7 +73,7 @@ async def async_main():
             builder = HtmlBuilder(project, args.output, hide_index_html=args.hide_index_html)
             exit_code = await RT.run_isolated(run_with_progressbar(builder))
 
-        elif cmd is cmd_pdf:
+        elif cmd is cmd_latex:
             project = load_project(args.config)
             output = absolute_or_relative(args.output)
 

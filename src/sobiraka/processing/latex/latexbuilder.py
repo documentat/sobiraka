@@ -29,8 +29,8 @@ class LatexBuilder(VolumeProcessor):
 
         # Load an optional post-processor a.k.a. PdfTheme
         self._theme: PdfTheme | None = None
-        if self.volume.config.pdf.theme is not None:
-            self._theme = load_pdf_theme(self.volume.config.pdf.theme)
+        if self.volume.config.latex.theme is not None:
+            self._theme = load_pdf_theme(self.volume.config.latex.theme)
 
     async def run(self):
         xelatex_workdir = RT.TMP / 'tex'
@@ -75,10 +75,10 @@ class LatexBuilder(VolumeProcessor):
                                            name=f'generate latex for {page.path_in_project}')
 
         try:
-            if config.pdf.paths:
+            if config.latex.paths:
                 latex_output.write(b'\n\n' + (80 * b'%'))
                 latex_output.write(b'\n\n%%% Paths\n\n')
-                for key, value in config.pdf.paths.items():
+                for key, value in config.latex.paths.items():
                     latex_output.write(fr'\newcommand{{\{key}}}{{{value.absolute()}/}}'.encode('utf-8') + b'\n')
 
             variables = {
@@ -97,10 +97,10 @@ class LatexBuilder(VolumeProcessor):
                 latex_output.write(b'\n\n%%% ' + self._theme.__class__.__name__.encode('utf-8') + b'\n\n')
                 latex_output.write(self._theme.style.read_bytes())
 
-            if config.pdf.header:
+            if config.latex.header:
                 latex_output.write(b'\n\n')
                 latex_output.write(b'\n\n%%% Project\'s custom header \n\n')
-                latex_output.write(project.fs.read_bytes(config.pdf.header))
+                latex_output.write(project.fs.read_bytes(config.latex.header))
 
             latex_output.write(b'\n\n' + (80 * b'%'))
             latex_output.write(b'\n\n\\begin{document}\n\\begin{sloppypar}')
@@ -110,7 +110,7 @@ class LatexBuilder(VolumeProcessor):
                 latex_output.write(b'\n\n%%% Cover\n\n')
                 latex_output.write(self._theme.cover.read_bytes())
 
-            if config.pdf.toc and self._theme.toc is not None:
+            if config.latex.toc and self._theme.toc is not None:
                 latex_output.write(b'\n\n' + (80 * b'%'))
                 latex_output.write(b'\n\n%%% Table of contents\n\n')
                 latex_output.write(self._theme.toc.read_bytes())
