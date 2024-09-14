@@ -32,7 +32,7 @@ class AbstractHtmlBuilder(Processor, metaclass=ABCMeta):
 
     @abstractmethod
     def get_page_template(self, page: Page) -> jinja2.Template:
-        ...
+        raise NotImplementedError
 
     @final
     async def add_additional_static_files(self, volume: Volume):
@@ -138,15 +138,15 @@ class AbstractHtmlBuilder(Processor, metaclass=ABCMeta):
 
     @abstractmethod
     def get_root_prefix(self, page: Page) -> str:
-        ...
+        raise NotImplementedError
 
     @abstractmethod
     def get_path_to_static(self, page: Page) -> RelativePath:
-        ...
+        raise NotImplementedError
 
     @abstractmethod
     def get_path_to_resources(self, page: Page) -> RelativePath:
-        ...
+        raise NotImplementedError
 
     async def process_image(self, image: Image, page: Page) -> tuple[Image, ...]:
         config: Config = page.volume.config
@@ -174,14 +174,14 @@ class AbstractHtmlBuilder(Processor, metaclass=ABCMeta):
 
     @abstractmethod
     def get_relative_image_url(self, image: Image, page: Page) -> str:
-        ...
+        raise NotImplementedError
 
     ################################################################################
     # Functions used for additional tasks
 
     @abstractmethod
     async def add_file_from_location(self, source: AbsolutePath, target: RelativePath):
-        ...
+        raise NotImplementedError
 
     @final
     async def add_directory_from_location(self, source: AbsolutePath, target: RelativePath):
@@ -193,8 +193,8 @@ class AbstractHtmlBuilder(Processor, metaclass=ABCMeta):
 
     @abstractmethod
     async def add_file_from_project(self, source: RelativePath, target: RelativePath):
-        ...
+        raise NotImplementedError
 
     @abstractmethod
     async def compile_sass(self, source: AbsolutePath, destination: RelativePath):
-        ...
+        raise NotImplementedError
