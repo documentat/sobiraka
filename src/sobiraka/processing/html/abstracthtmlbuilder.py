@@ -4,13 +4,11 @@ import re
 from abc import ABCMeta, abstractmethod
 from asyncio import Task, TaskGroup, create_subprocess_exec, create_task
 from copy import deepcopy
-from datetime import datetime
 from subprocess import PIPE
 from typing import final
 
-import iso639
 import jinja2
-from panflute import Image
+from panflute import Element, Header, Image
 
 from sobiraka.models import Page, Volume
 from sobiraka.models.config import Config
@@ -53,7 +51,6 @@ class AbstractHtmlBuilder(Processor, metaclass=ABCMeta):
     async def process4(self, page: Page):
         self.apply_postponed_image_changes(page)
         html = await self.render_html(page)
-        html = await self.decorate_html(page, html)
         RT[page].bytes = html
 
     @final
@@ -81,50 +78,6 @@ class AbstractHtmlBuilder(Processor, metaclass=ABCMeta):
 
         return html
 
-    @final
-    async def decorate_html(self, page: Page, html: bytes):
-        from ..toc import local_toc, toc
-
-        volume = page.volume
-        project = page.volume.project
-        config = page.volume.config
-
-        root_prefix = self.get_root_prefix(page)
-        head = self._head.render(root_prefix)
-
-        page_template = self.get_page_template(page)
-        html = await page_template.render_async(
-            builder=self,
-
-            project=project,
-            volume=volume,
-            config=config,
-            page=page,
-
-            number=RT[page].number,
-            title=RT[page].title,
-            body=html.decode('utf-8').strip(),
-
-            head=head,
-            now=datetime.now(),
-            toc=lambda **kwargs: toc(volume.root_page,
-                                     processor=self,
-                                     toc_depth=volume.config.html.toc_depth,
-                                     combined_toc=volume.config.html.combined_toc,
-                                     current_page=page,
-                                     **kwargs),
-            local_toc=lambda: local_toc(page),
-            Language=iso639.Language,
-
-            ROOT=root_prefix,
-            ROOT_PAGE=self.make_internal_url(volume.root_page, page=page),
-            STATIC=self.get_path_to_static(page),
-            RESOURCES=self.get_path_to_resources(page),
-            theme_data=volume.config.html.theme_data,
-        )
-
-        return html
-
     @classmethod
     def expand_path_vars(cls, text: str, volume: Volume) -> str:
         def _substitution(m: re.Match) -> str:
@@ -147,6 +100,12 @@ class AbstractHtmlBuilder(Processor, metaclass=ABCMeta):
     @abstractmethod
     def get_path_to_resources(self, page: Page) -> RelativePath:
         raise NotImplementedError
+
+    async def process_header(self, header: Header, page: Page) -> tuple[Element, ...]:
+        elems = await super().process_header(header, page)
+        if header.level == 1:
+            return ()
+        return elems
 
     async def process_image(self, image: Image, page: Page) -> tuple[Image, ...]:
         config: Config = page.volume.config

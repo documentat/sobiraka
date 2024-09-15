@@ -4,13 +4,15 @@ import os.path
 import re
 import sys
 from asyncio import create_subprocess_exec, create_task, to_thread
+from datetime import datetime
 from itertools import chain
 from os.path import relpath
 from shutil import copyfile, rmtree
 
+import iso639
 import jinja2
 from aiofiles.os import makedirs
-from panflute import Element, Header, Image
+from panflute import Image
 
 from sobiraka.models import DirPage, IndexPage, Page, PageHref, PageStatus, Project, Volume
 from sobiraka.models.config import Config, SearchIndexerName
@@ -100,11 +102,55 @@ class HtmlBuilder(AbstractHtmlBuilder, ProjectProcessor):
             await theme.process_doc(RT[page].doc, page)
 
         await super().process4(page)
+        await self.decorate_html(page)
 
         target_file = self.output / self.get_target_path(page)
         target_file.parent.mkdir(parents=True, exist_ok=True)
-        target_file.write_text(RT[page].bytes, encoding='utf-8')
+        target_file.write_bytes(RT[page].bytes)
         self._results.add(target_file)
+
+    async def decorate_html(self, page: Page):
+        from ..toc import local_toc, toc
+
+        volume = page.volume
+        project = page.volume.project
+        config = page.volume.config
+
+        root_prefix = self.get_root_prefix(page)
+        head = self._head.render(root_prefix)
+
+        page_template = self.get_page_template(page)
+        html = await page_template.render_async(
+            builder=self,
+
+            project=project,
+            volume=volume,
+            config=config,
+            page=page,
+
+            number=RT[page].number,
+            title=RT[page].title,
+            body=RT[page].bytes.decode('utf-8').strip(),
+
+            head=head,
+            now=datetime.now(),
+            toc=lambda **kwargs: toc(volume.root_page,
+                                     processor=self,
+                                     toc_depth=volume.config.html.toc_depth,
+                                     combined_toc=volume.config.html.combined_toc,
+                                     current_page=page,
+                                     **kwargs),
+            local_toc=lambda: local_toc(page),
+            Language=iso639.Language,
+
+            ROOT=root_prefix,
+            ROOT_PAGE=self.make_internal_url(PageHref(volume.root_page), page=page),
+            STATIC=self.get_path_to_static(page),
+            RESOURCES=self.get_path_to_resources(page),
+            theme_data=volume.config.html.theme_data,
+        )
+
+        RT[page].bytes = html.encode('utf-8')
 
     def get_target_path(self, page: Page) -> RelativePath:
         volume: Volume = page.volume
@@ -181,12 +227,6 @@ class HtmlBuilder(AbstractHtmlBuilder, ProjectProcessor):
         start = self.output / self.get_target_path(page)
         resources = self.output / page.volume.config.html.resources_prefix
         return resources.relative_to(start.parent)
-
-    async def process_header(self, header: Header, page: Page) -> tuple[Element, ...]:
-        elems = await super().process_header(header, page)
-        if header.level == 1:
-            return ()
-        return elems
 
     async def prepare_search_indexer(self, volume: Volume) -> SearchIndexer:
         # Select the search indexer implementation
