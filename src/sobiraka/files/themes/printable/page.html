@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'/>
+    <link rel='stylesheet' href='_static/printable.css'/>
+    <link rel='stylesheet' href='_static/pygments-colorful.css'/>
+</head>
+<body>
+
+{% for page, title, body in content %}
+    <!-- {{ page.path_in_volume }} -->
+    <h1 id='{{ page.id }}'>{{ title }}</h1>
+    {{ body }}
+{% endfor %}
+
+</body>
+</html>

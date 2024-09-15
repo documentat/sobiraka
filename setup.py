@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 setup(
     name='sobiraka',
-    version='0.0.1',
+    version='0.2a1',
     author='Max Alibaev',
     python_requires='~=3.11',
     install_requires=[
@@ -23,6 +23,7 @@ setup(
         'setuptools~=68.1.2',
         'utilspie~=0.1.0',
         'wcmatch~=8.4.1',
+        'weasyprint~=62.3',
         'yattag~=1.15.1',
     ],
     packages=find_packages('src'),

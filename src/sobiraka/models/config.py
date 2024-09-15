@@ -158,6 +158,14 @@ class Config_Latex:
 
 
 @dataclass(kw_only=True, frozen=True)
+class Config_WeasyPrint:
+    """Settings related to :class:`.WeasyBuilder`."""
+
+    theme: AbsolutePath = files('sobiraka') / 'files' / 'themes' / 'printable'
+    """Path to the theme that should be used when generating HTML."""
+
+
+@dataclass(kw_only=True, frozen=True)
 class Config_Lint_Checks:
     """Boolean options representing enabled and disabled checks that should be performed when linting."""
 
@@ -198,6 +206,8 @@ class Config:
     """
     Configuration for a volume. Used as a base class for :obj:`.Volume`.
     """
+    # pylint: disable=too-many-instance-attributes
+
     title: str = None
 
     paths: Config_Paths = field(default_factory=Config_Paths, kw_only=True)
@@ -210,6 +220,9 @@ class Config:
 
     latex: Config_Latex = field(default_factory=Config_Latex, kw_only=True)
     """Settings related to :class:`.LatexBuilder`."""
+
+    weasyprint: Config_WeasyPrint = field(default=Config_WeasyPrint, kw_only=True)
+    """Settings related to :class:`.WeasyBuilder`."""
 
     lint: Config_Lint = field(default_factory=Config_Lint, kw_only=True)
     """Settings related to :class:`.Linter`."""

@@ -41,6 +41,17 @@ RUN arch=$(arch | sed s:aarch64:arm64: | sed s:x86_64:amd64:) \
 
 
 ################################################################################
+# Download fonts
+
+FROM alpine:3.19 AS get-fonts
+WORKDIR /tmp/fonts
+RUN wget https://www.latofonts.com/download/lato2ofl-zip/ -O /tmp/lato.zip && unzip /tmp/lato.zip && rm /tmp/lato.zip
+RUN mv Lato2OFL/*.ttf .
+RUN wget https://download.jetbrains.com/fonts/JetBrainsMono-2.304.zip -O /tmp/jbmono.zip && unzip /tmp/jbmono.zip && rm /tmp/jbmono.zip
+RUN mv fonts/ttf/*.ttf .
+
+
+################################################################################
 # Install Sobiraka
 
 FROM install-pip-dependencies AS install-package
@@ -53,16 +64,20 @@ RUN pip install --prefix /prefix *.tar.gz
 
 FROM python-and-nodejs AS common-html
 RUN apk add --no-cache hunspell
+RUN apk add --no-cache weasyprint
 COPY --from=install-npm-dependencies /opt/node_modules /node_modules
 COPY --from=get-pandoc /tmp/pandoc /usr/local
+COPY --from=get-fonts /tmp/fonts /usr/share/fonts
 WORKDIR /W
 ENTRYPOINT [""]
 
 FROM python-and-nodejs AS common
 RUN apk add --no-cache texlive-full
 RUN apk add --no-cache hunspell
+RUN apk add --no-cache weasyprint
 COPY --from=install-npm-dependencies /opt/node_modules /node_modules
 COPY --from=get-pandoc /tmp/pandoc /usr/local
+COPY --from=get-fonts /tmp/fonts /usr/share/fonts
 WORKDIR /W
 ENTRYPOINT [""]
 

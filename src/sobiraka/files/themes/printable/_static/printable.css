@@ -1,0 +1,185 @@
+@page {
+    margin: 6rem 2rem 2rem 2rem;
+    size: A4;
+
+    @top-left {
+        content: string(current-title);
+        font-family: "Lato Medium", sans-serif;
+        font-size: 13pt;
+        font-style: italic;
+        margin-top: 2em;
+        vertical-align: top;
+    }
+
+    @top-right {
+        content: counter(page);
+        font-family: "Lato Medium", sans-serif;
+        font-size: 13pt;
+        font-style: italic;
+        margin-top: 2em;
+        vertical-align: top;
+    }
+}
+
+@page new-section {
+    @top-left {
+        content: none;
+    }
+}
+
+body {
+    --blue: #4e6fde;
+    --gray: #989898;
+    --lightgray: #ececec;
+
+    font-family: "Lato", sans-serif;
+    font-size: 14pt;
+    margin: 0;
+}
+
+
+/*
+    Headings
+ */
+
+h1 {
+    font-family: "Lato Black", sans-serif;
+    font-size: 30pt;
+    margin-top: 0;
+
+    page: new-section;
+    page-break-before: always;
+    string-set: current-title content();
+}
+
+h2 {
+    font-family: "Lato Semibold", sans-serif;
+    font-size: 24pt;
+}
+
+h3 {
+    font-family: "Lato Light", sans-serif;
+    font-size: 18pt;
+}
+
+h1 + *,
+h2 + *,
+h3 + * {
+    margin-top: -.5em;
+}
+
+
+/*
+    Links
+ */
+
+a {
+    color: var(--blue);
+    text-decoration: none;
+}
+
+
+/*
+    Code inlines
+ */
+
+code {
+    background: var(--lightgray);
+    border-radius: .2em;
+    box-sizing: content-box;
+    display: inline-block;
+    font-family: "JetBrains Mono NL Medium", monospace;
+    font-size: .9em;
+    padding: 0 .2em;
+}
+
+
+/*
+    Code blocks
+ */
+
+pre {
+    background: var(--lightgray);
+    border-radius: .2em;
+    font-family: "JetBrains Mono NL Medium", monospace;
+    font-size: .9em;
+    padding: .5em .5em;
+    margin: 0;
+    white-space: pre-wrap;
+}
+
+pre code {
+    background: none;
+}
+
+
+/*
+    Admonitions
+ */
+
+div.example, div.note, div.warning {
+    border-radius: .2em;
+    margin: .5em 0;
+    padding: .2em .5em;
+}
+
+div.example p, div.note p, div.warning p {
+    margin: 0;
+    padding: .5em .5em;
+}
+
+div.example {
+    background: #d8f6c7;
+    border-left: .2em solid #84af6c;
+}
+
+div.note {
+    background: #d0effa;
+    border-left: .2em solid #59a3b9;
+}
+
+div.warning {
+    background: #f6e9ac;
+    border-left: .2em solid #ccbc78;
+}
+
+
+/*
+    Tables
+ */
+
+table {
+    margin-bottom: 1em;
+    border-spacing: 0;
+}
+
+table tr:not(:first-child) th,
+table tr:not(:first-child) td {
+    border-top: none;
+}
+
+table th:not(:first-child),
+td:not(:first-child) {
+    border-left: none;
+}
+
+table thead th {
+    background: var(--lightgray);
+    border: 1px solid var(--gray);
+    border-bottom: none;
+    font-family: "Lato Black", sans-serif;
+    padding: .3em .5em;
+}
+
+table thead tr:first-child th:first-child {
+    border-top-left-radius: .3em;
+}
+
+table thead tr:first-child th:last-child {
+    border-top-right-radius: .3em;
+}
+
+table td {
+    border: 1px solid var(--gray);
+    padding: .3em .5em;
+}

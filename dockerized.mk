@@ -7,11 +7,13 @@ build: build-release-html build-release build-tester-dist build-tester-src build
 build-release-html:
 	@DOCKER_BUILDKIT=1 \
 		docker build . \
+		--target release-html \
 		--tag sobiraka:release-html
 
 build-release:
 	@DOCKER_BUILDKIT=1 \
 		docker build . \
+		--target release \
 		--tag sobiraka:release
 
 build-tester-dist:
@@ -47,14 +49,26 @@ test-dist:
 lint:
 	@docker run --rm -it -v $(PWD):/W:ro sobiraka:linter
 
-docs:
+docs-html:
 	@mkdir -p docs/build
 	@docker run --rm -it \
 		-v $(PWD)/docs:/W/docs:ro \
 		-v $(PWD)/docs/build:/W/docs/build \
 		sobiraka:release-html \
-		sobiraka html docs/docs.yaml docs/build
+		sobiraka html docs/docs.yaml --output docs/build
 	@docker run --rm -it \
 		-v $(PWD)/docs/build:/W/docs/build \
 		sobiraka:release-html \
 		chown -R $$(id -u):$$(id -g) docs/build
+
+docs-pdf:
+	@mkdir -p docs/build
+	@docker run --rm -it \
+		-v $(PWD)/docs:/W/docs:ro \
+		-v $(PWD)/docs/build:/W/docs/build \
+		sobiraka:release-html \
+		sobiraka weasy docs/docs.yaml --output docs/build/sobiraka.pdf
+	@docker run --rm -it \
+		-v $(PWD)/docs/build:/W/docs/build \
+		sobiraka:release-html \
+		chown $$(id -u):$$(id -g) docs/build/sobiraka.pdf

@@ -112,7 +112,7 @@ test-src:
   variables:
     VARIANT: tester-src
 
-lint-code:
+lint:
   extends: .test
   needs: [build-linter]
   variables:
@@ -120,17 +120,7 @@ lint-code:
   script:
     - make lint
 
-lint-docs:
-  when: manual
-  allow_failure: true
-  stage: test
-  needs: [build-release-html]
-  image: $CI_REGISTRY_IMAGE/cache/release:by-commit-$CI_COMMIT_SHA
-  script:
-    - ls -A | grep -v docs | xargs rm -rf
-    - sobiraka lint docs/docs.yaml
-
-build-docs:
+docs-html:
   stage: test
   needs: [build-release-html]
   image: $CI_REGISTRY_IMAGE/cache/release-html:by-commit-$CI_COMMIT_SHA
@@ -140,6 +130,17 @@ build-docs:
   artifacts:
     paths:
       - html
+
+docs-pdf:
+  stage: test
+  needs: [build-release-html]
+  image: $CI_REGISTRY_IMAGE/cache/release-html:by-commit-$CI_COMMIT_SHA
+  script:
+    - ls -A | grep -v docs | xargs rm -rf
+    - sobiraka --no-cache weasy docs/docs.yaml --output sobiraka.pdf
+  artifacts:
+    paths:
+      - sobiraka.pdf
 
 ################################################################################
 

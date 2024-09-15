@@ -116,6 +116,11 @@ $defs:
           toc: { type: boolean }
           paths: { type: object }
 
+      weasyprint:
+        additionalProperties: false
+        properties:
+          theme: { type: string }
+
       lint:
         additionalProperties: false
         properties:
