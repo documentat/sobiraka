@@ -120,6 +120,11 @@ $defs:
         additionalProperties: false
         properties:
           theme: { type: string }
+          toc_depth:
+            oneOf:
+              - type: integer
+              - enum: [infinity]
+          combined_toc: { type: boolean }
 
       lint:
         additionalProperties: false

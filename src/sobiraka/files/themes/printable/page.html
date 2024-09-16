@@ -7,6 +7,19 @@
 </head>
 <body>
 
+<ul class='toc'>
+    {% for item in toc() recursive %}
+        <li>
+            <a href='{{ item.url }}'>{{ item.title }}</a>
+            {% if item.children %}
+                <ul>
+                    {{ loop(item.children) }}
+                </ul>
+            {% endif %}
+        </li>
+    {% endfor %}
+</ul>
+
 {% for page, title, body in content %}
     <!-- {{ page.path_in_volume }} -->
     <h1 id='{{ page.id }}'>{{ title }}</h1>

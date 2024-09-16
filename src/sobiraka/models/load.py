@@ -116,6 +116,8 @@ def _load_volume(lang: str | None, codename: str, volume_data: dict, fs: FileSys
         ),
         weasyprint=Config_WeasyPrint(
             theme=_find_theme_dir(_('weasyprint.theme', 'printable'), fs=fs),
+            toc_depth=int(re.sub(r'^infinity$', '0', str(_('weasyprint.toc_depth', 'infinity')))) or inf,
+            combined_toc=_('weasyprint.combined_toc', False),
         ),
         lint=Config_Lint(
             dictionaries=tuple(_('lint.dictionaries', [])),

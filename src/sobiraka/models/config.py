@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import json
 from copy import copy
 from dataclasses import asdict, dataclass, field
@@ -53,6 +55,12 @@ class CombinedToc(Enum):
     NEVER = 'never'
     CURRENT = 'current'
     ALWAYS = 'always'
+
+    @classmethod
+    def from_bool(cls, value: bool) -> CombinedToc:
+        if value:
+            return CombinedToc.ALWAYS
+        return CombinedToc.NEVER
 
 
 class SearchIndexerName(Enum):
@@ -163,6 +171,10 @@ class Config_WeasyPrint:
 
     theme: AbsolutePath = files('sobiraka') / 'files' / 'themes' / 'printable'
     """Path to the theme that should be used when generating HTML."""
+
+    toc_depth: int | float = inf
+
+    combined_toc: bool = False
 
 
 @dataclass(kw_only=True, frozen=True)

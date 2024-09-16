@@ -21,6 +21,16 @@
     }
 }
 
+@page toc {
+    @top-left {
+        content: none;
+    }
+
+    @top-right {
+        content: none;
+    }
+}
+
 @page new-section {
     @top-left {
         content: none;
@@ -182,4 +192,44 @@ table thead tr:first-child th:last-child {
 table td {
     border: 1px solid var(--gray);
     padding: .3em .5em;
+}
+
+
+/*
+    Table of contents
+ */
+
+ul.toc {
+    padding-left: 0;
+
+    page: toc;
+}
+
+ul.toc li {
+    list-style: none;
+    font-family: "Lato", sans-serif;
+    font-size: 16pt;
+}
+
+ul.toc li a::after {
+    content: ' ' leader(dotted) ' ' target-counter(attr(href), page);
+}
+
+ul.toc > li {
+    font-family: "Lato Black", sans-serif;
+    font-size: 18pt;
+    margin-top: .5em;
+}
+
+ul.toc > li > a {
+    color: black;
+}
+
+ul.toc > li > a::after {
+    content: leader(' ') target-counter(attr(href), page);
+    font-family: inherit;
+}
+
+ul.toc > li > ul {
+    padding-left: 0;
 }

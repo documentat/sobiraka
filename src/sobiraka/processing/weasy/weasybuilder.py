@@ -14,6 +14,7 @@ import weasyprint
 from panflute import CodeBlock, Element, Image, RawBlock
 
 from sobiraka.models import Page, PageHref, PageStatus, Volume
+from sobiraka.models.config import CombinedToc
 from sobiraka.models.exceptions import DisableLink
 from sobiraka.processing.abstract import VolumeProcessor
 from sobiraka.processing.html.abstracthtmlbuilder import AbstractHtmlBuilder
@@ -37,6 +38,8 @@ class WeasyBuilder(AbstractHtmlBuilder, VolumeProcessor):
         self.pseudofiles: dict[str, bytes] = {}
 
     async def run(self):
+        from ..toc import toc
+
         self.output.parent.mkdir(parents=True, exist_ok=True)
 
         volume: Volume = self.volume
@@ -60,6 +63,12 @@ class WeasyBuilder(AbstractHtmlBuilder, VolumeProcessor):
             project=volume.project,
             volume=volume,
             config=volume.config,
+
+            toc=lambda **kwargs: toc(volume.root_page,
+                                     processor=self,
+                                     toc_depth=volume.config.weasyprint.toc_depth,
+                                     combined_toc=CombinedToc.from_bool(volume.config.weasyprint.combined_toc),
+                                     **kwargs),
 
             content=content,
         )
@@ -97,7 +106,7 @@ class WeasyBuilder(AbstractHtmlBuilder, VolumeProcessor):
 
     def make_internal_url(self, href: PageHref, *, page: Page) -> str:
         # TODO unduplicate
-        if href.target.volume is not page.volume:
+        if page is not None and page.volume is not href.target.volume:
             raise DisableLink
         result = href.target.id
         if href.anchor:
