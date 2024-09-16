@@ -20,9 +20,9 @@
     {% endfor %}
 </ul>
 
-{% for page, title, body in content %}
+{% for page, number, title, body in content %}
     <!-- {{ page.path_in_volume }} -->
-    <h1 id='{{ page.id }}'>{{ title }}</h1>
+    <h1 id='{{ page.id }}' data-number='{{ number }}'>{{ title }}</h1>
     {{ body }}
 {% endfor %}
 

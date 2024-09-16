@@ -20,7 +20,7 @@ from sobiraka.processing.abstract import VolumeProcessor
 from sobiraka.processing.html.abstracthtmlbuilder import AbstractHtmlBuilder
 from sobiraka.processing.plugin import WeasyTheme, load_weasy_theme
 from sobiraka.runtime import RT
-from sobiraka.utils import AbsolutePath, RelativePath
+from sobiraka.utils import AbsolutePath, RelativePath, TocNumber
 
 logger = logging.getLogger('weasyprint')
 logger.addHandler(logging.StreamHandler())
@@ -51,10 +51,10 @@ class WeasyBuilder(AbstractHtmlBuilder, VolumeProcessor):
                                            name=f'generate html for {page.path_in_project}')
 
         # Combine rendered pages into a single page
-        content: list[tuple[Page, str, str]] = []
+        content: list[tuple[Page, TocNumber, str, str]] = []
         for page in volume.pages:
             await processing[page]
-            content.append((page, RT[page].title, RT[page].bytes.decode('utf-8')))
+            content.append((page, RT[page].number, RT[page].title, RT[page].bytes.decode('utf-8')))
 
         # Apply the rendering template
         html = await self.theme.page_template.render_async(
