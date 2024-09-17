@@ -5,7 +5,7 @@ from sobiraka.processing.abstract import ProjectProcessor
 
 
 class FakeProcessor(ProjectProcessor):
-    def make_internal_url(self, href: PageHref, *, page: Page) -> str:
+    def make_internal_url(self, href: PageHref, *, page: Page = None) -> str:
         result = ''
         if href.target is not page:
             if page is not None:

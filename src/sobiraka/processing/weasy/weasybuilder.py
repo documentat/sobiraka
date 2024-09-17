@@ -104,8 +104,7 @@ class WeasyBuilder(AbstractHtmlBuilder, VolumeProcessor):
         print(url, file=sys.stderr)
         return weasyprint.default_url_fetcher(url)
 
-    def make_internal_url(self, href: PageHref, *, page: Page) -> str:
-        # TODO unduplicate
+    def make_internal_url(self, href: PageHref, *, page: Page = None) -> str:
         if page is not None and page.volume is not href.target.volume:
             raise DisableLink
         result = href.target.id

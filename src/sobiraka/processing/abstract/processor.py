@@ -435,7 +435,7 @@ class Processor(Dispatcher):
                 elem.content = Str(RT[href.target].title),
 
     @abstractmethod
-    def make_internal_url(self, href: PageHref, *, page: Page) -> str:
+    def make_internal_url(self, href: PageHref, *, page: Page = None) -> str:
         ...
 
 

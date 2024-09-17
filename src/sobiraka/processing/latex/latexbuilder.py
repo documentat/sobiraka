@@ -178,7 +178,7 @@ class LatexBuilder(VolumeProcessor):
                 print(line, file=sys.stderr)
             print('\033[0m', end='', file=sys.stderr)
 
-    def make_internal_url(self, href: PageHref, *, page: Page) -> str:
+    def make_internal_url(self, href: PageHref, *, page: Page = None) -> str:
         """
         Given a PageHref, i.e., a page and an optional anchor, generates a unique internal identifier for it.
         The function avoids using any non-ASCII characters, as well as the ``%`` character,

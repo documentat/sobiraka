@@ -186,10 +186,7 @@ class HtmlBuilder(AbstractHtmlBuilder, ProjectProcessor):
         start_path = self.get_target_path(page).parent
         return relpath(image_path, start=start_path)
 
-    def make_internal_url(self, href: PageHref | Page, *, page: Page) -> str:
-        if isinstance(href, Page):
-            href = PageHref(href)
-
+    def make_internal_url(self, href: PageHref, *, page: Page = None) -> str:
         if href.target is page:
             result = ''
 
