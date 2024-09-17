@@ -3,7 +3,6 @@ from __future__ import annotations
 import logging
 import re
 import sys
-import urllib.parse
 from asyncio import Task, create_task
 from mimetypes import guess_type
 from types import NoneType
@@ -11,7 +10,7 @@ from typing import BinaryIO, NotRequired, TYPE_CHECKING, TypedDict
 
 import jinja2
 import weasyprint
-from panflute import CodeBlock, Element, Image, RawBlock
+from panflute import CodeBlock, Element, Header, Image, RawBlock
 
 from sobiraka.models import Page, PageHref, PageStatus, Volume
 from sobiraka.models.config import CombinedToc
@@ -105,13 +104,16 @@ class WeasyBuilder(AbstractHtmlBuilder, VolumeProcessor):
         return weasyprint.default_url_fetcher(url)
 
     def make_internal_url(self, href: PageHref, *, page: Page = None) -> str:
+        """
+        Nobody really cares about how nice the internal URLs will in the intermediate HTML,
+        so we use URLs like '#path/to/page.md' and '#path/to/page.md::section'.
+        Luckily, WeasyPrint does not mind these characters.
+        """
         if page is not None and page.volume is not href.target.volume:
             raise DisableLink
-        result = href.target.id
+        result = '#' + str(href.target.path_in_volume)
         if href.anchor:
-            result += '--' + href.anchor
-        result = urllib.parse.quote(result).replace('%', '')
-        result = '#' + result
+            result += '::' + href.anchor
         return result
 
     def get_root_prefix(self, page: Page) -> str:
@@ -156,6 +158,20 @@ class WeasyBuilder(AbstractHtmlBuilder, VolumeProcessor):
                     html.asis(pygments_output)
 
         return RawBlock(html.getvalue()),
+
+    async def process_header(self, header: Header, page: Page) -> tuple[Element, ...]:
+        header, = await super().process_header(header, page)
+        assert isinstance(header, Header)
+
+        if header.level == 1:
+            href = PageHref(page)
+            header.identifier = self.make_internal_url(href)[1:]
+        else:
+            anchor = RT[page].anchors.by_header(header)
+            href = PageHref(page, anchor.identifier)
+            header.identifier = self.make_internal_url(href)[1:]
+
+        return header,
 
 
 if TYPE_CHECKING:

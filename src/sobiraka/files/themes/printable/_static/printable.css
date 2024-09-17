@@ -52,6 +52,16 @@ body {
     Headings
  */
 
+h1:not([data-number=''])::before,
+h2:not([data-number=''])::before,
+h3:not([data-number=''])::before,
+h4:not([data-number=''])::before,
+h5:not([data-number=''])::before,
+h6:not([data-number=''])::before {
+    content: attr(data-number) '. ';
+    color: var(--gray);
+}
+
 h1 {
     font-family: "Lato Black", sans-serif;
     font-size: 30pt;
@@ -60,11 +70,6 @@ h1 {
     page: new-section;
     page-break-before: always;
     string-set: current-title content();
-}
-
-h1:not([data-number=''])::before {
-    content: attr(data-number) '. ';
-    color: var(--gray);
 }
 
 h2 {

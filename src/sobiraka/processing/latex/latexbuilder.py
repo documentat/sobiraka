@@ -207,6 +207,8 @@ class LatexBuilder(VolumeProcessor):
         header, = await super().process_header(header, page)
         assert isinstance(header, Header)
 
+        header.identifier = urllib.parse.quote(header.identifier).replace('%', '')
+
         # Our result, however, will be not a Header, but a paragraph with custom LaTeX code.
         # We will generate inline elements into a list. In the end, we will wrap them all in a paragraph.
         result: list[Element] = []

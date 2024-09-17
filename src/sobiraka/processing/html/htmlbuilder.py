@@ -12,7 +12,7 @@ from shutil import copyfile, rmtree
 import iso639
 import jinja2
 from aiofiles.os import makedirs
-from panflute import Image
+from panflute import Element, Header, Image
 
 from sobiraka.models import DirPage, IndexPage, Page, PageHref, PageStatus, Project, Volume
 from sobiraka.models.config import Config, SearchIndexerName
@@ -265,3 +265,12 @@ class HtmlBuilder(AbstractHtmlBuilder, ProjectProcessor):
 
         self._results.add(destination)
         self._results.add(destination.with_suffix('.css.map'))
+
+    async def process_header(self, header: Header, page: Page) -> tuple[Element, ...]:
+        header, = await super().process_header(header, page)
+        assert isinstance(header, Header)
+
+        if header.level == 1:
+            return ()
+
+        return header,

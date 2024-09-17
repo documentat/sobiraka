@@ -85,7 +85,7 @@ class LocalTocDirective(Directive):
                               current_page=self.page)
 
         header = self.previous_header()
-        if header is not None:
+        if header is not None and header.level != 1:
             parent_item = toc_items.find_item_by_header(header)
             toc_items = parent_item.children
 

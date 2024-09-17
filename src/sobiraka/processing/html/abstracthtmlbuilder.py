@@ -8,7 +8,7 @@ from subprocess import PIPE
 from typing import final
 
 import jinja2
-from panflute import Element, Header, Image
+from panflute import Image
 
 from sobiraka.models import Page, Volume
 from sobiraka.models.config import Config
@@ -100,12 +100,6 @@ class AbstractHtmlBuilder(Processor, metaclass=ABCMeta):
     @abstractmethod
     def get_path_to_resources(self, page: Page) -> RelativePath:
         raise NotImplementedError
-
-    async def process_header(self, header: Header, page: Page) -> tuple[Element, ...]:
-        elems = await super().process_header(header, page)
-        if header.level == 1:
-            return ()
-        return elems
 
     async def process_image(self, image: Image, page: Page) -> tuple[Image, ...]:
         config: Config = page.volume.config

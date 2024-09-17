@@ -265,25 +265,31 @@ class Processor(Dispatcher):
         return await super().process_directive(directive, page)
 
     async def process_header(self, header: Header, page: Page) -> tuple[Element, ...]:
-        # Generate an identifier if is not done automatically, e.g., in RST
-        if not header.identifier:
-            header.identifier = stringify(header)
-            header.identifier = header.identifier.lower()
-            header.identifier = re.sub(r'\W+', '-', header.identifier)
-
-        # If this is a top level header, use it as the page title
         if header.level == 1:
+            # Use the top level header as the page title
             RT[page].title = stringify(header)
+
+            # Maybe skip numeration for the whole page
             if 'unnumbered' in header.classes:
                 RT[page].skip_numeration = True
 
         else:
-            anchor = Anchor.from_header(header)
-            if 'unnumbered' in header.classes:
-                RT[anchor].skip_numeration = True
+            # Generate anchor identifier if not provided
+            identifier = header.identifier
+            if not identifier:
+                identifier = stringify(header)
+                identifier = identifier.lower()
+                identifier = re.sub(r'\W+', '-', identifier)
+
+            # Remember the anchor
+            anchor = Anchor(header, identifier, label=stringify(header), level=header.level)
             RT[page].anchors.append(anchor)
 
-        return (header,)
+            # Maybe skip numeration for the section
+            if 'unnumbered' in header.classes:
+                RT[anchor].skip_numeration = True
+
+        return header,
 
     async def process_image(self, image: Image, page: Page) -> tuple[Element, ...]:
         """
@@ -413,12 +419,6 @@ class Processor(Dispatcher):
 
     async def process2_internal_link(self, elem: Link, href: PageHref, target_text: str, page: Page):
         await self.require(href.target, PageStatus.PROCESS1)
-        try:
-            elem.url = self.make_internal_url(href, page=page)
-        except DisableLink:
-            i = elem.parent.content.index(elem)
-            elem.parent.content[i:i + 1] = elem.content
-            return
 
         if href.anchor:
             try:
@@ -430,9 +430,15 @@ class Processor(Dispatcher):
                 RT[page].issues.append(BadLink(target_text))
                 return
 
-        else:
+        try:
+            elem.url = self.make_internal_url(href, page=page)
             if not elem.content:
                 elem.content = Str(RT[href.target].title),
+
+        except DisableLink:
+            i = elem.parent.content.index(elem)
+            elem.parent.content[i:i + 1] = elem.content
+            return
 
     @abstractmethod
     def make_internal_url(self, href: PageHref, *, page: Page = None) -> str:

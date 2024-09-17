@@ -3,6 +3,8 @@ paths:
   root: src
   include: ['**/*.md']
   partials: partials
+content:
+  numeration: true
 html:
   theme: book
   search:
@@ -11,6 +13,8 @@ html:
     link_target: h2
     translations:
       placeholder: Поиск
+weasyprint:
+  combined_toc: true
 lint:
   dictionaries:
     - en_US

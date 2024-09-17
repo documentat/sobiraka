@@ -19,10 +19,6 @@ class Anchor:
     def __hash__(self):
         return id(self)
 
-    @staticmethod
-    def from_header(header: Header) -> Anchor:
-        return Anchor(header, header.identifier, label=stringify(header), level=header.level)
-
 
 class Anchors(UserList[Anchor]):
     def __getitem__(self, key: int | str) -> Anchor:
