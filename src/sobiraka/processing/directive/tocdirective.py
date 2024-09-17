@@ -1,6 +1,5 @@
 from argparse import ArgumentParser
 from math import inf
-from types import NoneType
 from typing import Iterable, TYPE_CHECKING
 
 from panflute import BulletList, Element, Header, Link, ListItem, Plain, Space, Str
@@ -59,26 +58,20 @@ class LocalTocDirective(Directive):
         self.format: str = args.format
 
     def previous_header(self) -> Header | None:
-        prev: Element | None = self.prev
+        elem: Element | None = self
 
         while True:
-            match prev:
-                case NoneType():
-                    # Go one level up
-                    prev = prev.parent.prev
+            # Go one step back and, if necessary, one level up
+            if elem.prev is not None:
+                elem = elem.prev
+            elif elem.parent.prev is not None:
+                elem = elem.parent.prev
+            else:
+                return None
 
-                case Header():
-                    # We found the closest previous header!
-                    return prev
-
-                case _:
-                    # Continue looking, probably going one level up
-                    if prev.prev is not None:
-                        prev = prev.prev
-                    elif prev.parent.prev is not None:
-                        prev = prev.parent.prev
-                    else:
-                        return None
+            # Check if the element is a header
+            if isinstance(elem, Header):
+                return elem
 
     def postprocess(self):
         """
@@ -87,7 +80,9 @@ class LocalTocDirective(Directive):
         config: Config = self.page.volume.config
 
         toc_items = local_toc(self.page,
-                              toc_depth=self.depth)
+                              processor=self.processor,
+                              toc_depth=self.depth,
+                              current_page=self.page)
 
         header = self.previous_header()
         if header is not None:

@@ -140,7 +140,7 @@ class HtmlBuilder(AbstractHtmlBuilder, ProjectProcessor):
                                      combined_toc=volume.config.html.combined_toc,
                                      current_page=page,
                                      **kwargs),
-            local_toc=lambda: local_toc(page),
+            local_toc=lambda: local_toc(page, processor=self, current_page=page),
             Language=iso639.Language,
 
             ROOT=root_prefix,

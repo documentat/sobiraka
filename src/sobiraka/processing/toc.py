@@ -193,8 +193,9 @@ def toc(
 
         if combined_toc is CombinedToc.ALWAYS or (combined_toc is CombinedToc.CURRENT and item.is_current):
             item.children += local_toc(page,
+                                       processor=processor,
                                        toc_depth=toc_depth - 1,
-                                       href_prefix='' if item.is_current else item.url)
+                                       current_page=current_page)
 
         if len(page.children) > 0:
             if toc_depth > 1 or item.is_selected:
@@ -214,8 +215,9 @@ def toc(
 def local_toc(
         page: Page,
         *,
+        processor: Processor,
         toc_depth: int | float = inf,
-        href_prefix: str = '',
+        current_page: Page | None = None,
 ) -> Toc:
     """
     Generate a page's local toc, based on the information about anchors collected in `RT`.
@@ -230,10 +232,8 @@ def local_toc(
         if anchor.level > toc_depth + 1:
             continue
 
-        item = TocItem(title=anchor.label,
-                       url=f'{href_prefix}#{anchor.identifier}',
-                       number=RT[anchor].number,
-                       source=anchor)
+        url = processor.make_internal_url(PageHref(page, anchor.identifier), page=current_page)
+        item = TocItem(title=anchor.label, url=url, number=RT[anchor].number, source=anchor)
 
         if anchor.level == current_level:
             breadcrumbs[-2].append(item)
