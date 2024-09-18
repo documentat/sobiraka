@@ -52,6 +52,10 @@ body {
     Headings
  */
 
+h1, h2, h3, h4, h5, h6 {
+    bookmark-label: content(before) ' ' content(text);
+}
+
 h1:not([data-number=''])::before,
 h2:not([data-number=''])::before,
 h3:not([data-number=''])::before,
