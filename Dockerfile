@@ -1,7 +1,9 @@
+ARG PYTHON_VERSION=3.12
+
 ################################################################################
 # The base for most images
 
-FROM python:3.11-alpine3.19 AS python-and-nodejs
+FROM python:${PYTHON_VERSION}-alpine3.20 AS python-and-nodejs
 RUN apk add --no-cache nodejs npm
 
 
@@ -9,19 +11,20 @@ RUN apk add --no-cache nodejs npm
 # Install Python and NodeJS dependencies
 
 # Build Sobiraka
-FROM python:3.11-alpine3.19 AS build-package
+FROM python:${PYTHON_VERSION}-alpine3.20 AS build-package
+RUN pip install setuptools
 COPY setup.py .
 COPY src src
 RUN python setup.py sdist
 
-FROM python:3.11-alpine3.19 AS install-pip-dependencies
+FROM python:${PYTHON_VERSION}-alpine3.20 AS install-pip-dependencies
 COPY --from=build-package /sobiraka.egg-info/requires.txt .
 RUN pip install --prefix /prefix --requirement requires.txt
 
-FROM python:3.11-alpine3.19 AS install-pip-dependencies-for-tester
+FROM python:${PYTHON_VERSION}-alpine3.20 AS install-pip-dependencies-for-tester
 RUN pip install --prefix /prefix coverage~=7.0.0
 
-FROM python:3.11-alpine3.19 AS install-pip-dependencies-for-linter
+FROM python:${PYTHON_VERSION}-alpine3.20 AS install-pip-dependencies-for-linter
 RUN pip install --prefix /prefix pylint~=3.1.0
 
 FROM python-and-nodejs AS install-npm-dependencies
@@ -33,7 +36,7 @@ RUN npm install --verbose
 ################################################################################
 # Download additional utilities
 
-FROM alpine:3.19 AS get-pandoc
+FROM alpine:3.20 AS get-pandoc
 WORKDIR /tmp/pandoc
 RUN arch=$(arch | sed s:aarch64:arm64: | sed s:x86_64:amd64:) \
     && wget https://github.com/jgm/pandoc/releases/download/3.2.1/pandoc-3.2.1-linux-$arch.tar.gz -O-  \
@@ -43,7 +46,7 @@ RUN arch=$(arch | sed s:aarch64:arm64: | sed s:x86_64:amd64:) \
 ################################################################################
 # Download fonts
 
-FROM alpine:3.19 AS get-fonts
+FROM alpine:3.20 AS get-fonts
 WORKDIR /tmp/fonts
 RUN wget https://www.latofonts.com/download/lato2ofl-zip/ -O /tmp/lato.zip && unzip /tmp/lato.zip && rm /tmp/lato.zip
 RUN mv Lato2OFL/*.ttf .
@@ -55,6 +58,7 @@ RUN mv fonts/ttf/*.ttf .
 # Install Sobiraka
 
 FROM install-pip-dependencies AS install-package
+RUN pip install setuptools
 COPY --from=build-package /dist/*.tar.gz .
 RUN pip install --prefix /prefix *.tar.gz
 
@@ -85,7 +89,7 @@ ENTRYPOINT [""]
 ################################################################################
 # Final images
 
-FROM common AS tester-src
+FROM common AS tester
 RUN apk add --no-cache git make poppler-utils
 ARG UID=1000
 ARG GID=1000
@@ -95,15 +99,12 @@ USER myuser
 ENV PATH=/home/myuser/.local/bin:$PATH
 COPY --from=install-pip-dependencies /prefix /usr/local
 COPY --from=install-pip-dependencies-for-tester /prefix /usr/local
-CMD make tests
-
-FROM tester-src AS tester-dist
 COPY --from=install-package /prefix /usr/local
 COPY Makefile .
 COPY tests tests
 CMD make tests
 
-FROM tester-src AS linter
+FROM tester AS linter
 COPY --from=install-pip-dependencies-for-linter /prefix /usr/local
 CMD make lint
 
