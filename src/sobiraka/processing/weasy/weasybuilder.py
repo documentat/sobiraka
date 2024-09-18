@@ -13,7 +13,7 @@ import weasyprint
 from panflute import CodeBlock, Element, Header, Image, RawBlock
 
 from sobiraka.models import Page, PageHref, PageStatus, Volume
-from sobiraka.models.config import CombinedToc
+from sobiraka.models.config import CombinedToc, Config
 from sobiraka.models.exceptions import DisableLink
 from sobiraka.processing.abstract import VolumeProcessor
 from sobiraka.processing.html.abstracthtmlbuilder import AbstractHtmlBuilder
@@ -87,6 +87,8 @@ class WeasyBuilder(AbstractHtmlBuilder, VolumeProcessor):
         await super().process4(page)
 
     def fetch_url(self, url: str) -> FetchedString | FetchedFile:
+        config: Config = self.volume.config
+
         if url in self.pseudofiles:
             return dict(
                 string=self.pseudofiles[url],
@@ -97,6 +99,14 @@ class WeasyBuilder(AbstractHtmlBuilder, VolumeProcessor):
             mime_type = guess_type(file, strict=False)[0]
             return dict(
                 file_obj=file.open('rb'),
+                mime_type=mime_type,
+            )
+
+        if ':' not in url:
+            file = config.paths.resources / url
+            mime_type = guess_type(file, strict=False)[0]
+            return dict(
+                file_obj=open(file, 'rb'),
                 mime_type=mime_type,
             )
 
@@ -138,7 +148,7 @@ class WeasyBuilder(AbstractHtmlBuilder, VolumeProcessor):
         return RelativePath('_static')  # TODO
 
     def get_relative_image_url(self, image: Image, page: Page) -> str:
-        raise NotImplementedError
+        return image.url
 
     async def process_code_block(self, code: CodeBlock, page: Page) -> tuple[Element, ...]:
         from pygments.lexers import get_lexer_by_name

@@ -247,3 +247,12 @@ ul.toc > li > a::after {
 ul.toc > li > ul {
     padding-left: 0;
 }
+
+
+/*
+    Image
+ */
+
+p img {
+    max-width: 100%;
+}
