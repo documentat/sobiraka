@@ -1,12 +1,9 @@
-from __future__ import annotations
-
 import logging
 import re
 import sys
 from asyncio import Task, create_task
 from mimetypes import guess_type
 from types import NoneType
-from typing import BinaryIO, NotRequired, TYPE_CHECKING, TypedDict
 
 import weasyprint
 from panflute import CodeBlock, Element, Header, Image, RawBlock
@@ -85,7 +82,7 @@ class WeasyBuilder(AbstractHtmlBuilder, VolumeProcessor):
 
         await super().process4(page)
 
-    def fetch_url(self, url: str) -> FetchedString | FetchedFile:
+    def fetch_url(self, url: str) -> dict:
         config: Config = self.volume.config
 
         if url in self.pseudofiles:
@@ -178,20 +175,3 @@ class WeasyBuilder(AbstractHtmlBuilder, VolumeProcessor):
             header.identifier = self.make_internal_url(href)[1:]
 
         return header,
-
-
-if TYPE_CHECKING:
-    class FetchedString(TypedDict):
-        string: bytes
-        mime_type: str
-        encoding: NotRequired[str]
-        redirected_url: NotRequired[str]
-        filename: NotRequired[str]
-
-
-    class FetchedFile(TypedDict):
-        file_obj: BinaryIO
-        mime_type: str
-        encoding: NotRequired[str]
-        redirected_url: NotRequired[str]
-        filename: NotRequired[str]
