@@ -42,81 +42,93 @@ build-dist:
   services: ['docker:dind']
   variables:
     DOCKER_BUILDKIT: 1
+    BUILD_ARG: foo=bar
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script: |
     CONTEXT=`cat context_hash.txt`
-    docker pull $CI_REGISTRY_IMAGE/cache/$VARIANT:by-context-$CONTEXT || true
-    if docker images --format "{{.Repository}}:{{.Tag}}" | grep $CI_REGISTRY_IMAGE/cache/$VARIANT:by-context-$CONTEXT
+    docker pull $CI_REGISTRY_IMAGE/cache/$IMAGE:by-context-$CONTEXT || true
+    if docker images --format "{{.Repository}}:{{.Tag}}" | grep $CI_REGISTRY_IMAGE/cache/$IMAGE:by-context-$CONTEXT
     then
-        docker tag $CI_REGISTRY_IMAGE/cache/$VARIANT:by-context-$CONTEXT $CI_REGISTRY_IMAGE/cache/$VARIANT:by-commit-$CI_COMMIT_SHA
-        docker push $CI_REGISTRY_IMAGE/cache/$VARIANT:by-commit-$CI_COMMIT_SHA
+        docker tag $CI_REGISTRY_IMAGE/cache/$IMAGE:by-context-$CONTEXT $CI_REGISTRY_IMAGE/cache/$IMAGE:by-commit-$CI_COMMIT_SHA
+        docker push $CI_REGISTRY_IMAGE/cache/$IMAGE:by-commit-$CI_COMMIT_SHA
     else
         docker build . \
-          --target $VARIANT \
-          --tag $CI_REGISTRY_IMAGE/cache/$VARIANT:by-context-$CONTEXT \
-          --tag $CI_REGISTRY_IMAGE/cache/$VARIANT:by-commit-$CI_COMMIT_SHA
-        docker push $CI_REGISTRY_IMAGE/cache/$VARIANT:by-context-$CONTEXT
-        docker push $CI_REGISTRY_IMAGE/cache/$VARIANT:by-commit-$CI_COMMIT_SHA
+          --target $TARGET \
+          --build-arg $BUILD_ARG \
+          --tag $CI_REGISTRY_IMAGE/cache/$IMAGE:by-context-$CONTEXT \
+          --tag $CI_REGISTRY_IMAGE/cache/$IMAGE:by-commit-$CI_COMMIT_SHA
+        docker push $CI_REGISTRY_IMAGE/cache/$IMAGE:by-context-$CONTEXT
+        docker push $CI_REGISTRY_IMAGE/cache/$IMAGE:by-commit-$CI_COMMIT_SHA
     fi
 
-build-tester-src:
+build-tester-python3.12:
   extends: .build-docker
   variables:
-    VARIANT: tester-src
+    TARGET: tester
+    IMAGE: tester-python3.12
 
-build-tester-dist:
+build-tester-python3.11:
   extends: .build-docker
   variables:
-    VARIANT: tester-dist
+    TARGET: tester
+    IMAGE: tester-python3.11
+    BUILD_ARG: PYTHON_VERSION=3.11
 
 build-release-html:
   extends: .build-docker
   variables:
-    VARIANT: release-html
+    TARGET: release-html
+    IMAGE: release-html
 
 build-release:
   extends: .build-docker
   variables:
-    VARIANT: release
+    TARGET: release
+    IMAGE: release
 
 build-linter:
   extends: .build-docker
   variables:
-    VARIANT: linter
+    TARGET: linter
+    IMAGE: linter
 
 ################################################################################
 
 .test:
   stage: test
-  image: $CI_REGISTRY_IMAGE/cache/$VARIANT:by-commit-$CI_COMMIT_SHA
+  image: $CI_REGISTRY_IMAGE/cache/$IMAGE:by-commit-$CI_COMMIT_SHA
   services: ['docker:dind']
   variables:
     GIT_STRATEGY: fetch
   before_script:
+    - python --version
     - git config --global --add safe.directory $PWD
   script:
     - git checkout -- Makefile tests
     - make tests
 
-test-dist:
+test-python3.12:
   extends: .test
-  needs: [build-tester-dist]
+  needs: [build-tester-python3.12]
   variables:
-    VARIANT: tester-dist
+    TARGET: tester
+    IMAGE: tester-python3.12
   coverage: '/TOTAL .+ (\d+\.\d+)%/'
 
-test-src:
+test-python3.11:
   extends: .test
-  needs: [build-tester-src]
+  needs: [build-tester-python3.11]
   variables:
-    VARIANT: tester-src
+    TARGET: tester
+    IMAGE: tester-python3.11
 
 lint-code:
   extends: .test
   needs: [build-linter]
   variables:
-    VARIANT: linter
+    TARGET: linter
+    IMAGE: linter
   script:
     - make lint
 
