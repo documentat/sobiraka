@@ -1,18 +1,26 @@
 from __future__ import annotations
 
 import os.path
+import sys
 from os import PathLike
 from pathlib import Path, PurePosixPath
 
 
 class AbsolutePath(Path):
-    _flavour = Path().__class__._flavour  # pylint: disable=no-member,protected-access
+    if sys.version_info >= (3, 12):
+        def __init__(self, *pathsegments):
+            tmp_path = Path(*pathsegments)
+            tmp_path = tmp_path.resolve()
+            tmp_path = tmp_path.absolute()
+            super().__init__(tmp_path)
+    else:
+        _flavour = Path().__class__._flavour  # pylint: disable=no-member,protected-access
 
-    def __new__(cls, *args, **kwargs):
-        path = super().__new__(cls, *args, **kwargs)
-        path = path.resolve()
-        path = path.absolute()
-        return path
+        def __new__(cls, *args, **kwargs):
+            path = super().__new__(cls, *args, **kwargs)
+            path = path.resolve()
+            path = path.absolute()
+            return path
 
     def relative_to(self, start: PathLike | str) -> RelativePath:
         # pylint: disable=arguments-differ
@@ -21,11 +29,17 @@ class AbsolutePath(Path):
 
 
 class RelativePath(PurePosixPath):
-    def __new__(cls, *args):
-        path = super().__new__(cls, *args)
-        if path.is_absolute():
-            raise WrongPathType(f'{str(path)!r} is not a relative path.')
-        return path
+    if sys.version_info >= (3, 12):
+        def __init__(self, *pathsegments):
+            super().__init__(*pathsegments)
+            if self.is_absolute():
+                raise WrongPathType(f'{str(self)!r} is not a relative path.')
+    else:
+        def __new__(cls, *args):
+            path = super().__new__(cls, *args)
+            if path.is_absolute():
+                raise WrongPathType(f'{str(path)!r} is not a relative path.')
+            return path
 
     def __truediv__(self, other: PathLike | str) -> AbsolutePath | RelativePath:
         other = absolute_or_relative(other)
