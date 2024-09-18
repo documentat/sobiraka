@@ -7,7 +7,6 @@ from copy import deepcopy
 from subprocess import PIPE
 from typing import final
 
-import jinja2
 from panflute import Image
 
 from sobiraka.models import Page, Volume
@@ -27,10 +26,6 @@ class AbstractHtmlBuilder(Processor, metaclass=ABCMeta):
         self._html_builder_tasks: list[Task] = []
         self._results: set[AbsolutePath] = set()
         self._head: Head = Head()
-
-    @abstractmethod
-    def get_page_template(self, page: Page) -> jinja2.Template:
-        raise NotImplementedError
 
     @final
     async def add_additional_static_files(self, volume: Volume):

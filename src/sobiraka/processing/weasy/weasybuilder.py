@@ -8,7 +8,6 @@ from mimetypes import guess_type
 from types import NoneType
 from typing import BinaryIO, NotRequired, TYPE_CHECKING, TypedDict
 
-import jinja2
 import weasyprint
 from panflute import CodeBlock, Element, Header, Image, RawBlock
 
@@ -136,9 +135,6 @@ class WeasyBuilder(AbstractHtmlBuilder, VolumeProcessor):
         raise NotImplementedError
 
     async def compile_sass(self, source: AbsolutePath, destination: RelativePath):
-        raise NotImplementedError
-
-    def get_page_template(self, page: Page) -> jinja2.Template:
         raise NotImplementedError
 
     def get_path_to_resources(self, page: Page) -> RelativePath:

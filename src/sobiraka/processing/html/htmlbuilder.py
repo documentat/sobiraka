@@ -10,7 +10,6 @@ from os.path import relpath
 from shutil import copyfile, rmtree
 
 import iso639
-import jinja2
 from aiofiles.os import makedirs
 from panflute import Element, Header, Image
 
@@ -38,9 +37,6 @@ class HtmlBuilder(AbstractHtmlBuilder, ProjectProcessor):
         self._themes: dict[Volume, HtmlTheme] = {}
         for volume in project.volumes:
             self._themes[volume] = load_html_theme(volume.config.html.theme)
-
-    def get_page_template(self, page: Page) -> jinja2.Template:
-        return self._themes[page.volume].page_template
 
     async def run(self):
         self.output.mkdir(parents=True, exist_ok=True)
@@ -115,12 +111,12 @@ class HtmlBuilder(AbstractHtmlBuilder, ProjectProcessor):
         volume = page.volume
         project = page.volume.project
         config = page.volume.config
+        theme = self._themes[page.volume]
 
         root_prefix = self.get_root_prefix(page)
         head = self._head.render(root_prefix)
 
-        page_template = self.get_page_template(page)
-        html = await page_template.render_async(
+        html = await theme.page_template.render_async(
             builder=self,
 
             project=project,
