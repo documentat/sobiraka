@@ -16,12 +16,12 @@ class TabulArrayProcessor(Dispatcher):
     For each Table element, generate custom LaTeX code that uses https://www.ctan.org/pkg/tabularray.
     Concrete options for tables and cells can be overriden using the tabularray_*() functions.
 
-    Important: this class must be specified earlier than PdfTheme in the list of bases,
+    Important: this class must be specified earlier than LatexTheme in the list of bases,
     otherwise Python will never choose the correct process_table().
 
     Here's a correct example:
 
-        class MyPdfTheme(TabulArrayProcessor, PdfTheme):
+        class MyLatexTheme(TabulArrayProcessor, LatexTheme):
             ...
     """
 

@@ -14,7 +14,7 @@ from panflute import Element, Header, Str, stringify
 from sobiraka.models import Page, PageHref, PageStatus, Volume
 from sobiraka.models.exceptions import DisableLink
 from sobiraka.processing.abstract import VolumeProcessor
-from sobiraka.processing.plugin import PdfTheme, load_pdf_theme
+from sobiraka.processing.plugin import LatexTheme, load_latex_theme
 from sobiraka.processing.replacement import HeaderReplPara
 from sobiraka.runtime import RT
 from sobiraka.utils import AbsolutePath, LatexInline, panflute_to_bytes
@@ -27,10 +27,10 @@ class LatexBuilder(VolumeProcessor):
 
         self._latex: dict[Page, bytes] = {}
 
-        # Load an optional post-processor a.k.a. PdfTheme
-        self._theme: PdfTheme | None = None
+        # Load an optional post-processor a.k.a. LatexTheme
+        self._theme: LatexTheme | None = None
         if self.volume.config.latex.theme is not None:
-            self._theme = load_pdf_theme(self.volume.config.latex.theme)
+            self._theme = load_latex_theme(self.volume.config.latex.theme)
 
     async def run(self):
         xelatex_workdir = RT.TMP / 'tex'
@@ -133,7 +133,7 @@ class LatexBuilder(VolumeProcessor):
     async def process4(self, page: Page):
         # If a theme is set, run additional processing of the whole document
         # Note that if the theme does not contain custom logic implementation, we skip this step as useless
-        if type(self._theme) not in (NoneType, PdfTheme):
+        if type(self._theme) not in (NoneType, LatexTheme):
             await self._theme.process_doc(RT[page].doc, page)
 
         if len(RT[page].doc.content) == 0:
@@ -153,7 +153,7 @@ class LatexBuilder(VolumeProcessor):
             assert pandoc.returncode == 0
             RT[page].bytes = await pandoc.stdout.read()
 
-            # When a PdfTheme prepends or appends some code to a Para,
+            # When a LatexTheme prepends or appends some code to a Para,
             # it may leave the 'BEGIN STRIP'/'END STRIP' notes,
             # which we will now use to remove unnecessary empty lines
             RT[page].bytes = re.sub(rb'% BEGIN STRIP\n+', b'', RT[page].bytes)

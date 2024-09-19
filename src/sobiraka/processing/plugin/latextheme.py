@@ -7,9 +7,9 @@ from .plugin import Plugin, load_plugin
 
 
 @dataclass
-class PdfTheme(Plugin, metaclass=ABCMeta):
+class LatexTheme(Plugin, metaclass=ABCMeta):
     """
-    A theme for generating PDF.
+    A theme for LatexBuilder.
 
     It may or may not provide multiple files that will be included at the beginning of the resulting LaTeX document.
 
@@ -27,10 +27,10 @@ class PdfTheme(Plugin, metaclass=ABCMeta):
     """LaTeX code to be included after the cover."""
 
 
-def load_pdf_theme(theme_dir: AbsolutePath) -> PdfTheme:
-    theme = PdfTheme()
+def load_latex_theme(theme_dir: AbsolutePath) -> LatexTheme:
+    theme = LatexTheme()
     with suppress(FileNotFoundError):
-        theme = load_plugin(theme_dir / 'theme.py', base_class=PdfTheme)()
+        theme = load_plugin(theme_dir / 'theme.py', base_class=LatexTheme)()
     theme.style = _try_find_file(theme_dir, 'style.sty')
     theme.cover = _try_find_file(theme_dir, 'cover.tex')
     theme.toc = _try_find_file(theme_dir, 'toc.tex')
