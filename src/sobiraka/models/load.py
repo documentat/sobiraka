@@ -10,6 +10,7 @@ import panflute
 import yaml
 from utilspie.collectionsutils import frozendict
 
+from sobiraka.models.config import Config_PDF_Headers
 from sobiraka.utils import convert_or_none, merge_dicts
 
 from .config import CombinedToc, Config, Config_Content, Config_HTML, Config_HTML_Search, Config_Lint, \
@@ -115,7 +116,13 @@ def _load_volume(lang: str | None, codename: str, volume_data: dict, fs: FileSys
             header=convert_or_none(Path, _('pdf.header')),
             theme=_find_theme_dir(_('pdf.theme', 'simple'), fs=fs),
             toc=_('pdf.toc', True),
-            paths=frozendict({k: Path(v).absolute() for k, v in _('pdf.paths', {}).items()}),
+            paths=frozendict({k: Path(v) for k, v in _('pdf.paths', {}).items()}),
+            headers=Config_PDF_Headers(
+                by_class=frozendict(_('pdf.headers.by_class', {})),
+                by_global_level=_load_pdf_headers_by_global_level(_('pdf.headers.by_global_level', {})),
+                by_page_level=frozendict({int(k): v for k, v in _('pdf.headers.by_page_level', {}).items()}),
+                by_element=frozendict(_('pdf.headers.by_element', {})),
+            )
         ),
         lint=Config_Lint(
             dictionaries=tuple(_('lint.dictionaries', [])),
@@ -124,6 +131,19 @@ def _load_volume(lang: str | None, codename: str, volume_data: dict, fs: FileSys
         ),
         variables=frozendict(_('variables', {})),
     ))
+
+
+def _load_pdf_headers_by_global_level(values: dict[str, str]) -> frozendict[int, str]:
+    if values:
+        return frozendict({int(k): v for k, v in values.items()})
+    return frozendict({
+        1: 'part*',
+        2: 'section*',
+        3: 'subsection*',
+        4: 'subsubsection*',
+        5: 'paragraph*',
+        6: 'subparagraph*',
+    })
 
 
 def _find_theme_dir(name: str, *, fs: FileSystem) -> Path:

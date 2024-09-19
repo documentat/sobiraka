@@ -13,6 +13,7 @@ from typing import BinaryIO
 from panflute import Element, Header, Str, stringify
 
 from sobiraka.models import Page, PageHref, PageStatus, Volume
+from sobiraka.models.config import Config_PDF_Headers
 from sobiraka.models.exceptions import DisableLink
 from sobiraka.runtime import RT
 from sobiraka.utils import LatexInline, panflute_to_bytes
@@ -31,7 +32,10 @@ class PdfBuilder(VolumeProcessor):
         # Load an optional post-processor a.k.a. PdfTheme
         self._theme: PdfTheme | None = None
         if self.volume.config.pdf.theme is not None:
-            self._theme = load_pdf_theme(self.volume.config.pdf.theme)
+            theme_dir: Path = self.volume.config.pdf.theme
+            if not theme_dir.is_absolute():
+                theme_dir = self.volume.project.fs.resolve(self.volume.config.pdf.theme)
+            self._theme = load_pdf_theme(theme_dir)
 
     async def run(self):
         xelatex_workdir = RT.TMP / 'tex'
@@ -64,6 +68,8 @@ class PdfBuilder(VolumeProcessor):
         return 0
 
     async def generate_latex(self, latex_output: BinaryIO):
+        # pylint: disable=too-many-branches
+
         volume = self.volume
         project = self.volume.project
         config = self.volume.config
@@ -80,13 +86,16 @@ class PdfBuilder(VolumeProcessor):
                 latex_output.write(b'\n\n' + (80 * b'%'))
                 latex_output.write(b'\n\n%%% Paths\n\n')
                 for key, value in config.pdf.paths.items():
+                    value = self.volume.project.fs.resolve(value)
                     latex_output.write(fr'\newcommand{{\{key}}}{{{value}/}}'.encode('utf-8') + b'\n')
 
             variables = {
                 'TITLE': config.title,
                 'LANG': volume.lang,
-                **config.variables,
             }
+            for key, value in config.variables.items():
+                if re.fullmatch(r'[A-Za-z_]+', key):
+                    variables[key] = value
             latex_output.write(b'\n\n' + (80 * b'%'))
             latex_output.write(b'\n\n%%% Variables\n\n')
             for key, value in variables.items():
@@ -212,25 +221,21 @@ class PdfBuilder(VolumeProcessor):
         # We will generate inline elements into a list. In the end, we will wrap them all in a paragraph.
         result: list[Element] = []
 
+        # Generate the internal link for \hyperref
+        href = PageHref(page, header.identifier if header.level > 1 else None)
+        dest = re.sub(r'^#', '', self.make_internal_url(href, page=page))
+
         # Generate our hypertargets and bookmarks manually, to avoid any weird behavior with TOCs
         if 'notoc' not in header.classes:
-            href = PageHref(page, header.identifier if header.level > 1 else None)
-            dest = re.sub(r'^#', '', self.make_internal_url(href, page=page))
+            level = page.level + header.level - 1
             label = stringify(header).replace('%', r'\%')
             if page.volume.config.content.numeration:
                 label = '%NUMBER%' + label
-            result += LatexInline(fr'\hypertarget{{{dest}}}{{}}'), Str('\n')
-            result += LatexInline(fr'\bookmark[level={header.level},dest={dest}]{{{label}}}'), Str('\n')
+            result += LatexInline(fr'\bookmark[level={level},dest={dest}]{{{label}}}'), Str('\n')
 
         # Add the appropriate header tag and an opening curly bracket, e.g., '\section{'.
-        tag = {
-            1: 'section',
-            2: 'subsection',
-            3: 'subsubsection',
-            4: 'paragraph',
-            5: 'subparagraph',
-        }[header.level]
-        if 'notoc' in header.classes:
+        tag = self.choose_header_tag(header, page)
+        if 'notoc' in header.classes and tag[-1] != '*':
             tag += '*'
         result += LatexInline(fr'\{tag}{{'),
 
@@ -246,6 +251,25 @@ class PdfBuilder(VolumeProcessor):
                 result.append(item)
 
         # Close the curly bracket
-        result += LatexInline('}'),
+        result += LatexInline('}'), Str('\n')
+
+        # Make it linkable for \hyperref
+        result += LatexInline(fr'\label{{{dest}}}'),
 
         return (HeaderReplPara(header, result),)
+
+    def choose_header_tag(self, header: Header, page: Page) -> str:
+        config_headers: Config_PDF_Headers = page.volume.config.pdf.headers
+
+        for klass in header.classes:
+            with suppress(KeyError):
+                return config_headers.by_class[klass]
+
+        with suppress(KeyError):
+            return config_headers.by_global_level[page.level + header.level - 1]
+
+        if header.level == 1:
+            with suppress(KeyError):
+                return config_headers.by_page_level[page.level]
+
+        return config_headers.by_element[header.level]

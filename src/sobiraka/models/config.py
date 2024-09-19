@@ -142,6 +142,14 @@ class Config_HTML:
 
 
 @dataclass(kw_only=True, frozen=True)
+class Config_PDF_Headers:
+    by_class: dict[str, str] = field(default_factory=frozendict)
+    by_global_level: dict[int, str] = field(default_factory=frozendict)
+    by_page_level: dict[int, str] = field(default_factory=frozendict)
+    by_element: dict[int, str] = field(default_factory=frozendict)
+
+
+@dataclass(kw_only=True, frozen=True)
 class Config_PDF:
     """Settings related to :class:`.PdfBuilder`."""
 
@@ -155,6 +163,8 @@ class Config_PDF:
     """Whether to add a table of contents."""
 
     paths: dict[str, Path] = field(default=dict)
+
+    headers: Config_PDF_Headers = field(default_factory=Config_PDF_Headers)
 
 
 @dataclass(kw_only=True, frozen=True)

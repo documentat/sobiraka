@@ -1,6 +1,6 @@
 paths:
   root: src
-  include: ['**/*.md']
-
 pdf:
-  header: header.sty
+  headers:
+    by_global_level:
+      '1': section*

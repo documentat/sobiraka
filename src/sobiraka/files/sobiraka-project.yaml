@@ -115,6 +115,20 @@ $defs:
           theme: { type: string }
           toc: { type: boolean }
           paths: { type: object }
+          headers:
+            properties:
+              by_class:
+                patternProperties:
+                  .+: { type: string }
+              by_element:
+                patternProperties:
+                  'h\d*': { type: string }
+              by_page_level:
+                patternProperties:
+                  '[1-9]\d*': { type: string }
+              by_global_level:
+                patternProperties:
+                  '[1-9]\d*': { type: string }
 
       lint:
         additionalProperties: false

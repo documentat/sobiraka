@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, overload
 
 import yaml
 
+from ..namingscheme import NamingScheme
 from ..syntax import Syntax
 from ..version import TranslationStatus, Version
 
@@ -240,22 +241,12 @@ class Page:
         Equals to number of parts in the :data:`path_in_volume` plus 1.
         """
         level = len(self.path_in_volume.parts) + 1
-        if self.path_in_volume.stem == '0' or self.path_in_volume.stem.startswith('0-'):
+
+        naming_scheme: NamingScheme = self.volume.config.paths.naming_scheme
+        if naming_scheme.parse(self.path_in_volume).is_main:
             level -= 1
+
         return level
-
-    @property
-    def antilevel(self) -> int:
-        """
-        A value that shows how far is this page's :data:`level` from the biggest level found in this :class:`.Volume`.
-
-        For the pages with the biggest level, this value always equals to `1`.
-        For other pages, it is always larger than `1`.
-
-        :example: In a volume with only three pages, having levels `1`, `2`, `3`,
-            their corresponding antilevels will be `3`, `2`, `1`.
-        """
-        return self.volume.max_level - self.level + 1
 
     # ------------------------------------------------------------------------------------------------------------------
     # Translation-related properties
