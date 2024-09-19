@@ -149,7 +149,7 @@ docs-pdf:
   image: $CI_REGISTRY_IMAGE/cache/release-html:by-commit-$CI_COMMIT_SHA
   script:
     - ls -A | grep -v docs | xargs rm -rf
-    - sobiraka --no-cache weasy docs/docs.yaml --output sobiraka.pdf
+    - sobiraka --no-cache pdf docs/docs.yaml --output sobiraka.pdf
   artifacts:
     paths:
       - sobiraka.pdf

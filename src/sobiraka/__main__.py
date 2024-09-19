@@ -30,12 +30,12 @@ async def async_main():
     cmd_html.add_argument('--output', type=AbsolutePath, default=AbsolutePath('build/html'))
     cmd_html.add_argument('--hide-index-html', action='store_true', help='Remove the "index.html" part from links.')
 
-    cmd_latex = commands.add_parser('pdf', help='Build PDF file.')
+    cmd_latex = commands.add_parser('pdf-latex', help='Build PDF file fia LaTeX.')
     cmd_latex.add_argument('config', metavar='CONFIG', type=AbsolutePath)
     cmd_latex.add_argument('volume', nargs='?')
     cmd_latex.add_argument('--output', type=AbsolutePath, default=AbsolutePath('build/pdf'))
 
-    cmd_weasy = commands.add_parser('weasy', help='Build PDF file via WeasyPrint.')
+    cmd_weasy = commands.add_parser('pdf', help='Build PDF file via WeasyPrint.')
     cmd_weasy.add_argument('config', metavar='CONFIG', type=AbsolutePath)
     cmd_weasy.add_argument('volume', nargs='?')
     cmd_weasy.add_argument('--output', type=AbsolutePath, default=AbsolutePath('build/pdf'))

@@ -68,7 +68,7 @@ docs-pdf:
 		-v $(PWD)/docs:/W/docs:ro \
 		-v $(PWD)/docs/build:/W/docs/build \
 		sobiraka:release-html \
-		sobiraka weasy docs/docs.yaml --output docs/build/sobiraka.pdf
+		sobiraka pdf docs/docs.yaml --output docs/build/sobiraka.pdf
 	@docker run --rm -it \
 		-v $(PWD)/docs/build:/W/docs/build \
 		sobiraka:release-html \
