@@ -6,11 +6,11 @@ from abstracttests.projecttestcase import ProjectTestCase
 from helpers.fakefilesystem import FakeFileSystem
 from sobiraka.models import Project
 from sobiraka.models.load import load_project_from_str
-from sobiraka.processing import HtmlBuilder
+from sobiraka.processing import WebBuilder
 from sobiraka.utils import AbsolutePath
 
 
-class TestHtmlImages(ProjectTestCase[HtmlBuilder]):
+class TestHtmlImages(ProjectTestCase[WebBuilder]):
     def _init_project(self) -> Project:
         manifest = dedent("""
         paths:
@@ -28,9 +28,9 @@ class TestHtmlImages(ProjectTestCase[HtmlBuilder]):
 
         return load_project_from_str(manifest, fs=fs)
 
-    def _init_processor(self) -> HtmlBuilder:
+    def _init_processor(self) -> WebBuilder:
         output = self.enterContext(TemporaryDirectory(prefix='sobiraka-test-'))
-        return HtmlBuilder(self.project, AbsolutePath(output))
+        return WebBuilder(self.project, AbsolutePath(output))
 
     async def asyncSetUp(self):
         await super().asyncSetUp()

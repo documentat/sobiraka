@@ -7,21 +7,21 @@ from abstracttests.abstracttestwithrt import AbstractTestWithRtTmp
 from abstracttests.projecttestcase import ProjectTestCase
 from sobiraka.models import FileSystem, Page, PageStatus, Project, Volume
 from sobiraka.models.config import Config_HTML_Search, Config_Search_LinkTarget
-from sobiraka.processing import HtmlBuilder
-from sobiraka.processing.html.search import PagefindIndexer
+from sobiraka.processing import WebBuilder
+from sobiraka.processing.web.search import PagefindIndexer
 from sobiraka.runtime import RT
 from sobiraka.utils import RelativePath
 
 
 @patch(f'{PagefindIndexer.__module__}.{PagefindIndexer.__qualname__}._add_record')
-class AbstractTestPagefindIndexer(ProjectTestCase[HtmlBuilder], AbstractTestWithRtTmp, metaclass=ABCMeta):
+class AbstractTestPagefindIndexer(ProjectTestCase[WebBuilder], AbstractTestWithRtTmp, metaclass=ABCMeta):
     REQUIRE = PageStatus.PROCESS4
 
     LINK_TARGET = Config_Search_LinkTarget.H1
     EXPECTED: tuple[call, ...]
 
     def _init_processor(self):
-        return HtmlBuilder(self.project, RT.TMP / 'build')
+        return WebBuilder(self.project, RT.TMP / 'build')
 
     async def test_add_record(self, mock: MagicMock):
         indexer = PagefindIndexer(self.processor, self.project.get_volume(), RT.TMP / 'build' / 'pagefind')

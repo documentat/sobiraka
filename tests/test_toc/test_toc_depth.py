@@ -11,7 +11,7 @@ from abstracttests.projecttestcase import ProjectTestCase
 from helpers import assertNoDiff
 from sobiraka.models import FileSystem, IndexPage, Page, Project, Volume
 from sobiraka.models.config import CombinedToc, Config, Config_HTML
-from sobiraka.processing import HtmlBuilder
+from sobiraka.processing import WebBuilder
 from sobiraka.processing.toc import Toc, TocItem, toc
 from sobiraka.utils import AbsolutePath, RelativePath
 
@@ -22,7 +22,7 @@ Test that:
 """
 
 
-class AbstractTestTocDepth(ProjectTestCase[HtmlBuilder]):
+class AbstractTestTocDepth(ProjectTestCase[WebBuilder]):
     toc_depth: int | float
 
     async def asyncSetUp(self):
@@ -37,7 +37,7 @@ class AbstractTestTocDepth(ProjectTestCase[HtmlBuilder]):
         })
 
     def _init_processor(self):
-        return HtmlBuilder(self.project, self.output)
+        return WebBuilder(self.project, self.output)
 
     async def test_toc_depth(self):
         data = {

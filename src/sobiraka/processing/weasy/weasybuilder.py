@@ -12,8 +12,8 @@ from sobiraka.models import Page, PageHref, PageStatus, Volume
 from sobiraka.models.config import CombinedToc, Config
 from sobiraka.models.exceptions import DisableLink
 from sobiraka.processing.abstract import VolumeProcessor
-from sobiraka.processing.html.abstracthtmlbuilder import AbstractHtmlBuilder
 from sobiraka.processing.plugin import WeasyTheme, load_weasy_theme
+from sobiraka.processing.web.abstractwebbuilder import AbstractWebBuilder
 from sobiraka.runtime import RT
 from sobiraka.utils import AbsolutePath, RelativePath, TocNumber
 
@@ -21,11 +21,11 @@ logger = logging.getLogger('weasyprint')
 logger.addHandler(logging.StreamHandler())
 
 
-class WeasyBuilder(AbstractHtmlBuilder, VolumeProcessor):
+class WeasyBuilder(AbstractWebBuilder, VolumeProcessor):
 
     def __init__(self, volume: Volume, output: AbsolutePath):
         VolumeProcessor.__init__(self, volume)
-        AbstractHtmlBuilder.__init__(self)
+        AbstractWebBuilder.__init__(self)
 
         self.output: AbsolutePath = output
         self.theme: WeasyTheme = load_weasy_theme(self.volume.config.weasyprint.theme)
@@ -69,6 +69,7 @@ class WeasyBuilder(AbstractHtmlBuilder, VolumeProcessor):
         )
 
         self.pseudofiles['/page.html'] = html.encode('utf-8')
+        self.output.with_suffix('.html').write_text(html)
 
         printer = weasyprint.HTML(string=html,
                                   base_url='sobiraka:page.html',

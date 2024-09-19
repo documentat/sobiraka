@@ -3,18 +3,18 @@ from typing import Sequence, TYPE_CHECKING
 
 from sobiraka.models import Page, Volume
 from sobiraka.models.config import Config_HTML_Search
-from sobiraka.processing.html import HeadTag
+from sobiraka.processing.web import HeadTag
 from sobiraka.utils import AbsolutePath, RelativePath
 
 if TYPE_CHECKING:
-    from sobiraka.processing import HtmlBuilder
+    from sobiraka.processing import WebBuilder
 
 
 class SearchIndexer(metaclass=ABCMeta):
 
-    def __init__(self, builder: 'HtmlBuilder', volume: Volume, index_path: RelativePath | None):
+    def __init__(self, builder: 'WebBuilder', volume: Volume, index_path: RelativePath | None):
         super().__init__()
-        self.builder: HtmlBuilder = builder
+        self.builder: WebBuilder = builder
         self.volume: Volume = volume
         self.search_config: Config_HTML_Search = volume.config.html.search
 

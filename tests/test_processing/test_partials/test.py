@@ -1,13 +1,13 @@
 from unittest import main
 
-from abstracttests.htmlprojecttestcase import HtmlProjectTestCase
+from abstracttests.webprojecttestcase import WebProjectTestCase
 
 
-class TestPartial(HtmlProjectTestCase):
+class TestPartial(WebProjectTestCase):
     pass
 
 
-del HtmlProjectTestCase
+del WebProjectTestCase
 
 if __name__ == '__main__':
     main()

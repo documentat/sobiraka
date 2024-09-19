@@ -3,7 +3,7 @@ from unittest.mock import Mock
 
 from abstracttests.projecttestcase import ProjectTestCase
 from sobiraka.models import FileSystem, Page, PageHref, Project, Volume
-from sobiraka.processing import HtmlBuilder, LatexBuilder, WeasyBuilder
+from sobiraka.processing import LatexBuilder, WeasyBuilder, WebBuilder
 from sobiraka.utils import RelativePath
 
 
@@ -45,7 +45,7 @@ class AbstractTestInternalLinks(ProjectTestCase):
 
 class TestInternalLinks_HTML(AbstractTestInternalLinks):
     def _init_processor(self):
-        return HtmlBuilder(self.project, None)
+        return WebBuilder(self.project, None)
 
     EXPECTED_THIS_PAGE = ''
     EXPECTED_THIS_PAGE_SECTION = '#section'

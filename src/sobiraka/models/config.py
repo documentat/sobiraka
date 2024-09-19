@@ -117,7 +117,7 @@ class Config_HTML_Search:
 
 @dataclass(kw_only=True, frozen=True)
 class Config_HTML:
-    """Settings related to :class:`.HtmlBuilder`."""
+    """Settings related to :class:`.WebBuilder`."""
 
     # pylint: disable=too-many-instance-attributes
 
@@ -226,7 +226,7 @@ class Config:
     """Settings that affect discovering source files."""
 
     html: Config_HTML = field(default_factory=Config_HTML, kw_only=True)
-    """Settings related to :class:`.HtmlBuilder`."""
+    """Settings related to :class:`.WebBuilder`."""
 
     content: Config_Content = field(default=Config_Content, kw_only=True)
 

@@ -1,14 +1,14 @@
 from .abstracttestwithrt import AbstractTestWithRtTmp
 from .projectdirtestcase import ProjectDirTestCase
 from helpers import assertNoDiff
-from sobiraka.processing import HtmlBuilder
+from sobiraka.processing import WebBuilder
 from sobiraka.runtime import RT
 
 
-class HtmlProjectTestCase(ProjectDirTestCase[HtmlBuilder], AbstractTestWithRtTmp):
+class WebProjectTestCase(ProjectDirTestCase[WebBuilder], AbstractTestWithRtTmp):
 
     def _init_processor(self):
-        return HtmlBuilder(self.project, RT.TMP)
+        return WebBuilder(self.project, RT.TMP)
 
     async def test_html(self):
         await self.processor.run()
