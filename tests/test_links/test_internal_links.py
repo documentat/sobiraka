@@ -3,7 +3,7 @@ from unittest.mock import Mock
 
 from abstracttests.projecttestcase import ProjectTestCase
 from sobiraka.models import FileSystem, Page, PageHref, Project, Volume
-from sobiraka.processing import LatexBuilder, WeasyBuilder, WebBuilder
+from sobiraka.processing import LatexBuilder, WeasyPrintBuilder, WebBuilder
 from sobiraka.utils import RelativePath
 
 
@@ -63,9 +63,9 @@ class TestInternalLinks_Latex(AbstractTestInternalLinks):
     EXPECTED_OTHER_PAGE_SECTION = '#r--other-page--section'
 
 
-class TestInternalLinks_Weasy(AbstractTestInternalLinks):
+class TestInternalLinks_WeasyPrint(AbstractTestInternalLinks):
     def _init_processor(self):
-        return WeasyBuilder(self.project.get_volume(), None)
+        return WeasyPrintBuilder(self.project.get_volume(), None)
 
     EXPECTED_THIS_PAGE = '#this-page.md'
     EXPECTED_THIS_PAGE_SECTION = '#this-page.md::section'

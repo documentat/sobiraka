@@ -5,7 +5,7 @@ from asyncio import run
 from sobiraka.cache import init_cache
 from sobiraka.linter import Linter
 from sobiraka.models.load import load_project
-from sobiraka.processing import LatexBuilder, WeasyBuilder, WebBuilder, run_with_progressbar
+from sobiraka.processing import LatexBuilder, WeasyPrintBuilder, WebBuilder, run_with_progressbar
 from sobiraka.runtime import RT
 from sobiraka.translating import changelog, check_translations
 from sobiraka.utils import AbsolutePath, absolute_or_relative, validate_dictionary
@@ -30,15 +30,15 @@ async def async_main():
     cmd_web.add_argument('--output', type=AbsolutePath, default=AbsolutePath('build/web'))
     cmd_web.add_argument('--hide-index-html', action='store_true', help='Remove the "index.html" part from links.')
 
-    cmd_latex = commands.add_parser('pdf-latex', help='Build PDF file fia LaTeX.')
+    cmd_pdf = commands.add_parser('pdf', help='Build PDF file via WeasyPrint.')
+    cmd_pdf.add_argument('config', metavar='CONFIG', type=AbsolutePath)
+    cmd_pdf.add_argument('volume', nargs='?')
+    cmd_pdf.add_argument('--output', type=AbsolutePath, default=AbsolutePath('build/pdf'))
+
+    cmd_latex = commands.add_parser('latex', help='Build PDF file fia LaTeX.')
     cmd_latex.add_argument('config', metavar='CONFIG', type=AbsolutePath)
     cmd_latex.add_argument('volume', nargs='?')
     cmd_latex.add_argument('--output', type=AbsolutePath, default=AbsolutePath('build/pdf'))
-
-    cmd_weasy = commands.add_parser('pdf', help='Build PDF file via WeasyPrint.')
-    cmd_weasy.add_argument('config', metavar='CONFIG', type=AbsolutePath)
-    cmd_weasy.add_argument('volume', nargs='?')
-    cmd_weasy.add_argument('--output', type=AbsolutePath, default=AbsolutePath('build/pdf'))
 
     cmd_lint = commands.add_parser('lint', help='Check a volume for various issues.')
     cmd_lint.add_argument('config', metavar='CONFIG', type=AbsolutePath)
@@ -101,7 +101,7 @@ async def async_main():
                     if exit_code != 0:
                         break
 
-        elif cmd is cmd_weasy:
+        elif cmd is cmd_pdf:
             project = load_project(args.config)
             output = absolute_or_relative(args.output)
 
@@ -110,7 +110,7 @@ async def async_main():
                 if output.suffix.lower() != '.pdf':
                     output /= f'{volume.config.title}.pdf'
                 print(f'Building {output.name!r}...', file=sys.stderr)
-                builder = WeasyBuilder(volume, output)
+                builder = WeasyPrintBuilder(volume, output)
                 exit_code = await RT.run_isolated(run_with_progressbar(builder))
 
             else:
@@ -119,7 +119,7 @@ async def async_main():
                 for volume in project.volumes:
                     output_file = output / f'{volume.config.title}.pdf'
                     print(f'Building {output_file.name!r}...', file=sys.stderr)
-                    builder = WeasyBuilder(volume, output_file)
+                    builder = WeasyPrintBuilder(volume, output_file)
                     exit_code = await RT.run_isolated(run_with_progressbar(builder))
                     if exit_code != 0:
                         break

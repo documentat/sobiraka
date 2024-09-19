@@ -9,13 +9,13 @@ from .plugin import Plugin, load_plugin
 
 
 @dataclass
-class WeasyTheme(Plugin, metaclass=ABCMeta):
+class WeasyPrintTheme(Plugin, metaclass=ABCMeta):
     theme_dir: AbsolutePath
     static_dir: AbsolutePath
     page_template: jinja2.Template
 
 
-def load_weasy_theme(theme_dir: AbsolutePath) -> WeasyTheme:
+def load_weasyprint_theme(theme_dir: AbsolutePath) -> WeasyPrintTheme:
     jinja_env = jinja2.Environment(
         loader=jinja2.FileSystemLoader(theme_dir),
         enable_async=True,
@@ -26,8 +26,8 @@ def load_weasy_theme(theme_dir: AbsolutePath) -> WeasyTheme:
 
     static_dir = theme_dir / '_static'
 
-    theme_class = WeasyTheme
+    theme_class = WeasyPrintTheme
     with suppress(FileNotFoundError, AssertionError):
-        theme_class = load_plugin(theme_dir / 'theme.py', base_class=WeasyTheme)
+        theme_class = load_plugin(theme_dir / 'theme.py', base_class=WeasyPrintTheme)
 
     return theme_class(theme_dir, static_dir, page_template)

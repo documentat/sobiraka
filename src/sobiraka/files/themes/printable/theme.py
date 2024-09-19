@@ -1,10 +1,10 @@
 from panflute import Element, Header
 from sobiraka.models import Page
-from sobiraka.processing.plugin import WeasyTheme
+from sobiraka.processing.plugin import WeasyPrintTheme
 from sobiraka.runtime import RT
 
 
-class PrintableTheme(WeasyTheme):
+class PrintableTheme(WeasyPrintTheme):
 
     async def process_header(self, header: Header, page: Page) -> tuple[Element, ...]:
         if header.level == 1:

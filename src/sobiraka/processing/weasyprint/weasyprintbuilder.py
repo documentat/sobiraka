@@ -12,7 +12,7 @@ from sobiraka.models import Page, PageHref, PageStatus, Volume
 from sobiraka.models.config import CombinedToc, Config
 from sobiraka.models.exceptions import DisableLink
 from sobiraka.processing.abstract import VolumeProcessor
-from sobiraka.processing.plugin import WeasyTheme, load_weasy_theme
+from sobiraka.processing.plugin import WeasyPrintTheme, load_weasyprint_theme
 from sobiraka.processing.web.abstractwebbuilder import AbstractWebBuilder
 from sobiraka.runtime import RT
 from sobiraka.utils import AbsolutePath, RelativePath, TocNumber
@@ -21,14 +21,14 @@ logger = logging.getLogger('weasyprint')
 logger.addHandler(logging.StreamHandler())
 
 
-class WeasyBuilder(AbstractWebBuilder, VolumeProcessor):
+class WeasyPrintBuilder(AbstractWebBuilder, VolumeProcessor):
 
     def __init__(self, volume: Volume, output: AbsolutePath):
         VolumeProcessor.__init__(self, volume)
         AbstractWebBuilder.__init__(self)
 
         self.output: AbsolutePath = output
-        self.theme: WeasyTheme = load_weasy_theme(self.volume.config.weasyprint.theme)
+        self.theme: WeasyPrintTheme = load_weasyprint_theme(self.volume.config.weasyprint.theme)
 
         self.pseudofiles: dict[str, bytes] = {}
 
@@ -78,7 +78,7 @@ class WeasyBuilder(AbstractWebBuilder, VolumeProcessor):
 
     async def process4(self, page: Page):
         # Apply custom document processing
-        if type(self.theme) not in (NoneType, WeasyTheme):
+        if type(self.theme) not in (NoneType, WeasyPrintTheme):
             await self.theme.process_doc(RT[page].doc, page)
 
         await super().process4(page)
