@@ -15,7 +15,7 @@ from sobiraka.runtime import RT
 from sobiraka.utils import AbsolutePath, RelativePath, panflute_to_bytes
 from .head import Head
 from ..abstract import Processor
-from ..plugin import HtmlTheme
+from ..plugin import WebTheme
 
 
 class AbstractHtmlBuilder(Processor, metaclass=ABCMeta):
@@ -36,7 +36,7 @@ class AbstractHtmlBuilder(Processor, metaclass=ABCMeta):
                 tg.create_task(self.add_file_from_project(source_path, target_path))
 
     @final
-    async def compile_all_sass(self, theme: HtmlTheme):
+    async def compile_all_sass(self, theme: WebTheme):
         async with TaskGroup() as tg:
             for source_path, target_path in theme.sass_files.items():
                 source_path = theme.theme_dir / source_path
@@ -113,7 +113,7 @@ class AbstractHtmlBuilder(Processor, metaclass=ABCMeta):
             self._html_builder_tasks.append(create_task(self.add_file_from_project(source_path, target_path)))
 
         # Use the path relative to the page path
-        # (we postpone the actual change in the element to not confuse the HtmlTheme custom code later)
+        # (we postpone the actual change in the element to not confuse the WebTheme custom code later)
         new_url = self.get_relative_image_url(image, page)
         if new_url != image.url:
             RT[page].converted_image_urls.append((image, new_url))

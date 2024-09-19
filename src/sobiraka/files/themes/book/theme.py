@@ -1,10 +1,10 @@
 from panflute import Div, Element, Header, Link, RawBlock, Space, Str
 
 from sobiraka.models import Page
-from sobiraka.processing.plugin import HtmlTheme
+from sobiraka.processing.plugin import WebTheme
 
 
-class BookTheme(HtmlTheme):
+class BookTheme(WebTheme):
     """
     A clean and simple HTML theme, based on https://github.com/alex-shpak/hugo-book.
     Supports multilanguage projects.

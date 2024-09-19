@@ -20,7 +20,7 @@ from sobiraka.utils import AbsolutePath, RelativePath, super_gather
 from .abstracthtmlbuilder import AbstractHtmlBuilder
 from .search import PagefindIndexer, SearchIndexer
 from ..abstract import ProjectProcessor
-from ..plugin import HtmlTheme, load_html_theme
+from ..plugin import WebTheme, load_web_theme
 
 
 class HtmlBuilder(AbstractHtmlBuilder, ProjectProcessor):
@@ -34,9 +34,9 @@ class HtmlBuilder(AbstractHtmlBuilder, ProjectProcessor):
 
         self._indexers: dict[Volume, SearchIndexer] = {}
 
-        self._themes: dict[Volume, HtmlTheme] = {}
+        self._themes: dict[Volume, WebTheme] = {}
         for volume in project.volumes:
-            self._themes[volume] = load_html_theme(volume.config.html.theme)
+            self._themes[volume] = load_web_theme(volume.config.html.theme)
 
     async def run(self):
         self.output.mkdir(parents=True, exist_ok=True)
@@ -94,7 +94,7 @@ class HtmlBuilder(AbstractHtmlBuilder, ProjectProcessor):
             await indexer.add_page(page)
 
         theme = self._themes[page.volume]
-        if theme.__class__ is not HtmlTheme:
+        if theme.__class__ is not WebTheme:
             await theme.process_doc(RT[page].doc, page)
 
         await super().process4(page)

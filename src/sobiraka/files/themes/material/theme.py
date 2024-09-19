@@ -7,10 +7,10 @@ from pygments.formatters.html import HtmlFormatter
 from pygments.lexers import get_lexer_by_name
 
 from sobiraka.models import Page
-from sobiraka.processing.plugin import HtmlTheme
+from sobiraka.processing.plugin import WebTheme
 
 
-class MaterialTheme(HtmlTheme):
+class MaterialTheme(WebTheme):
     """
     Material-inspired HTML theme, based on https://bashtage.github.io/sphinx-material/.
     Support multilanguage projects.

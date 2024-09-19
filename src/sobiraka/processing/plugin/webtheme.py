@@ -9,7 +9,7 @@ from .plugin import Plugin, load_plugin
 
 
 @dataclass
-class HtmlTheme(Plugin, metaclass=ABCMeta):
+class WebTheme(Plugin, metaclass=ABCMeta):
     """
     A theme for generating HTML.
 
@@ -25,7 +25,7 @@ class HtmlTheme(Plugin, metaclass=ABCMeta):
     sass_files: dict[str, str] = field(default_factory=dict)
 
 
-def load_html_theme(theme_dir: AbsolutePath) -> HtmlTheme:
+def load_web_theme(theme_dir: AbsolutePath) -> WebTheme:
     jinja_env = jinja2.Environment(
         loader=jinja2.FileSystemLoader(theme_dir),
         enable_async=True,
@@ -36,8 +36,8 @@ def load_html_theme(theme_dir: AbsolutePath) -> HtmlTheme:
 
     static_dir = theme_dir / '_static'
 
-    theme_class = HtmlTheme
+    theme_class = WebTheme
     with suppress(FileNotFoundError):
-        theme_class = load_plugin(theme_dir / 'theme.py', base_class=HtmlTheme)
+        theme_class = load_plugin(theme_dir / 'theme.py', base_class=WebTheme)
 
     return theme_class(theme_dir, static_dir, page_template)
