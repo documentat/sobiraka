@@ -9,4 +9,4 @@ lint:
 	@PYTHONPATH=src python -m pylint sobiraka src/sobiraka/files/themes/*/theme.py
 
 docs:
-	@PYTHONPATH=src python -m sobiraka html docs/docs.yaml docs/build
+	@PYTHONPATH=src python -m sobiraka web docs/docs.yaml docs/build

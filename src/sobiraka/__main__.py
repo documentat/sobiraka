@@ -25,10 +25,10 @@ async def async_main():
 
     commands = parser.add_subparsers(title='commands', dest='command')
 
-    cmd_html = commands.add_parser('html', help='Build HTML site.')
-    cmd_html.add_argument('config', metavar='CONFIG', type=AbsolutePath)
-    cmd_html.add_argument('--output', type=AbsolutePath, default=AbsolutePath('build/html'))
-    cmd_html.add_argument('--hide-index-html', action='store_true', help='Remove the "index.html" part from links.')
+    cmd_web = commands.add_parser('web', help='Build web documentation.')
+    cmd_web.add_argument('config', metavar='CONFIG', type=AbsolutePath)
+    cmd_web.add_argument('--output', type=AbsolutePath, default=AbsolutePath('build/web'))
+    cmd_web.add_argument('--hide-index-html', action='store_true', help='Remove the "index.html" part from links.')
 
     cmd_latex = commands.add_parser('pdf-latex', help='Build PDF file fia LaTeX.')
     cmd_latex.add_argument('config', metavar='CONFIG', type=AbsolutePath)
@@ -73,7 +73,7 @@ async def async_main():
     else:
         cmd = commands.choices.get(args.command)
 
-        if cmd is cmd_html:
+        if cmd is cmd_web:
             project = load_project(args.config)
             builder = HtmlBuilder(project, args.output, hide_index_html=args.hide_index_html)
             exit_code = await RT.run_isolated(run_with_progressbar(builder))

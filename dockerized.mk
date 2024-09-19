@@ -50,13 +50,13 @@ test-python3.11:
 lint:
 	@docker run --rm -it -v $(PWD):/W:ro sobiraka:linter
 
-docs-html:
+docs-web:
 	@mkdir -p docs/build
 	@docker run --rm -it \
 		-v $(PWD)/docs:/W/docs:ro \
 		-v $(PWD)/docs/build:/W/docs/build \
 		sobiraka:release-html \
-		sobiraka html docs/docs.yaml --output docs/build
+		sobiraka web docs/docs.yaml --output docs/build
 	@docker run --rm -it \
 		-v $(PWD)/docs/build:/W/docs/build \
 		sobiraka:release-html \
