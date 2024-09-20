@@ -181,7 +181,8 @@ class Processor(Dispatcher):
 
         This method is called by :obj:`.Page.loaded`.
         """
-        from sobiraka.processing import LatexBuilder, WebBuilder
+        from sobiraka.processing import LatexBuilder, WeasyPrintBuilder, WebBuilder
+        from sobiraka.processing.web.abstracthtmlbuilder import AbstractHtmlBuilder
 
         volume: Volume = page.volume
         config: Config = page.volume.config
@@ -189,8 +190,12 @@ class Processor(Dispatcher):
         fs: FileSystem = page.volume.project.fs
 
         variables = config.variables | dict(
-            HTML=isinstance(self, WebBuilder),
-            PDF=isinstance(self, LatexBuilder),
+            HTML=isinstance(self, AbstractHtmlBuilder),
+            PDF=isinstance(self, (WeasyPrintBuilder, LatexBuilder)),
+
+            WEB=isinstance(self, WebBuilder),
+            WEASYPRINT=isinstance(self, WeasyPrintBuilder),
+            LATEX=isinstance(self, LatexBuilder),
 
             page=page,
             volume=volume,
