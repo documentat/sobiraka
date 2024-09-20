@@ -2,7 +2,7 @@ from abc import ABCMeta, abstractmethod
 from typing import Sequence, TYPE_CHECKING
 
 from sobiraka.models import Page, Volume
-from sobiraka.models.config import Config_HTML_Search
+from sobiraka.models.config import Config_Web_Search
 from sobiraka.processing.web import HeadTag
 from sobiraka.utils import AbsolutePath, RelativePath
 
@@ -16,7 +16,7 @@ class SearchIndexer(metaclass=ABCMeta):
         super().__init__()
         self.builder: WebBuilder = builder
         self.volume: Volume = volume
-        self.search_config: Config_HTML_Search = volume.config.html.search
+        self.search_config: Config_Web_Search = volume.config.web.search
 
         self.index_path_relative: RelativePath = index_path or self.default_index_path(volume)
         self.index_path: AbsolutePath = builder.output / self.index_path_relative

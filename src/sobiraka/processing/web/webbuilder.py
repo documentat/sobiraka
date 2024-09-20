@@ -36,7 +36,7 @@ class WebBuilder(AbstractWebBuilder, ProjectProcessor):
 
         self._themes: dict[Volume, WebTheme] = {}
         for volume in project.volumes:
-            self._themes[volume] = load_web_theme(volume.config.html.theme)
+            self._themes[volume] = load_web_theme(volume.config.web.theme)
 
     async def run(self):
         self.output.mkdir(parents=True, exist_ok=True)
@@ -57,7 +57,7 @@ class WebBuilder(AbstractWebBuilder, ProjectProcessor):
             )
 
             # Initialize search indexer
-            if config.html.search.engine is not None:
+            if config.web.search.engine is not None:
                 indexer = await self.prepare_search_indexer(volume)
                 self._indexers[volume] = indexer
                 self._head += indexer.head_tags()
@@ -132,8 +132,8 @@ class WebBuilder(AbstractWebBuilder, ProjectProcessor):
             now=datetime.now(),
             toc=lambda **kwargs: toc(volume.root_page,
                                      processor=self,
-                                     toc_depth=volume.config.html.toc_depth,
-                                     combined_toc=volume.config.html.combined_toc,
+                                     toc_depth=volume.config.web.toc_depth,
+                                     combined_toc=volume.config.web.combined_toc,
                                      current_page=page,
                                      **kwargs),
             local_toc=lambda: local_toc(page, processor=self, current_page=page),
@@ -143,7 +143,7 @@ class WebBuilder(AbstractWebBuilder, ProjectProcessor):
             ROOT_PAGE=self.make_internal_url(PageHref(volume.root_page), page=page),
             STATIC=self.get_path_to_static(page),
             RESOURCES=self.get_path_to_resources(page),
-            theme_data=volume.config.html.theme_data,
+            theme_data=volume.config.web.theme_data,
         )
 
         RT[page].bytes = html.encode('utf-8')
@@ -169,7 +169,7 @@ class WebBuilder(AbstractWebBuilder, ProjectProcessor):
             case _:
                 raise TypeError(page.__class__.__name__)
 
-        prefix = config.html.prefix or '$AUTOPREFIX'
+        prefix = config.web.prefix or '$AUTOPREFIX'
         prefix = self.expand_path_vars(prefix, volume)
         prefix = os.path.join(*prefix.split('/'))
 
@@ -178,7 +178,7 @@ class WebBuilder(AbstractWebBuilder, ProjectProcessor):
 
     def get_relative_image_url(self, image: Image, page: Page) -> str:
         config: Config = page.volume.config
-        image_path = RelativePath() / config.html.resources_prefix / image.url
+        image_path = RelativePath() / config.web.resources_prefix / image.url
         start_path = self.get_target_path(page).parent
         return relpath(image_path, start=start_path)
 
@@ -218,7 +218,7 @@ class WebBuilder(AbstractWebBuilder, ProjectProcessor):
 
     def get_path_to_resources(self, page: Page) -> RelativePath:
         start = self.output / self.get_target_path(page)
-        resources = self.output / page.volume.config.html.resources_prefix
+        resources = self.output / page.volume.config.web.resources_prefix
         return resources.relative_to(start.parent)
 
     async def prepare_search_indexer(self, volume: Volume) -> SearchIndexer:
@@ -226,12 +226,12 @@ class WebBuilder(AbstractWebBuilder, ProjectProcessor):
         config: Config = volume.config
         indexer_class = {
             SearchIndexerName.PAGEFIND: PagefindIndexer,
-        }[config.html.search.engine]
+        }[config.web.search.engine]
 
         # Select the index file path
         index_relative_path = None
-        if config.html.search.index_path is not None:
-            index_relative_path = self.expand_path_vars(config.html.search.index_path, volume)
+        if config.web.search.index_path is not None:
+            index_relative_path = self.expand_path_vars(config.web.search.index_path, volume)
 
         # Initialize the indexer
         indexer = indexer_class(self, volume, index_relative_path)

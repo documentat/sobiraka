@@ -107,7 +107,7 @@ class Config_Pagefind_Translations:
 
 
 @dataclass(kw_only=True, frozen=True)
-class Config_HTML_Search:
+class Config_Web_Search:
     engine: SearchIndexerName = None
     index_path: str = None
     skip_elements: tuple[type[Element], ...] = ()
@@ -116,7 +116,7 @@ class Config_HTML_Search:
 
 
 @dataclass(kw_only=True, frozen=True)
-class Config_HTML:
+class Config_Web:
     """Settings related to :class:`.WebBuilder`."""
 
     # pylint: disable=too-many-instance-attributes
@@ -146,7 +146,7 @@ class Config_HTML:
 
     combined_toc: CombinedToc = CombinedToc.NEVER
 
-    search: Config_HTML_Search = field(default_factory=Config_HTML_Search)
+    search: Config_Web_Search = field(default_factory=Config_Web_Search)
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -170,7 +170,7 @@ class Config_WeasyPrint:
     """Settings related to :class:`.WeasyBuilder`."""
 
     theme: AbsolutePath = files('sobiraka') / 'files' / 'themes' / 'printable'
-    """Path to the theme that should be used when generating HTML."""
+    """Path to the theme that should be used when generating PDF via WeasyPrint."""
 
     toc_depth: int | float = inf
 
@@ -225,7 +225,7 @@ class Config:
     paths: Config_Paths = field(default_factory=Config_Paths, kw_only=True)
     """Settings that affect discovering source files."""
 
-    html: Config_HTML = field(default_factory=Config_HTML, kw_only=True)
+    web: Config_Web = field(default_factory=Config_Web, kw_only=True)
     """Settings related to :class:`.WebBuilder`."""
 
     content: Config_Content = field(default=Config_Content, kw_only=True)

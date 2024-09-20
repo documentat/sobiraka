@@ -63,7 +63,7 @@ $defs:
         properties:
           numeration: { type: boolean }
 
-      html:
+      web:
         additionalProperties: false
         properties:
           prefix: { type: string }

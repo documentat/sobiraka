@@ -30,9 +30,9 @@ class AbstractWebBuilder(Processor, metaclass=ABCMeta):
     @final
     async def add_additional_static_files(self, volume: Volume):
         async with TaskGroup() as tg:
-            for filename in volume.config.html.resources_force_copy:
+            for filename in volume.config.web.resources_force_copy:
                 source_path = (volume.config.paths.resources or volume.config.paths.root) / filename
-                target_path = volume.config.html.resources_prefix / filename
+                target_path = volume.config.web.resources_prefix / filename
                 tg.create_task(self.add_file_from_project(source_path, target_path))
 
     @final
@@ -108,7 +108,7 @@ class AbstractWebBuilder(Processor, metaclass=ABCMeta):
 
         # Schedule copying the image file to the output directory
         source_path = config.paths.resources / image.url
-        target_path = RelativePath(config.html.resources_prefix) / image.url
+        target_path = RelativePath(config.web.resources_prefix) / image.url
         if target_path not in self._html_builder_tasks:
             self._html_builder_tasks.append(create_task(self.add_file_from_project(source_path, target_path)))
 

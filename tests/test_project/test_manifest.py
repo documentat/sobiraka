@@ -62,7 +62,7 @@ class TestManifest_1L_1V(_TestManifest):
         self.assertEqual(('one', 'two', 'three'), self.volume.config.paths.include)
 
     def test_resources_prefix(self):
-        self.assertEqual('img', self.volume.config.html.resources_prefix)
+        self.assertEqual('img', self.volume.config.web.resources_prefix)
 
     YAML = '''
         languages:
@@ -73,7 +73,7 @@ class TestManifest_1L_1V(_TestManifest):
                         paths:
                             root: src/en
                             include: [one, two, three]
-                        html:
+                        web:
                             resources_prefix: img
     '''
 
@@ -94,7 +94,7 @@ class TestManifest_1L_1VDefault(TestManifest_1L_1V):
                         paths:
                             root: src/en
                             include: [one, two, three]
-                        html:
+                        web:
                             resources_prefix: img
     '''
 
@@ -113,7 +113,7 @@ class TestManifest_1L_1VFlat(TestManifest_1L_1V):
                 paths:
                     root: src/en
                     include: [one, two, three]
-                html:
+                web:
                     resources_prefix: img
     '''
 
@@ -134,7 +134,7 @@ class TestManifest_1LDefault_1V(TestManifest_1L_1V):
                         paths:
                             root: src/en
                             include: [one, two, three]
-                        html:
+                        web:
                             resources_prefix: img
     '''
 
@@ -158,7 +158,7 @@ class TestManifest_1LDefault_1VDefault(TestManifest_1L_1V):
                         paths:
                             root: src/en
                             include: [one, two, three]
-                        html:
+                        web:
                             resources_prefix: img
     '''
 
@@ -180,7 +180,7 @@ class TestManifest_1LDefault_1VFlat(TestManifest_1L_1V):
                 paths:
                     root: src/en
                     include: [one, two, three]
-                html:
+                web:
                     resources_prefix: img
     '''
 
@@ -199,7 +199,7 @@ class TestManifest_1LFlat_1V(TestManifest_1L_1V):
                 paths:
                     root: src/en
                     include: [one, two, three]
-                html:
+                web:
                     resources_prefix: img
     '''
 
@@ -221,7 +221,7 @@ class TestManifest_1LFlat_1VDefault(TestManifest_1L_1V):
                 paths:
                     root: src/en
                     include: [one, two, three]
-                html:
+                web:
                     resources_prefix: img
     '''
 
@@ -241,7 +241,7 @@ class TestManifest_1LFlat_1VFlat(TestManifest_1L_1V):
         paths:
             root: src/en
             include: [one, two, three]
-        html:
+        web:
             resources_prefix: img
     '''
 
@@ -288,7 +288,7 @@ class TestManifest_2L_2V(_TestManifest):
         expected_data = 4 * ('img',)
         for i, (expected, volume) in enumerate(zip(expected_data, self.project.volumes, strict=True)):
             with self.subTest(f'{i} - {expected}'):
-                self.assertEqual(expected, volume.config.html.resources_prefix)
+                self.assertEqual(expected, volume.config.web.resources_prefix)
 
     def test_primary_language(self):
         self.assertEqual('ru', self.project.primary_language)
@@ -303,14 +303,14 @@ class TestManifest_2L_2V(_TestManifest):
                         paths:
                             root: src/en
                             include: [one, two, three]
-                        html:
+                        web:
                             resources_prefix: img
                     vol2:
                         title: Documentation
                         paths:
                             root: src/en
                             include: [four, five, six]
-                        html:
+                        web:
                             resources_prefix: img
             ru:
                 volumes:
@@ -319,14 +319,14 @@ class TestManifest_2L_2V(_TestManifest):
                         paths:
                             root: src/ru
                             include: [one, two, three]
-                        html:
+                        web:
                             resources_prefix: img
                     vol2:
                         title: Документация
                         paths:
                             root: src/ru
                             include: [four, five, six]
-                        html:
+                        web:
                             resources_prefix: img
     '''
 
@@ -338,7 +338,7 @@ class TestManifest_2L_2V_LanguageDefaults(TestManifest_2L_2V):
             DEFAULT:
                 volumes:
                     DEFAULT:
-                        html:
+                        web:
                             resources_prefix: img
             en:
                 volumes:
@@ -379,13 +379,13 @@ class TestManifest_2L_2V_VolumeDefaults(TestManifest_2L_2V):
                         paths:
                             root: src/en
                             include: [one, two, three]
-                        html:
+                        web:
                             resources_prefix: img
                     vol2:
                         paths:
                             root: src/en
                             include: [four, five, six]
-                        html:
+                        web:
                             resources_prefix: img
             ru:
                 volumes:
@@ -395,13 +395,13 @@ class TestManifest_2L_2V_VolumeDefaults(TestManifest_2L_2V):
                         paths:
                             root: src/ru
                             include: [one, two, three]
-                        html:
+                        web:
                             resources_prefix: img
                     vol2:
                         paths:
                             root: src/ru
                             include: [four, five, six]
-                        html:
+                        web:
                             resources_prefix: img
     '''
 
@@ -413,7 +413,7 @@ class TestManifest_2L_2V_AllDefaults(TestManifest_2L_2V):
             DEFAULT:
                 volumes:
                     DEFAULT:
-                        html:
+                        web:
                             resources_prefix: img
             en:
                 volumes:

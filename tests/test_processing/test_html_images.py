@@ -16,7 +16,7 @@ class TestHtmlImages(ProjectTestCase[WebBuilder]):
         paths:
             root: src
             resources: img_src
-        html:
+        web:
             resources_prefix: img_dst
         """)
 

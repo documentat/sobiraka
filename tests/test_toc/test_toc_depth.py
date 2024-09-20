@@ -10,14 +10,14 @@ from bs4.formatter import Formatter
 from abstracttests.projecttestcase import ProjectTestCase
 from helpers import assertNoDiff
 from sobiraka.models import FileSystem, IndexPage, Page, Project, Volume
-from sobiraka.models.config import CombinedToc, Config, Config_HTML
+from sobiraka.models.config import CombinedToc, Config, Config_Web
 from sobiraka.processing import WebBuilder
 from sobiraka.processing.toc import Toc, TocItem, toc
 from sobiraka.utils import AbsolutePath, RelativePath
 
 """
 Test that:
-- `config.html.toc_depth` affects which items are included in the TOC,
+- `config.web.toc_depth` affects which items are included in the TOC,
 - items with skipped children have the `is_collapsed` property set to True.
 """
 
@@ -31,7 +31,7 @@ class AbstractTestTocDepth(ProjectTestCase[WebBuilder]):
 
     def _init_project(self) -> Project:
         fs = Mock(FileSystem)
-        config = Config(html=Config_HTML(toc_depth=self.toc_depth))
+        config = Config(web=Config_Web(toc_depth=self.toc_depth))
         return Project(fs, {
             RelativePath('src'): Volume(config, dataset_paths()),
         })

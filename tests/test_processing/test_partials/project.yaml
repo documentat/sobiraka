@@ -1,5 +1,5 @@
 paths:
   root: src
   partials: partials
-html:
+web:
   theme: raw

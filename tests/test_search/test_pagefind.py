@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, Mock, call, patch
 from abstracttests.abstracttestwithrt import AbstractTestWithRtTmp
 from abstracttests.projecttestcase import ProjectTestCase
 from sobiraka.models import FileSystem, Page, PageStatus, Project, Volume
-from sobiraka.models.config import Config_HTML_Search, Config_Search_LinkTarget
+from sobiraka.models.config import Config_Search_LinkTarget, Config_Web_Search
 from sobiraka.processing import WebBuilder
 from sobiraka.processing.web.search import PagefindIndexer
 from sobiraka.runtime import RT
@@ -25,7 +25,7 @@ class AbstractTestPagefindIndexer(ProjectTestCase[WebBuilder], AbstractTestWithR
 
     async def test_add_record(self, mock: MagicMock):
         indexer = PagefindIndexer(self.processor, self.project.get_volume(), RT.TMP / 'build' / 'pagefind')
-        indexer.search_config = Config_HTML_Search(link_target=self.LINK_TARGET)
+        indexer.search_config = Config_Web_Search(link_target=self.LINK_TARGET)
         await indexer.initialize()
         for page in self.project.pages:
             await indexer.add_page(page)

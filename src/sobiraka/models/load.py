@@ -10,9 +10,9 @@ import yaml
 from utilspie.collectionsutils import frozendict
 
 from sobiraka.utils import AbsolutePath, RelativePath, convert_or_none, merge_dicts
-from .config import CombinedToc, Config, Config_Content, Config_HTML, Config_HTML_Search, Config_Latex, Config_Lint, \
-    Config_Lint_Checks, Config_Pagefind_Translations, Config_Paths, Config_Search_LinkTarget, Config_WeasyPrint, \
-    SearchIndexerName
+from .config import CombinedToc, Config, Config_Content, Config_Latex, Config_Lint, Config_Lint_Checks, \
+    Config_Pagefind_Translations, Config_Paths, Config_Search_LinkTarget, Config_WeasyPrint, Config_Web, \
+    Config_Web_Search, SearchIndexerName
 from .filesystem import FileSystem, RealFileSystem
 from .namingscheme import NamingScheme
 from .project import Project
@@ -92,20 +92,20 @@ def _load_volume(lang: str | None, codename: str, volume_data: dict, fs: FileSys
         content=Config_Content(
             numeration=_('content.numeration', False),
         ),
-        html=Config_HTML(
-            prefix=_('html.prefix', '$AUTOPREFIX'),
-            resources_prefix=_('html.resources_prefix', '_resources'),
-            resources_force_copy=_('html.resources_force_copy', ()),
-            theme=_find_theme_dir(_('html.theme', 'simple'), fs=fs),
-            theme_data=_('html.theme_data', {}),
-            toc_depth=int(re.sub(r'^infinity$', '0', str(_('html.toc_depth', 'infinity')))) or inf,
-            combined_toc=CombinedToc(_('html.combined_toc', 'never')),
-            search=Config_HTML_Search(
-                engine=convert_or_none(SearchIndexerName, _('html.search.engine')),
-                index_path=_('html.search.index_path'),
-                skip_elements=tuple(getattr(panflute.elements, x) for x in _('html.search.skip_elements', ())),
-                link_target=Config_Search_LinkTarget(_('html.search.link_target', 'h1')),
-                translations=Config_Pagefind_Translations(**_('html.search.translations', {})),
+        web=Config_Web(
+            prefix=_('web.prefix', '$AUTOPREFIX'),
+            resources_prefix=_('web.resources_prefix', '_resources'),
+            resources_force_copy=_('web.resources_force_copy', ()),
+            theme=_find_theme_dir(_('web.theme', 'simple'), fs=fs),
+            theme_data=_('web.theme_data', {}),
+            toc_depth=int(re.sub(r'^infinity$', '0', str(_('web.toc_depth', 'infinity')))) or inf,
+            combined_toc=CombinedToc(_('web.combined_toc', 'never')),
+            search=Config_Web_Search(
+                engine=convert_or_none(SearchIndexerName, _('web.search.engine')),
+                index_path=_('web.search.index_path'),
+                skip_elements=tuple(getattr(panflute.elements, x) for x in _('web.search.skip_elements', ())),
+                link_target=Config_Search_LinkTarget(_('web.search.link_target', 'h1')),
+                translations=Config_Pagefind_Translations(**_('web.search.translations', {})),
             ),
         ),
         latex=Config_Latex(
