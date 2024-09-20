@@ -166,7 +166,7 @@ class Config_Latex:
 
 
 @dataclass(kw_only=True, frozen=True)
-class Config_WeasyPrint:
+class Config_PDF:
     """Settings related to :class:`.WeasyBuilder`."""
 
     theme: AbsolutePath = files('sobiraka') / 'files' / 'themes' / 'printable'
@@ -233,7 +233,7 @@ class Config:
     latex: Config_Latex = field(default_factory=Config_Latex, kw_only=True)
     """Settings related to :class:`.LatexBuilder`."""
 
-    weasyprint: Config_WeasyPrint = field(default=Config_WeasyPrint, kw_only=True)
+    pdf: Config_PDF = field(default=Config_PDF, kw_only=True)
     """Settings related to :class:`.WeasyBuilder`."""
 
     lint: Config_Lint = field(default_factory=Config_Lint, kw_only=True)

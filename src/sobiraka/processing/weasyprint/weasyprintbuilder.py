@@ -28,7 +28,7 @@ class WeasyPrintBuilder(AbstractWebBuilder, VolumeProcessor):
         AbstractWebBuilder.__init__(self)
 
         self.output: AbsolutePath = output
-        self.theme: WeasyPrintTheme = load_weasyprint_theme(self.volume.config.weasyprint.theme)
+        self.theme: WeasyPrintTheme = load_weasyprint_theme(self.volume.config.pdf.theme)
 
         self.pseudofiles: dict[str, bytes] = {}
 
@@ -61,8 +61,8 @@ class WeasyPrintBuilder(AbstractWebBuilder, VolumeProcessor):
 
             toc=lambda **kwargs: toc(volume.root_page,
                                      processor=self,
-                                     toc_depth=volume.config.weasyprint.toc_depth,
-                                     combined_toc=CombinedToc.from_bool(volume.config.weasyprint.combined_toc),
+                                     toc_depth=volume.config.pdf.toc_depth,
+                                     combined_toc=CombinedToc.from_bool(volume.config.pdf.combined_toc),
                                      **kwargs),
 
             content=content,

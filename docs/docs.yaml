@@ -13,7 +13,7 @@ web:
     link_target: h2
     translations:
       placeholder: Поиск
-weasyprint:
+pdf:
   combined_toc: true
 lint:
   dictionaries:

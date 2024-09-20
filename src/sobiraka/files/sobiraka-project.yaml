@@ -116,7 +116,7 @@ $defs:
           toc: { type: boolean }
           paths: { type: object }
 
-      weasyprint:
+      pdf:
         additionalProperties: false
         properties:
           theme: { type: string }

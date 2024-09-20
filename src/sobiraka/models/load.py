@@ -10,9 +10,9 @@ import yaml
 from utilspie.collectionsutils import frozendict
 
 from sobiraka.utils import AbsolutePath, RelativePath, convert_or_none, merge_dicts
-from .config import CombinedToc, Config, Config_Content, Config_Latex, Config_Lint, Config_Lint_Checks, \
-    Config_Pagefind_Translations, Config_Paths, Config_Search_LinkTarget, Config_WeasyPrint, Config_Web, \
-    Config_Web_Search, SearchIndexerName
+from .config import CombinedToc, Config, Config_Content, Config_Latex, Config_Lint, Config_Lint_Checks, Config_PDF, \
+    Config_Pagefind_Translations, Config_Paths, Config_Search_LinkTarget, Config_Web, Config_Web_Search, \
+    SearchIndexerName
 from .filesystem import FileSystem, RealFileSystem
 from .namingscheme import NamingScheme
 from .project import Project
@@ -114,10 +114,10 @@ def _load_volume(lang: str | None, codename: str, volume_data: dict, fs: FileSys
             toc=_('latex.toc', True),
             paths=frozendict({k: RelativePath(v) for k, v in _('latex.paths', {}).items()}),
         ),
-        weasyprint=Config_WeasyPrint(
-            theme=_find_theme_dir(_('weasyprint.theme', 'printable'), fs=fs),
-            toc_depth=int(re.sub(r'^infinity$', '0', str(_('weasyprint.toc_depth', 'infinity')))) or inf,
-            combined_toc=_('weasyprint.combined_toc', False),
+        pdf=Config_PDF(
+            theme=_find_theme_dir(_('pdf.theme', 'printable'), fs=fs),
+            toc_depth=int(re.sub(r'^infinity$', '0', str(_('pdf.toc_depth', 'infinity')))) or inf,
+            combined_toc=_('pdf.combined_toc', False),
         ),
         lint=Config_Lint(
             dictionaries=tuple(_('lint.dictionaries', [])),
