@@ -18,7 +18,7 @@ from ..abstract import Processor
 from ..plugin import WebTheme
 
 
-class AbstractWebBuilder(Processor, metaclass=ABCMeta):
+class AbstractHtmlBuilder(Processor, metaclass=ABCMeta):
 
     def __init__(self):
         Processor.__init__(self)

@@ -13,7 +13,7 @@ from sobiraka.models.config import CombinedToc, Config
 from sobiraka.models.exceptions import DisableLink
 from sobiraka.processing.abstract import VolumeProcessor
 from sobiraka.processing.plugin import WeasyPrintTheme, load_weasyprint_theme
-from sobiraka.processing.web.abstractwebbuilder import AbstractWebBuilder
+from sobiraka.processing.web.abstracthtmlbuilder import AbstractHtmlBuilder
 from sobiraka.runtime import RT
 from sobiraka.utils import AbsolutePath, RelativePath, TocNumber
 
@@ -21,11 +21,11 @@ logger = logging.getLogger('weasyprint')
 logger.addHandler(logging.StreamHandler())
 
 
-class WeasyPrintBuilder(AbstractWebBuilder, VolumeProcessor):
+class WeasyPrintBuilder(AbstractHtmlBuilder, VolumeProcessor):
 
     def __init__(self, volume: Volume, output: AbsolutePath):
         VolumeProcessor.__init__(self, volume)
-        AbstractWebBuilder.__init__(self)
+        AbstractHtmlBuilder.__init__(self)
 
         self.output: AbsolutePath = output
         self.theme: WeasyPrintTheme = load_weasyprint_theme(self.volume.config.pdf.theme)

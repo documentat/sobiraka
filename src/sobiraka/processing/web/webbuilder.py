@@ -17,17 +17,17 @@ from sobiraka.models import DirPage, IndexPage, Page, PageHref, PageStatus, Proj
 from sobiraka.models.config import Config, SearchIndexerName
 from sobiraka.runtime import RT
 from sobiraka.utils import AbsolutePath, RelativePath, super_gather
-from .abstractwebbuilder import AbstractWebBuilder
+from .abstracthtmlbuilder import AbstractHtmlBuilder
 from .search import PagefindIndexer, SearchIndexer
 from ..abstract import ProjectProcessor
 from ..plugin import WebTheme, load_web_theme
 
 
-class WebBuilder(AbstractWebBuilder, ProjectProcessor):
+class WebBuilder(AbstractHtmlBuilder, ProjectProcessor):
 
     def __init__(self, project: Project, output: AbsolutePath, *, hide_index_html: bool = False):
         ProjectProcessor.__init__(self, project)
-        AbstractWebBuilder.__init__(self)
+        AbstractHtmlBuilder.__init__(self)
 
         self.output: AbsolutePath = output
         self.hide_index_html: bool = hide_index_html
