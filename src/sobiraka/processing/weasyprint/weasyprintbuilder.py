@@ -68,11 +68,10 @@ class WeasyPrintBuilder(AbstractHtmlBuilder, VolumeProcessor):
             content=content,
         )
 
-        self.pseudofiles['/page.html'] = html.encode('utf-8')
         self.output.with_suffix('.html').write_text(html)
 
         printer = weasyprint.HTML(string=html,
-                                  base_url='sobiraka:page.html',
+                                  base_url='sobiraka:print.html',
                                   url_fetcher=self.fetch_url)
         printer.write_pdf(self.output)
 

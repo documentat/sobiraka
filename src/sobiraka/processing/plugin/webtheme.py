@@ -32,7 +32,7 @@ def load_web_theme(theme_dir: AbsolutePath) -> WebTheme:
         undefined=jinja2.StrictUndefined,
         comment_start_string='{{#',
         comment_end_string='#}}')
-    page_template = jinja_env.get_template('page.html')
+    page_template = jinja_env.get_template('web.html')
 
     static_dir = theme_dir / '_static'
 

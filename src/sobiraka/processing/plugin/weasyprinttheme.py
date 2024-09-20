@@ -22,7 +22,7 @@ def load_weasyprint_theme(theme_dir: AbsolutePath) -> WeasyPrintTheme:
         undefined=jinja2.StrictUndefined,
         comment_start_string='{{#',
         comment_end_string='#}}')
-    page_template = jinja_env.get_template('page.html')
+    page_template = jinja_env.get_template('print.html')
 
     static_dir = theme_dir / '_static'
 
