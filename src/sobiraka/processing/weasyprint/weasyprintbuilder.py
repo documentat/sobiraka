@@ -14,11 +14,9 @@ from sobiraka.models.exceptions import DisableLink
 from sobiraka.processing.abstract import VolumeProcessor
 from sobiraka.processing.plugin import WeasyPrintTheme, load_weasyprint_theme
 from sobiraka.processing.web.abstracthtmlbuilder import AbstractHtmlBuilder
+from sobiraka.report import update_progressbar
 from sobiraka.runtime import RT
 from sobiraka.utils import AbsolutePath, RelativePath, TocNumber
-
-logger = logging.getLogger('weasyprint')
-logger.addHandler(logging.StreamHandler())
 
 
 class WeasyPrintBuilder(AbstractHtmlBuilder, VolumeProcessor):
@@ -68,12 +66,8 @@ class WeasyPrintBuilder(AbstractHtmlBuilder, VolumeProcessor):
             content=content,
         )
 
-        self.output.with_suffix('.html').write_text(html)
-
-        printer = weasyprint.HTML(string=html,
-                                  base_url='sobiraka:print.html',
-                                  url_fetcher=self.fetch_url)
-        printer.write_pdf(self.output)
+        update_progressbar('Writing PDF...')
+        self.render_pdf(html)
 
     async def process4(self, page: Page):
         # Apply custom document processing
@@ -81,6 +75,27 @@ class WeasyPrintBuilder(AbstractHtmlBuilder, VolumeProcessor):
             await self.theme.process_doc(RT[page].doc, page)
 
         await super().process4(page)
+
+    def render_pdf(self, html: str):
+        ok = True
+
+        class WeasyPrintLogHandler(logging.NullHandler):
+            def handle(self, record: logging.LogRecord):
+                nonlocal ok
+                ok = False
+
+        handler = WeasyPrintLogHandler()
+        try:
+            logging.getLogger('weasyprint').addHandler(handler)
+
+            printer = weasyprint.HTML(string=html, base_url='sobiraka:print.html', url_fetcher=self.fetch_url)
+            printer.write_pdf(self.output)
+
+            if not ok:
+                raise RuntimeError('WeasyPrint has something to say, please check above the progressbar.')
+
+        finally:
+            logging.getLogger('weasyprint').removeHandler(handler)
 
     def fetch_url(self, url: str) -> dict:
         config: Config = self.volume.config

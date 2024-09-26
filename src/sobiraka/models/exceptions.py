@@ -34,8 +34,3 @@ class DependencyFailed(Exception):
 class VolumeFailed(Ignorable):
     def __init__(self, volume: Volume):
         super().__init__(f'Some pages failed in {volume.codename!r}')
-
-
-class SomePagesFailed(ExceptionGroup):
-    def __new__(cls, exceptions: list[Exception]):
-        return super().__new__(cls, 'Some pages failed', exceptions)

@@ -5,7 +5,8 @@ from asyncio import run
 from sobiraka.cache import init_cache
 from sobiraka.linter import Linter
 from sobiraka.models.load import load_project
-from sobiraka.processing import LatexBuilder, WeasyPrintBuilder, WebBuilder, run_with_progressbar
+from sobiraka.processing import LatexBuilder, WeasyPrintBuilder, WebBuilder
+from sobiraka.report import run_with_progressbar
 from sobiraka.runtime import RT
 from sobiraka.translating import changelog, check_translations
 from sobiraka.utils import AbsolutePath, absolute_or_relative, validate_dictionary

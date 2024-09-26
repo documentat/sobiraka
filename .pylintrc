@@ -3,6 +3,7 @@ disable=
     consider-using-enumerate,
     duplicate-code,
     import-outside-toplevel,
+    logging-fstring-interpolation,
     missing-class-docstring,
     missing-function-docstring,
     missing-module-docstring,

@@ -17,6 +17,7 @@ from sobiraka.models.exceptions import DisableLink
 from sobiraka.processing.abstract import VolumeProcessor
 from sobiraka.processing.plugin import LatexTheme, load_latex_theme
 from sobiraka.processing.replacement import HeaderReplPara
+from sobiraka.report import update_progressbar
 from sobiraka.runtime import RT
 from sobiraka.utils import AbsolutePath, LatexInline, panflute_to_bytes
 
@@ -43,7 +44,7 @@ class LatexBuilder(VolumeProcessor):
         resources_dir = self.volume.project.fs.resolve(self.volume.config.paths.resources)
         total_runs = 3
         for n in range(1, total_runs + 1):
-            self.message = f'Rendering PDF ({n}/{total_runs})...'
+            update_progressbar(f'Rendering PDF ({n}/{total_runs})...')
             xelatex = await create_subprocess_exec(
                 'xelatex',
                 '-shell-escape',
@@ -56,7 +57,7 @@ class LatexBuilder(VolumeProcessor):
             await xelatex.wait()
             if xelatex.returncode != 0:
                 self.print_xelatex_error(xelatex_workdir / 'build.log')
-                sys.exit(1)
+                return 1
 
         self.output.parent.mkdir(parents=True, exist_ok=True)
         copyfile(xelatex_workdir / 'build.pdf', self.output)
@@ -70,7 +71,7 @@ class LatexBuilder(VolumeProcessor):
         project = self.volume.project
         config = self.volume.config
 
-        self.message = 'Generating LaTeX...'
+        update_progressbar('Generating LaTeX...')
 
         processing: dict[Page, Task] = {}
         for page in volume.pages:

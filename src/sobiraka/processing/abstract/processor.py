@@ -18,6 +18,7 @@ from sobiraka.models import Anchor, BadImage, BadLink, DirPage, FileSystem, Page
     UrlHref, Volume
 from sobiraka.models.config import Config
 from sobiraka.models.exceptions import DependencyFailed, DisableLink, IssuesOccurred, VolumeFailed
+from sobiraka.report import update_progressbar
 from sobiraka.runtime import RT
 from sobiraka.utils import AbsolutePath, PathGoesOutsideStartDirectory, RelativePath, absolute_or_relative, super_gather
 from .dispatcher import Dispatcher
@@ -30,12 +31,6 @@ class Processor(Dispatcher):
     # pylint: disable=too-many-public-methods
 
     def __init__(self):
-        self.message: str = None
-        """
-        Text message describing what the processor is currently doing.
-        Will be displayed next to the progressbar.
-        """
-
         self.tasks: dict[Page | Volume, dict[PageStatus, Task]] = defaultdict(dict)
         """
         Dictionary of all tasks that the processor has started. Managed by `create_page_task()`.
@@ -143,6 +138,7 @@ class Processor(Dispatcher):
                     await super_gather(before_process3, f'Some other pages failed in {page.volume.codename!r}')
                 except* Exception as excs:
                     RT[page].status = PageStatus.VOL_FAILURE
+                    update_progressbar()
                     raise VolumeFailed(page.volume) from excs
 
             # Start running the appropriate function.
@@ -159,20 +155,24 @@ class Processor(Dispatcher):
             # The same logic applies to another page's VolumeFailed.
             except* (IssuesOccurred, VolumeFailed) as excs:
                 RT[page].status = PageStatus.DEP_FAILURE
+                update_progressbar()
                 raise DependencyFailed(page) from excs
 
             # Any other type of exception is unexpected. May even be a Sobiraka bug.
             # We consider it the current page's failure and set the status accordingly.
             except* Exception:
                 RT[page].status = PageStatus.FAILURE
+                update_progressbar()
                 raise
 
             # If we are still here, update the status
             RT[page].status = status
+            update_progressbar()
 
             # If any number of issues was found for the page, we consider it a failure and raise IssuesOccurred.
             if len(RT[page].issues) != 0:
                 RT[page].status = PageStatus.FAILURE
+                update_progressbar()
                 raise IssuesOccurred(page, RT[page].issues)
 
     async def prepare(self, page: Page):
