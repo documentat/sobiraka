@@ -4,6 +4,7 @@ import os.path
 import sys
 from os import PathLike
 from pathlib import Path, PurePosixPath
+from typing import Iterable
 
 
 class AbsolutePath(Path):
@@ -26,6 +27,13 @@ class AbsolutePath(Path):
         # pylint: disable=arguments-differ
         start = AbsolutePath(start)
         return RelativePath(os.path.relpath(self, start=start))
+
+    def walk_all(self) -> Iterable[AbsolutePath]:
+        for dirpath, dirnames, filenames in os.walk(self):
+            for dirname in dirnames:
+                yield Path(dirpath) / dirname
+            for filename in filenames:
+                yield Path(dirpath) / filename
 
 
 class RelativePath(PurePosixPath):

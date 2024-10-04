@@ -1,4 +1,6 @@
 from asyncio.subprocess import Process, create_subprocess_exec
+from glob import glob
+from importlib.resources import files
 from subprocess import PIPE
 from textwrap import dedent
 from typing import Sequence
@@ -32,7 +34,8 @@ class PagefindIndexer(SearchIndexer, PlainTextDispatcher):
         self.node_process.stdin.write(code.encode('utf-8'))
 
     async def initialize(self):
-        self.node_process = await create_subprocess_exec('node', '--input-type', 'module', stdin=PIPE, stdout=PIPE)
+        self.node_process = await create_subprocess_exec('node', '--input-type', 'module', stdin=PIPE, stdout=PIPE,
+                                                         cwd=files('sobiraka'))
         self.execute_js('''
             import * as fs from 'fs';
             import * as path from 'path';
@@ -89,7 +92,7 @@ class PagefindIndexer(SearchIndexer, PlainTextDispatcher):
         assert self.node_process.returncode == 0, 'Pagefind failure'
 
     def results(self) -> set[AbsolutePath]:
-        return set(self.index_path.rglob('**/*'))
+        return set(AbsolutePath(p) for p in glob('**/*', root_dir=self.index_path))
 
     def head_tags(self) -> Sequence[HeadTag]:
         yield HeadJsFile(self.index_path_relative / 'pagefind-ui.js')

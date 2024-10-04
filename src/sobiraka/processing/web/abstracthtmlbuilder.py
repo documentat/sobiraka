@@ -134,7 +134,7 @@ class AbstractHtmlBuilder(Processor, metaclass=ABCMeta):
     @final
     async def add_directory_from_location(self, source: AbsolutePath, target: RelativePath):
         async with TaskGroup() as tg:
-            for file_source in source.glob('**/*'):
+            for file_source in source.walk_all():
                 if file_source.is_file():
                     file_target = target / file_source.relative_to(source)
                     tg.create_task(self.add_file_from_location(file_source, file_target))

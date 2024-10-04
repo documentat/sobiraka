@@ -13,9 +13,8 @@ from sobiraka.models import DirPage, GitFileSystem, Page, Project, Version
 from sobiraka.models.load import load_project_from_str
 from sobiraka.utils import AbsolutePath, RelativePath
 
-if True:  # pylint: disable=using-constant-test
-    os.environ['GIT_PYTHON_REFRESH'] = 'quiet'
-    from git import Repo, Blob, Commit
+os.environ['GIT_PYTHON_REFRESH'] = 'quiet'
+from git import Blob, Commit, Repo  # pylint: disable=wrong-import-order,wrong-import-position
 
 
 def changelog(manifest_path: AbsolutePath, rev1: str, rev2: str) -> int:

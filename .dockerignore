@@ -1,6 +1,5 @@
 *
 !Makefile
-!package.json
 !setup.py
 !src/sobiraka
 !tests

@@ -1,115 +1,108 @@
-ARG PYTHON_VERSION=3.12
+ARG PANDOC
+ARG PYTHON
 
-################################################################################
-# The base for most images
-
-FROM python:${PYTHON_VERSION}-alpine3.20 AS python-and-nodejs
-RUN apk add --no-cache nodejs npm
+ARG NODE=20.17
+ARG UBUNTU=24.10
 
 
 ################################################################################
-# Install Python and NodeJS dependencies
+# Install dependencies
 
-# Build Sobiraka
-FROM python:${PYTHON_VERSION}-alpine3.20 AS build-package
-RUN pip install setuptools
+FROM python:$PYTHON AS build-package
+RUN --mount=type=cache,target=/root/.cache/pip pip install setuptools
 COPY setup.py .
 COPY src src
 RUN python setup.py sdist
 
-FROM python:${PYTHON_VERSION}-alpine3.20 AS install-pip-dependencies
-COPY --from=build-package /sobiraka.egg-info/requires.txt .
-RUN pip install --prefix /prefix --requirement requires.txt
+FROM python:$PYTHON AS get-tester-dependencies
+RUN apt update
+RUN apt install --yes --download-only git poppler-utils
 
-FROM python:${PYTHON_VERSION}-alpine3.20 AS install-pip-dependencies-for-tester
-RUN pip install --prefix /prefix coverage~=7.0.0
+FROM python:$PYTHON AS get-weasyprint
+RUN apt update
+RUN apt install --yes --download-only weasyprint
 
-FROM python:${PYTHON_VERSION}-alpine3.20 AS install-pip-dependencies-for-linter
-RUN pip install --prefix /prefix pylint~=3.1.0
+FROM python:$PYTHON AS get-conda
+RUN wget --progress=bar:force https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /tmp/miniconda.sh
+RUN chmod +x /tmp/miniconda.sh
 
-FROM python-and-nodejs AS install-npm-dependencies
-WORKDIR /opt
-ADD package.json .
-RUN npm install --verbose
-
-
-################################################################################
-# Download additional utilities
-
-FROM alpine:3.20 AS get-pandoc
-WORKDIR /tmp/pandoc
-RUN arch=$(arch | sed s:aarch64:arm64: | sed s:x86_64:amd64:) \
-    && wget https://github.com/jgm/pandoc/releases/download/3.2.1/pandoc-3.2.1-linux-$arch.tar.gz -O-  \
-    | tar -xz --strip-components=1
+FROM python:$PYTHON AS get-fonts
+RUN wget --progress=bar:force https://www.latofonts.com/download/lato2ofl-zip/ -O lato.zip
+RUN unzip lato.zip **/*.ttf -d /tmp/fonts
+RUN wget --progress=bar:force https://download.jetbrains.com/fonts/JetBrainsMono-2.304.zip -O jbmono.zip
+RUN unzip jbmono.zip **/*.ttf -d /tmp/fonts
 
 
 ################################################################################
-# Download fonts
+# Base images
 
-FROM alpine:3.20 AS get-fonts
-WORKDIR /tmp/fonts
-RUN wget https://www.latofonts.com/download/lato2ofl-zip/ -O /tmp/lato.zip && unzip /tmp/lato.zip && rm /tmp/lato.zip
-RUN mv Lato2OFL/*.ttf .
-RUN wget https://download.jetbrains.com/fonts/JetBrainsMono-2.304.zip -O /tmp/jbmono.zip && unzip /tmp/jbmono.zip && rm /tmp/jbmono.zip
-RUN mv fonts/ttf/*.ttf .
-
-
-################################################################################
-# Install Sobiraka
-
-FROM install-pip-dependencies AS install-package
-RUN pip install setuptools
-COPY --from=build-package /dist/*.tar.gz .
-RUN pip install --prefix /prefix *.tar.gz
-
-
-################################################################################
-# The base images for all final images
-
-FROM python-and-nodejs AS common-html
-RUN apk add --no-cache hunspell
-RUN apk add --no-cache weasyprint
-COPY --from=install-npm-dependencies /opt/node_modules /node_modules
-COPY --from=get-pandoc /tmp/pandoc /usr/local
-COPY --from=get-fonts /tmp/fonts /usr/share/fonts
+FROM pandoc/latex:$PANDOC-ubuntu AS latex-python-nodejs
 WORKDIR /W
+RUN tlmgr install koma-script
+RUN apt update
+COPY --from=get-conda /tmp/miniconda.sh /tmp/miniconda.sh
+RUN /tmp/miniconda.sh -b -m -p /opt/conda && rm /tmp/miniconda.sh
+ENV PATH /opt/conda/bin:$PATH
+ARG NODE
+ARG PYTHON
+RUN conda create -y --name myenv python=$PYTHON nodejs=$NODE
+ENV PATH /opt/conda/envs/myenv/bin:$PATH
+
+FROM pandoc/core:$PANDOC-ubuntu AS python-nodejs
+WORKDIR /W
+RUN apt update
+COPY --from=get-conda /tmp/miniconda.sh /tmp/miniconda.sh
+RUN /tmp/miniconda.sh -b -m -p /opt/conda && rm /tmp/miniconda.sh
+ENV PATH /opt/conda/bin:$PATH
+ARG NODE
+ARG PYTHON
+RUN conda create -y --name myenv python=$PYTHON nodejs=$NODE
+ENV PATH /opt/conda/envs/myenv/bin:$PATH
+
+
+################################################################################
+# The base image for all final images
+
+FROM latex-python-nodejs AS common-latex
+COPY --from=get-weasyprint /var/cache/apt /var/cache/apt
+RUN apt install --yes weasyprint
+RUN --mount=type=cache,target=/root/.npm npm install -g pagefind
+COPY --from=get-fonts /tmp/fonts /usr/share/fonts
 ENTRYPOINT [""]
 
-FROM python-and-nodejs AS common
-RUN apk add --no-cache texlive-full
-RUN apk add --no-cache hunspell
-RUN apk add --no-cache weasyprint
-COPY --from=install-npm-dependencies /opt/node_modules /node_modules
-COPY --from=get-pandoc /tmp/pandoc /usr/local
+FROM python-nodejs AS common
+COPY --from=get-weasyprint /var/cache/apt /var/cache/apt
+RUN apt install --yes weasyprint
+RUN --mount=type=cache,target=/root/.npm npm install -g pagefind
 COPY --from=get-fonts /tmp/fonts /usr/share/fonts
-WORKDIR /W
 ENTRYPOINT [""]
 
 
 ################################################################################
 # Final images
 
-FROM common AS tester
-RUN apk add --no-cache git make poppler-utils
+FROM common-latex AS tester
+COPY --from=get-tester-dependencies /var/cache/apt /var/cache/apt
+RUN apt install --yes git poppler-utils
+RUN --mount=type=cache,target=/root/.cache/pip pip install coverage~=7.0.0
+COPY --from=build-package /dist/*.tar.gz .
+RUN --mount=type=cache,target=/root/.cache/pip pip install *.tar.gz && rm *.tar.gz
 ARG UID=1000
 ARG GID=1000
-RUN addgroup mygroup -g $GID
-RUN adduser myuser -u $UID -G mygroup -D
-USER myuser
-ENV PATH=/home/myuser/.local/bin:$PATH
-COPY --from=install-pip-dependencies /prefix /usr/local
-COPY --from=install-pip-dependencies-for-tester /prefix /usr/local
-COPY --from=install-package /prefix /usr/local
-COPY Makefile .
-COPY tests tests
-CMD make tests
+RUN addgroup --gid $GID myuser || true
+RUN adduser --uid $UID --gid $GID myuser || true
+USER 1000
+COPY tests .
+ENV COVERAGE_FILE /tmp/coverage
+CMD python -m coverage run --source=sobiraka -m unittest discover --start-directory=. --verbose \
+	&& python -m coverage report --precision=1 --skip-empty --skip-covered --show-missing
 
-FROM tester AS linter
-COPY --from=install-pip-dependencies-for-linter /prefix /usr/local
-CMD make lint
-
-FROM common-html AS release-html
-COPY --from=install-package /prefix /usr/local
+FROM common-latex AS release-latex
+COPY --from=build-package /dist/*.tar.gz .
+RUN --mount=type=cache,target=/root/.cache/pip pip install *.tar.gz && rm *.tar.gz
+CMD sobiraka
 
 FROM common AS release
-COPY --from=install-package /prefix /usr/local
+COPY --from=build-package /dist/*.tar.gz .
+RUN --mount=type=cache,target=/root/.cache/pip pip install *.tar.gz && rm *.tar.gz
+CMD sobiraka

@@ -3,7 +3,7 @@ from unittest import main
 from abstracttests.latexprojecttestcase import LatexProjectTestCase
 
 
-class TestLatexHeader(LatexProjectTestCase):
+class TestLatexImages(LatexProjectTestCase):
     pass
 
 

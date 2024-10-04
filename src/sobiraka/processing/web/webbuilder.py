@@ -77,7 +77,7 @@ class WebBuilder(AbstractHtmlBuilder, ProjectProcessor):
         # Delete files that were not produced during this build
         all_files = set()
         all_dirs = set()
-        for file in self.output.rglob('**/*'):
+        for file in self.output.walk_all():
             if file.is_dir():
                 all_dirs.add(file)
             else:

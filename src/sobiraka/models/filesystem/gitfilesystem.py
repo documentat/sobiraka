@@ -9,9 +9,8 @@ from wcmatch.glob import globmatch
 from sobiraka.utils import AbsolutePath, RelativePath
 from .filesystem import FileSystem, GLOB_KWARGS
 
-if True:  # pylint: disable=using-constant-test
-    os.environ['GIT_PYTHON_REFRESH'] = 'quiet'
-    from git import Commit, Tree
+os.environ['GIT_PYTHON_REFRESH'] = 'quiet'
+from git import Commit, Tree  # pylint: disable=wrong-import-order,wrong-import-position
 
 
 class GitFileSystem(FileSystem):

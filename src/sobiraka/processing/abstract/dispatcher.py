@@ -42,7 +42,7 @@ class Dispatcher:
             case Div() as div:
                 if len(div.classes) == 1 \
                         and (process_custom_div := getattr(self, f'process_div_{div.classes[0]}', None)) is not None:
-                    result = await process_custom_div(div, page)
+                    result = await process_custom_div(div, page)  # pylint: disable=not-callable
                 else:
                     result = await self.process_div(div, page)
             case Doc():

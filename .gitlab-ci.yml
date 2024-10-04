@@ -1,159 +1,280 @@
+variables:
+  PYTHON: 3.13
+  PANDOC: 3.5
+
+  PIP_CACHE_DIR: $CI_PROJECT_DIR/.cache/pip
+
+  PANDOC_URL: https://github.com/jgm/pandoc/releases/download/$PANDOC/pandoc-$PANDOC-linux-amd64.tar.gz
+  PANDOC_FILENAME: pandoc-$PANDOC-linux-amd64.tar.gz
+
+  LATO_URL: https://www.latofonts.com/download/lato2ofl-zip/
+  JETBRAINS_MONO_URL: https://download.jetbrains.com/fonts/JetBrainsMono-2.304.zip
+
+default:
+  image: python:$PYTHON-alpine3.20
+  cache:
+    when: always
+    key: $CI_JOB_NAME
+    paths:
+      - .cache
+      - node_modules
+
 stages:
-  - prepare
-  - build
-  - test
-  - publish
+  - Main
+  - Test with Python 3.11
+  - Test with Python 3.12
+  - Test with Python 3.13
+  - Publish
 
-################################################################################
+# ------------------------------------------------------------------------------
+# region Templates
 
-md5sum:
-  stage: prepare
+.sobiraka_pandoc:
+  needs: [Build package]
+  before_script: &sobiraka_pandoc_bs
+    - pip install dist/*.tar.gz
+    - apk add git weasyprint
+    - mkdir -p .cache && [ -f .cache/$PANDOC_FILENAME ] || wget $PANDOC_URL -O .cache/$PANDOC_FILENAME
+    - tar -xzf .cache/$PANDOC_FILENAME --strip-components=1 -C /usr
+
+.test:
+  image: docker
+  needs: []
+  before_script:
+    - apk add make
+  script:
+    - make test PYTHON=$PYTHON PANDOC=$PANDOC
+
+# endregion
+
+# ------------------------------------------------------------------------------
+# region Main
+
+Build package:
+  stage: Main
+  script:
+    - pip install setuptools
+    - python setup.py sdist
+  artifacts:
+    paths:
+      - dist
+
+Build images:
+  stage: Main
+  needs: [Calculate hash]
+  image: docker
+  services: ['docker:dind']
+  before_script:
+    - apk add make
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script: |
+    for TARGET in release release-latex; do
+      # Try and download a relevant image
+      docker pull $CI_REGISTRY_IMAGE/tmp/$TARGET:hash-$HASH \
+        || docker pull $CI_REGISTRY_IMAGE/tmp/$TARGET:branch-$HASH \
+        || true
+      # Check if the image for this exact hash exists
+      if docker images --format "{{.Repository}}:{{.Tag}}" | grep $CI_REGISTRY_IMAGE/tmp/$TARGET:hash-$HASH
+      then
+          # The image exists
+          # Push it back as the current commit's image
+          docker tag $CI_REGISTRY_IMAGE/tmp/$TARGET:hash-$HASH $CI_REGISTRY_IMAGE/tmp/$TARGET:commit-$CI_COMMIT_SHA
+          docker tag $CI_REGISTRY_IMAGE/tmp/$TARGET:hash-$HASH $CI_REGISTRY_IMAGE/tmp/$TARGET:branch-$CI_COMMIT_BRANCH
+          docker push $CI_REGISTRY_IMAGE/tmp/$TARGET:commit-$CI_COMMIT_SHA
+          docker push $CI_REGISTRY_IMAGE/tmp/$TARGET:branch-$CI_COMMIT_BRANCH
+      else
+          # The image does not exist
+          # Build it and then push as both the current commit's and the current hash's image
+          make $TARGET
+          docker tag sobiraka:$TARGET $CI_REGISTRY_IMAGE/tmp/$TARGET:hash-$HASH
+          docker tag sobiraka:$TARGET $CI_REGISTRY_IMAGE/tmp/$TARGET:commit-$CI_COMMIT_SHA
+          docker tag sobiraka:$TARGET $CI_REGISTRY_IMAGE/tmp/$TARGET:branch-$CI_COMMIT_BRANCH
+          docker push $CI_REGISTRY_IMAGE/tmp/$TARGET:hash-$HASH
+          docker push $CI_REGISTRY_IMAGE/tmp/$TARGET:commit-$CI_COMMIT_SHA
+          docker push $CI_REGISTRY_IMAGE/tmp/$TARGET:branch-$CI_COMMIT_BRANCH
+      fi
+    done
+
+Calculate hash:
+  stage: Main
+  needs: [Build package]
   image: docker
   script:
     - echo >> .dockerignore
     - echo '!Dockerfile' >> .dockerignore
     - echo '!.dockerignore' >> .dockerignore
     - echo '!.gitlab-ci.yml' >> .dockerignore
-    - echo -e 'FROM docker\nWORKDIR /W\nADD . .' | docker build . --file - --tag context
-    - docker run --rm context sh -c 'ls -lAh'
-    - docker run --rm context sh -c 'ls | sort | xargs tar c --to-stdout | md5sum | cut -d" " -f1' > context_hash.txt
-    - cat context_hash.txt
+    - echo -e 'FROM docker\nWORKDIR /W\nADD . .' | docker build . --file - --tag md5sum
+    - docker run --rm md5sum sh -c 'ls -lAh'
+    - docker run --rm md5sum sh -c 'ls | sort | xargs tar c --to-stdout | md5sum | cut -d" " -f1' | sed 's/^/HASH=/' > .env
+    - cat .env
   artifacts:
-    paths:
-      - context_hash.txt
+    reports:
+      dotenv: .env
 
-################################################################################
-
-build-dist:
-  stage: build
-  needs: []
-  image: python:3.11-slim-bullseye
+Documentation (HTML):
+  stage: Main
+  needs: [Build images]
+  image: $CI_REGISTRY_IMAGE/tmp/release:commit-$CI_COMMIT_SHA
   script:
-    - python setup.py sdist
-  artifacts:
-    paths:
-      - dist
-
-################################################################################
-
-.build-docker:
-  stage: build
-  image: docker
-  services: ['docker:dind']
-  variables:
-    DOCKER_BUILDKIT: 1
-    BUILD_ARG: foo=bar
-  before_script:
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-  script: |
-    CONTEXT=`cat context_hash.txt`
-    docker pull $CI_REGISTRY_IMAGE/cache/$IMAGE:by-context-$CONTEXT || true
-    if docker images --format "{{.Repository}}:{{.Tag}}" | grep $CI_REGISTRY_IMAGE/cache/$IMAGE:by-context-$CONTEXT
-    then
-        docker tag $CI_REGISTRY_IMAGE/cache/$IMAGE:by-context-$CONTEXT $CI_REGISTRY_IMAGE/cache/$IMAGE:by-commit-$CI_COMMIT_SHA
-        docker push $CI_REGISTRY_IMAGE/cache/$IMAGE:by-commit-$CI_COMMIT_SHA
-    else
-        docker build . \
-          --target $TARGET \
-          --build-arg $BUILD_ARG \
-          --tag $CI_REGISTRY_IMAGE/cache/$IMAGE:by-context-$CONTEXT \
-          --tag $CI_REGISTRY_IMAGE/cache/$IMAGE:by-commit-$CI_COMMIT_SHA
-        docker push $CI_REGISTRY_IMAGE/cache/$IMAGE:by-context-$CONTEXT
-        docker push $CI_REGISTRY_IMAGE/cache/$IMAGE:by-commit-$CI_COMMIT_SHA
-    fi
-
-build-tester-python3.12:
-  extends: .build-docker
-  variables:
-    TARGET: tester
-    IMAGE: tester-python3.12
-
-build-tester-python3.11:
-  extends: .build-docker
-  variables:
-    TARGET: tester
-    IMAGE: tester-python3.11
-    BUILD_ARG: PYTHON_VERSION=3.11
-
-build-release-html:
-  extends: .build-docker
-  variables:
-    TARGET: release-html
-    IMAGE: release-html
-
-build-release:
-  extends: .build-docker
-  variables:
-    TARGET: release
-    IMAGE: release
-
-build-linter:
-  extends: .build-docker
-  variables:
-    TARGET: linter
-    IMAGE: linter
-
-################################################################################
-
-.test:
-  stage: test
-  image: $CI_REGISTRY_IMAGE/cache/$IMAGE:by-commit-$CI_COMMIT_SHA
-  services: ['docker:dind']
-  variables:
-    GIT_STRATEGY: fetch
-  before_script:
-    - python --version
-    - git config --global --add safe.directory $PWD
-  script:
-    - git checkout -- Makefile tests
-    - make tests
-
-test-python3.12:
-  extends: .test
-  needs: [build-tester-python3.12]
-  variables:
-    TARGET: tester
-    IMAGE: tester-python3.12
-  coverage: '/TOTAL .+ (\d+\.\d+)%/'
-
-test-python3.11:
-  extends: .test
-  needs: [build-tester-python3.11]
-  variables:
-    TARGET: tester
-    IMAGE: tester-python3.11
-
-lint:
-  extends: .test
-  needs: [build-linter]
-  variables:
-    TARGET: linter
-    IMAGE: linter
-  script:
-    - make lint
-
-docs-web:
-  stage: test
-  needs: [build-release-html]
-  image: $CI_REGISTRY_IMAGE/cache/release-html:by-commit-$CI_COMMIT_SHA
-  script:
-    - ls -A | grep -v docs | xargs rm -rf
     - sobiraka --no-cache web docs/docs.yaml --output html
   artifacts:
     paths:
       - html
 
-docs-pdf:
-  stage: test
-  needs: [build-release-html]
-  image: $CI_REGISTRY_IMAGE/cache/release-html:by-commit-$CI_COMMIT_SHA
+Documentation (PDF):
+  stage: Main
+  needs: [Build images]
+  image: $CI_REGISTRY_IMAGE/tmp/release:commit-$CI_COMMIT_SHA
   script:
-    - ls -A | grep -v docs | xargs rm -rf
     - sobiraka --no-cache pdf docs/docs.yaml --output sobiraka.pdf
   artifacts:
     paths:
       - sobiraka.pdf
 
-################################################################################
+Lint:
+  stage: Main
+  extends: .sobiraka_pandoc
+  variables:
+    PYTHONPATH: src
+  before_script:
+    - *sobiraka_pandoc_bs
+    - pip install pylint==3.3.1
+  script:
+    - pylint sobiraka src/sobiraka/files/themes/*/theme.py
 
-include: .gitlab-ci-post.yml
+# endregion
+
+# ------------------------------------------------------------------------------
+# region Test
+
+Python 3.11, Pandoc 3.2:
+  stage: Test with Python 3.11
+  extends: .test
+  variables:
+    PANDOC: 3.2
+    PYTHON: 3.11
+
+Python 3.11, Pandoc 3.3:
+  stage: Test with Python 3.11
+  extends: .test
+  variables:
+    PANDOC: 3.3
+    PYTHON: 3.11
+
+Python 3.11, Pandoc 3.4:
+  stage: Test with Python 3.11
+  extends: .test
+  variables:
+    PANDOC: 3.4
+    PYTHON: 3.11
+
+Python 3.11, Pandoc 3.5:
+  stage: Test with Python 3.11
+  extends: .test
+  variables:
+    PANDOC: 3.5
+    PYTHON: 3.11
+
+Python 3.12, Pandoc 3.2:
+  stage: Test with Python 3.12
+  extends: .test
+  variables:
+    PANDOC: 3.2
+    PYTHON: 3.12
+
+Python 3.12, Pandoc 3.3:
+  stage: Test with Python 3.12
+  extends: .test
+  variables:
+    PANDOC: 3.3
+    PYTHON: 3.12
+
+Python 3.12, Pandoc 3.4:
+  stage: Test with Python 3.12
+  extends: .test
+  variables:
+    PANDOC: 3.4
+    PYTHON: 3.12
+
+Python 3.12, Pandoc 3.5:
+  stage: Test with Python 3.12
+  extends: .test
+  variables:
+    PANDOC: 3.5
+    PYTHON: 3.12
+
+Python 3.13, Pandoc 3.2:
+  stage: Test with Python 3.13
+  extends: .test
+  variables:
+    PANDOC: 3.2
+    PYTHON: 3.13
+
+Python 3.13, Pandoc 3.3:
+  stage: Test with Python 3.13
+  extends: .test
+  variables:
+    PANDOC: 3.3
+    PYTHON: 3.13
+
+Python 3.13, Pandoc 3.4:
+  stage: Test with Python 3.13
+  extends: .test
+  variables:
+    PANDOC: 3.4
+    PYTHON: 3.13
+
+Python 3.13, Pandoc 3.5:
+  stage: Test with Python 3.13
+  extends: .test
+  variables:
+    PANDOC: 3.5
+    PYTHON: 3.13
+  coverage: '/TOTAL .+ (\d+\.\d+)%/'
+
+# endregion
+
+# ------------------------------------------------------------------------------
+# region Publish
+
+Publish image:
+  stage: Publish
+  image: docker
+  services: ['docker:dind']
+  variables:
+    GIT_STRATEGY: none
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script: |
+    docker pull $CI_REGISTRY_IMAGE/tmp/release:commit-$CI_COMMIT_SHA
+    docker pull $CI_REGISTRY_IMAGE/tmp/release-latex:commit-$CI_COMMIT_SHA
+    
+    # Publish under the current commit name
+    docker tag $CI_REGISTRY_IMAGE/tmp/release:commit-$CI_COMMIT_SHA $CI_REGISTRY_IMAGE/sobiraka:$CI_COMMIT_SHA
+    docker tag $CI_REGISTRY_IMAGE/tmp/release-latex:commit-$CI_COMMIT_SHA $CI_REGISTRY_IMAGE/sobiraka-latex:$CI_COMMIT_SHA
+    docker push $CI_REGISTRY_IMAGE/sobiraka:$CI_COMMIT_SHA
+    docker push $CI_REGISTRY_IMAGE/sobiraka-latex:$CI_COMMIT_SHA
+    
+    # Publish under the 'latest' name
+    if [ $CI_COMMIT_REF_NAME == 'master' ]
+    then
+        docker tag $CI_REGISTRY_IMAGE/tmp/release:commit-$CI_COMMIT_SHA $CI_REGISTRY_IMAGE/sobiraka:latest
+        docker tag $CI_REGISTRY_IMAGE/tmp/release-latex:commit-$CI_COMMIT_SHA $CI_REGISTRY_IMAGE/sobiraka-latex:latest
+        docker push $CI_REGISTRY_IMAGE/sobiraka:latest
+        docker push $CI_REGISTRY_IMAGE/sobiraka-latex:latest
+    fi
+
+pages:
+  stage: Publish
+  variables:
+    GIT_STRATEGY: none
+  script:
+    - mv html public
+  artifacts:
+    paths:
+      - public
+  rules:
+    - if: $CI_COMMIT_REF_NAME == 'master'
+
+# endregion

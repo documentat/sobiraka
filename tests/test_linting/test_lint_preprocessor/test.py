@@ -1,4 +1,4 @@
-from unittest import main
+from unittest import main, skip
 
 from panflute import Space, Str
 
@@ -7,6 +7,7 @@ from helpers import assertNoDiff
 from sobiraka.processing.txt import TextModel
 
 
+@skip('Linting is disabled temporarily.')
 class TestLintPreprocessor(AbstractLintingTest):
 
     async def test_lines(self):

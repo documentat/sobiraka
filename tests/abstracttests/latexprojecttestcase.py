@@ -9,7 +9,7 @@ from .abstracttestwithrt import AbstractTestWithRtTmp
 from .projectdirtestcase import ProjectDirTestCase
 
 
-class PdfProjectTestCase(ProjectDirTestCase[LatexBuilder], AbstractTestWithRtTmp):
+class LatexProjectTestCase(ProjectDirTestCase[LatexBuilder], AbstractTestWithRtTmp):
     REQUIRE = PageStatus.PROCESS4
 
     def _init_processor(self):
@@ -28,13 +28,14 @@ class PdfProjectTestCase(ProjectDirTestCase[LatexBuilder], AbstractTestWithRtTmp
         pdftoppm = await create_subprocess_exec('pdftoppm', '-png', 'test.pdf', 'page', cwd=RT.TMP)
         await pdftoppm.wait()
 
-        expected_count = len(list((self.dir / 'expected' / 'pdf').glob('*.png')))
-        actual_count = len(list(RT.TMP.glob('*.png')))
+        expected_dir = self.dir / 'expected' / 'pdf'
+        expected_count = sum(1 for f in expected_dir.iterdir() if f.name.endswith('.png'))
+        actual_count = sum(1 for f in RT.TMP.iterdir() if f.name.endswith('.png'))
         self.assertEqual(expected_count, actual_count)
 
         for p in range(1, expected_count + 1):
             with self.subTest(f'page-{p}'):
-                with (self.dir / 'expected' / 'pdf' / f'page-{p}.png').open('rb') as file:
+                with (expected_dir / f'page-{p}.png').open('rb') as file:
                     expected_sha = hashlib.file_digest(file, 'sha1')
                 with (RT.TMP / f'page-{p}.png').open('rb') as file:
                     actual_sha = hashlib.file_digest(file, 'sha1')
