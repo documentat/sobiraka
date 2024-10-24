@@ -72,8 +72,11 @@ h1 {
     margin-top: 0;
 
     page: new-section;
-    page-break-before: always;
     string-set: current-title content();
+}
+
+h1:not(:first-of-type) {
+    page-break-before: always;
 }
 
 h2 {
@@ -218,6 +221,11 @@ ul.toc {
     padding-left: 0;
 
     page: toc;
+}
+
+ul.toc:not(:has(li)) {
+    page: unset;
+    display: none;
 }
 
 ul.toc li {
