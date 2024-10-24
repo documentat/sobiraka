@@ -55,7 +55,9 @@ class AbstractVisualPdfTestCase(ProjectTestCase, AbstractTestWithRtTmp, Generic[
         potentially_outdated_test = False
         try:
             # Make sure the number of screenshots is as expected
-            self.assertEqual(len(expected_screenshots), len(actual_screenshots), 'Page count is wrong!')
+            if len(expected_screenshots) != len(actual_screenshots):
+                potentially_outdated_test = True
+                self.fail('Page count is wrong!')
 
             # Compare each actual screenshot with its expected counterpart by their hash sums
             for p, (expected, actual) in enumerate(zip(expected_screenshots, actual_screenshots)):

@@ -106,12 +106,8 @@ class WeasyPrintBuilder(AbstractHtmlBuilder, VolumeProcessor):
             )
 
         if m := re.match('^_static/(.+)$', url):
-            file = self.theme.static_dir / m.group(1)
-            mime_type = guess_type(file, strict=False)[0]
-            return dict(
-                file_obj=file.open('rb'),
-                mime_type=mime_type,
-            )
+            mime_type, file_obj = self.theme.open_static_file(m.group(1))
+            return dict(file_obj=file_obj, mime_type=mime_type)
 
         if ':' not in url:
             file = config.paths.resources / url
