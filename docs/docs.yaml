@@ -3,8 +3,6 @@ paths:
   root: src
   include: ['**/*.md']
   partials: partials
-content:
-  numeration: true
 web:
   theme: book
   search:

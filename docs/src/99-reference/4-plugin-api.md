@@ -1,6 +1,6 @@
 # API для плагинов
 
-Основные методы и поля, которые вы можете переопределить в коде темы для Собираки. Методы могут использоваться как в `HtmlTheme`, так и в `PdfTheme`.
+Основные методы и поля, которые вы можете переопределить в коде темы для Собираки. Методы могут использоваться в `WebTheme`, `WeasyPrintTheme` и `LatexTheme`.
 
 {% include 'unstable-api.md' %}
 
@@ -41,7 +41,7 @@ async def process_div_example(self, div: Div, page: Page) -> tuple[Element, ...]
 async def process_role_doc(self, code: Code, page: Page) -> tuple[Element, ...]: ...
 ```
 
-Эта часть API актуальна только для формата [ReST](../1-overview/92-rest.md).
+Эта часть API актуальна только для формата [ReST](../11-overview/92-rest.md).
 
 Методы с такими именами вызываются для обработки элементов (формально принадлежащих классу `Code`) с определёнными [ролями](https://www.sphinx-doc.org/en/master/usage/restructuredtext/roles.html).
 
