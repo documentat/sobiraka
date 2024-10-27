@@ -23,7 +23,7 @@ class AbsolutePath(Path):
             path = path.absolute()
             return path
 
-    def relative_to(self, start: PathLike | str) -> RelativePath:
+    def relative_to(self, start, *_):
         # pylint: disable=arguments-differ
         start = AbsolutePath(start)
         return RelativePath(os.path.relpath(self, start=start))
@@ -31,9 +31,9 @@ class AbsolutePath(Path):
     def walk_all(self) -> Iterable[AbsolutePath]:
         for dirpath, dirnames, filenames in os.walk(self):
             for dirname in dirnames:
-                yield Path(dirpath) / dirname
+                yield AbsolutePath(dirpath) / dirname
             for filename in filenames:
-                yield Path(dirpath) / filename
+                yield AbsolutePath(dirpath) / filename
 
 
 class RelativePath(PurePosixPath):
@@ -67,7 +67,7 @@ class RelativePath(PurePosixPath):
 
         return RelativePath(*result)
 
-    def relative_to(self, start: PathLike | str) -> RelativePath:
+    def relative_to(self, start, *_):
         # pylint: disable=arguments-differ
         start = RelativePath(start)
         return RelativePath(os.path.relpath(self, start=start))

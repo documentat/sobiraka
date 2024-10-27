@@ -1,5 +1,4 @@
 from asyncio.subprocess import Process, create_subprocess_exec
-from glob import glob
 from importlib.resources import files
 from subprocess import PIPE
 from textwrap import dedent
@@ -92,7 +91,7 @@ class PagefindIndexer(SearchIndexer, PlainTextDispatcher):
         assert self.node_process.returncode == 0, 'Pagefind failure'
 
     def results(self) -> set[AbsolutePath]:
-        return set(AbsolutePath(p) for p in glob('**/*', root_dir=self.index_path))
+        return set(self.index_path.walk_all())
 
     def head_tags(self) -> Sequence[HeadTag]:
         yield HeadJsFile(self.index_path_relative / 'pagefind-ui.js')
