@@ -1,6 +1,6 @@
 @page {
     margin: 6rem 2rem 2rem 2rem;
-    size: A4;
+    size: A4 portrait;
 
     @top-left {
         content: string(current-title);
@@ -35,6 +35,10 @@
     @top-left {
         content: none;
     }
+}
+
+@page landscape {
+    size: A4 landscape;
 }
 
 body {
