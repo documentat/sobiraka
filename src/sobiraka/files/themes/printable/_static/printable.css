@@ -209,6 +209,7 @@ table thead tr:first-child th:last-child {
 
 table td {
     border: 1px solid var(--gray);
+    page-break-inside: avoid;
     padding: .3em .5em;
 }
 
