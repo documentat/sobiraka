@@ -77,12 +77,12 @@ class WeasyPrintBuilder(AbstractHtmlBuilder, VolumeProcessor):
         await super().process4(page)
 
     def render_pdf(self, html: str):
-        ok = True
+        messages = ''
 
         class WeasyPrintLogHandler(logging.NullHandler):
             def handle(self, record: logging.LogRecord):
-                nonlocal ok
-                ok = False
+                nonlocal messages
+                messages += record.getMessage() + '\n'
 
         handler = WeasyPrintLogHandler()
         try:
@@ -91,8 +91,8 @@ class WeasyPrintBuilder(AbstractHtmlBuilder, VolumeProcessor):
             printer = weasyprint.HTML(string=html, base_url='sobiraka:print.html', url_fetcher=self.fetch_url)
             printer.write_pdf(self.output)
 
-            if not ok:
-                raise RuntimeError('WeasyPrint has something to say, please check above the progressbar.')
+            if messages:
+                raise WeasyPrintException(f'\n\n{messages}')
 
         finally:
             logging.getLogger('weasyprint').removeHandler(handler)
@@ -186,3 +186,7 @@ class WeasyPrintBuilder(AbstractHtmlBuilder, VolumeProcessor):
             header.identifier = self.make_internal_url(href)[1:]
 
         return header,
+
+
+class WeasyPrintException(Exception):
+    pass
