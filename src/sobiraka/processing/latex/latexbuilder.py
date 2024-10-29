@@ -15,7 +15,7 @@ from sobiraka.models import Page, PageHref, PageStatus, Volume
 from sobiraka.models.config import Config_Latex_Headers
 from sobiraka.models.exceptions import DisableLink
 from sobiraka.processing.abstract import VolumeProcessor
-from sobiraka.processing.plugin import LatexTheme, load_latex_theme
+from sobiraka.processing.plugin import LatexTheme, load_theme
 from sobiraka.processing.replacement import HeaderReplPara
 from sobiraka.report import update_progressbar
 from sobiraka.runtime import RT
@@ -32,7 +32,7 @@ class LatexBuilder(VolumeProcessor):
         # Load an optional post-processor a.k.a. LatexTheme
         self._theme: LatexTheme | None = None
         if self.volume.config.latex.theme is not None:
-            self._theme = load_latex_theme(self.volume.config.latex.theme)
+            self._theme = load_theme(self.volume.config.latex.theme, LatexTheme)
 
     async def run(self):
         xelatex_workdir = RT.TMP / 'tex'

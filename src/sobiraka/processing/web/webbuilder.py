@@ -20,7 +20,7 @@ from sobiraka.utils import AbsolutePath, RelativePath, super_gather
 from .abstracthtmlbuilder import AbstractHtmlBuilder
 from .search import PagefindIndexer, SearchIndexer
 from ..abstract import ProjectProcessor
-from ..plugin import WebTheme, load_web_theme
+from ..plugin import WebTheme, load_theme
 
 
 class WebBuilder(AbstractHtmlBuilder, ProjectProcessor):
@@ -36,7 +36,7 @@ class WebBuilder(AbstractHtmlBuilder, ProjectProcessor):
 
         self._themes: dict[Volume, WebTheme] = {}
         for volume in project.volumes:
-            self._themes[volume] = load_web_theme(volume.config.web.theme)
+            self._themes[volume] = load_theme(volume.config.web.theme, WebTheme)
 
     async def run(self):
         self.output.mkdir(parents=True, exist_ok=True)

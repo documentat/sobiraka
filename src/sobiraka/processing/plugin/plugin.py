@@ -1,4 +1,5 @@
 from abc import ABCMeta
+from contextlib import suppress
 from importlib.util import module_from_spec, spec_from_file_location
 from inspect import isclass
 from typing import TypeVar
@@ -11,6 +12,16 @@ class Plugin(Dispatcher, metaclass=ABCMeta):
     """
     A plugin for Sobiraka.
     """
+
+
+class Theme(Plugin, metaclass=ABCMeta):
+    """
+    A theme for Sobiraka.
+    """
+
+    def __init__(self, theme_dir: AbsolutePath):
+        super().__init__()
+        self.theme_dir: AbsolutePath = theme_dir
 
 
 P = TypeVar('P', bound=Plugin)
@@ -37,3 +48,12 @@ def load_plugin(plugin_file: AbsolutePath, base_class: type[P] = Plugin) -> type
     assert len(klasses) == 1, klasses
     klass = klasses[0]
     return klass
+
+
+T = TypeVar('T', bound=Theme)
+
+
+def load_theme(theme_dir: AbsolutePath, base_class: type[Theme]) -> T:
+    with suppress(FileNotFoundError, AssertionError):
+        base_class = load_plugin(theme_dir / 'theme.py', base_class=base_class)
+    return base_class(theme_dir)

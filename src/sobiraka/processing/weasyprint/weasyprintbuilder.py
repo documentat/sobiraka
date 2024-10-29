@@ -12,7 +12,7 @@ from sobiraka.models import Page, PageHref, PageStatus, Volume
 from sobiraka.models.config import CombinedToc, Config
 from sobiraka.models.exceptions import DisableLink
 from sobiraka.processing.abstract import VolumeProcessor
-from sobiraka.processing.plugin import WeasyPrintTheme, load_weasyprint_theme
+from sobiraka.processing.plugin import WeasyPrintTheme, load_theme
 from sobiraka.processing.web.abstracthtmlbuilder import AbstractHtmlBuilder
 from sobiraka.report import update_progressbar
 from sobiraka.runtime import RT
@@ -26,7 +26,7 @@ class WeasyPrintBuilder(AbstractHtmlBuilder, VolumeProcessor):
         AbstractHtmlBuilder.__init__(self)
 
         self.output: AbsolutePath = output
-        self.theme: WeasyPrintTheme = load_weasyprint_theme(self.volume.config.pdf.theme)
+        self.theme: WeasyPrintTheme = load_theme(self.volume.config.pdf.theme, WeasyPrintTheme)
 
         self.pseudofiles: dict[str, bytes] = {}
 

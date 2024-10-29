@@ -1,13 +1,10 @@
 from abc import ABCMeta
-from contextlib import suppress
-from dataclasses import dataclass
 
 from sobiraka.utils import AbsolutePath
-from .plugin import Plugin, load_plugin
+from .plugin import Theme
 
 
-@dataclass
-class LatexTheme(Plugin, metaclass=ABCMeta):
+class LatexTheme(Theme, metaclass=ABCMeta):
     """
     A theme for LatexBuilder.
 
@@ -17,24 +14,17 @@ class LatexTheme(Plugin, metaclass=ABCMeta):
     The implementation will be called via Dispatcher.process_container().
     """
 
-    style: AbsolutePath = None
-    """LaTeX code to be included at the very beginning, even before ``\\begin{document}``."""
+    def __init__(self, theme_dir: AbsolutePath):
+        super().__init__(theme_dir)
 
-    cover: AbsolutePath = None
-    """LaTeX code to be included immediately after the document environment began."""
+        self.style = _try_find_file(theme_dir, 'style.sty')
+        """LaTeX code to be included at the very beginning, even before ``\\begin{document}``."""
 
-    toc: AbsolutePath = None
-    """LaTeX code to be included after the cover."""
+        self.cover = _try_find_file(theme_dir, 'cover.tex')
+        """LaTeX code to be included immediately after the document environment began."""
 
-
-def load_latex_theme(theme_dir: AbsolutePath) -> LatexTheme:
-    theme = LatexTheme()
-    with suppress(FileNotFoundError):
-        theme = load_plugin(theme_dir / 'theme.py', base_class=LatexTheme)()
-    theme.style = _try_find_file(theme_dir, 'style.sty')
-    theme.cover = _try_find_file(theme_dir, 'cover.tex')
-    theme.toc = _try_find_file(theme_dir, 'toc.tex')
-    return theme
+        self.toc = _try_find_file(theme_dir, 'toc.tex')
+        """LaTeX code to be included after the cover."""
 
 
 def _try_find_file(base: AbsolutePath, filename: str) -> AbsolutePath | None:
