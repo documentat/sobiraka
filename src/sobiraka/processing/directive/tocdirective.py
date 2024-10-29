@@ -2,11 +2,11 @@ from argparse import ArgumentParser
 from math import inf
 from typing import Iterable, TYPE_CHECKING
 
-from panflute import BulletList, Element, Header, Link, ListItem, Plain, Space, Str
+from panflute import BulletList, Div, Element, Header, Link, ListItem, Plain, Str
 
 from sobiraka.models import Page
 from sobiraka.models.config import CombinedToc, Config
-from sobiraka.utils import Unnumbered, replace_element
+from sobiraka.utils import replace_element
 from .directive import Directive
 from ..toc import Toc, local_toc, toc
 
@@ -42,7 +42,8 @@ class TocDirective(Directive):
         bullet_list = BulletList(*_make_items(toc_items,
                                               format=self.format,
                                               numeration=config.content.numeration))
-        replace_element(self, bullet_list)
+        div = Div(bullet_list, classes=['toc'])
+        replace_element(self, div)
 
 
 class LocalTocDirective(Directive):
@@ -92,20 +93,14 @@ class LocalTocDirective(Directive):
         bullet_list = BulletList(*_make_items(toc_items,
                                               format=self.format,
                                               numeration=config.content.numeration))
-        replace_element(self, bullet_list)
+        div = Div(bullet_list, classes=['toc'])
+        replace_element(self, div)
 
 
 def _make_items(toc_items: Toc, *, format: str, numeration: bool) -> Iterable[ListItem]:
     # pylint: disable=redefined-builtin
-
     for item in toc_items:
-        plain = Plain(Link(Str(item.title), url=item.url))
-        li = ListItem(plain)
-
-        if numeration and item.number is not Unnumbered:
-            plain.content = Str(item.number.format(format)), Space(), *plain.content
-
+        li = ListItem(Plain(Link(Str(item.title), url=item.url)))
         if len(item.children) > 0:
             li.content.append(BulletList(*_make_items(item.children, format=format, numeration=numeration)))
-
         yield li

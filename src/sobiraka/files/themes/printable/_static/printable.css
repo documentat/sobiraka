@@ -222,49 +222,52 @@ table td {
     Table of contents
  */
 
-ul.toc {
-    padding-left: 0;
-
+div.toc.main-toc {
     page: toc;
+    page-break-after: always;
 }
 
-ul.toc:not(:has(li)) {
+div.toc:not(:has(ul li)) {
     page: unset;
     display: none;
 }
 
-ul.toc li {
+div.toc > ul {
+    padding-left: 0;
+}
+
+div.toc > ul li {
     list-style: none;
     font-family: "Lato", sans-serif;
     font-size: 16pt;
 }
 
-ul.toc li a::before {
+div.toc > ul li a::before {
     color: var(--gray);
     content: target-text(attr(href), before) ' ';
 }
 
-ul.toc li a::after {
+div.toc > ul li a::after {
     color: black;
     content: ' ' leader(dotted) ' ' target-counter(attr(href), page);
 }
 
-ul.toc > li {
+div.toc > ul > li {
     font-family: "Lato Black", sans-serif;
     font-size: 18pt;
     margin-top: .5em;
 }
 
-ul.toc > li > a {
+div.toc > ul > li > a {
     color: black;
 }
 
-ul.toc > li > a::after {
+div.toc > ul > li > a::after {
     content: leader(' ') target-counter(attr(href), page);
     font-family: inherit;
 }
 
-ul.toc > li > ul {
+div.toc > ul > li > ul {
     padding-left: 0;
 }
 

@@ -8,15 +8,17 @@ from sobiraka.utils import RelativePath
 
 
 class TestWeasyPrint_Numeration(WeasyPrintProjectTestCase):
-    PAGE_LIMIT = 1
+    PAGE_LIMIT = 4
 
     def _init_project(self) -> Project:
         fs = Mock(FileSystem)
         config = Config(content=Config_Content(numeration=True))
         return Project(fs, {
             RelativePath(): Volume(config, {
-                RelativePath('chapter1'): Page('# Chapter 1'),
-                RelativePath('chapter1/section1'): Page('# Section 1'),
+                RelativePath(): Page('Here is some introduction.'),
+
+                RelativePath('chapter1'): Page('# Chapter 1\n\n@toc'),
+                RelativePath('chapter1/section1'): Page('# Section 1\n\n@toc'),
                 RelativePath('chapter1/section1/page1.md'): Page('# Page 1'),
                 RelativePath('chapter1/section1/page2.md'): Page('# Page 2'),
                 RelativePath('chapter1/section2'): Page('# Section 2'),

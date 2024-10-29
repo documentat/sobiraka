@@ -16,6 +16,10 @@ class TestWeasyPrint_PageMargins(WeasyPrintProjectTestCase):
                 font-family: "Lato", sans-serif;
             }
             
+            div.toc {
+                display: none;
+            }
+            
             @page {
                 margin: 10rem;
                 @top-left-corner     { content: "@top-left-corner";     background: deeppink;  }
