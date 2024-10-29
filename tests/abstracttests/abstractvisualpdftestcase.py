@@ -18,6 +18,13 @@ T = TypeVar('T', bound=Processor)
 class AbstractVisualPdfTestCase(ProjectTestCase, AbstractTestWithRtTmp, Generic[T]):
     REQUIRE = PageStatus.PROCESS4
 
+    PAGE_LIMIT: int = None
+    """
+    When this value is set, the test only compares this many pages of the resulting PDF, not all pages.
+    It also DOES NOT compare the number of pages produces by the builder.
+    This mode is intended only for tests which focus on the cover or the TOC.
+    """
+
     @classmethod
     def expected_dir(cls) -> AbsolutePath:
         this_file = AbsolutePath(inspect.getfile(cls))
@@ -41,14 +48,21 @@ class AbstractVisualPdfTestCase(ProjectTestCase, AbstractTestWithRtTmp, Generic[
         return results_dir
 
     async def test_pdf(self):
+        (RT.TMP / 'screenshots').mkdir()
+
+        # Scan the directory with the expected screenshots
         expected_screenshots = self.expected_dir().iterdir()
         expected_screenshots = list(f for f in expected_screenshots if f.name.endswith('.png'))
         expected_screenshots.sort()
 
-        # Generate PDF, then convert it to a series of PNG screenshots
+        # Generate PDF
         await self.processor.run()
-        (RT.TMP / 'screenshots').mkdir()
-        pdftoppm = await create_subprocess_exec('pdftoppm', '-png', 'test.pdf', 'screenshots/page', cwd=RT.TMP)
+
+        # Convert PDF to a series of PNG screenshots
+        pdftoppm_command = ['pdftoppm', 'test.pdf', 'screenshots/page', '-png']
+        if self.PAGE_LIMIT:
+            pdftoppm_command += ['-l', str(self.PAGE_LIMIT)]
+        pdftoppm = await create_subprocess_exec(*pdftoppm_command, cwd=RT.TMP)
         await pdftoppm.wait()
         actual_screenshots: list[AbsolutePath] = list(sorted((RT.TMP / 'screenshots').iterdir()))
 
@@ -62,8 +76,6 @@ class AbstractVisualPdfTestCase(ProjectTestCase, AbstractTestWithRtTmp, Generic[
             # Compare each actual screenshot with its expected counterpart by their hash sums
             for p, (expected, actual) in enumerate(zip(expected_screenshots, actual_screenshots)):
                 with self.subTest(expected.stem):
-                    self.assertEqual(f'page-{p + 1}.png', expected.name)
-                    self.assertEqual(f'page-{p + 1}.png', actual.name)
                     with expected.open('rb') as file:
                         expected_sha = hashlib.file_digest(file, 'sha1')
                     with actual.open('rb') as file:

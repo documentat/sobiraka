@@ -240,10 +240,12 @@ ul.toc li {
 }
 
 ul.toc li a::before {
+    color: var(--gray);
     content: target-text(attr(href), before) ' ';
 }
 
 ul.toc li a::after {
+    color: black;
     content: ' ' leader(dotted) ' ' target-counter(attr(href), page);
 }
 
