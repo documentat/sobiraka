@@ -66,14 +66,14 @@ ENV PATH /opt/conda/envs/myenv/bin:$PATH
 FROM latex-python-nodejs AS common-latex
 COPY --from=get-weasyprint /var/cache/apt /var/cache/apt
 RUN apt install --yes weasyprint
-RUN --mount=type=cache,target=/root/.npm npm install -g pagefind
+RUN --mount=type=cache,target=/root/.npm npm install -g pagefind sass
 COPY --from=get-fonts /tmp/fonts /usr/share/fonts
 ENTRYPOINT [""]
 
 FROM python-nodejs AS common
 COPY --from=get-weasyprint /var/cache/apt /var/cache/apt
 RUN apt install --yes weasyprint
-RUN --mount=type=cache,target=/root/.npm npm install -g pagefind
+RUN --mount=type=cache,target=/root/.npm npm install -g pagefind sass
 COPY --from=get-fonts /tmp/fonts /usr/share/fonts
 ENTRYPOINT [""]
 

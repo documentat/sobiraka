@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import re
 from abc import ABCMeta, abstractmethod
-from asyncio import Task, TaskGroup, create_subprocess_exec, create_task
+from asyncio import Task, TaskGroup, create_subprocess_exec, create_task, to_thread
 from copy import deepcopy
-from subprocess import PIPE
+from subprocess import PIPE, Popen
 from typing import final
 
 from panflute import Image
@@ -15,7 +15,7 @@ from sobiraka.runtime import RT
 from sobiraka.utils import AbsolutePath, RelativePath, panflute_to_bytes
 from .head import Head
 from ..abstract import Processor
-from ..plugin import WebTheme
+from ..plugin import AbstractHtmlTheme
 
 
 class AbstractHtmlBuilder(Processor, metaclass=ABCMeta):
@@ -36,12 +36,23 @@ class AbstractHtmlBuilder(Processor, metaclass=ABCMeta):
                 tg.create_task(self.add_file_from_project(source_path, target_path))
 
     @final
-    async def compile_all_sass(self, theme: WebTheme):
+    async def compile_all_sass(self, theme: AbstractHtmlTheme):
         async with TaskGroup() as tg:
-            for source_path, target_path in theme.sass_files.items():
-                source_path = theme.theme_dir / source_path
-                target_path = RelativePath('_static') / target_path
-                tg.create_task(self.compile_sass(source_path, target_path))
+            for source, target in theme.sass_files.items():
+                source = theme.theme_dir / source
+                tg.create_task(to_thread(self.compile_sass, source, target))
+
+    @abstractmethod
+    def compile_sass(self, source: AbsolutePath, target: str):
+        ...
+
+    @final
+    def compile_sass_impl(self, source: AbsolutePath) -> bytes:
+        with Popen(['sass', '--style=compressed', source.name], cwd=source.parent, stdout=PIPE, stderr=PIPE) as process:
+            stdout, stderr = process.communicate()
+            if process.returncode != 0:
+                raise RuntimeError(f'SASS compilation failed.\n\n{stderr.decode()}')
+            return stdout
 
     async def process4(self, page: Page):
         self.apply_postponed_image_changes(page)
@@ -141,8 +152,4 @@ class AbstractHtmlBuilder(Processor, metaclass=ABCMeta):
 
     @abstractmethod
     async def add_file_from_project(self, source: RelativePath, target: RelativePath):
-        raise NotImplementedError
-
-    @abstractmethod
-    async def compile_sass(self, source: AbsolutePath, destination: RelativePath):
         raise NotImplementedError

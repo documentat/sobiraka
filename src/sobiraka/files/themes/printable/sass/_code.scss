@@ -1,0 +1,24 @@
+code {
+    background: var(--lightgray);
+    border-radius: .2em;
+    box-sizing: content-box;
+    display: inline-block;
+    font-family: "JetBrains Mono NL Medium", monospace;
+    font-size: .9em;
+    padding: 0 .2em;
+}
+
+pre {
+    background: var(--lightgray);
+    border-radius: .2em;
+    font-family: "JetBrains Mono NL Medium", monospace;
+    font-size: .9em;
+    overflow-wrap: anywhere;
+    padding: .5em .5em;
+    margin: 0;
+    white-space: pre-wrap;
+
+    code {
+        background: none;
+    }
+}

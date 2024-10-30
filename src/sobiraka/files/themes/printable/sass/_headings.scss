@@ -1,0 +1,37 @@
+h1, h2, h3, h4, h5, h6 {
+    bookmark-label: content(before) ' ' content(text);
+
+    &:not([data-number=''])::before {
+        content: attr(data-number) '. ';
+        color: var(--gray);
+    }
+}
+
+h1 {
+    font-family: "Lato Black", sans-serif;
+    font-size: 30pt;
+    margin-top: 0;
+
+    page: new-section;
+    string-set: current-title content();
+
+    &:not(:first-of-type) {
+        page-break-before: always;
+    }
+}
+
+h2 {
+    font-family: "Lato Semibold", sans-serif;
+    font-size: 24pt;
+}
+
+h3 {
+    font-family: "Lato Light", sans-serif;
+    font-size: 18pt;
+}
+
+h1 + *,
+h2 + *,
+h3 + * {
+    margin-top: -.5em;
+}

@@ -2,15 +2,13 @@ from __future__ import annotations
 
 import os.path
 import re
-import sys
-from asyncio import create_subprocess_exec, create_task, to_thread
+from asyncio import create_task, to_thread
 from datetime import datetime
 from itertools import chain
 from os.path import relpath
 from shutil import copyfile, rmtree
 
 import iso639
-from aiofiles.os import makedirs
 from panflute import Element, Header, Image
 
 from sobiraka.models import DirPage, IndexPage, Page, PageHref, PageStatus, Project, Volume
@@ -249,18 +247,12 @@ class WebBuilder(AbstractHtmlBuilder, ProjectProcessor):
         await to_thread(self.project.fs.copy, source, target)
         self._results.add(target)
 
-    async def compile_sass(self, source: AbsolutePath, destination: RelativePath):
-        destination = self.output / destination
-        await makedirs(destination.parent, exist_ok=True)
-
-        sass = await create_subprocess_exec('sass', '--style=compressed', f'{source}:{destination}')
-        await sass.wait()
-        if sass.returncode != 0:
-            print('SASS compilation failed.', file=sys.stderr)
-            sys.exit(1)
-
-        self._results.add(destination)
-        self._results.add(destination.with_suffix('.css.map'))
+    def compile_sass(self, source: AbsolutePath, target: str):
+        css = self.compile_sass_impl(source)
+        target = self.output / '_static' / target
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(css)
+        self._results.add(target)
 
     async def process_header(self, header: Header, page: Page) -> tuple[Element, ...]:
         header, = await super().process_header(header, page)

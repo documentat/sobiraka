@@ -11,6 +11,7 @@ from sobiraka.utils import RelativePath
 class TestWeasyPrint_PageMargins(WeasyPrintProjectTestCase):
     def _init_processor(self):
         builder: WeasyPrintBuilder = super()._init_processor()
+        builder.theme.sass_files.clear()
         builder.theme.static_pseudofiles['printable.css'] = 'text/css', dedent('''
             html {
                 font-family: "Lato", sans-serif;

@@ -1,0 +1,41 @@
+.book-search {
+    .pagefind-ui__search-clear {
+        display: none;
+    }
+
+    ol.pagefind-ui__results {
+        padding: 0;
+        margin: 0;
+        list-style: none;
+
+        li {
+            margin: 1em 0;
+            position: relative
+        }
+
+        a {
+            display: block;
+
+            &:hover {
+                opacity: .5
+            }
+        }
+
+        p {
+            margin: 0;
+
+            &.pagefind-ui__result-excerpt {
+                font-size: small;
+                opacity: .5;
+            }
+        }
+
+        .pagefind-ui__button {
+            display: none;
+        }
+
+        .pagefind-ui__message {
+            display: none;
+        }
+    }
+}

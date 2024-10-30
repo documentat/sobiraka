@@ -2,6 +2,7 @@ import logging
 import re
 import sys
 from asyncio import Task, create_task
+from contextlib import suppress
 from mimetypes import guess_type
 from types import NoneType
 
@@ -16,7 +17,7 @@ from sobiraka.processing.plugin import WeasyPrintTheme, load_theme
 from sobiraka.processing.web.abstracthtmlbuilder import AbstractHtmlBuilder
 from sobiraka.report import update_progressbar
 from sobiraka.runtime import RT
-from sobiraka.utils import AbsolutePath, RelativePath, TocNumber
+from sobiraka.utils import AbsolutePath, RelativePath, TocNumber, super_gather
 
 
 class WeasyPrintBuilder(AbstractHtmlBuilder, VolumeProcessor):
@@ -28,7 +29,7 @@ class WeasyPrintBuilder(AbstractHtmlBuilder, VolumeProcessor):
         self.output: AbsolutePath = output
         self.theme: WeasyPrintTheme = load_theme(self.volume.config.pdf.theme, WeasyPrintTheme)
 
-        self.pseudofiles: dict[str, bytes] = {}
+        self.pseudofiles: dict[str, tuple[str, bytes]] = {}
 
     async def run(self):
         from ..toc import toc
@@ -43,11 +44,18 @@ class WeasyPrintBuilder(AbstractHtmlBuilder, VolumeProcessor):
             processing[page] = create_task(self.require(page, PageStatus.PROCESS4),
                                            name=f'generate html for {page.path_in_project}')
 
+        # Launch non-page processing tasks
+        self._html_builder_tasks += (
+            create_task(self.compile_all_sass(self.theme)),
+        )
+
         # Combine rendered pages into a single page
         content: list[tuple[Page, TocNumber, str, str]] = []
         for page in volume.pages:
             await processing[page]
             content.append((page, RT[page].number, RT[page].title, RT[page].bytes.decode('utf-8')))
+
+        await super_gather(self._html_builder_tasks, 'Some tasks failed when building HTML')
 
         # Apply the rendering template
         html = await self.theme.page_template.render_async(
@@ -100,10 +108,9 @@ class WeasyPrintBuilder(AbstractHtmlBuilder, VolumeProcessor):
     def fetch_url(self, url: str) -> dict:
         config: Config = self.volume.config
 
-        if url in self.pseudofiles:
-            return dict(
-                string=self.pseudofiles[url],
-            )
+        with suppress(KeyError):
+            mime_type, content = self.pseudofiles[url]
+            return dict(string=content, mime_type=mime_type)
 
         if m := re.match('^_static/(.+)$', url):
             mime_type, file_obj = self.theme.open_static_file(m.group(1))
@@ -142,8 +149,8 @@ class WeasyPrintBuilder(AbstractHtmlBuilder, VolumeProcessor):
     async def add_file_from_project(self, source: RelativePath, target: RelativePath):
         raise NotImplementedError
 
-    async def compile_sass(self, source: AbsolutePath, destination: RelativePath):
-        raise NotImplementedError
+    def compile_sass(self, source: AbsolutePath, target: str):
+        self.pseudofiles[f'_static/{target}'] = 'text/css', self.compile_sass_impl(source)
 
     def get_path_to_resources(self, page: Page) -> RelativePath:
         return RelativePath('_resources')

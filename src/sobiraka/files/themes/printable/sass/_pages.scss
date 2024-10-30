@@ -1,0 +1,52 @@
+@page {
+    margin: 6rem 2rem 2rem 2rem;
+    size: A4 portrait;
+
+    @top-left {
+        content: string(current-title);
+        font-family: "Lato Medium", sans-serif;
+        font-size: 13pt;
+        font-style: italic;
+        margin-top: 2em;
+        vertical-align: top;
+    }
+
+    @top-right {
+        content: counter(page);
+        font-family: "Lato Medium", sans-serif;
+        font-size: 13pt;
+        font-style: italic;
+        margin-top: 2em;
+        vertical-align: top;
+    }
+}
+
+@page toc {
+    @top-left {
+        content: none;
+    }
+
+    @top-right {
+        content: none;
+    }
+}
+
+@page new-section {
+    @top-left {
+        content: none;
+    }
+}
+
+@page landscape {
+    size: A4 landscape;
+}
+
+body {
+    --blue: #4e6fde;
+    --gray: #989898;
+    --lightgray: #ececec;
+
+    font-family: "Lato", sans-serif;
+    font-size: 14pt;
+    margin: 0;
+}

@@ -2,6 +2,7 @@ from panflute import Div, Element, Header, Link, RawBlock, Space, Str
 
 from sobiraka.models import Page
 from sobiraka.processing.plugin import WebTheme
+from sobiraka.utils import AbsolutePath
 
 
 class BookTheme(WebTheme):
@@ -9,7 +10,12 @@ class BookTheme(WebTheme):
     A clean and simple HTML theme, based on https://github.com/alex-shpak/hugo-book.
     Supports multilanguage projects.
     """
+
     # pylint: disable=unused-argument
+
+    def __init__(self, theme_dir: AbsolutePath):
+        super().__init__(theme_dir)
+        self.sass_files['sass/additional.scss'] = 'additional.css'
 
     async def process_header(self, header: Header, page: Page) -> tuple[Element, ...]:
         if header.level >= 2:
