@@ -40,7 +40,6 @@ class WebBuilder(AbstractHtmlBuilder, ProjectProcessor):
         self.output.mkdir(parents=True, exist_ok=True)
 
         for volume in self.project.volumes:
-            config: Config = volume.config
             theme = self._themes[volume]
 
             # Launch page processing tasks
@@ -52,13 +51,8 @@ class WebBuilder(AbstractHtmlBuilder, ProjectProcessor):
                 create_task(self.add_directory_from_location(theme.static_dir, RelativePath('_static'))),
                 create_task(self.add_additional_static_files(volume)),
                 create_task(self.compile_all_sass(theme)),
+                create_task(self.prepare_search_indexer(volume)),
             )
-
-            # Initialize search indexer
-            if config.web.search.engine is not None:
-                indexer = await self.prepare_search_indexer(volume)
-                self._indexers[volume] = indexer
-                self._head += indexer.head_tags()
 
         # Wait until all pages will be generated and all additional files will be copied to the output directory
         # This may include tasks that started as a side effect of generating the HTML pages
@@ -219,9 +213,12 @@ class WebBuilder(AbstractHtmlBuilder, ProjectProcessor):
         resources = self.output / page.volume.config.web.resources_prefix
         return resources.relative_to(start.parent)
 
-    async def prepare_search_indexer(self, volume: Volume) -> SearchIndexer:
-        # Select the search indexer implementation
+    async def prepare_search_indexer(self, volume: Volume):
         config: Config = volume.config
+        if config.web.search.engine is None:
+            return
+
+        # Select the search indexer implementation
         indexer_class = {
             SearchIndexerName.PAGEFIND: PagefindIndexer,
         }[config.web.search.engine]
@@ -234,7 +231,10 @@ class WebBuilder(AbstractHtmlBuilder, ProjectProcessor):
         # Initialize the indexer
         indexer = indexer_class(self, volume, index_relative_path)
         await indexer.initialize()
-        return indexer
+        self._indexers[volume] = indexer
+
+        # Put required files to the HTML head
+        self._head += indexer.head_tags()
 
     async def add_file_from_location(self, source: AbsolutePath, target: RelativePath):
         target = self.output / target
