@@ -140,7 +140,7 @@ class Config_Web:
     theme: AbsolutePath = files('sobiraka') / 'files' / 'themes' / 'simple'
     """Path to the theme that should be used when generating HTML."""
 
-    theme_data: dict[str, Any] = field(default=dict)
+    theme_data: dict[str, Any] = field(default=frozendict)
 
     toc_depth: int | float = inf
 
@@ -177,7 +177,7 @@ class Config_Latex:
     toc: bool = True
     """Whether to add a table of contents."""
 
-    paths: dict[str, RelativePath] = field(default=dict)
+    paths: dict[str, RelativePath] = field(default=frozendict)
 
     headers: Config_Latex_Headers = field(default_factory=Config_Latex_Headers)
 
