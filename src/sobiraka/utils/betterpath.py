@@ -3,7 +3,7 @@ from __future__ import annotations
 import os.path
 import sys
 from os import PathLike
-from pathlib import Path, PurePosixPath
+from pathlib import Path
 from typing import Iterable
 
 
@@ -36,13 +36,15 @@ class AbsolutePath(Path):
                 yield AbsolutePath(dirpath) / filename
 
 
-class RelativePath(PurePosixPath):
+class RelativePath(Path):
     if sys.version_info >= (3, 12):
         def __init__(self, *pathsegments):
             super().__init__(*pathsegments)
             if self.is_absolute():
                 raise WrongPathType(f'{str(self)!r} is not a relative path.')
     else:
+        _flavour = Path().__class__._flavour  # pylint: disable=no-member,protected-access
+
         def __new__(cls, *args):
             path = super().__new__(cls, *args)
             if path.is_absolute():

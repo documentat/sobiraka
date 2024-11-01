@@ -16,6 +16,7 @@ from sobiraka.models.config import Config, SearchIndexerName
 from sobiraka.runtime import RT
 from sobiraka.utils import AbsolutePath, RelativePath, super_gather
 from .abstracthtmlbuilder import AbstractHtmlBuilder
+from .head import HeadCssFile, HeadJsFile
 from .search import PagefindIndexer, SearchIndexer
 from ..abstract import ProjectProcessor
 from ..plugin import WebTheme, load_theme
@@ -49,6 +50,7 @@ class WebBuilder(AbstractHtmlBuilder, ProjectProcessor):
             # Launch non-page processing tasks
             self._html_builder_tasks += (
                 create_task(self.add_directory_from_location(theme.static_dir, RelativePath('_static'))),
+                create_task(self.add_custom_files(volume)),
                 create_task(self.compile_all_sass(theme)),
                 create_task(self.prepare_search_indexer(volume)),
             )
@@ -211,6 +213,23 @@ class WebBuilder(AbstractHtmlBuilder, ProjectProcessor):
         start = self.output / self.get_target_path(page)
         resources = self.output / page.volume.config.web.resources_prefix
         return resources.relative_to(start.parent)
+
+    async def add_custom_files(self, volume: Volume):
+        config: Config = volume.config
+
+        for script in config.web.custom_scripts:
+            source = RelativePath(script)
+            assert source.suffix == '.js'
+            target = RelativePath() / 'js' / source.name
+            await self.add_file_from_project(source, target)
+            self._head.append(HeadJsFile(target))
+
+        for style in config.web.custom_styles:
+            source = RelativePath(style)
+            assert source.suffix == '.css'
+            target = RelativePath() / 'css' / source.name
+            await self.add_file_from_project(source, target)
+            self._head.append(HeadCssFile(target))
 
     async def prepare_search_indexer(self, volume: Volume):
         config: Config = volume.config

@@ -9,11 +9,12 @@ from types import NoneType
 import weasyprint
 from panflute import CodeBlock, Element, Header, Image, RawBlock
 
-from sobiraka.models import Page, PageHref, PageStatus, Volume
+from sobiraka.models import FileSystem, Page, PageHref, PageStatus, Volume
 from sobiraka.models.config import CombinedToc, Config
 from sobiraka.models.exceptions import DisableLink
 from sobiraka.processing.abstract import VolumeProcessor
 from sobiraka.processing.plugin import WeasyPrintTheme, load_theme
+from sobiraka.processing.web import HeadCssFile
 from sobiraka.processing.web.abstracthtmlbuilder import AbstractHtmlBuilder
 from sobiraka.report import update_progressbar
 from sobiraka.runtime import RT
@@ -46,6 +47,7 @@ class WeasyPrintBuilder(AbstractHtmlBuilder, VolumeProcessor):
 
         # Launch non-page processing tasks
         self._html_builder_tasks += (
+            create_task(self.add_custom_files()),
             create_task(self.compile_all_sass(self.theme)),
         )
 
@@ -57,6 +59,8 @@ class WeasyPrintBuilder(AbstractHtmlBuilder, VolumeProcessor):
 
         await super_gather(self._html_builder_tasks, 'Some tasks failed when building HTML')
 
+        head = self._head.render('')
+
         # Apply the rendering template
         html = await self.theme.page_template.render_async(
             builder=self,
@@ -65,6 +69,7 @@ class WeasyPrintBuilder(AbstractHtmlBuilder, VolumeProcessor):
             volume=volume,
             config=volume.config,
 
+            head=head,
             toc=lambda **kwargs: toc(volume.root_page,
                                      processor=self,
                                      toc_depth=volume.config.pdf.toc_depth,
@@ -157,6 +162,16 @@ class WeasyPrintBuilder(AbstractHtmlBuilder, VolumeProcessor):
 
     def get_path_to_static(self, page: Page) -> RelativePath:
         return RelativePath('_static')  # TODO
+
+    async def add_custom_files(self):
+        config: Config = self.volume.config
+        fs: FileSystem = self.volume.project.fs
+
+        for style in config.pdf.custom_styles:
+            source = RelativePath(style)
+            assert source.suffix == '.css'
+            self.pseudofiles[f'css/{source.name}'] = 'text/css', fs.read_bytes(source)
+            self._head.append(HeadCssFile(RelativePath(f'css/{source.name}')))
 
     def get_relative_image_url(self, image: Image, page: Page) -> str:
         return image.url

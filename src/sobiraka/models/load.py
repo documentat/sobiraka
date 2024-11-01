@@ -98,6 +98,8 @@ def _load_volume(lang: str | None, codename: str, volume_data: dict, fs: FileSys
             resources_prefix=_('web.resources_prefix', '_resources'),
             theme=_find_theme_dir(_('web.theme', 'simple'), fs=fs),
             theme_data=_('web.theme_data', {}),
+            custom_styles=tuple(map(RelativePath, _('web.custom_styles', ()))),
+            custom_scripts=tuple(map(RelativePath, _('web.custom_scripts', ()))),
             toc_depth=int(re.sub(r'^infinity$', '0', str(_('web.toc_depth', 'infinity')))) or inf,
             combined_toc=CombinedToc(_('web.combined_toc', 'never')),
             search=Config_Web_Search(
@@ -122,6 +124,7 @@ def _load_volume(lang: str | None, codename: str, volume_data: dict, fs: FileSys
         ),
         pdf=Config_PDF(
             theme=_find_theme_dir(_('pdf.theme', 'printable'), fs=fs),
+            custom_styles=tuple(map(RelativePath, _('pdf.custom_styles', ()))),
             toc_depth=int(re.sub(r'^infinity$', '0', str(_('pdf.toc_depth', 'infinity')))) or inf,
             combined_toc=_('pdf.combined_toc', False),
         ),

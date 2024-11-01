@@ -70,6 +70,14 @@ $defs:
           resources_prefix: { type: string }
           theme: { type: string }
           theme_data: { type: object }
+          custom_scripts:
+            type: array
+            uniqueItems: true
+            items: { type: string }
+          custom_styles:
+            type: array
+            uniqueItems: true
+            items: { type: string }
           toc_depth:
             oneOf:
               - type: integer
@@ -130,6 +138,10 @@ $defs:
         additionalProperties: false
         properties:
           theme: { type: string }
+          custom_styles:
+            type: array
+            uniqueItems: true
+            items: { type: string }
           toc_depth:
             oneOf:
               - type: integer

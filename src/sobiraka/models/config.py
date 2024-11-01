@@ -140,6 +140,10 @@ class Config_Web:
 
     theme_data: dict[str, Any] = field(default=frozendict)
 
+    custom_styles: tuple[RelativePath, ...] = ()
+
+    custom_scripts: tuple[RelativePath, ...] = ()
+
     toc_depth: int | float = inf
 
     combined_toc: CombinedToc = CombinedToc.NEVER
@@ -186,6 +190,8 @@ class Config_PDF:
 
     theme: AbsolutePath = files('sobiraka') / 'files' / 'themes' / 'printable'
     """Path to the theme that should be used when generating PDF via WeasyPrint."""
+
+    custom_styles: tuple[RelativePath, ...] = ()
 
     toc_depth: int | float = inf
 
