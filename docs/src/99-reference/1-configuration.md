@@ -182,10 +182,6 @@ paths:
 
 Если настройка не задана, используется директория “_resources”.
 
-### `web.resources_force_copy` {#volume.web.resources_force_copy}
-
-Список файлов, которые следует скопировать из [`paths.resources`](#volume.paths.resources) в [`web.resources_prefix`](#volume.web.resources_prefix) принудительно, даже если на них не ссылается ни одна страница документации. Например, здесь может быть необходимо указать путь к иконке проекта, на которую может сослаться используемая тема.
-
 ### `web.theme` {#volume.web.theme}
 
 Название или путь к директории с HTML-темой.

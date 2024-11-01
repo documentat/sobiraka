@@ -49,7 +49,6 @@ class WebBuilder(AbstractHtmlBuilder, ProjectProcessor):
             # Launch non-page processing tasks
             self._html_builder_tasks += (
                 create_task(self.add_directory_from_location(theme.static_dir, RelativePath('_static'))),
-                create_task(self.add_additional_static_files(volume)),
                 create_task(self.compile_all_sass(theme)),
                 create_task(self.prepare_search_indexer(volume)),
             )

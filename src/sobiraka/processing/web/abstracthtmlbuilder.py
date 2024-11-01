@@ -28,14 +28,6 @@ class AbstractHtmlBuilder(Processor, metaclass=ABCMeta):
         self._head: Head = Head()
 
     @final
-    async def add_additional_static_files(self, volume: Volume):
-        async with TaskGroup() as tg:
-            for filename in volume.config.web.resources_force_copy:
-                source_path = (volume.config.paths.resources or volume.config.paths.root) / filename
-                target_path = volume.config.web.resources_prefix / filename
-                tg.create_task(self.add_file_from_project(source_path, target_path))
-
-    @final
     async def compile_all_sass(self, theme: AbstractHtmlTheme):
         async with TaskGroup() as tg:
             for source, target in theme.sass_files.items():

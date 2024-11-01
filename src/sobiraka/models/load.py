@@ -96,7 +96,6 @@ def _load_volume(lang: str | None, codename: str, volume_data: dict, fs: FileSys
         web=Config_Web(
             prefix=_('web.prefix', '$AUTOPREFIX'),
             resources_prefix=_('web.resources_prefix', '_resources'),
-            resources_force_copy=_('web.resources_force_copy', ()),
             theme=_find_theme_dir(_('web.theme', 'simple'), fs=fs),
             theme_data=_('web.theme_data', {}),
             toc_depth=int(re.sub(r'^infinity$', '0', str(_('web.toc_depth', 'infinity')))) or inf,

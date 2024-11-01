@@ -135,8 +135,6 @@ class Config_Web:
     resources_prefix: str = '_resources'
     """Relative path to the directory for placing the resources, such as images."""
 
-    resources_force_copy: tuple[str, ...] = ()
-
     theme: AbsolutePath = files('sobiraka') / 'files' / 'themes' / 'simple'
     """Path to the theme that should be used when generating HTML."""
 
