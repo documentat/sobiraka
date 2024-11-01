@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os.path
 import re
-from asyncio import create_task, to_thread
+from asyncio import to_thread
 from datetime import datetime
 from itertools import chain
 from os.path import relpath
@@ -14,7 +14,7 @@ from panflute import Element, Header, Image
 from sobiraka.models import DirPage, IndexPage, Page, PageHref, PageStatus, Project, Volume
 from sobiraka.models.config import Config, SearchIndexerName
 from sobiraka.runtime import RT
-from sobiraka.utils import AbsolutePath, RelativePath, super_gather
+from sobiraka.utils import AbsolutePath, RelativePath
 from .abstracthtmlbuilder import AbstractHtmlBuilder
 from .head import HeadCssFile, HeadJsFile
 from .search import PagefindIndexer, SearchIndexer
@@ -45,19 +45,17 @@ class WebBuilder(AbstractHtmlBuilder, ProjectProcessor):
 
             # Launch page processing tasks
             for page in volume.pages:
-                self._html_builder_tasks.append(create_task(self.require(page, PageStatus.PROCESS4)))
+                self.add_html_task(self.require(page, PageStatus.PROCESS4))
 
             # Launch non-page processing tasks
-            self._html_builder_tasks += (
-                create_task(self.add_directory_from_location(theme.static_dir, RelativePath('_static'))),
-                create_task(self.add_custom_files(volume)),
-                create_task(self.compile_all_sass(theme)),
-                create_task(self.prepare_search_indexer(volume)),
-            )
+            self.add_html_task(self.add_directory_from_location(theme.static_dir, RelativePath('_static')))
+            self.add_html_task(self.add_custom_files(volume))
+            self.add_html_task(self.compile_all_sass(theme))
+            self.add_html_task(self.prepare_search_indexer(volume))
 
         # Wait until all pages will be generated and all additional files will be copied to the output directory
         # This may include tasks that started as a side effect of generating the HTML pages
-        await super_gather(self._html_builder_tasks, 'Some tasks failed when building HTML')
+        await self.await_all_html_tasks()
 
         # Finalize all search indexers
         for indexer in self._indexers.values():

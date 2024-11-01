@@ -18,7 +18,7 @@ from sobiraka.processing.web import HeadCssFile
 from sobiraka.processing.web.abstracthtmlbuilder import AbstractHtmlBuilder
 from sobiraka.report import update_progressbar
 from sobiraka.runtime import RT
-from sobiraka.utils import AbsolutePath, RelativePath, TocNumber, super_gather
+from sobiraka.utils import AbsolutePath, RelativePath, TocNumber
 
 
 class WeasyPrintBuilder(AbstractHtmlBuilder, VolumeProcessor):
@@ -46,10 +46,8 @@ class WeasyPrintBuilder(AbstractHtmlBuilder, VolumeProcessor):
                                            name=f'generate html for {page.path_in_project}')
 
         # Launch non-page processing tasks
-        self._html_builder_tasks += (
-            create_task(self.add_custom_files()),
-            create_task(self.compile_all_sass(self.theme)),
-        )
+        self.add_html_task(self.add_custom_files())
+        self.add_html_task(self.compile_all_sass(self.theme))
 
         # Combine rendered pages into a single page
         content: list[tuple[Page, TocNumber, str, str]] = []
@@ -57,7 +55,7 @@ class WeasyPrintBuilder(AbstractHtmlBuilder, VolumeProcessor):
             await processing[page]
             content.append((page, RT[page].number, RT[page].title, RT[page].bytes.decode('utf-8')))
 
-        await super_gather(self._html_builder_tasks, 'Some tasks failed when building HTML')
+        await self.await_all_html_tasks()
 
         head = self._head.render('')
 

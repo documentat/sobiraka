@@ -5,14 +5,14 @@ from abc import ABCMeta, abstractmethod
 from asyncio import Task, TaskGroup, create_subprocess_exec, create_task, to_thread
 from copy import deepcopy
 from subprocess import PIPE, Popen
-from typing import final
+from typing import Awaitable, Coroutine, final
 
 from panflute import Image
 
 from sobiraka.models import Page, Volume
 from sobiraka.models.config import Config
 from sobiraka.runtime import RT
-from sobiraka.utils import AbsolutePath, RelativePath, panflute_to_bytes
+from sobiraka.utils import AbsolutePath, RelativePath, panflute_to_bytes, super_gather
 from .head import Head
 from ..abstract import Processor
 from ..plugin import AbstractHtmlTheme
@@ -26,6 +26,12 @@ class AbstractHtmlBuilder(Processor, metaclass=ABCMeta):
         self._html_builder_tasks: list[Task] = []
         self._results: set[AbsolutePath] = set()
         self._head: Head = Head()
+
+    def add_html_task(self, coro: Coroutine):
+        self._html_builder_tasks.append(create_task(coro))
+
+    def await_all_html_tasks(self) -> Awaitable:
+        return super_gather(self._html_builder_tasks, 'Some tasks failed when building HTML')
 
     @final
     async def compile_all_sass(self, theme: AbstractHtmlTheme):
@@ -112,8 +118,7 @@ class AbstractHtmlBuilder(Processor, metaclass=ABCMeta):
         # Schedule copying the image file to the output directory
         source_path = config.paths.resources / image.url
         target_path = RelativePath(config.web.resources_prefix) / image.url
-        if target_path not in self._html_builder_tasks:
-            self._html_builder_tasks.append(create_task(self.add_file_from_project(source_path, target_path)))
+        self.add_html_task(self.add_file_from_project(source_path, target_path))
 
         # Use the path relative to the page path
         # (we postpone the actual change in the element to not confuse the WebTheme custom code later)
