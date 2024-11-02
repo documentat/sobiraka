@@ -2,7 +2,6 @@ import sys
 from argparse import ArgumentParser
 from asyncio import run
 
-from sobiraka.cache import init_cache
 from sobiraka.linter import Linter
 from sobiraka.models.load import load_project
 from sobiraka.processing import LatexBuilder, WeasyPrintBuilder, WebBuilder
@@ -19,10 +18,6 @@ async def async_main():
 
     parser = ArgumentParser()
     parser.add_argument('--tmpdir', type=AbsolutePath, default=AbsolutePath('build'))
-
-    cache_or_no_cache = parser.add_mutually_exclusive_group()
-    cache_or_no_cache.add_argument('--no-cache', action='store_true')
-    cache_or_no_cache.add_argument('--cache', type=AbsolutePath, default=AbsolutePath('.cache'))
 
     commands = parser.add_subparsers(title='commands', dest='command')
 
@@ -63,9 +58,6 @@ async def async_main():
 
     args = parser.parse_args()
     RT.TMP = args.tmpdir
-
-    if not args.no_cache:
-        init_cache(args.cache)  # TODO uses $SRC/.cache
 
     if args.command is None:
         parser.print_help()

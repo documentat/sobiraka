@@ -117,7 +117,7 @@ Documentation (HTML):
   needs: [Build images]
   image: $CI_REGISTRY_IMAGE/tmp/release:commit-$CI_COMMIT_SHA
   script:
-    - sobiraka --no-cache web docs/docs.yaml --output html
+    - sobiraka web docs/docs.yaml --output html
   artifacts:
     paths:
       - html
@@ -127,7 +127,7 @@ Documentation (PDF):
   needs: [Build images]
   image: $CI_REGISTRY_IMAGE/tmp/release:commit-$CI_COMMIT_SHA
   script:
-    - sobiraka --no-cache pdf docs/docs.yaml --output sobiraka.pdf
+    - sobiraka pdf docs/docs.yaml --output sobiraka.pdf
   artifacts:
     paths:
       - sobiraka.pdf
