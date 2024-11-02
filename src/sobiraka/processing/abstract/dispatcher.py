@@ -9,6 +9,7 @@ from ..directive import Directive
 
 
 class Dispatcher:
+    # TODO Rename: Dispatcher → Processor
     # pylint: disable=too-many-public-methods
 
     async def process_element(self, elem: Element, page: Page) -> tuple[Element, ...]:

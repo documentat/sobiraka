@@ -63,7 +63,7 @@ class TestLinks2(ProjectTestCase):
         for target_text, expected_path in data.items():
             with self.subTest(target=target_text):
                 previous_links_count = len(RT[page].links)
-                await self.processor._process_internal_link(Link(), target_text, page)
+                await self.builder._process_internal_link(Link(), target_text, page)
                 self.assertEqual(previous_links_count + 1, len(RT[page].links))
 
                 href = RT[page].links[-1]

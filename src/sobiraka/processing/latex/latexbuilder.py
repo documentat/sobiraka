@@ -14,7 +14,7 @@ from panflute import Element, Header, Str, stringify
 from sobiraka.models import Page, PageHref, PageStatus, Volume
 from sobiraka.models.config import Config_Latex_Headers
 from sobiraka.models.exceptions import DisableLink
-from sobiraka.processing.abstract import VolumeProcessor
+from sobiraka.processing.abstract import VolumeBuilder
 from sobiraka.processing.plugin import LatexTheme, load_theme
 from sobiraka.processing.replacement import HeaderReplPara
 from sobiraka.report import update_progressbar
@@ -22,7 +22,7 @@ from sobiraka.runtime import RT
 from sobiraka.utils import AbsolutePath, LatexInline, panflute_to_bytes
 
 
-class LatexBuilder(VolumeProcessor):
+class LatexBuilder(VolumeBuilder):
     def __init__(self, volume: Volume, output: AbsolutePath):
         super().__init__(volume)
         self.output: AbsolutePath = output

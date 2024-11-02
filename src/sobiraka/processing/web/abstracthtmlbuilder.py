@@ -14,14 +14,14 @@ from sobiraka.models.config import Config
 from sobiraka.runtime import RT
 from sobiraka.utils import AbsolutePath, RelativePath, panflute_to_bytes, super_gather
 from .head import Head, HeadCssFile
-from ..abstract import Processor
+from ..abstract import Builder
 from ..plugin import AbstractHtmlTheme
 
 
-class AbstractHtmlBuilder(Processor, metaclass=ABCMeta):
+class AbstractHtmlBuilder(Builder, metaclass=ABCMeta):
 
     def __init__(self):
-        Processor.__init__(self)
+        Builder.__init__(self)
 
         self._html_builder_tasks: list[Task] = []
         self._results: set[AbsolutePath] = set()

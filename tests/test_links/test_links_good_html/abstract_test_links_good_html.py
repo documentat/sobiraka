@@ -8,7 +8,7 @@ from sobiraka.utils import AbsolutePath
 
 
 class AbstractTestLinksGoodHtml(ProjectDirTestCase):
-    def _init_processor(self):
+    def _init_builder(self):
         output = self.enterContext(TemporaryDirectory(prefix='sobiraka-test-'))
         return WebBuilder(self.project, AbsolutePath(output))
 
@@ -80,7 +80,7 @@ class AbstractTestLinksGoodHtml(ProjectDirTestCase):
                             + str(href.target.path_in_volume.with_suffix(''))
                             + (f'#{href.anchor}' if href.anchor else '')
                     ):
-                        actual_url = self.processor.make_internal_url(href, page=page)
+                        actual_url = self.builder.make_internal_url(href, page=page)
                         self.assertEqual(expected_url, actual_url)
 
 

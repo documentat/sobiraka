@@ -4,13 +4,13 @@ from unittest.mock import Mock
 from panflute import BulletList, Div, Element, Link, ListItem, Plain, Str
 
 from abstracttests.projecttestcase import ProjectTestCase
-from helpers.fakeprocessor import FakeProcessor
+from helpers.fakebuilder import FakeBuilder
 from sobiraka.models import FileSystem, Page, PageStatus, Project, Volume
 from sobiraka.runtime import RT
 from sobiraka.utils import RelativePath
 
 
-class AbstractTestTocDirective(ProjectTestCase[FakeProcessor]):
+class AbstractTestTocDirective(ProjectTestCase[FakeBuilder]):
     REQUIRE = PageStatus.PROCESS3
 
     directive: str

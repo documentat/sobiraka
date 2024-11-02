@@ -4,9 +4,9 @@ from unittest import main
 from unittest.mock import Mock
 
 from abstracttests.abstracttestwithrt import AbstractTestWithRtPages
-from helpers.fakeprocessor import FakeProcessor
+from helpers.fakebuilder import FakeBuilder
 from sobiraka.models import FileSystem, Page, PageStatus, Project, Volume
-from sobiraka.processing.abstract import Processor
+from sobiraka.processing.abstract import Builder
 from sobiraka.processing.toc import Toc, TocItem, local_toc
 from sobiraka.utils import RelativePath
 
@@ -28,9 +28,9 @@ class AbstractTestLocalToc(AbstractTestWithRtPages):
                     (page := Page(dedent(self.source))),
             }),
         })
-        await Processor().require(page, PageStatus.PROCESS1)
+        await Builder().require(page, PageStatus.PROCESS1)
         actual = local_toc(page,
-                           processor=FakeProcessor(project),
+                           builder=FakeBuilder(project),
                            toc_depth=self.toc_depth)
         self.assertEqual(self.expected, actual)
 

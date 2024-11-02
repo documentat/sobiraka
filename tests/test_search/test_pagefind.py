@@ -20,11 +20,11 @@ class AbstractTestPagefindIndexer(ProjectTestCase[WebBuilder], AbstractTestWithR
     LINK_TARGET = Config_Search_LinkTarget.H1
     EXPECTED: tuple[call, ...]
 
-    def _init_processor(self):
+    def _init_builder(self):
         return WebBuilder(self.project, RT.TMP / 'build')
 
     async def test_add_record(self, mock: MagicMock):
-        indexer = PagefindIndexer(self.processor, self.project.get_volume(), RT.TMP / 'build' / 'pagefind')
+        indexer = PagefindIndexer(self.builder, self.project.get_volume(), RT.TMP / 'build' / 'pagefind')
         indexer.search_config = Config_Web_Search(link_target=self.LINK_TARGET)
         await indexer.initialize()
         for page in self.project.pages:

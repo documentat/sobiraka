@@ -28,25 +28,25 @@ class TestHtmlImages(ProjectTestCase[WebBuilder]):
 
         return load_project_from_str(manifest, fs=fs)
 
-    def _init_processor(self) -> WebBuilder:
+    def _init_builder(self) -> WebBuilder:
         output = self.enterContext(TemporaryDirectory(prefix='sobiraka-test-'))
         return WebBuilder(self.project, AbsolutePath(output))
 
     async def asyncSetUp(self):
         await super().asyncSetUp()
-        await self.processor.run()
+        await self.builder.run()
 
     def test_images(self):
         for name in ('absolute', 'relative'):
             with self.subTest(name):
-                actual = (self.processor.output / 'img_dst' / f'{name}.png').read_bytes()
+                actual = (self.builder.output / 'img_dst' / f'{name}.png').read_bytes()
                 self.assertEqual(name.encode(), actual)
 
     def test_html(self):
         for name in ('absolute', 'relative'):
             with self.subTest(name):
                 expected = f'<img src="img_dst/{name}.png" />'
-                actual = (self.processor.output / f'{name}.html').read_text()
+                actual = (self.builder.output / f'{name}.html').read_text()
                 self.assertIn(expected, actual)
 
 

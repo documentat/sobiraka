@@ -6,7 +6,7 @@ from panflute import Block
 from sobiraka.models import Page
 
 if TYPE_CHECKING:
-    from ..abstract import Processor
+    from ..abstract import Builder
 
 
 class Directive(Block, metaclass=ABCMeta):
@@ -17,19 +17,19 @@ class Directive(Block, metaclass=ABCMeta):
     It must be placed in what Pandoc considers a separate paragraph
     (the most sure way to do it is to add newlines before and after).
 
-    During an early step of processing, the code in `Processor` walks through all paragraphs in the document.
+    During an early step of building, the code in `Processor` walks through all paragraphs in the document.
     If a paragraph begins with one of the known directive names, it replaces the paragraph with a `Directive`.
 
     When the code in `Dispatcher` finds this element, it calls its `process()` function.
-    At a later stage of processing, the processor calls each directive's `postprocess()`.
+    At a later stage of building, the builder calls each directive's `postprocess()`.
 
     Directives are convenient for implementing features that need to put generated Pandoc AST elements into pages.
     For example, `TocDirective` is used a placeholder that is later replaced with other AST elements,
     all without the need to render the generated content into a temporary Markdown or other syntax.
     """
 
-    def __init__(self, processor: 'Processor', page: Page):
-        self.processor: 'Processor' = processor
+    def __init__(self, builder: 'Builder', page: Page):
+        self.builder: 'Builder' = builder
         self.page: Page = page
 
     def __repr__(self):

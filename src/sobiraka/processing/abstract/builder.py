@@ -26,14 +26,14 @@ from ..directive import Directive
 from ..numerate import numerate
 
 
-class Processor(Dispatcher):
+class Builder(Dispatcher):
     # pylint: disable=too-many-instance-attributes
     # pylint: disable=too-many-public-methods
 
     def __init__(self):
         self.tasks: dict[Page | Volume, dict[PageStatus, Task]] = defaultdict(dict)
         """
-        Dictionary of all tasks that the processor has started. Managed by `create_page_task()`.
+        Dictionary of all tasks that the building has started. Managed by `create_page_task()`.
         """
 
         self.jinja: dict[Volume, jinja2.Environment] = {}
@@ -450,11 +450,11 @@ class Processor(Dispatcher):
         ...
 
 
-class ProjectProcessor(Processor):
+class ProjectBuilder(Builder):
     # TODO: add ABCMeta to the base Processor class
     # pylint: disable=abstract-method
     def __init__(self, project: Project):
-        Processor.__init__(self)
+        Builder.__init__(self)
         self.project: Project = project
 
     def get_project(self) -> Project:
@@ -467,10 +467,10 @@ class ProjectProcessor(Processor):
         return self.project.pages
 
 
-class VolumeProcessor(Processor):
+class VolumeBuilder(Builder):
     # pylint: disable=abstract-method
     def __init__(self, volume: Volume):
-        Processor.__init__(self)
+        Builder.__init__(self)
         self.volume: Volume = volume
 
     def get_project(self) -> Project:

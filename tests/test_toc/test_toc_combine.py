@@ -3,7 +3,7 @@ from unittest import main
 from unittest.mock import Mock
 
 from abstracttests.projecttestcase import ProjectTestCase
-from helpers.fakeprocessor import FakeProcessor
+from helpers.fakebuilder import FakeBuilder
 from sobiraka.models import FileSystem, Page, Project, Volume
 from sobiraka.models.config import CombinedToc
 from sobiraka.processing.toc import Toc, TocItem, toc
@@ -14,7 +14,7 @@ Test that the `combined_toc` argument affects whether local TOCs are embedded in
 """
 
 
-class AbstractTestTocCombine(ProjectTestCase[FakeProcessor]):
+class AbstractTestTocCombine(ProjectTestCase[FakeBuilder]):
     combine: CombinedToc
     toc_depth: int | float = inf
     expected: Toc
@@ -36,7 +36,7 @@ class AbstractTestTocCombine(ProjectTestCase[FakeProcessor]):
 
         volume = self.project.get_volume()
         actual = toc(volume,
-                     processor=self.processor,
+                     builder=self.builder,
                      toc_depth=self.toc_depth,
                      combined_toc=self.combine,
                      current_page=volume.pages_by_path[RelativePath('section1/page1.md')])

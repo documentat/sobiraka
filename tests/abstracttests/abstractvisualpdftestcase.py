@@ -5,14 +5,14 @@ from asyncio import create_subprocess_exec
 from typing import Generic, TypeVar
 
 from sobiraka.models import PageStatus
-from sobiraka.processing.abstract import Processor
+from sobiraka.processing.abstract import Builder
 from sobiraka.runtime import RT
 from sobiraka.utils import AbsolutePath
 from .abstracttestwithrt import AbstractTestWithRtTmp
 from .projectdirtestcase import ProjectDirTestCase
 from .projecttestcase import ProjectTestCase
 
-T = TypeVar('T', bound=Processor)
+T = TypeVar('T', bound=Builder)
 
 
 class AbstractVisualPdfTestCase(ProjectTestCase, AbstractTestWithRtTmp, Generic[T]):
@@ -56,7 +56,7 @@ class AbstractVisualPdfTestCase(ProjectTestCase, AbstractTestWithRtTmp, Generic[
         expected_screenshots.sort()
 
         # Generate PDF
-        await self.processor.run()
+        await self.builder.run()
 
         # Convert PDF to a series of PNG screenshots
         pdftoppm_command = ['pdftoppm', 'test.pdf', 'screenshots/page', '-png']

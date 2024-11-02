@@ -5,12 +5,12 @@ from typing import Any, Generic, Iterable, TypeVar
 from unittest import SkipTest
 
 from abstracttests.abstracttestwithrt import AbstractTestWithRtPages
-from helpers.fakeprocessor import FakeProcessor
+from helpers.fakebuilder import FakeBuilder
 from sobiraka.models import Page, PageStatus, Project
-from sobiraka.processing.abstract import Processor
+from sobiraka.processing.abstract import Builder
 from sobiraka.utils import AbsolutePath, super_gather
 
-T = TypeVar('T', bound=Processor)
+T = TypeVar('T', bound=Builder)
 
 
 class ProjectTestCase(AbstractTestWithRtPages, Generic[T], metaclass=ABCMeta):
@@ -22,7 +22,7 @@ class ProjectTestCase(AbstractTestWithRtPages, Generic[T], metaclass=ABCMeta):
         await super().asyncSetUp()
 
         self.project = self._init_project()
-        self.processor: T = self._init_processor()
+        self.builder: T = self._init_builder()
 
         await self._process()
 
@@ -30,13 +30,13 @@ class ProjectTestCase(AbstractTestWithRtPages, Generic[T], metaclass=ABCMeta):
     def _init_project(self) -> Project:
         ...
 
-    def _init_processor(self) -> T:
-        return FakeProcessor(self.project)
+    def _init_builder(self) -> T:
+        return FakeBuilder(self.project)
 
     async def _process(self):
         tasks = []
         for page in self.project.pages:
-            tasks.append(create_task(self.processor.require(page, self.REQUIRE)))
+            tasks.append(create_task(self.builder.require(page, self.REQUIRE)))
         await super_gather(tasks)
 
     def subTest(self, msg: Any = ..., **params: Any):

@@ -10,7 +10,7 @@ from .abstractvisualpdftestcase import AbstractVisualPdfTestCase
 class WeasyPrintProjectTestCase(AbstractVisualPdfTestCase[WeasyPrintBuilder], metaclass=ABCMeta):
     REQUIRE = PageStatus.PROCESS4
 
-    def _init_processor(self):
+    def _init_builder(self):
         return WeasyPrintBuilder(self.project.volumes[0], RT.TMP / 'test.pdf')
 
 

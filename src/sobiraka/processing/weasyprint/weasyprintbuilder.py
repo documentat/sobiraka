@@ -12,7 +12,7 @@ from panflute import CodeBlock, Element, Header, Image, RawBlock
 from sobiraka.models import FileSystem, Page, PageHref, PageStatus, Volume
 from sobiraka.models.config import CombinedToc, Config
 from sobiraka.models.exceptions import DisableLink
-from sobiraka.processing.abstract import VolumeProcessor
+from sobiraka.processing.abstract import VolumeBuilder
 from sobiraka.processing.plugin import WeasyPrintTheme, load_theme
 from sobiraka.processing.web import HeadCssFile
 from sobiraka.processing.web.abstracthtmlbuilder import AbstractHtmlBuilder
@@ -21,10 +21,10 @@ from sobiraka.runtime import RT
 from sobiraka.utils import AbsolutePath, RelativePath, TocNumber
 
 
-class WeasyPrintBuilder(AbstractHtmlBuilder, VolumeProcessor):
+class WeasyPrintBuilder(AbstractHtmlBuilder, VolumeBuilder):
 
     def __init__(self, volume: Volume, output: AbsolutePath):
-        VolumeProcessor.__init__(self, volume)
+        VolumeBuilder.__init__(self, volume)
         AbstractHtmlBuilder.__init__(self)
 
         self.output: AbsolutePath = output
@@ -69,7 +69,7 @@ class WeasyPrintBuilder(AbstractHtmlBuilder, VolumeProcessor):
 
             head=head,
             toc=lambda **kwargs: toc(volume.root_page,
-                                     processor=self,
+                                     builder=self,
                                      toc_depth=volume.config.pdf.toc_depth,
                                      combined_toc=CombinedToc.from_bool(volume.config.pdf.combined_toc),
                                      **kwargs),

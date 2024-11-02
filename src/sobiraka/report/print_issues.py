@@ -8,10 +8,10 @@ from sobiraka.runtime import RT
 from .style import COLORS, ICONS
 
 if TYPE_CHECKING:
-    from sobiraka.processing.abstract import Processor
+    from sobiraka.processing.abstract import Builder
 
 
-def print_issues(processor: 'Processor') -> bool:
+def print_issues(builder: 'Builder') -> bool:
     """
     For each page with the FAILURE status, print a list of issues that occurred.
     For each page with the DEP_FAILURE status, print a list of failed pages it depends on.
@@ -21,7 +21,7 @@ def print_issues(processor: 'Processor') -> bool:
     failures: list[Page] = []
     dep_failures: list[Page] = []
 
-    for page in processor.get_pages():
+    for page in builder.get_pages():
         if RT[page].status is PageStatus.FAILURE:
             issues_count += len(RT[page].issues)
             failures.append(page)

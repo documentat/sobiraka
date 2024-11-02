@@ -16,7 +16,7 @@ from sobiraka.utils import TocNumber, Unnumbered
 
 if TYPE_CHECKING:
     from sobiraka.models import Page, Volume
-    from sobiraka.processing.abstract import Processor
+    from sobiraka.processing.abstract import Builder
 
 
 @dataclass
@@ -141,7 +141,7 @@ class Toc(list[TocItem]):
 def toc(
         base: Volume | Page,
         *,
-        processor: Processor,
+        builder: Builder,
         toc_depth: int | float,
         combined_toc: CombinedToc,
         current_page: Page | None = None,
@@ -155,7 +155,7 @@ def toc(
     If given a `Volume`, the function will generate a top-level TOC.
     If given a `Page`, the function will generate a TOC of the page's child pages.
 
-    The function uses `processor` and `current_page` for generating each item's correct URL.
+    The function uses `builder` and `current_page` for generating each item's correct URL.
     Also, the `current_page` is used for marking `TocItem`s as current or selected.
 
     The `toc_depth` limits the depth of the TOC.
@@ -185,7 +185,7 @@ def toc(
 
     for page in pages:
         item = TocItem(title=RT[page].title,
-                       url=processor.make_internal_url(PageHref(page), page=current_page),
+                       url=builder.make_internal_url(PageHref(page), page=current_page),
                        number=RT[page].number,
                        source=page,
                        is_current=page is current_page,
@@ -193,14 +193,14 @@ def toc(
 
         if combined_toc is CombinedToc.ALWAYS or (combined_toc is CombinedToc.CURRENT and item.is_current):
             item.children += local_toc(page,
-                                       processor=processor,
+                                       builder=builder,
                                        toc_depth=toc_depth - 1,
                                        current_page=current_page)
 
         if len(page.children) > 0:
             if toc_depth > 1 or item.is_selected:
                 item.children += toc(page,
-                                     processor=processor,
+                                     builder=builder,
                                      current_page=current_page,
                                      toc_depth=toc_depth - 1,
                                      combined_toc=combined_toc)
@@ -215,7 +215,7 @@ def toc(
 def local_toc(
         page: Page,
         *,
-        processor: Processor,
+        builder: Builder,
         toc_depth: int | float = inf,
         current_page: Page | None = None,
 ) -> Toc:
@@ -232,7 +232,7 @@ def local_toc(
         if anchor.level > toc_depth + 1:
             continue
 
-        url = processor.make_internal_url(PageHref(page, anchor.identifier), page=current_page)
+        url = builder.make_internal_url(PageHref(page, anchor.identifier), page=current_page)
         item = TocItem(title=anchor.label, url=url, number=RT[anchor].number, source=anchor)
 
         if anchor.level == current_level:

@@ -18,14 +18,14 @@ from sobiraka.utils import AbsolutePath, RelativePath
 from .abstracthtmlbuilder import AbstractHtmlBuilder
 from .head import HeadCssFile, HeadJsFile
 from .search import PagefindIndexer, SearchIndexer
-from ..abstract import ProjectProcessor
+from ..abstract import ProjectBuilder
 from ..plugin import WebTheme, load_theme
 
 
-class WebBuilder(AbstractHtmlBuilder, ProjectProcessor):
+class WebBuilder(AbstractHtmlBuilder, ProjectBuilder):
 
     def __init__(self, project: Project, output: AbsolutePath, *, hide_index_html: bool = False):
-        ProjectProcessor.__init__(self, project)
+        ProjectBuilder.__init__(self, project)
         AbstractHtmlBuilder.__init__(self)
 
         self.output: AbsolutePath = output
@@ -122,12 +122,12 @@ class WebBuilder(AbstractHtmlBuilder, ProjectProcessor):
             head=head,
             now=datetime.now(),
             toc=lambda **kwargs: toc(volume.root_page,
-                                     processor=self,
+                                     builder=self,
                                      toc_depth=volume.config.web.toc_depth,
                                      combined_toc=volume.config.web.combined_toc,
                                      current_page=page,
                                      **kwargs),
-            local_toc=lambda: local_toc(page, processor=self, current_page=page),
+            local_toc=lambda: local_toc(page, builder=self, current_page=page),
             Language=iso639.Language,
 
             ROOT=root_prefix,

@@ -36,7 +36,7 @@ class AbstractTestTocDepth(ProjectTestCase[WebBuilder]):
             RelativePath('src'): Volume(config, dataset_paths()),
         })
 
-    def _init_processor(self):
+    def _init_builder(self):
         return WebBuilder(self.project, self.output)
 
     async def test_toc_depth(self):
@@ -51,7 +51,7 @@ class AbstractTestTocDepth(ProjectTestCase[WebBuilder]):
             page = self.project.get_volume().pages_by_path[path]
             with self.subTest(page):
                 actual = toc(page,
-                             processor=self.processor,
+                             builder=self.builder,
                              toc_depth=self.toc_depth,
                              combined_toc=CombinedToc.NEVER,
                              current_page=page)
@@ -73,7 +73,7 @@ class AbstractTestTocDepth(ProjectTestCase[WebBuilder]):
                 expected = re.sub(r'<(a|strong)([^>]*)>\n\s+([^>]+)\n\s+</\1>', r'<\1\2>\3</\1>', expected)
 
                 actual = toc(self.project.get_volume(),
-                             processor=self.processor,
+                             builder=self.builder,
                              toc_depth=self.toc_depth,
                              combined_toc=CombinedToc.NEVER,
                              current_page=page)

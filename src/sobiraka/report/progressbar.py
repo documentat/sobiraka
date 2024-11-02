@@ -10,23 +10,23 @@ from .print_issues import print_issues
 from .style import ICONS
 
 if TYPE_CHECKING:
-    from sobiraka.processing.abstract import Processor
+    from sobiraka.processing.abstract import Builder
 
 
-async def run_with_progressbar(processor: 'Processor'):
-    # Enable the progress bar and call `processor.run()`
-    progressbar = ProgressBarLogHandler(processor)
+async def run_with_progressbar(builder: 'Builder'):
+    # Enable the progress bar and call `builder.run()`
+    progressbar = ProgressBarLogHandler(builder)
     try:
         logging.getLogger().addHandler(progressbar)
-        result = await processor.run()
+        result = await builder.run()
         assert result in (0, None), result
         return 0
 
     # If any exception is raised, we send it to ProgressBarLogHandler which prints it.
     # Then, we print the list of issues that occurred during the processing.
     except:  # pylint: disable=bare-except
-        logging.getLogger().exception(f'{processor.__class__.__name__} failed.')
-        print_issues(processor)
+        logging.getLogger().exception(f'{builder.__class__.__name__} failed.')
+        print_issues(builder)
         return 1
 
     finally:
@@ -57,12 +57,12 @@ class ProgressBarUpdate(logging.LogRecord):
 
 class ProgressBarLogHandler(logging.StreamHandler):
     """
-    The actual log handler that renders a nice progressbar based on what happens in the processor.
+    The actual log handler that renders a nice progressbar based on what happens in the builder.
     """
-    def __init__(self, processor: 'Processor'):
+    def __init__(self, builder: 'Builder'):
         super().__init__()
 
-        self.processor: 'Processor' = processor
+        self.builder: 'Builder' = builder
         self.message: str | None = None
 
     def handle(self, record: logging.LogRecord):
@@ -94,7 +94,7 @@ class ProgressBarLogHandler(logging.StreamHandler):
         print(clear_line(), end='\r', file=sys.stderr)
 
         # Print a one-character 'icon' representing each page's status
-        for page in self.processor.get_pages():
+        for page in self.builder.get_pages():
             print(ICONS[RT[page].status], end=Style.RESET_ALL, file=sys.stderr)
 
         # Print a message, if provided

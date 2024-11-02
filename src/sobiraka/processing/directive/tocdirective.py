@@ -11,12 +11,12 @@ from .directive import Directive
 from ..toc import Toc, local_toc, toc
 
 if TYPE_CHECKING:
-    from ..abstract import Processor
+    from ..abstract import Builder
 
 
 class TocDirective(Directive):
-    def __init__(self, processor: 'Processor', page: Page, argv: list[str]):
-        super().__init__(processor, page)
+    def __init__(self, builder: 'Builder', page: Page, argv: list[str]):
+        super().__init__(builder, page)
 
         parser = ArgumentParser(add_help=False)
         parser.add_argument('--depth', type=int, default=inf)
@@ -35,7 +35,7 @@ class TocDirective(Directive):
         config: Config = self.page.volume.config
 
         toc_items = toc(self.page,
-                        processor=self.processor,
+                        builder=self.builder,
                         current_page=self.page,
                         toc_depth=self.depth,
                         combined_toc=CombinedToc.ALWAYS if self.combined else CombinedToc.NEVER)
@@ -47,8 +47,8 @@ class TocDirective(Directive):
 
 
 class LocalTocDirective(Directive):
-    def __init__(self, processor: 'Processor', page: Page, argv: list[str]):
-        super().__init__(processor, page)
+    def __init__(self, builder: 'Builder', page: Page, argv: list[str]):
+        super().__init__(builder, page)
 
         parser = ArgumentParser(add_help=False)
         parser.add_argument('--depth', type=int, default=inf)
@@ -81,7 +81,7 @@ class LocalTocDirective(Directive):
         config: Config = self.page.volume.config
 
         toc_items = local_toc(self.page,
-                              processor=self.processor,
+                              builder=self.builder,
                               toc_depth=self.depth,
                               current_page=self.page)
 

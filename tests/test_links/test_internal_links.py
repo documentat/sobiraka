@@ -28,24 +28,24 @@ class AbstractTestInternalLinks(ProjectTestCase):
 
     def test_internal_links(self):
         with self.subTest('This page'):
-            actual = self.processor.make_internal_url(PageHref(self.this_page), page=self.this_page)
+            actual = self.builder.make_internal_url(PageHref(self.this_page), page=self.this_page)
             self.assertEqual(self.EXPECTED_THIS_PAGE, actual)
 
         with self.subTest('This page → Section'):
-            actual = self.processor.make_internal_url(PageHref(self.this_page, 'section'), page=self.this_page)
+            actual = self.builder.make_internal_url(PageHref(self.this_page, 'section'), page=self.this_page)
             self.assertEqual(self.EXPECTED_THIS_PAGE_SECTION, actual)
 
         with self.subTest('Other page'):
-            actual = self.processor.make_internal_url(PageHref(self.other_page), page=self.this_page)
+            actual = self.builder.make_internal_url(PageHref(self.other_page), page=self.this_page)
             self.assertEqual(self.EXPECTED_OTHER_PAGE, actual)
 
         with self.subTest('Other page → Section'):
-            actual = self.processor.make_internal_url(PageHref(self.other_page, 'section'), page=self.this_page)
+            actual = self.builder.make_internal_url(PageHref(self.other_page, 'section'), page=self.this_page)
             self.assertEqual(self.EXPECTED_OTHER_PAGE_SECTION, actual)
 
 
 class TestInternalLinks_HTML(AbstractTestInternalLinks):
-    def _init_processor(self):
+    def _init_builder(self):
         return WebBuilder(self.project, None)
 
     EXPECTED_THIS_PAGE = ''
@@ -55,7 +55,7 @@ class TestInternalLinks_HTML(AbstractTestInternalLinks):
 
 
 class TestInternalLinks_Latex(AbstractTestInternalLinks):
-    def _init_processor(self):
+    def _init_builder(self):
         return LatexBuilder(self.project.get_volume(), None)
 
     EXPECTED_THIS_PAGE = '#r--this-page'
@@ -65,7 +65,7 @@ class TestInternalLinks_Latex(AbstractTestInternalLinks):
 
 
 class TestInternalLinks_WeasyPrint(AbstractTestInternalLinks):
-    def _init_processor(self):
+    def _init_builder(self):
         return WeasyPrintBuilder(self.project.get_volume(), None)
 
     EXPECTED_THIS_PAGE = '#this-page.md'

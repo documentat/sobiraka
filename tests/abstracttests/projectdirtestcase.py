@@ -3,11 +3,11 @@ from typing import Generic, TypeVar
 
 from sobiraka.models import Project
 from sobiraka.models.load import load_project
-from sobiraka.processing.abstract import Processor
+from sobiraka.processing.abstract import Builder
 from sobiraka.utils import AbsolutePath
 from .projecttestcase import ProjectTestCase
 
-T = TypeVar('T', bound=Processor)
+T = TypeVar('T', bound=Builder)
 
 
 class ProjectDirTestCase(ProjectTestCase, Generic[T]):
