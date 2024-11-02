@@ -1,54 +1,63 @@
-from textwrap import dedent
+from importlib.resources import files
 from unittest import main
-from unittest.mock import Mock
 
 from abstracttests.weasyprintprojecttestcase import WeasyPrintProjectTestCase
-from sobiraka.models import FileSystem, Page, Project, Volume
-from sobiraka.processing import WeasyPrintBuilder
-from sobiraka.utils import RelativePath
+from helpers.fakefilesystem import FakeFileSystem
+from sobiraka.models import Page, Project, Volume
+from sobiraka.models.config import Config, Config_PDF
+from sobiraka.runtime import RT
+from sobiraka.utils import AbsolutePath, RelativePath
+
+CSS = b'''
+html {
+    font-family: "Lato", sans-serif;
+}
+
+div.toc {
+    display: none;
+}
+
+@page {
+    margin: 10rem !important;
+    
+    @top-left-corner     { content: "@top-left-corner"     !important; background: deeppink;  }
+    @top-left            { content: "@top-left"            !important; background: hotpink;   }
+    @top-center          { content: "@top-center"          !important; background: lightpink; }
+    @top-right           { content: "@top-right"           !important; background: hotpink;   }
+    @top-right-corner    { content: "@top-right-corner"    !important; background: deeppink;  }
+    
+    @left-top            { content: "@left-top"            !important; background: hotpink;   }
+    @left-middle         { content: "@left-middle"         !important; background: lightpink; }
+    @left-bottom         { content: "@left-bottom"         !important; background: hotpink;   }
+    
+    @right-top           { content: "@right-top"           !important; background: hotpink;   }
+    @right-middle        { content: "@right-middle"        !important; background: lightpink; }
+    @right-bottom        { content: "@right-bottom"        !important; background: hotpink;   }
+    
+    @bottom-left-corner  { content: "@bottom-left-corner"  !important; background: deeppink;  }
+    @bottom-left         { content: "@bottom-left"         !important; background: hotpink;   }
+    @bottom-center       { content: "@bottom-center"       !important; background: lightpink; }
+    @bottom-right        { content: "@bottom-right"        !important; background: hotpink;   }
+    @bottom-right-corner { content: "@bottom-right-corner" !important; background: deeppink;  }
+}
+'''
 
 
 class TestWeasyPrint_PageMargins(WeasyPrintProjectTestCase):
-    def _init_processor(self):
-        builder: WeasyPrintBuilder = super()._init_processor()
-        builder.theme.sass_files.clear()
-        builder.theme.static_pseudofiles['printable.css'] = 'text/css', dedent('''
-            html {
-                font-family: "Lato", sans-serif;
-            }
-            
-            div.toc {
-                display: none;
-            }
-            
-            @page {
-                margin: 10rem;
-                @top-left-corner     { content: "@top-left-corner";     background: deeppink;  }
-                @top-left            { content: "@top-left";            background: hotpink;   }
-                @top-center          { content: "@top-center";          background: lightpink; }
-                @top-right           { content: "@top-right";           background: hotpink;   }
-                @top-right-corner    { content: "@top-right-corner";    background: deeppink;  }
-                
-                @left-top            { content: "@left-top";            background: hotpink;   }
-                @left-middle         { content: "@left-middle";         background: lightpink; }
-                @left-bottom         { content: "@left-bottom";         background: hotpink;   }
-                
-                @right-top           { content: "@right-top";           background: hotpink;   }
-                @right-middle        { content: "@right-middle";        background: lightpink; }
-                @right-bottom        { content: "@right-bottom";        background: hotpink;   }
-                
-                @bottom-left-corner  { content: "@bottom-left-corner";  background: deeppink;  }
-                @bottom-left         { content: "@bottom-left";         background: hotpink;   }
-                @bottom-center       { content: "@bottom-center";       background: lightpink; }
-                @bottom-right        { content: "@bottom-right";        background: hotpink;   }
-                @bottom-right-corner { content: "@bottom-right-corner"; background: deeppink;  }
-            }
-        ''').strip()
-        return builder
-
     def _init_project(self) -> Project:
-        return Project(Mock(FileSystem), {
-            RelativePath(): Volume({
+        fs = FakeFileSystem({
+            RelativePath('theme/style.css'): CSS,
+        })
+
+        config = Config(
+            pdf=Config_PDF(
+                theme=AbsolutePath(files('sobiraka')) / 'files' / 'themes' / 'raw',
+                custom_styles=(
+                    RelativePath('theme/style.css'),
+                )))
+
+        return Project(fs, {
+            RelativePath(): Volume(config, {
                 RelativePath(): Page('# Look at these beautiful page margins!')
             })
         })

@@ -13,7 +13,7 @@ from sobiraka.models import Page, Volume
 from sobiraka.models.config import Config
 from sobiraka.runtime import RT
 from sobiraka.utils import AbsolutePath, RelativePath, panflute_to_bytes, super_gather
-from .head import Head
+from .head import Head, HeadCssFile
 from ..abstract import Processor
 from ..plugin import AbstractHtmlTheme
 
@@ -34,14 +34,18 @@ class AbstractHtmlBuilder(Processor, metaclass=ABCMeta):
         return super_gather(self._html_builder_tasks, 'Some tasks failed when building HTML')
 
     @final
-    async def compile_all_sass(self, theme: AbstractHtmlTheme):
+    async def compile_theme_sass(self, theme: AbstractHtmlTheme):
         async with TaskGroup() as tg:
-            for source, target in theme.sass_files.items():
-                source = theme.theme_dir / source
-                tg.create_task(to_thread(self.compile_sass, source, target))
+            theme_sass_dir = theme.theme_dir / 'sass'
+            if theme_sass_dir.exists():
+                for source in theme_sass_dir.iterdir():
+                    if source.suffix in ('.sass', '.scss') and not source.stem.startswith('_'):
+                        target = RelativePath('_static') / 'css' / f'{source.stem}.css'
+                        tg.create_task(to_thread(self.compile_sass, source, target))
+                        self._head.append(HeadCssFile(target))
 
     @abstractmethod
-    def compile_sass(self, source: AbsolutePath, target: str):
+    def compile_sass(self, source: AbsolutePath, target: RelativePath):
         ...
 
     @final

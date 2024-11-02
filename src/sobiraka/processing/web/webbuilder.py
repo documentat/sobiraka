@@ -11,7 +11,7 @@ from shutil import copyfile, rmtree
 import iso639
 from panflute import Element, Header, Image
 
-from sobiraka.models import DirPage, IndexPage, Page, PageHref, PageStatus, Project, Volume
+from sobiraka.models import DirPage, FileSystem, IndexPage, Page, PageHref, PageStatus, Project, Volume
 from sobiraka.models.config import Config, SearchIndexerName
 from sobiraka.runtime import RT
 from sobiraka.utils import AbsolutePath, RelativePath
@@ -50,7 +50,7 @@ class WebBuilder(AbstractHtmlBuilder, ProjectProcessor):
             # Launch non-page processing tasks
             self.add_html_task(self.add_directory_from_location(theme.static_dir, RelativePath('_static')))
             self.add_html_task(self.add_custom_files(volume))
-            self.add_html_task(self.compile_all_sass(theme))
+            self.add_html_task(self.compile_theme_sass(theme))
             self.add_html_task(self.prepare_search_indexer(volume))
 
         # Wait until all pages will be generated and all additional files will be copied to the output directory
@@ -164,7 +164,7 @@ class WebBuilder(AbstractHtmlBuilder, ProjectProcessor):
         prefix = self.expand_path_vars(prefix, volume)
         prefix = os.path.join(*prefix.split('/'))
 
-        target_path = prefix / target_path
+        target_path = RelativePath(prefix) / target_path
         return target_path
 
     def get_relative_image_url(self, image: Image, page: Page) -> str:
@@ -213,6 +213,7 @@ class WebBuilder(AbstractHtmlBuilder, ProjectProcessor):
         return resources.relative_to(start.parent)
 
     async def add_custom_files(self, volume: Volume):
+        fs: FileSystem = self.project.fs
         config: Config = volume.config
 
         for script in config.web.custom_scripts:
@@ -224,10 +225,20 @@ class WebBuilder(AbstractHtmlBuilder, ProjectProcessor):
 
         for style in config.web.custom_styles:
             source = RelativePath(style)
-            assert source.suffix == '.css'
-            target = RelativePath() / 'css' / source.name
-            await self.add_file_from_project(source, target)
-            self._head.append(HeadCssFile(target))
+            match source.suffix:
+                case '.css':
+                    target = RelativePath() / 'css' / source.name
+                    self.add_html_task(self.add_file_from_project(source, target))
+                    self._head.append(HeadCssFile(target))
+
+                case '.sass' | '.scss':
+                    source = fs.resolve(source)
+                    target = RelativePath('_static') / 'css' / f'{source.stem}.css'
+                    self.add_html_task(to_thread(self.compile_sass, source, target))
+                    self._head.append(HeadCssFile(target))
+
+                case _:
+                    raise ValueError(source)
 
     async def prepare_search_indexer(self, volume: Volume):
         config: Config = volume.config
@@ -263,9 +274,9 @@ class WebBuilder(AbstractHtmlBuilder, ProjectProcessor):
         await to_thread(self.project.fs.copy, source, target)
         self._results.add(target)
 
-    def compile_sass(self, source: AbsolutePath, target: str):
+    def compile_sass(self, source: AbsolutePath, target: RelativePath):
         css = self.compile_sass_impl(source)
-        target = self.output / '_static' / target
+        target = self.output / target
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_bytes(css)
         self._results.add(target)

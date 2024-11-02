@@ -22,10 +22,6 @@ class AbstractHtmlTheme(Theme, metaclass=ABCMeta):
     """
     TEMPLATE_NAME: str
 
-    def __init__(self, theme_dir: AbsolutePath):
-        super().__init__(theme_dir)
-        self.sass_files: dict[str, str] = {}
-
     @cached_property
     def page_template(self) -> jinja2.Template:
         jinja_env = jinja2.Environment(

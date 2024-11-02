@@ -1,7 +1,7 @@
 import logging
 import re
 import sys
-from asyncio import Task, create_task
+from asyncio import Task, create_task, to_thread
 from contextlib import suppress
 from mimetypes import guess_type
 from types import NoneType
@@ -47,7 +47,7 @@ class WeasyPrintBuilder(AbstractHtmlBuilder, VolumeProcessor):
 
         # Launch non-page processing tasks
         self.add_html_task(self.add_custom_files())
-        self.add_html_task(self.compile_all_sass(self.theme))
+        self.add_html_task(self.compile_theme_sass(self.theme))
 
         # Combine rendered pages into a single page
         content: list[tuple[Page, TocNumber, str, str]] = []
@@ -115,17 +115,15 @@ class WeasyPrintBuilder(AbstractHtmlBuilder, VolumeProcessor):
             mime_type, content = self.pseudofiles[url]
             return dict(string=content, mime_type=mime_type)
 
-        if m := re.match('^_static/(.+)$', url):
-            mime_type, file_obj = self.theme.open_static_file(m.group(1))
-            return dict(file_obj=file_obj, mime_type=mime_type)
+        if re.match('^_static/(.+)$', url):
+            file_path = self.theme.theme_dir / url
+            mime_type, _ = guess_type(file_path, strict=False)
+            return dict(file_obj=file_path.open('rb'), mime_type=mime_type)
 
         if ':' not in url:
-            file = config.paths.resources / url
-            mime_type = guess_type(file, strict=False)[0]
-            return dict(
-                file_obj=open(file, 'rb'),
-                mime_type=mime_type,
-            )
+            file_path = config.paths.resources / url
+            mime_type, _ = guess_type(file_path, strict=False)[0]
+            return dict(file_obj=file_path.open('rb'), mime_type=mime_type)
 
         print(url, file=sys.stderr)
         return weasyprint.default_url_fetcher(url)
@@ -152,8 +150,9 @@ class WeasyPrintBuilder(AbstractHtmlBuilder, VolumeProcessor):
     async def add_file_from_project(self, source: RelativePath, target: RelativePath):
         raise NotImplementedError
 
-    def compile_sass(self, source: AbsolutePath, target: str):
-        self.pseudofiles[f'_static/{target}'] = 'text/css', self.compile_sass_impl(source)
+    def compile_sass(self, source: AbsolutePath, target: RelativePath):
+        self.pseudofiles[str(target)] = 'text/css', self.compile_sass_impl(source)
+        self._head.append(HeadCssFile(target))
 
     def get_path_to_resources(self, page: Page) -> RelativePath:
         return RelativePath('_resources')
@@ -167,9 +166,18 @@ class WeasyPrintBuilder(AbstractHtmlBuilder, VolumeProcessor):
 
         for style in config.pdf.custom_styles:
             source = RelativePath(style)
-            assert source.suffix == '.css'
-            self.pseudofiles[f'css/{source.name}'] = 'text/css', fs.read_bytes(source)
-            self._head.append(HeadCssFile(RelativePath(f'css/{source.name}')))
+            match source.suffix:
+                case '.css':
+                    self.pseudofiles[f'css/{source.name}'] = 'text/css', fs.read_bytes(source)
+                    self._head.append(HeadCssFile(RelativePath(f'css/{source.name}')))
+
+                case '.sass' | '.scss':
+                    source = fs.resolve(source)
+                    target = RelativePath('_static') / 'css' / f'{source.stem}.css'
+                    self.add_html_task(to_thread(self.compile_sass, source, target))
+
+                case _:
+                    raise ValueError(source)
 
     def get_relative_image_url(self, image: Image, page: Page) -> str:
         return image.url

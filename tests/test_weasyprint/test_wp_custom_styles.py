@@ -1,3 +1,4 @@
+from textwrap import dedent
 from unittest import main
 
 from abstracttests.weasyprintprojecttestcase import WeasyPrintProjectTestCase
@@ -10,18 +11,28 @@ from sobiraka.utils import RelativePath
 class TestWeasyPrint_CustomStyles(WeasyPrintProjectTestCase):
     def _init_project(self) -> Project:
         fs = FakeFileSystem({
-            RelativePath('theme/customstyle.css'): b'h1 { color: lightgreen; }'
+            RelativePath('theme/style1.css'): b'''
+                h1 { color: lightgreen; }
+            ''',
+            RelativePath('theme/style2.sass'): b'''
+                @mixin red_text { color: indianred; }
+                p { @include red_text; }
+            ''',
         })
 
         config = Config(
             pdf=Config_PDF(
                 custom_styles=(
-                    RelativePath('theme/customstyle.css'),
+                    RelativePath('theme/style1.css'),
                 )))
 
         return Project(fs, {
             RelativePath(): Volume(config, {
-                RelativePath(): Page('# Hello, world!\n The title above should be green.'),
+                RelativePath(): Page(dedent('''
+                    # Hello, world!
+                    The title above should be green.
+                    This text should be red.
+                ''')),
             })
         })
 
