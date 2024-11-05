@@ -1,7 +1,0 @@
-paths:
-  root: src
-  include: ['**/*.rst']
-
-lint:
-  exceptions:
-    - exceptions.txt
