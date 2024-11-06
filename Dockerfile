@@ -61,6 +61,21 @@ ENV PATH /opt/conda/envs/myenv/bin:$PATH
 
 
 ################################################################################
+# Install dependencies that we could not install before python-nodejs
+
+FROM python-nodejs AS install-pip-dependencies
+COPY --from=build-package /sobiraka.egg-info/requires.txt .
+RUN pip install --prefix /prefix --requirement requires.txt
+
+FROM python-nodejs AS install-pip-dependencies-for-tester
+RUN pip install --prefix /prefix coverage~=7.0.0
+
+FROM install-pip-dependencies AS install-package
+COPY --from=build-package /dist/*.tar.gz .
+RUN pip install --prefix /prefix *.tar.gz
+
+
+################################################################################
 # The base image for all final images
 
 FROM latex-python-nodejs AS common-latex
@@ -82,11 +97,11 @@ ENTRYPOINT [""]
 # Final images
 
 FROM common-latex AS tester
-COPY --from=get-tester-dependencies /var/cache/apt /var/cache/apt
 RUN apt install --yes git poppler-utils
-RUN --mount=type=cache,target=/root/.cache/pip pip install coverage~=7.0.0
-COPY --from=build-package /dist/*.tar.gz .
-RUN --mount=type=cache,target=/root/.cache/pip pip install *.tar.gz && rm *.tar.gz
+COPY --from=get-tester-dependencies /var/cache/apt /var/cache/apt
+COPY --from=install-pip-dependencies-for-tester /prefix /opt/conda/envs/myenv
+COPY --from=install-pip-dependencies /prefix /opt/conda/envs/myenv
+COPY --from=install-package /prefix /opt/conda/envs/myenv
 ARG UID=1000
 ARG GID=1000
 RUN addgroup --gid $GID myuser || true
@@ -98,11 +113,11 @@ CMD python -m coverage run --source=sobiraka -m unittest discover --start-direct
 	&& python -m coverage report --precision=1 --skip-empty --skip-covered --show-missing
 
 FROM common-latex AS release-latex
-COPY --from=build-package /dist/*.tar.gz .
-RUN --mount=type=cache,target=/root/.cache/pip pip install *.tar.gz && rm *.tar.gz
+COPY --from=install-pip-dependencies /prefix /opt/conda/envs/myenv
+COPY --from=install-package /prefix /opt/conda/envs/myenv
 CMD sobiraka
 
 FROM common AS release
-COPY --from=build-package /dist/*.tar.gz .
-RUN --mount=type=cache,target=/root/.cache/pip pip install *.tar.gz && rm *.tar.gz
+COPY --from=install-pip-dependencies /prefix /opt/conda/envs/myenv
+COPY --from=install-package /prefix /opt/conda/envs/myenv
 CMD sobiraka
