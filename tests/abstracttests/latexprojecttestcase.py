@@ -1,6 +1,6 @@
 from helpers import assertNoDiff
 from sobiraka.models import PageStatus
-from sobiraka.processing import LatexBuilder
+from sobiraka.processing.latex import LatexBuilder
 from sobiraka.runtime import RT
 from .abstractvisualpdftestcase import AbstractVisualPdfTestCase
 

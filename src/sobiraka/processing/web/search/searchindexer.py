@@ -7,7 +7,7 @@ from sobiraka.processing.web import HeadTag
 from sobiraka.utils import AbsolutePath, RelativePath
 
 if TYPE_CHECKING:
-    from sobiraka.processing import WebBuilder
+    from sobiraka.processing.web import WebBuilder
 
 
 class SearchIndexer(metaclass=ABCMeta):

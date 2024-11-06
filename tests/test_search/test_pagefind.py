@@ -7,7 +7,7 @@ from abstracttests.abstracttestwithrt import AbstractTestWithRtTmp
 from abstracttests.projecttestcase import ProjectTestCase
 from sobiraka.models import FileSystem, Page, PageStatus, Project, Volume
 from sobiraka.models.config import Config_Search_LinkTarget, Config_Web_Search
-from sobiraka.processing import WebBuilder
+from sobiraka.processing.web import WebBuilder
 from sobiraka.processing.web.search import PagefindIndexer
 from sobiraka.runtime import RT
 from sobiraka.utils import RelativePath

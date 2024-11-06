@@ -1,5 +1,6 @@
 from collections import defaultdict
 from typing import Awaitable, Callable
+from typing_extensions import override
 
 from panflute import BlockQuote, BulletList, Caption, Citation, Cite, Code, CodeBlock, Definition, DefinitionItem, \
     DefinitionList, Div, Doc, Element, Emph, Header, HorizontalRule, Image, LineBlock, LineBreak, LineItem, Link, \
@@ -24,6 +25,7 @@ class PlainTextDispatcher(Dispatcher):
     Once :meth:`process_doc()` is done, you can retrieve the information about the plain text
     from :data:`tm`, which is a :class:`TextModel` object.
     """
+
     # pylint: disable=too-many-public-methods
 
     def __init__(self, *args, **kwargs):
@@ -31,6 +33,7 @@ class PlainTextDispatcher(Dispatcher):
 
         self.tm: dict[Page, TextModel] = defaultdict(self._new_text_model)
 
+    @override
     async def process_doc(self, doc: Doc, page: Page):
         tm = self.tm[page]
         tm.sections[None] = Fragment(tm, Pos(0, 0), Pos(0, 0))
@@ -90,21 +93,26 @@ class PlainTextDispatcher(Dispatcher):
     ################################################################################
     # Inline non-containers
 
+    @override
     async def process_code(self, code: Code, page: Page):
         self._atomic(page, code, code.text)
 
+    @override
     async def process_space(self, space: Space, page: Page):
         self._atomic(page, space, ' ')
 
+    @override
     async def process_str(self, elem: Str, page: Page):
         self._atomic(page, elem, elem.text)
 
+    @override
     async def process_line_break(self, line_break: LineBreak, page: Page):
         tm = self.tm[page]
         fragment = Fragment(tm, tm.end_pos, tm.end_pos, line_break)
         tm.fragments.append(fragment)
         tm.lines.append('')
 
+    @override
     async def process_soft_break(self, soft_break: SoftBreak, page: Page):
         tm = self.tm[page]
         tm.fragments.append(Fragment(tm, tm.end_pos, tm.end_pos, soft_break))
@@ -113,48 +121,61 @@ class PlainTextDispatcher(Dispatcher):
     ################################################################################
     # Inline containers
 
+    @override
     async def process_emph(self, emph: Emph, page: Page):
         await self._container(page, emph)
 
+    @override
     async def process_strong(self, strong: Strong, page: Page):
         await self._container(page, strong)
 
+    @override
     async def process_image(self, image: Image, page: Page):
         await self._container(page, image)
 
+    @override
     async def process_link(self, link: Link, page: Page):
         await self._container(page, link)
 
+    @override
     async def process_plain(self, plain: Plain, page: Page):
         await self._container(page, plain)
 
+    @override
     async def process_small_caps(self, small_caps: SmallCaps, page: Page):
         await self._container(page, small_caps)
 
+    @override
     async def process_span(self, span: Span, page: Page):
         await self._container(page, span)
 
+    @override
     async def process_strikeout(self, strikeout: Strikeout, page: Page):
         await self._container(page, strikeout)
 
+    @override
     async def process_underline(self, underline: Underline, page: Page):
         await self._container(page, underline)
 
     ################################################################################
     # Block containers
 
+    @override
     async def process_code_block(self, code: CodeBlock, page: Page):
         for line in code.text.splitlines():
             self._atomic(page, code, line)
             self._ensure_new_line(page)
 
+    @override
     async def process_block_quote(self, blockquote: BlockQuote, page: Page):
         await self._container(page, blockquote, allow_new_line=True)
 
+    @override
     async def process_definition(self, definition: Definition, page: Page):
         await self._container(page, definition, allow_new_line=True)
         self._ensure_new_line(page)
 
+    @override
     async def process_definition_item(self, definition_item: DefinitionItem, page: Page):
         async def process():
             for subelem in definition_item.term:
@@ -166,13 +187,16 @@ class PlainTextDispatcher(Dispatcher):
 
         await self._container(page, definition_item, allow_new_line=True, process=process)
 
+    @override
     async def process_definition_list(self, definition_list: DefinitionList, page: Page):
         await self._container(page, definition_list, allow_new_line=True)
 
+    @override
     async def process_div(self, div: Div, page: Page):
         await self._container(page, div, allow_new_line=True)
         self._ensure_new_line(page)
 
+    @override
     async def process_header(self, header: Header, page: Page):
         tm = self.tm[page]
 
@@ -188,6 +212,7 @@ class PlainTextDispatcher(Dispatcher):
             anchor = RT[page].anchors.by_header(header)
             tm.sections[anchor] = Fragment(tm, tm.end_pos, tm.end_pos)
 
+    @override
     async def process_para(self, para: Para, page: Page):
         await self._container(page, para, allow_new_line=True)
         self._ensure_new_line(page)
@@ -195,12 +220,15 @@ class PlainTextDispatcher(Dispatcher):
     ################################################################################
     # Lists
 
+    @override
     async def process_bullet_list(self, bullet_list: BulletList, page: Page):
         await self._container(page, bullet_list, allow_new_line=True)
 
+    @override
     async def process_ordered_list(self, ordered_list: OrderedList, page: Page):
         await self._container(page, ordered_list, allow_new_line=True)
 
+    @override
     async def process_list_item(self, item: ListItem, page: Page):
         await self._container(page, item, allow_new_line=True)
         self._ensure_new_line(page)
@@ -208,6 +236,7 @@ class PlainTextDispatcher(Dispatcher):
     ################################################################################
     # Tables
 
+    @override
     async def process_table(self, table: Table, page: Page):
         async def process():
             await self.process_table_head(table.head, page)
@@ -217,22 +246,28 @@ class PlainTextDispatcher(Dispatcher):
 
         await self._container(page, table, allow_new_line=True, process=process)
 
+    @override
     async def process_table_body(self, body: TableBody, page: Page):
         await self._container(page, body, allow_new_line=True)
 
+    @override
     async def process_table_cell(self, cell: TableCell, page: Page):
         await self._container(page, cell, allow_new_line=True)
         self._ensure_new_line(page)
 
+    @override
     async def process_table_foot(self, foot: TableFoot, page: Page):
         await self._container(page, foot, allow_new_line=True)
 
+    @override
     async def process_table_head(self, head: TableHead, page: Page):
         await self._container(page, head, allow_new_line=True)
 
+    @override
     async def process_table_row(self, row: TableRow, page: Page):
         await self._container(page, row, allow_new_line=True)
 
+    @override
     async def process_caption(self, caption: Caption, page: Page):
         await self._container(page, caption, allow_new_line=True)
         self._ensure_new_line(page)
@@ -240,6 +275,7 @@ class PlainTextDispatcher(Dispatcher):
     ################################################################################
     # Line blocks
 
+    @override
     async def process_line_block(self, line_block: LineBlock, page: Page):
         tm = self.tm[page]
 
@@ -252,49 +288,62 @@ class PlainTextDispatcher(Dispatcher):
         await self._container(page, line_block, allow_new_line=True, process=process)
         self._ensure_new_line(page)
 
+    @override
     async def process_line_item(self, line_item: LineItem, page: Page):
         await self._container(page, line_item)
 
     ################################################################################
     # Ignored elements
 
+    @override
     async def process_horizontal_rule(self, rule: HorizontalRule, page: Page):
         pass
 
+    @override
     async def process_math(self, math: Math, page: Page):
         pass
 
+    @override
     async def process_raw_block(self, raw: RawBlock, page: Page):
         pass
 
+    @override
     async def process_raw_inline(self, raw: RawInline, page: Page):
         pass
 
+    @override
     async def process_subscript(self, subscript: Subscript, page: Page):
         pass
 
+    @override
     async def process_superscript(self, superscript: Superscript, page: Page):
         pass
 
     ################################################################################
     # Rarely used elements, not implemented
 
+    @override
     async def process_citation(self, citation: Citation, page: Page):
         return await self.process_default(citation, page)
 
+    @override
     async def process_cite(self, cite: Cite, page: Page):
         return await self.process_default(cite, page)
 
+    @override
     async def process_note(self, note: Note, page: Page):
         return await self.process_default(note, page)
 
+    @override
     async def process_null(self, elem: Null, page: Page):
         return await self.process_default(elem, page)
 
+    @override
     async def process_quoted(self, quoted: Quoted, page: Page):
         return await self.process_default(quoted, page)
 
     ################################################################################
 
+    @override
     async def process_default(self, elem: Element, page: Page):
         raise NotImplementedError(elem.__class__.__name__)

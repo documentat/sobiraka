@@ -70,6 +70,7 @@ $defs:
           resources_prefix: { type: string }
           theme: { type: string }
           theme_data: { type: object }
+          processor: { type: string }
           custom_scripts:
             type: array
             uniqueItems: true
@@ -117,6 +118,7 @@ $defs:
         properties:
           header: { type: string }
           theme: { type: string }
+          processor: { type: string }
           toc: { type: boolean }
           paths: { type: object }
           headers:
@@ -138,6 +140,7 @@ $defs:
         additionalProperties: false
         properties:
           theme: { type: string }
+          processor: { type: string }
           custom_styles:
             type: array
             uniqueItems: true

@@ -2,7 +2,7 @@ from tempfile import TemporaryDirectory
 
 from abstracttests.projectdirtestcase import ProjectDirTestCase
 from sobiraka.models import Href, Page, PageHref, UrlHref
-from sobiraka.processing import WebBuilder
+from sobiraka.processing.web import WebBuilder
 from sobiraka.runtime import RT
 from sobiraka.utils import AbsolutePath
 

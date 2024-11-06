@@ -11,7 +11,7 @@ from abstracttests.projecttestcase import ProjectTestCase
 from helpers import assertNoDiff
 from sobiraka.models import FileSystem, IndexPage, Page, Project, Volume
 from sobiraka.models.config import CombinedToc, Config, Config_Web
-from sobiraka.processing import WebBuilder
+from sobiraka.processing.web import WebBuilder
 from sobiraka.processing.toc import Toc, TocItem, toc
 from sobiraka.utils import AbsolutePath, RelativePath
 

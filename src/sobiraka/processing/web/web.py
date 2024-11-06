@@ -7,6 +7,8 @@ from datetime import datetime
 from itertools import chain
 from os.path import relpath
 from shutil import copyfile, rmtree
+from typing import final
+from typing_extensions import override
 
 import iso639
 from panflute import Element, Header, Image
@@ -14,15 +16,16 @@ from panflute import Element, Header, Image
 from sobiraka.models import DirPage, FileSystem, IndexPage, Page, PageHref, PageStatus, Project, Volume
 from sobiraka.models.config import Config, SearchIndexerName
 from sobiraka.runtime import RT
-from sobiraka.utils import AbsolutePath, RelativePath
-from .abstracthtmlbuilder import AbstractHtmlBuilder
+from sobiraka.utils import AbsolutePath, RelativePath, configured_jinja, convert_or_none
+from .abstracthtml import AbstractHtmlBuilder, AbstractHtmlProcessor
 from .head import HeadCssFile, HeadJsFile
 from .search import PagefindIndexer, SearchIndexer
-from ..abstract import ProjectBuilder
-from ..plugin import WebTheme, load_theme
+from ..abstract import ProjectBuilder, Theme
+from ..load_processor import load_processor
 
 
-class WebBuilder(AbstractHtmlBuilder, ProjectBuilder):
+@final
+class WebBuilder(ProjectBuilder['WebProcessor', 'WebTheme'], AbstractHtmlBuilder):
 
     def __init__(self, project: Project, output: AbsolutePath, *, hide_index_html: bool = False):
         ProjectBuilder.__init__(self, project)
@@ -33,15 +36,23 @@ class WebBuilder(AbstractHtmlBuilder, ProjectBuilder):
 
         self._indexers: dict[Volume, SearchIndexer] = {}
 
-        self._themes: dict[Volume, WebTheme] = {}
-        for volume in project.volumes:
-            self._themes[volume] = load_theme(volume.config.web.theme, WebTheme)
+    def init_processor(self, volume: Volume) -> WebProcessor:
+        fs: FileSystem = self.project.fs
+        config: Config = volume.config
+        processor_class = load_processor(
+            convert_or_none(fs.resolve, config.web.processor),
+            config.web.theme,
+            WebProcessor)
+        return processor_class(self)
+
+    def init_theme(self, volume: Volume) -> WebTheme:
+        return WebTheme(volume.config.web.theme)
 
     async def run(self):
         self.output.mkdir(parents=True, exist_ok=True)
 
         for volume in self.project.volumes:
-            theme = self._themes[volume]
+            theme = self.themes[volume]
 
             # Launch page processing tasks
             for page in volume.pages:
@@ -84,10 +95,6 @@ class WebBuilder(AbstractHtmlBuilder, ProjectBuilder):
         if indexer := self._indexers.get(page.volume):
             await indexer.add_page(page)
 
-        theme = self._themes[page.volume]
-        if theme.__class__ is not WebTheme:
-            await theme.process_doc(RT[page].doc, page)
-
         await super().process4(page)
         await self.decorate_html(page)
 
@@ -102,7 +109,7 @@ class WebBuilder(AbstractHtmlBuilder, ProjectBuilder):
         volume = page.volume
         project = page.volume.project
         config = page.volume.config
-        theme = self._themes[page.volume]
+        theme = self.themes[page.volume]
 
         root_prefix = self.get_root_prefix(page)
         head = self._head.render(root_prefix)
@@ -281,6 +288,10 @@ class WebBuilder(AbstractHtmlBuilder, ProjectBuilder):
         target.write_bytes(css)
         self._results.add(target)
 
+
+class WebProcessor(AbstractHtmlProcessor[WebBuilder]):
+
+    @override
     async def process_header(self, header: Header, page: Page) -> tuple[Element, ...]:
         header, = await super().process_header(header, page)
         assert isinstance(header, Header)
@@ -289,3 +300,10 @@ class WebBuilder(AbstractHtmlBuilder, ProjectBuilder):
             return ()
 
         return header,
+
+
+@final
+class WebTheme(Theme):
+    def __init__(self, theme_dir: AbsolutePath):
+        super().__init__(theme_dir)
+        self.page_template = configured_jinja(theme_dir).get_template('web.html')

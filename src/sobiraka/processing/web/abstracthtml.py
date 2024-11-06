@@ -5,7 +5,8 @@ from abc import ABCMeta, abstractmethod
 from asyncio import Task, TaskGroup, create_subprocess_exec, create_task, to_thread
 from copy import deepcopy
 from subprocess import PIPE, Popen
-from typing import Awaitable, Coroutine, final
+from typing import Awaitable, Coroutine, Generic, TypeVar, final
+from typing_extensions import override
 
 from panflute import Image
 
@@ -14,8 +15,7 @@ from sobiraka.models.config import Config
 from sobiraka.runtime import RT
 from sobiraka.utils import AbsolutePath, RelativePath, panflute_to_bytes, super_gather
 from .head import Head, HeadCssFile
-from ..abstract import Builder
-from ..plugin import AbstractHtmlTheme
+from ..abstract import Builder, Processor, Theme
 
 
 class AbstractHtmlBuilder(Builder, metaclass=ABCMeta):
@@ -34,7 +34,7 @@ class AbstractHtmlBuilder(Builder, metaclass=ABCMeta):
         return super_gather(self._html_builder_tasks, 'Some tasks failed when building HTML')
 
     @final
-    async def compile_theme_sass(self, theme: AbstractHtmlTheme):
+    async def compile_theme_sass(self, theme: Theme):
         async with TaskGroup() as tg:
             theme_sass_dir = theme.theme_dir / 'sass'
             if theme_sass_dir.exists():
@@ -109,29 +109,6 @@ class AbstractHtmlBuilder(Builder, metaclass=ABCMeta):
     def get_path_to_resources(self, page: Page) -> RelativePath:
         raise NotImplementedError
 
-    async def process_image(self, image: Image, page: Page) -> tuple[Image, ...]:
-        config: Config = page.volume.config
-
-        # Run the default processing
-        # It is important to run it first, since it normalizes the path
-        image, = await super().process_image(image, page)
-        assert isinstance(image, Image)
-        if image.url is None:
-            return image,
-
-        # Schedule copying the image file to the output directory
-        source_path = config.paths.resources / image.url
-        target_path = RelativePath(config.web.resources_prefix) / image.url
-        self.add_html_task(self.add_file_from_project(source_path, target_path))
-
-        # Use the path relative to the page path
-        # (we postpone the actual change in the element to not confuse the WebTheme custom code later)
-        new_url = self.get_relative_image_url(image, page)
-        if new_url != image.url:
-            RT[page].converted_image_urls.append((image, new_url))
-
-        return image,
-
     @abstractmethod
     def get_relative_image_url(self, image: Image, page: Page) -> str:
         raise NotImplementedError
@@ -154,3 +131,33 @@ class AbstractHtmlBuilder(Builder, metaclass=ABCMeta):
     @abstractmethod
     async def add_file_from_project(self, source: RelativePath, target: RelativePath):
         raise NotImplementedError
+
+
+B = TypeVar('B', bound=AbstractHtmlBuilder)
+
+
+class AbstractHtmlProcessor(Processor[B], Generic[B], metaclass=ABCMeta):
+
+    @override
+    async def process_image(self, image: Image, page: Page) -> tuple[Image, ...]:
+        config: Config = page.volume.config
+
+        # Run the default processing
+        # It is important to run it first, since it normalizes the path
+        image, = await super().process_image(image, page)
+        assert isinstance(image, Image)
+        if image.url is None:
+            return image,
+
+        # Schedule copying the image file to the output directory
+        source_path = config.paths.resources / image.url
+        target_path = RelativePath(config.web.resources_prefix) / image.url
+        self.builder.add_html_task(self.builder.add_file_from_project(source_path, target_path))
+
+        # Use the path relative to the page path
+        # (we postpone the actual change in the element to not confuse the WebTheme custom code later)
+        new_url = self.builder.get_relative_image_url(image, page)
+        if new_url != image.url:
+            RT[page].converted_image_urls.append((image, new_url))
+
+        return image,

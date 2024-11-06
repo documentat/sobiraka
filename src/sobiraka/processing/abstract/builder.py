@@ -1,35 +1,32 @@
-import re
 import shlex
-from abc import abstractmethod
+from abc import ABCMeta, abstractmethod
 from asyncio import Task, create_subprocess_exec, create_task
 from collections import defaultdict
-from contextlib import suppress
 from functools import partial
 from io import BytesIO
-from os.path import normpath
 from subprocess import PIPE
+from typing import Awaitable, Generic, TypeVar, final
 
 import jinja2
 import panflute
 from jinja2 import StrictUndefined
-from panflute import Cite, Code, Doc, Element, Header, Image, Link, Para, Space, Str, Table, stringify
+from panflute import Cite, Doc, Para, Space, Str, stringify
 
-from sobiraka.models import Anchor, BadImage, BadLink, DirPage, FileSystem, Page, PageHref, PageStatus, Project, \
-    UrlHref, Volume
+from sobiraka.models import FileSystem, Page, PageHref, PageStatus, Project, Volume
 from sobiraka.models.config import Config
-from sobiraka.models.exceptions import DependencyFailed, DisableLink, IssuesOccurred, VolumeFailed
+from sobiraka.models.exceptions import DependencyFailed, IssuesOccurred, VolumeFailed
 from sobiraka.report import update_progressbar
 from sobiraka.runtime import RT
-from sobiraka.utils import AbsolutePath, PathGoesOutsideStartDirectory, RelativePath, absolute_or_relative, super_gather
-from .dispatcher import Dispatcher
-from ..directive import Directive
+from sobiraka.utils import super_gather
+from .processor import Processor
+from .theme import Theme
 from ..numerate import numerate
 
+T = TypeVar('T', bound=Theme)
+P = TypeVar('P', bound=Processor)
 
-class Builder(Dispatcher):
-    # pylint: disable=too-many-instance-attributes
-    # pylint: disable=too-many-public-methods
 
+class Builder(Generic[P, T], metaclass=ABCMeta):
     def __init__(self):
         self.tasks: dict[Page | Volume, dict[PageStatus, Task]] = defaultdict(dict)
         """
@@ -39,7 +36,6 @@ class Builder(Dispatcher):
         self.jinja: dict[Volume, jinja2.Environment] = {}
 
         self.process2_tasks: dict[Page, list[Task]] = defaultdict(list)
-        self.directives: dict[Page, list[Directive]] = defaultdict(list)
 
     def __repr__(self):
         return f'<{self.__class__.__name__} at {hex(id(self))}>'
@@ -60,6 +56,11 @@ class Builder(Dispatcher):
     def get_pages(self) -> tuple[Page, ...]:
         ...
 
+    @abstractmethod
+    def get_processor_for_page(self, page: Page) -> P:
+        ...
+
+    @final
     def create_page_task(self, page: Page, status: PageStatus) -> Task:
         """
         Creates (if not created) a Task that runs a function corresponding to the given PageStatus.
@@ -94,6 +95,7 @@ class Builder(Dispatcher):
             task = self.tasks[key][status] = create_task(coro, name=f'{status.name} {page.path_in_project}')
         return task
 
+    @final
     async def require(self, page: Page, target_status: PageStatus):
         """
         Perform all yet unperformed operations until the `page` will reach the `target_status`.
@@ -149,7 +151,7 @@ class Builder(Dispatcher):
             try:
                 await self.create_page_task(page, status)
 
-            # The only place that raises IssuesOccured is `require()` itself, see a few lines below.
+            # The only place that raises IssuesOccurred is `require()` itself, see a few lines below.
             # If we catch it, it means that the step required some other page, but processing that page failed.
             # It is an IssuesOccurred for that page, but a DependencyFailed for the current one.
             # The same logic applies to another page's VolumeFailed.
@@ -181,8 +183,9 @@ class Builder(Dispatcher):
 
         This method is called by :obj:`.Page.loaded`.
         """
-        from sobiraka.processing import LatexBuilder, WeasyPrintBuilder, WebBuilder
-        from sobiraka.processing.web.abstracthtmlbuilder import AbstractHtmlBuilder
+        from sobiraka.processing.latex import LatexBuilder
+        from sobiraka.processing.weasyprint import WeasyPrintBuilder
+        from sobiraka.processing.web import WebBuilder, AbstractHtmlBuilder
 
         volume: Volume = page.volume
         config: Config = page.volume.config
@@ -236,7 +239,8 @@ class Builder(Dispatcher):
         This method is called by :obj:`.Page.processed1`.
         """
         RT[page].doc.walk(partial(self.preprocess, page=page))
-        await self.process_doc(RT[page].doc, page)
+        processor = self.get_processor_for_page(page)
+        await processor.process_doc(RT[page].doc, page)
         return page
 
     def preprocess(self, para: Para, _: Doc, *, page: Page):
@@ -265,88 +269,6 @@ class Builder(Dispatcher):
                 from ..directive import TocDirective
                 return TocDirective(self, page, argv)
 
-    async def process_directive(self, directive: Directive, page: Page) -> tuple[Element, ...]:
-        self.directives[page].append(directive)
-        return await super().process_directive(directive, page)
-
-    async def process_header(self, header: Header, page: Page) -> tuple[Element, ...]:
-        if header.level == 1:
-            # Use the top level header as the page title
-            RT[page].title = stringify(header)
-
-            # Maybe skip numeration for the whole page
-            if 'unnumbered' in header.classes:
-                RT[page].skip_numeration = True
-
-        else:
-            # Generate anchor identifier if not provided
-            identifier = header.identifier
-            if not identifier:
-                identifier = stringify(header)
-                identifier = identifier.lower()
-                identifier = re.sub(r'\W+', '-', identifier)
-
-            # Remember the anchor
-            anchor = Anchor(header, identifier, label=stringify(header), level=header.level)
-            RT[page].anchors.append(anchor)
-
-            # Maybe skip numeration for the section
-            if 'unnumbered' in header.classes:
-                RT[anchor].skip_numeration = True
-
-        return header,
-
-    async def process_image(self, image: Image, page: Page) -> tuple[Element, ...]:
-        """
-        Get the image path, process variables inside it, and make it relative to the resources directory.
-
-        If the file does not exist, create an Issue and set `image.url` to None.
-        """
-        volume: Volume = page.volume
-        config: Config = volume.config
-        fs: FileSystem = volume.project.fs
-
-        path = image.url.replace('$LANG', volume.lang or '')
-        path = absolute_or_relative(path)
-        if isinstance(path, AbsolutePath):
-            path = path.relative_to('/')
-        else:
-            path = page.path_in_project.parent / path
-            path = RelativePath(normpath(path))
-            path = path.relative_to(volume.config.paths.resources)
-
-        if fs.exists(config.paths.resources / path):
-            image.url = str(path)
-        else:
-            RT[page].issues.append(BadImage(image.url))
-            image.url = None
-
-        return (image,)
-
-    async def process_para(self, para: Para, page: Page) -> tuple[Element, ...]:
-        para, = await super().process_para(para, page)
-        assert isinstance(para, Para)
-
-        with suppress(AssertionError):
-            assert len(para.content) >= 1
-            assert isinstance(para.content[0], Str)
-            assert para.content[0].text.startswith('//')
-
-            text = ''
-            for elem in para.content:
-                assert isinstance(elem, (Str, Space))
-                text += stringify(elem)
-
-            if m := re.fullmatch(r'// table-id: (\S+)', text):
-                table_id = m.group(1)
-                table = para.next
-                if not isinstance(table, Table):
-                    raise RuntimeError(f'Wait, where is the table? [{table_id}]')
-                RT.IDS[id(table)] = table_id
-                return ()
-
-        return (para,)
-
     async def process2(self, page: Page):
         await super_gather(self.process2_tasks[page], f'Additional tasks failed for {page.path_in_project}')
 
@@ -355,129 +277,91 @@ class Builder(Dispatcher):
             numerate(volume.root_page.children)
 
         for page in volume.pages:
-            for toc_placeholder in self.directives[page]:
+            processor = self.get_processor_for_page(page)
+            for toc_placeholder in processor.directives[page]:
                 toc_placeholder.postprocess()
 
     async def process4(self, page: Page):
         pass
 
-    # --------------------------------------------------------------------------------
-    # Internal links
-
-    async def process_link(self, link: Link, page: Page):
-        if re.match(r'^\w+:', link.url):
-            RT[page].links.append(UrlHref(link.url))
-        else:
-            if page.path_in_volume.suffix == '.rst':
-                RT[page].issues.append(BadLink(link.url))
-                return
-            await self._process_internal_link(link, link.url, page)
-
-    async def process_role_doc(self, code: Code, page: Page):
-        if m := re.fullmatch(r'(.+) < (.+) >', code.text, flags=re.X):
-            label = m.group(1).strip()
-            target_text = m.group(2)
-        else:
-            label = None
-            target_text = code.text
-
-        link = Link(Str(label))
-        await self._process_internal_link(link, target_text, page)
-        return (link,)
-
-    async def _process_internal_link(self, elem: Link, target_text: str, page: Page):
-        try:
-            m = re.fullmatch(r'(?: \$ ([A-z0-9\-_]+)? )? (/)? ([^#]+)? (?: [#] (.+) )?$', target_text, re.VERBOSE)
-            volume_name, is_absolute, target_path_str, target_anchor = m.groups()
-
-            if (volume_name, is_absolute, target_path_str) == (None, None, None):
-                target = page
-
-            else:
-                volume = page.volume
-                if volume_name is not None:
-                    volume = page.volume.project.get_volume(volume_name)
-                    is_absolute = True
-
-                target_path = RelativePath(target_path_str or '.')
-                if not is_absolute:
-                    if isinstance(page, DirPage):
-                        target_path = (page.path_in_volume / target_path).resolve()
-                    else:
-                        target_path = RelativePath(normpath(page.path_in_volume.parent / target_path))
-
-                target = volume.pages_by_path[target_path]
-
-            href = PageHref(target, target_anchor)
-            RT[page].links.append(href)
-
-            RT[page].dependencies.add(href.target)
-            self.schedule_processing_internal_link(elem, href, target_text, page)
-
-        except (KeyError, ValueError, PathGoesOutsideStartDirectory):
-            RT[page].issues.append(BadLink(target_text))
-
-    def schedule_processing_internal_link(self, elem: Link, href: PageHref, target_text: str, page: Page):
-        self.process2_tasks[page].append(create_task(
-            self.process2_internal_link(elem, href, target_text, page)
-        ))
-
-    async def process2_internal_link(self, elem: Link, href: PageHref, target_text: str, page: Page):
-        await self.require(href.target, PageStatus.PROCESS1)
-
-        if href.anchor:
-            try:
-                anchor = RT[href.target].anchors.by_identifier(href.anchor)
-                if not elem.content:
-                    elem.content = Str(anchor.label),
-
-            except (KeyError, AssertionError):
-                RT[page].issues.append(BadLink(target_text))
-                return
-
-        try:
-            elem.url = self.make_internal_url(href, page=page)
-            if not elem.content:
-                elem.content = Str(RT[href.target].title),
-
-        except DisableLink:
-            i = elem.parent.content.index(elem)
-            elem.parent.content[i:i + 1] = elem.content
-            return
+    @final
+    def schedule_for_stage2(self, page: Page, awaitable: Awaitable[None]):
+        self.process2_tasks[page].append(create_task(awaitable))
 
     @abstractmethod
     def make_internal_url(self, href: PageHref, *, page: Page = None) -> str:
         ...
 
 
-class ProjectBuilder(Builder):
-    # TODO: add ABCMeta to the base Processor class
-    # pylint: disable=abstract-method
+class ProjectBuilder(Builder, Generic[P, T], metaclass=ABCMeta):
+    """
+    A builder that works with the whole project at once.
+    Each volume can still have its own `Processor` and `Theme`, though.
+    """
+
     def __init__(self, project: Project):
         Builder.__init__(self)
-        self.project: Project = project
 
+        self.project: Project = project
+        self.processors: dict[Volume, P] = {}
+        self.themes: dict[Volume, T] = {}
+
+        for volume in project.volumes:
+            self.processors[volume] = self.init_processor(volume)
+            self.themes[volume] = self.init_theme(volume)
+
+    @final
     def get_project(self) -> Project:
         return self.project
 
+    @final
     def get_volumes(self) -> tuple[Volume, ...]:
         return self.project.volumes
 
+    @final
     def get_pages(self) -> tuple[Page, ...]:
         return self.project.pages
 
+    @final
+    def get_processor_for_page(self, page: Page) -> P:
+        return self.processors[page.volume]
 
-class VolumeBuilder(Builder):
-    # pylint: disable=abstract-method
+    @abstractmethod
+    def init_processor(self, volume: Volume) -> P: ...
+
+    @abstractmethod
+    def init_theme(self, volume: Volume) -> T: ...
+
+
+class VolumeBuilder(Builder, Generic[P, T], metaclass=ABCMeta):
+    """
+    A builder that works with an individual volume.
+    """
+
     def __init__(self, volume: Volume):
         Builder.__init__(self)
         self.volume: Volume = volume
+        self.processor: P = self.init_processor()
+        self.theme: T = self.init_theme()
 
+    @final
     def get_project(self) -> Project:
         return self.volume.project
 
+    @final
     def get_volumes(self) -> tuple[Volume, ...]:
         return self.volume,
 
+    @final
     def get_pages(self) -> tuple[Page, ...]:
         return self.volume.pages
+
+    @final
+    def get_processor_for_page(self, page: Page) -> P:
+        return self.processor
+
+    @abstractmethod
+    def init_processor(self) -> P: ...
+
+    @abstractmethod
+    def init_theme(self) -> T: ...

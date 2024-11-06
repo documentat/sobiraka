@@ -141,7 +141,7 @@ Lint:
     - *sobiraka_pandoc_bs
     - pip install pylint==3.3.1
   script:
-    - pylint sobiraka src/sobiraka/files/themes/*/theme.py
+    - pylint sobiraka src/sobiraka/files/themes/*/extension.py
 
 # endregion
 

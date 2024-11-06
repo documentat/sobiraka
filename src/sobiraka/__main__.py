@@ -3,7 +3,9 @@ from argparse import ArgumentParser
 from asyncio import run
 
 from sobiraka.models.load import load_project
-from sobiraka.processing import LatexBuilder, WeasyPrintBuilder, WebBuilder
+from sobiraka.processing.latex import LatexBuilder
+from sobiraka.processing.weasyprint import WeasyPrintBuilder
+from sobiraka.processing.web import WebBuilder
 from sobiraka.report import run_with_progressbar
 from sobiraka.runtime import RT
 from sobiraka.translating import changelog, check_translations

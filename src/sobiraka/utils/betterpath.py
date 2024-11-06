@@ -23,7 +23,7 @@ class AbsolutePath(Path):
             path = path.absolute()
             return path
 
-    def relative_to(self, start, *_):
+    def relative_to(self, start, *_) -> RelativePath:
         # pylint: disable=arguments-differ
         start = AbsolutePath(start)
         return RelativePath(os.path.relpath(self, start=start))

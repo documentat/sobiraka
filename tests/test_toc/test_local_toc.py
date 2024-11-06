@@ -28,10 +28,9 @@ class AbstractTestLocalToc(AbstractTestWithRtPages):
                     (page := Page(dedent(self.source))),
             }),
         })
-        await Builder().require(page, PageStatus.PROCESS1)
-        actual = local_toc(page,
-                           builder=FakeBuilder(project),
-                           toc_depth=self.toc_depth)
+        builder = FakeBuilder(project)
+        await builder.require(page, PageStatus.PROCESS1)
+        actual = local_toc(page, builder=builder, toc_depth=self.toc_depth)
         self.assertEqual(self.expected, actual)
 
 

@@ -1,38 +1,48 @@
+from __future__ import annotations
+
 import os
 import re
 import sys
 import urllib.parse
+from abc import ABCMeta
 from asyncio import Task, create_subprocess_exec, create_task
 from contextlib import suppress
 from shutil import copyfile
 from subprocess import DEVNULL, PIPE
-from types import NoneType
-from typing import BinaryIO
+from typing import BinaryIO, final
+from typing_extensions import override
 
 from panflute import Element, Header, Str, stringify
 
-from sobiraka.models import Page, PageHref, PageStatus, Volume
-from sobiraka.models.config import Config_Latex_Headers
+from sobiraka.models import FileSystem, Page, PageHref, PageStatus, Volume
+from sobiraka.models.config import Config, Config_Latex_Headers
 from sobiraka.models.exceptions import DisableLink
-from sobiraka.processing.abstract import VolumeBuilder
-from sobiraka.processing.plugin import LatexTheme, load_theme
-from sobiraka.processing.replacement import HeaderReplPara
 from sobiraka.report import update_progressbar
 from sobiraka.runtime import RT
-from sobiraka.utils import AbsolutePath, LatexInline, panflute_to_bytes
+from sobiraka.utils import AbsolutePath, LatexInline, convert_or_none, panflute_to_bytes
+from ..abstract import Processor, Theme, VolumeBuilder
+from ..load_processor import load_processor
+from ..replacement import HeaderReplPara
 
 
-class LatexBuilder(VolumeBuilder):
+@final
+class LatexBuilder(VolumeBuilder['LatexProcessor', 'LatexTheme']):
     def __init__(self, volume: Volume, output: AbsolutePath):
         super().__init__(volume)
+
         self.output: AbsolutePath = output
 
-        self._latex: dict[Page, bytes] = {}
+    def init_processor(self) -> LatexProcessor:
+        fs: FileSystem = self.get_project().fs
+        config: Config = self.volume.config
+        processor_class = load_processor(
+            convert_or_none(fs.resolve, config.web.processor),
+            config.web.theme,
+            LatexProcessor)
+        return processor_class(self)
 
-        # Load an optional post-processor a.k.a. LatexTheme
-        self._theme: LatexTheme | None = None
-        if self.volume.config.latex.theme is not None:
-            self._theme = load_theme(self.volume.config.latex.theme, LatexTheme)
+    def init_theme(self) -> LatexTheme:
+        return LatexTheme(self.volume.config.web.theme)
 
     async def run(self):
         xelatex_workdir = RT.TMP / 'tex'
@@ -99,10 +109,10 @@ class LatexBuilder(VolumeBuilder):
                 key = key.replace('_', '')
                 latex_output.write(fr'\newcommand{{\{key}}}{{{value}}}'.encode('utf-8') + b'\n')
 
-            if self._theme.style is not None:
+            if self.theme.style is not None:
                 latex_output.write(b'\n\n' + (80 * b'%'))
-                latex_output.write(b'\n\n%%% ' + self._theme.__class__.__name__.encode('utf-8') + b'\n\n')
-                latex_output.write(self._theme.style.read_bytes())
+                latex_output.write(b'\n\n%%% ' + self.theme.__class__.__name__.encode('utf-8') + b'\n\n')
+                latex_output.write(self.theme.style.read_bytes())
 
             if config.latex.header:
                 latex_output.write(b'\n\n')
@@ -112,15 +122,15 @@ class LatexBuilder(VolumeBuilder):
             latex_output.write(b'\n\n' + (80 * b'%'))
             latex_output.write(b'\n\n\\begin{document}\n\\begin{sloppypar}')
 
-            if self._theme.cover is not None:
+            if self.theme.cover is not None:
                 latex_output.write(b'\n\n' + (80 * b'%'))
                 latex_output.write(b'\n\n%%% Cover\n\n')
-                latex_output.write(self._theme.cover.read_bytes())
+                latex_output.write(self.theme.cover.read_bytes())
 
-            if config.latex.toc and self._theme.toc is not None:
+            if config.latex.toc and self.theme.toc is not None:
                 latex_output.write(b'\n\n' + (80 * b'%'))
                 latex_output.write(b'\n\n%%% Table of contents\n\n')
-                latex_output.write(self._theme.toc.read_bytes())
+                latex_output.write(self.theme.toc.read_bytes())
 
             for page in volume.pages:
                 await processing[page]
@@ -138,11 +148,6 @@ class LatexBuilder(VolumeBuilder):
                     await task
 
     async def process4(self, page: Page):
-        # If a theme is set, run additional processing of the whole document
-        # Note that if the theme does not contain custom logic implementation, we skip this step as useless
-        if type(self._theme) not in (NoneType, LatexTheme):
-            await self._theme.process_doc(RT[page].doc, page)
-
         if len(RT[page].doc.content) == 0:
             RT[page].bytes = b''
 
@@ -200,6 +205,10 @@ class LatexBuilder(VolumeBuilder):
         result = '#' + result
         return result
 
+
+class LatexProcessor(Processor[LatexBuilder]):
+
+    @override
     async def process_header(self, header: Header, page: Page) -> tuple[Element, ...]:
         r"""
         Generate LaTeX code based on the given `header`.
@@ -222,7 +231,7 @@ class LatexBuilder(VolumeBuilder):
 
         # Generate the internal link for \hyperref
         href = PageHref(page, header.identifier if header.level > 1 else None)
-        dest = re.sub(r'^#', '', self.make_internal_url(href, page=page))
+        dest = re.sub(r'^#', '', self.builder.make_internal_url(href, page=page))
 
         # Generate our hypertargets and bookmarks manually, to avoid any weird behavior with TOCs
         if 'notoc' not in header.classes:
@@ -272,3 +281,30 @@ class LatexBuilder(VolumeBuilder):
                 return config_headers.by_page_level[page.level]
 
         return config_headers.by_element[header.level]
+
+
+@final
+class LatexTheme(Theme, metaclass=ABCMeta):
+    """
+    A theme for LatexBuilder.
+
+    It may or may not provide multiple files that will be included at the beginning of the resulting LaTeX document.
+    """
+
+    def __init__(self, theme_dir: AbsolutePath):
+        super().__init__(theme_dir)
+
+        def try_find_file(filename: str) -> AbsolutePath | None:
+            path = theme_dir / filename
+            if path.exists():
+                return path
+            return None
+
+        self.style = try_find_file('style.sty')
+        """LaTeX code to be included at the very beginning, even before ``\\begin{document}``."""
+
+        self.cover = try_find_file('cover.tex')
+        """LaTeX code to be included immediately after the document environment began."""
+
+        self.toc = try_find_file('toc.tex')
+        """LaTeX code to be included after the cover."""

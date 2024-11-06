@@ -3,7 +3,9 @@ from unittest.mock import Mock
 
 from abstracttests.projecttestcase import ProjectTestCase
 from sobiraka.models import FileSystem, Page, PageHref, Project, Volume
-from sobiraka.processing import LatexBuilder, WeasyPrintBuilder, WebBuilder
+from sobiraka.processing.latex import LatexBuilder
+from sobiraka.processing.weasyprint import WeasyPrintBuilder
+from sobiraka.processing.web import WebBuilder
 from sobiraka.utils import RelativePath
 
 

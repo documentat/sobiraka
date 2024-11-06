@@ -140,6 +140,9 @@ class Config_Web:
 
     theme_data: dict[str, Any] = field(default=frozendict)
 
+    processor: RelativePath = None
+    """Path to the custom Processor implementation."""
+
     custom_styles: tuple[RelativePath, ...] = ()
 
     custom_scripts: tuple[RelativePath, ...] = ()
@@ -176,6 +179,9 @@ class Config_Latex:
     theme: AbsolutePath = None
     """Path to the theme that should be used when generating LaTeX."""
 
+    processor: RelativePath = None
+    """Path to the custom Processor implementation."""
+
     toc: bool = True
     """Whether to add a table of contents."""
 
@@ -190,6 +196,9 @@ class Config_PDF:
 
     theme: AbsolutePath = files('sobiraka') / 'files' / 'themes' / 'printable'
     """Path to the theme that should be used when generating PDF via WeasyPrint."""
+
+    processor: RelativePath = None
+    """Path to the custom Processor implementation."""
 
     custom_styles: tuple[RelativePath, ...] = ()
 

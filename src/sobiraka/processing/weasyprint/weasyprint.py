@@ -1,10 +1,13 @@
+from __future__ import annotations
+
 import logging
 import re
 import sys
 from asyncio import Task, create_task, to_thread
 from contextlib import suppress
 from mimetypes import guess_type
-from types import NoneType
+from typing import final
+from typing_extensions import override
 
 import weasyprint
 from panflute import CodeBlock, Element, Header, Image, RawBlock
@@ -12,25 +15,35 @@ from panflute import CodeBlock, Element, Header, Image, RawBlock
 from sobiraka.models import FileSystem, Page, PageHref, PageStatus, Volume
 from sobiraka.models.config import CombinedToc, Config
 from sobiraka.models.exceptions import DisableLink
-from sobiraka.processing.abstract import VolumeBuilder
-from sobiraka.processing.plugin import WeasyPrintTheme, load_theme
-from sobiraka.processing.web import HeadCssFile
-from sobiraka.processing.web.abstracthtmlbuilder import AbstractHtmlBuilder
+from sobiraka.processing import load_processor
+from sobiraka.processing.abstract import Theme, VolumeBuilder
+from sobiraka.processing.web import AbstractHtmlBuilder, AbstractHtmlProcessor, HeadCssFile
 from sobiraka.report import update_progressbar
 from sobiraka.runtime import RT
-from sobiraka.utils import AbsolutePath, RelativePath, TocNumber
+from sobiraka.utils import AbsolutePath, RelativePath, TocNumber, configured_jinja, convert_or_none
 
 
-class WeasyPrintBuilder(AbstractHtmlBuilder, VolumeBuilder):
+@final
+class WeasyPrintBuilder(VolumeBuilder['WeasyPrintProcessor', 'WeasyPrintTheme'], AbstractHtmlBuilder):
 
     def __init__(self, volume: Volume, output: AbsolutePath):
         VolumeBuilder.__init__(self, volume)
         AbstractHtmlBuilder.__init__(self)
 
         self.output: AbsolutePath = output
-        self.theme: WeasyPrintTheme = load_theme(self.volume.config.pdf.theme, WeasyPrintTheme)
-
         self.pseudofiles: dict[str, tuple[str, bytes]] = {}
+
+    def init_processor(self) -> WeasyPrintProcessor:
+        fs: FileSystem = self.get_project().fs
+        config: Config = self.volume.config
+        processor_class = load_processor(
+            convert_or_none(fs.resolve, config.pdf.processor),
+            config.pdf.theme,
+            WeasyPrintProcessor)
+        return processor_class(self)
+
+    def init_theme(self) -> WeasyPrintTheme:
+        return WeasyPrintTheme(self.volume.config.pdf.theme)
 
     async def run(self):
         from ..toc import toc
@@ -79,13 +92,6 @@ class WeasyPrintBuilder(AbstractHtmlBuilder, VolumeBuilder):
 
         update_progressbar('Writing PDF...')
         self.render_pdf(html)
-
-    async def process4(self, page: Page):
-        # Apply custom document processing
-        if type(self.theme) not in (NoneType, WeasyPrintTheme):
-            await self.theme.process_doc(RT[page].doc, page)
-
-        await super().process4(page)
 
     def render_pdf(self, html: str):
         messages = ''
@@ -182,6 +188,10 @@ class WeasyPrintBuilder(AbstractHtmlBuilder, VolumeBuilder):
     def get_relative_image_url(self, image: Image, page: Page) -> str:
         return image.url
 
+
+class WeasyPrintProcessor(AbstractHtmlProcessor[WeasyPrintBuilder]):
+
+    @override
     async def process_code_block(self, code: CodeBlock, page: Page) -> tuple[Element, ...]:
         from pygments.lexers import get_lexer_by_name
         from pygments.formatters.html import HtmlFormatter
@@ -201,19 +211,40 @@ class WeasyPrintBuilder(AbstractHtmlBuilder, VolumeBuilder):
 
         return RawBlock(html.getvalue()),
 
+    @override
     async def process_header(self, header: Header, page: Page) -> tuple[Element, ...]:
         header, = await super().process_header(header, page)
         assert isinstance(header, Header)
 
         if header.level == 1:
             href = PageHref(page)
-            header.identifier = self.make_internal_url(href)[1:]
+            header.identifier = self.builder.make_internal_url(href)[1:]
         else:
             anchor = RT[page].anchors.by_header(header)
             href = PageHref(page, anchor.identifier)
-            header.identifier = self.make_internal_url(href)[1:]
+            header.identifier = self.builder.make_internal_url(href)[1:]
+
+        self.builder.add_html_task(self.numerate_header(header, page))
 
         return header,
+
+    async def numerate_header(self, header: Header, page: Page) -> tuple[Element, ...]:
+        await self.builder.require(page, PageStatus.PROCESS3)
+
+        if header.level == 1:
+            header.attributes['data-number'] = str(RT[page].number)
+        else:
+            anchor = RT[page].anchors.by_header(header)
+            header.attributes['data-number'] = str(RT[anchor].number)
+
+        return header,
+
+
+@final
+class WeasyPrintTheme(Theme):
+    def __init__(self, theme_dir: AbsolutePath):
+        super().__init__(theme_dir)
+        self.page_template = configured_jinja(theme_dir).get_template('print.html')
 
 
 class WeasyPrintException(Exception):

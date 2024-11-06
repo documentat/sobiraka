@@ -21,6 +21,7 @@ setup(
         'python-iso639~=2023.6.15',
         'pyyaml~=6.0',
         'setuptools~=68.1.2',
+        'typing-extensions~=4.12.2',
         'utilspie~=0.1.0',
         'wcmatch~=8.4.1',
         'weasyprint~=62.3',

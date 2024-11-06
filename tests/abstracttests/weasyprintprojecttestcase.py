@@ -1,7 +1,7 @@
 from abc import ABCMeta
 
 from sobiraka.models import PageStatus
-from sobiraka.processing import WeasyPrintBuilder
+from sobiraka.processing.weasyprint import WeasyPrintBuilder
 from sobiraka.runtime import RT
 
 from .abstractvisualpdftestcase import AbstractVisualPdfTestCase

@@ -5,15 +5,15 @@ from textwrap import dedent
 from typing import Sequence
 
 from panflute import Element, stringify
+from typing_extensions import override
 
 from sobiraka.models import Page, Volume
 from sobiraka.models.config import Config_Search_LinkTarget
 from sobiraka.processing.txt import PlainTextDispatcher
+from sobiraka.processing.web import HeadJsCode, HeadJsFile, HeadTag
 from sobiraka.runtime import RT
 from sobiraka.utils import AbsolutePath, RelativePath
-
 from .searchindexer import SearchIndexer
-from ..head import HeadJsCode, HeadJsFile, HeadTag
 
 
 class PagefindIndexer(SearchIndexer, PlainTextDispatcher):
@@ -105,6 +105,6 @@ class PagefindIndexer(SearchIndexer, PlainTextDispatcher):
             }})
         ''').strip())
 
-    async def process_element(self, elem: Element, page: Page):
-        if not isinstance(elem, self.search_config.skip_elements):
-            return await super().process_element(elem, page)
+    @override
+    async def must_skip(self, elem: Element, page: Page):
+        return isinstance(elem, self.search_config.skip_elements)

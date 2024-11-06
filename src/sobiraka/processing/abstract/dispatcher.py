@@ -1,3 +1,6 @@
+from abc import ABCMeta
+from typing import final
+
 from panflute import BlockQuote, BulletList, Caption, Citation, Cite, Code, CodeBlock, Definition, DefinitionItem, \
     DefinitionList, Div, Doc, Element, Emph, Figure, Header, HorizontalRule, Image, LineBlock, LineBreak, LineItem, \
     Link, ListContainer, ListItem, Math, Note, Null, OrderedList, Para, Plain, Quoted, RawBlock, RawInline, SmallCaps, \
@@ -8,13 +11,16 @@ from sobiraka.models import Page, Syntax
 from ..directive import Directive
 
 
-class Dispatcher:
-    # TODO Rename: Dispatcher → Processor
+class Dispatcher(metaclass=ABCMeta):
     # pylint: disable=too-many-public-methods
 
+    @final
     async def process_element(self, elem: Element, page: Page) -> tuple[Element, ...]:
         # pylint: disable=cyclic-import
         # pylint: disable=too-many-statements
+
+        if await self.must_skip(elem, page):
+            return elem,
 
         match elem:
             case BlockQuote():
@@ -135,6 +141,7 @@ class Dispatcher:
             case _:  # pragma: no cover
                 raise TypeError(type(result))
 
+    @final
     async def process_container(self, elem: Element, page: Page) -> Element:
         """
         Process the `elem` and modify it, if necessary.
@@ -161,6 +168,10 @@ class Dispatcher:
                     i += len(result) - 1
 
         return elem
+
+    async def must_skip(self, elem: Element, page: Page) -> bool:
+        # pylint: disable=unused-argument
+        return False
 
     async def process_default(self, elem: Element, page: Page) -> tuple[Element, ...]:
         return (await self.process_container(elem, page),)

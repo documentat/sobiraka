@@ -6,7 +6,7 @@ from abstracttests.projecttestcase import ProjectTestCase
 from helpers.fakefilesystem import FakeFileSystem
 from sobiraka.models import Project
 from sobiraka.models.load import load_project_from_str
-from sobiraka.processing import WebBuilder
+from sobiraka.processing.web import WebBuilder
 from sobiraka.utils import AbsolutePath
 
 
@@ -17,6 +17,7 @@ class TestHtmlImages(ProjectTestCase[WebBuilder]):
             root: src
             resources: img_src
         web:
+            theme: raw
             resources_prefix: img_dst
         """)
 
