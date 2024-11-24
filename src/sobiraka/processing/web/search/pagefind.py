@@ -4,7 +4,7 @@ from subprocess import PIPE
 from textwrap import dedent
 from typing import Sequence
 
-from panflute import Element, stringify
+from panflute import Element, Header, stringify
 from typing_extensions import override
 
 from sobiraka.models import Page, Volume
@@ -108,3 +108,9 @@ class PagefindIndexer(SearchIndexer, PlainTextDispatcher):
     @override
     async def must_skip(self, elem: Element, page: Page):
         return isinstance(elem, self.search_config.skip_elements)
+
+    async def process_header(self, header: Header, page: Page):
+        if header.level == 1:
+            return ()
+
+        await super().process_header(header, page)

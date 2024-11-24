@@ -1,9 +1,9 @@
+from panflute import Div, Element, Header, Link, RawBlock, Space, Str
 from typing_extensions import override
 
-from panflute import Div, Element, Header, Link, RawBlock, Space, Str
-
-from sobiraka.models import Page
+from sobiraka.models import Page, PageStatus
 from sobiraka.processing.web import WebProcessor
+from sobiraka.runtime import RT
 
 
 class BookThemeProcessor(WebProcessor):
@@ -14,16 +14,14 @@ class BookThemeProcessor(WebProcessor):
 
     @override
     async def process_header(self, header: Header, page: Page) -> tuple[Element, ...]:
-        if header.level == 1:
-            result = await super().process_header(header, page)
-            assert result == ()
-            return result
-
         header, = await super().process_header(header, page)
         assert isinstance(header, Header)
-        assert header.level >= 2
 
-        header.content += (Space(), Link(Str('#'), url=f'#{header.identifier}', classes=['anchor']))
+        if header.level >= 2:
+            header.content += Space(), Link(Str('#'), url=f'#{header.identifier}', classes=['anchor'])
+
+        self.builder.add_html_task(self.numerate_header(header, page))
+
         return header,
 
     async def process_div_note(self, div: Div, page: Page) -> tuple[Element, ...]:
@@ -57,3 +55,12 @@ class BookThemeProcessor(WebProcessor):
         return (RawBlock('<blockquote class="book-hint danger">'),
                 *div.content,
                 RawBlock('</blockquote>'))
+
+    async def numerate_header(self, header: Header, page: Page):
+        await self.builder.require(page, PageStatus.PROCESS3)
+
+        if header.level == 1:
+            header.content = Str(RT[page].number.format('{}. ')), *header.content
+        else:
+            anchor = RT[page].anchors.by_header(header)
+            header.content = Str(RT[anchor].number.format('{}. ')), *header.content

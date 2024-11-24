@@ -228,7 +228,7 @@ class WeasyPrintProcessor(AbstractHtmlProcessor[WeasyPrintBuilder]):
 
         return header,
 
-    async def numerate_header(self, header: Header, page: Page) -> tuple[Element, ...]:
+    async def numerate_header(self, header: Header, page: Page):
         await self.builder.require(page, PageStatus.PROCESS3)
 
         if header.level == 1:
@@ -236,8 +236,6 @@ class WeasyPrintProcessor(AbstractHtmlProcessor[WeasyPrintBuilder]):
         else:
             anchor = RT[page].anchors.by_header(header)
             header.attributes['data-number'] = str(RT[anchor].number)
-
-        return header,
 
 
 @final

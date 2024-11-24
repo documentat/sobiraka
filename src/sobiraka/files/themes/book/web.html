@@ -15,7 +15,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/django.min.js"></script>
     <script src="{{ STATIC }}/custom.js"></script>
 
-    <title>{{ title }} | {{ config.title }}</title>
+    <title>{{ title |e }} | {{ config.title |e }}</title>
 
     {{ head | indent(4) -}}
 </head>
@@ -65,7 +65,7 @@
                         <li class="book-section-flat">
                             <a href="{{ section.url }}"{% if section.is_current %} class="active"{% endif %}>
                                 {{ section.number.format('{}.') }}
-                                {{ section.title }}
+                                {{ section.title |e }}
                             </a>
 
                             {% if section.children %}
@@ -74,7 +74,7 @@
                                         <li>
                                             <a href="{{ item.url }}"{% if item.is_current %} class="active"{% endif %}>
                                                 {{ item.number.format('{}.') }}
-                                                {{ item.title }}
+                                                {{ item.title |e }}
                                             </a>
 
                                             {% if item.children %}
@@ -126,11 +126,6 @@
 
         <article class="markdown">
 
-            <h1>
-                {{ number.format('{}.') }}
-                {{ title }}
-            </h1>
-
             {{ body }}
 
         </article>
@@ -149,7 +144,7 @@
                             <li>
                                 <a href='{{ item.url }}'>
                                     {{ item.number.format('{}.') }}
-                                    {{ item.title }}
+                                    {{ item.title|e }}
                                 </a>
                                 {% if item.children %}
                                     <ul>

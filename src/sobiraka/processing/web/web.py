@@ -8,15 +8,14 @@ from itertools import chain
 from os.path import relpath
 from shutil import copyfile, rmtree
 from typing import final
-from typing_extensions import override
 
 import iso639
-from panflute import Element, Header, Image
-
+from panflute import Image
 from sobiraka.models import DirPage, FileSystem, IndexPage, Page, PageHref, PageStatus, Project, Volume
 from sobiraka.models.config import Config, SearchIndexerName
 from sobiraka.runtime import RT
 from sobiraka.utils import AbsolutePath, RelativePath, configured_jinja, convert_or_none
+
 from .abstracthtml import AbstractHtmlBuilder, AbstractHtmlProcessor
 from .head import HeadCssFile, HeadJsFile
 from .search import PagefindIndexer, SearchIndexer
@@ -290,16 +289,7 @@ class WebBuilder(ProjectBuilder['WebProcessor', 'WebTheme'], AbstractHtmlBuilder
 
 
 class WebProcessor(AbstractHtmlProcessor[WebBuilder]):
-
-    @override
-    async def process_header(self, header: Header, page: Page) -> tuple[Element, ...]:
-        header, = await super().process_header(header, page)
-        assert isinstance(header, Header)
-
-        if header.level == 1:
-            return ()
-
-        return header,
+    pass
 
 
 @final
