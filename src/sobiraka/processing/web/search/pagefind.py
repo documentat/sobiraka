@@ -7,7 +7,7 @@ from typing import Sequence
 from panflute import Element, Header, stringify
 from typing_extensions import override
 
-from sobiraka.models import Page, Volume
+from sobiraka.models import Page, PageHref, Volume
 from sobiraka.models.config import Config_Search_LinkTarget
 from sobiraka.processing.txt import PlainTextDispatcher
 from sobiraka.processing.web import HeadJsCode, HeadJsFile, HeadTag
@@ -59,7 +59,7 @@ class PagefindIndexer(SearchIndexer, PlainTextDispatcher):
         await super().process_doc(RT[page].doc, page)
 
         tm = self.tm[page]
-        url = str(self.builder.get_target_path(page))
+        url = str(self.builder.make_internal_url(PageHref(page)))
         title = RT[page].title
 
         match self.search_config.link_target:

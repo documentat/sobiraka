@@ -184,7 +184,7 @@ class WebBuilder(ProjectBuilder['WebProcessor', 'WebTheme'], AbstractHtmlBuilder
             result = ''
 
         else:
-            source_path = self.get_target_path(page)
+            source_path = self.get_target_path(page) if page is not None else RelativePath()
             target_path = self.get_target_path(href.target)
             add_slash = False
 
