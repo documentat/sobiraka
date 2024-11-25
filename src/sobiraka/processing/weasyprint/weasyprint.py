@@ -10,8 +10,7 @@ from typing import final
 from typing_extensions import override
 
 import weasyprint
-from panflute import CodeBlock, Element, Header, Image, RawBlock
-
+from panflute import CodeBlock, Doc, Element, Header, Image, RawBlock, Str
 from sobiraka.models import FileSystem, Page, PageHref, PageStatus, Volume
 from sobiraka.models.config import CombinedToc, Config
 from sobiraka.models.exceptions import DisableLink
@@ -210,6 +209,18 @@ class WeasyPrintProcessor(AbstractHtmlProcessor[WeasyPrintBuilder]):
                     html.asis(pygments_output)
 
         return RawBlock(html.getvalue()),
+
+    @override
+    async def process_doc(self, doc: Doc, page: Page) -> None:
+        try:
+            assert len(doc.content) > 0
+            header = doc.content[0]
+            assert isinstance(header, Header)
+            assert header.level == 1
+        except AssertionError:
+            doc.content.insert(0, Header(Str(page.stem), level=1))
+
+        await super().process_doc(doc, page)
 
     @override
     async def process_header(self, header: Header, page: Page) -> tuple[Element, ...]:
