@@ -11,8 +11,8 @@ from abstracttests.projecttestcase import ProjectTestCase
 from helpers import assertNoDiff
 from sobiraka.models import FileSystem, IndexPage, Page, Project, Volume
 from sobiraka.models.config import CombinedToc, Config, Config_Web
+from sobiraka.processing.toc import CollapsedToc, Toc, TocItem, toc
 from sobiraka.processing.web import WebBuilder
-from sobiraka.processing.toc import Toc, TocItem, toc
 from sobiraka.utils import AbsolutePath, RelativePath
 
 """
@@ -143,45 +143,45 @@ def dataset_paths() -> dict[RelativePath, Page]:
 
 def expected_paths_from_root(toc_depth: int | float) -> Toc:
     return Toc(
-        TocItem('part1', 'part1/index.html', **_children_if(toc_depth > 1, Toc(
-            TocItem('chapter1', 'part1/chapter1/index.html', **_children_if(toc_depth > 2, Toc(
-                TocItem('section1', 'part1/chapter1/section1/index.html', **_children_if(toc_depth > 3, Toc(
+        TocItem('part1', 'part1/index.html', children=_children_if(toc_depth > 1, Toc(
+            TocItem('chapter1', 'part1/chapter1/index.html', children=_children_if(toc_depth > 2, Toc(
+                TocItem('section1', 'part1/chapter1/section1/index.html', children=_children_if(toc_depth > 3, Toc(
                     TocItem('article1', 'part1/chapter1/section1/article1.html'),
                     TocItem('article2', 'part1/chapter1/section1/article2.html'),
                 ))),
-                TocItem('section2', 'part1/chapter1/section2/index.html', **_children_if(toc_depth > 3, Toc(
+                TocItem('section2', 'part1/chapter1/section2/index.html', children=_children_if(toc_depth > 3, Toc(
                     TocItem('article1', 'part1/chapter1/section2/article1.html'),
                     TocItem('article2', 'part1/chapter1/section2/article2.html'),
                 ))),
             ))),
-            TocItem('chapter2', 'part1/chapter2/index.html', **_children_if(toc_depth > 2, Toc(
-                TocItem('section1', 'part1/chapter2/section1/index.html', **_children_if(toc_depth > 3, Toc(
+            TocItem('chapter2', 'part1/chapter2/index.html', children=_children_if(toc_depth > 2, Toc(
+                TocItem('section1', 'part1/chapter2/section1/index.html', children=_children_if(toc_depth > 3, Toc(
                     TocItem('article1', 'part1/chapter2/section1/article1.html'),
                     TocItem('article2', 'part1/chapter2/section1/article2.html'),
                 ))),
-                TocItem('section2', 'part1/chapter2/section2/index.html', **_children_if(toc_depth > 3, Toc(
+                TocItem('section2', 'part1/chapter2/section2/index.html', children=_children_if(toc_depth > 3, Toc(
                     TocItem('article1', 'part1/chapter2/section2/article1.html'),
                     TocItem('article2', 'part1/chapter2/section2/article2.html'),
                 ))),
             ))),
         ))),
-        TocItem('part2', 'part2/index.html', **_children_if(toc_depth > 1, Toc(
-            TocItem('chapter1', 'part2/chapter1/index.html', **_children_if(toc_depth > 2, Toc(
-                TocItem('section1', 'part2/chapter1/section1/index.html', **_children_if(toc_depth > 3, Toc(
+        TocItem('part2', 'part2/index.html', children=_children_if(toc_depth > 1, Toc(
+            TocItem('chapter1', 'part2/chapter1/index.html', children=_children_if(toc_depth > 2, Toc(
+                TocItem('section1', 'part2/chapter1/section1/index.html', children=_children_if(toc_depth > 3, Toc(
                     TocItem('article1', 'part2/chapter1/section1/article1.html'),
                     TocItem('article2', 'part2/chapter1/section1/article2.html'),
                 ))),
-                TocItem('section2', 'part2/chapter1/section2/index.html', **_children_if(toc_depth > 3, Toc(
+                TocItem('section2', 'part2/chapter1/section2/index.html', children=_children_if(toc_depth > 3, Toc(
                     TocItem('article1', 'part2/chapter1/section2/article1.html'),
                     TocItem('article2', 'part2/chapter1/section2/article2.html'),
                 ))),
             ))),
-            TocItem('chapter2', 'part2/chapter2/index.html', **_children_if(toc_depth > 2, Toc(
-                TocItem('section1', 'part2/chapter2/section1/index.html', **_children_if(toc_depth > 3, Toc(
+            TocItem('chapter2', 'part2/chapter2/index.html', children=_children_if(toc_depth > 2, Toc(
+                TocItem('section1', 'part2/chapter2/section1/index.html', children=_children_if(toc_depth > 3, Toc(
                     TocItem('article1', 'part2/chapter2/section1/article1.html'),
                     TocItem('article2', 'part2/chapter2/section1/article2.html'),
                 ))),
-                TocItem('section2', 'part2/chapter2/section2/index.html', **_children_if(toc_depth > 3, Toc(
+                TocItem('section2', 'part2/chapter2/section2/index.html', children=_children_if(toc_depth > 3, Toc(
                     TocItem('article1', 'part2/chapter2/section2/article1.html'),
                     TocItem('article2', 'part2/chapter2/section2/article2.html'),
                 ))),
@@ -192,22 +192,22 @@ def expected_paths_from_root(toc_depth: int | float) -> Toc:
 
 def expected_paths_from_p1(toc_depth: int | float) -> Toc:
     return Toc(
-        TocItem('chapter1', 'chapter1/index.html', **_children_if(toc_depth > 1, Toc(
-            TocItem('section1', 'chapter1/section1/index.html', **_children_if(toc_depth > 2, Toc(
+        TocItem('chapter1', 'chapter1/index.html', children=_children_if(toc_depth > 1, Toc(
+            TocItem('section1', 'chapter1/section1/index.html', children=_children_if(toc_depth > 2, Toc(
                 TocItem('article1', 'chapter1/section1/article1.html'),
                 TocItem('article2', 'chapter1/section1/article2.html'),
             ))),
-            TocItem('section2', 'chapter1/section2/index.html', **_children_if(toc_depth > 2, Toc(
+            TocItem('section2', 'chapter1/section2/index.html', children=_children_if(toc_depth > 2, Toc(
                 TocItem('article1', 'chapter1/section2/article1.html'),
                 TocItem('article2', 'chapter1/section2/article2.html'),
             ))),
         ))),
-        TocItem('chapter2', 'chapter2/index.html', **_children_if(toc_depth > 1, Toc(
-            TocItem('section1', 'chapter2/section1/index.html', **_children_if(toc_depth > 2, Toc(
+        TocItem('chapter2', 'chapter2/index.html', children=_children_if(toc_depth > 1, Toc(
+            TocItem('section1', 'chapter2/section1/index.html', children=_children_if(toc_depth > 2, Toc(
                 TocItem('article1', 'chapter2/section1/article1.html'),
                 TocItem('article2', 'chapter2/section1/article2.html'),
             ))),
-            TocItem('section2', 'chapter2/section2/index.html', **_children_if(toc_depth > 2, Toc(
+            TocItem('section2', 'chapter2/section2/index.html', children=_children_if(toc_depth > 2, Toc(
                 TocItem('article1', 'chapter2/section2/article1.html'),
                 TocItem('article2', 'chapter2/section2/article2.html'),
             ))),
@@ -217,11 +217,11 @@ def expected_paths_from_p1(toc_depth: int | float) -> Toc:
 
 def expected_paths_from_p1c1(toc_depth: int | float) -> Toc:
     return Toc(
-        TocItem('section1', 'section1/index.html', **_children_if(toc_depth > 1, Toc(
+        TocItem('section1', 'section1/index.html', children=_children_if(toc_depth > 1, Toc(
             TocItem('article1', 'section1/article1.html'),
             TocItem('article2', 'section1/article2.html'),
         ))),
-        TocItem('section2', 'section2/index.html', **_children_if(toc_depth > 1, Toc(
+        TocItem('section2', 'section2/index.html', children=_children_if(toc_depth > 1, Toc(
             TocItem('article1', 'section2/article1.html'),
             TocItem('article2', 'section2/article2.html'),
         ))),
@@ -239,8 +239,8 @@ def expected_paths_from_p1c1s1a1(toc_depth: int | float) -> Toc:
     return Toc()
 
 
-def _children_if(value: bool, children: list[TocItem]):
-    return dict(children=children) if value else dict(is_collapsed=True)
+def _children_if(value: bool, children: list[TocItem]) -> Toc | CollapsedToc:
+    return children if value else CollapsedToc()
 
 
 if __name__ == '__main__':

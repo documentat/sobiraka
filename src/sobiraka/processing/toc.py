@@ -51,10 +51,7 @@ class TocItem:
     is_selected: bool = field(kw_only=True, default=False)
     """True if the item corresponds to the currently opened page or any of its parent pages."""
 
-    is_collapsed: bool = field(kw_only=True, default=False)
-    """True if the item would have some children but they were omitted due to a depth limit."""
-
-    children: Toc = field(kw_only=True, default_factory=list)
+    children: Toc | CollapsedToc = field(kw_only=True, default_factory=list)
     """List of this item's sub-items."""
 
     def __repr__(self):
@@ -85,6 +82,11 @@ class TocItem:
         for subitem in self.children:
             yield subitem
             yield from subitem.walk()
+
+    @property
+    def is_collapsed(self) -> bool:
+        """True if the item would have some children but they were omitted due to a depth limit."""
+        return self.children is CollapsedToc
 
 
 class Toc(list[TocItem]):
@@ -136,6 +138,10 @@ class Toc(list[TocItem]):
                 if item.source.header is header:
                     return item
         raise KeyError(header)
+
+
+class CollapsedToc(tuple):
+    """A value that indicates that some items would be here but were collapsed due to a depth limit."""
 
 
 def toc(
@@ -194,7 +200,7 @@ def toc(
                                      toc_depth=toc_depth - 1,
                                      combined_toc=combined_toc)
             else:
-                item.is_collapsed = True
+                item.children = CollapsedToc()
 
         tree.append(item)
 
