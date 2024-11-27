@@ -72,7 +72,7 @@ class AbstractTestTocDepth(ProjectTestCase[WebBuilder]):
                     formatter=Formatter(Formatter.HTML, indent=2))
                 expected = re.sub(r'<(a|strong)([^>]*)>\n\s+([^>]+)\n\s+</\1>', r'<\1\2>\3</\1>', expected)
 
-                actual = toc(self.project.get_volume(),
+                actual = toc(self.project.get_volume().root_page,
                              builder=self.builder,
                              toc_depth=self.toc_depth,
                              combined_toc=CombinedToc.NEVER,

@@ -68,7 +68,7 @@ class TestNumerate(ProjectTestCase[FakeBuilder], AbstractTestWithRtPages):
     async def test_numeration(self):
         expected = expected_data(self.numeration_enabled)
 
-        actual = toc(self.project.get_volume(),
+        actual = toc(self.project.get_volume().root_page,
                      builder=self.builder,
                      toc_depth=inf,
                      combined_toc=CombinedToc.ALWAYS)

@@ -35,7 +35,7 @@ class AbstractTestTocCombine(ProjectTestCase[FakeBuilder]):
         self.maxDiff = None
 
         volume = self.project.get_volume()
-        actual = toc(volume,
+        actual = toc(volume.root_page,
                      builder=self.builder,
                      toc_depth=self.toc_depth,
                      combined_toc=self.combine,

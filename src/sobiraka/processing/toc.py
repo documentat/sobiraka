@@ -15,7 +15,7 @@ from sobiraka.runtime import RT
 from sobiraka.utils import TocNumber, Unnumbered
 
 if TYPE_CHECKING:
-    from sobiraka.models import Page, Volume
+    from sobiraka.models import Page
     from sobiraka.processing.abstract import Builder
 
 
@@ -139,7 +139,7 @@ class Toc(list[TocItem]):
 
 
 def toc(
-        base: Volume | Page,
+        base: Page,
         *,
         builder: Builder,
         toc_depth: int | float,
@@ -169,18 +169,7 @@ def toc(
     The `combined_toc` argument indicates whether to include local TOCs as subtrees of the TOC items.
     You may choose to always include them, never include them, or only include the current page's local TOC.
     """
-    from sobiraka.models.page import Page
-    from sobiraka.models.volume import Volume
-
-    pages: Iterable[Page]
-    match base:
-        case Volume():
-            pages = base.root_page.children
-        case Page():
-            pages = base.children
-        case _:
-            raise TypeError(base)
-
+    pages = base.children
     tree = Toc()
 
     for page in pages:
