@@ -48,7 +48,7 @@ class TocItem:
     is_current: bool = field(kw_only=True, default=False)
     """True if the item corresponds to the currently opened page."""
 
-    is_selected: bool = field(kw_only=True, default=False)
+    is_breadcrumb: bool = field(kw_only=True, default=False)
     """True if the item corresponds to the currently opened page or any of its parent pages."""
 
     children: Toc | CollapsedToc = field(kw_only=True, default_factory=list)
@@ -63,7 +63,7 @@ class TocItem:
         if self.is_current:
             parts.append('current')
 
-        if self.is_selected:
+        if self.is_breadcrumb:
             parts.append('selected')
 
         if self.is_collapsed:
@@ -192,10 +192,10 @@ def toc(
 
         if current_page is not None:
             if page in current_page.breadcrumbs:
-                item.is_selected = True
+                item.is_breadcrumb = True
 
         if len(RT[page].anchors) > 0 or len(page.children) > 0:
-            if toc_depth > 1 or item.is_selected:
+            if toc_depth > 1 or item.is_breadcrumb:
                 item.children = toc(page,
                                     builder=builder,
                                     current_page=current_page,

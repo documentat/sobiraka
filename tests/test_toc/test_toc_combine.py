@@ -46,8 +46,8 @@ class AbstractTestTocCombine(ProjectTestCase[FakeBuilder]):
 class TestTocCombine_Never(AbstractTestTocCombine):
     combine = CombinedToc.NEVER
     expected = Toc(
-        TocItem('Section 1', '.', is_selected=True, children=Toc(
-            TocItem('Page 1.1', '', is_current=True, is_selected=True),
+        TocItem('Section 1', '.', is_breadcrumb=True, children=Toc(
+            TocItem('Page 1.1', '', is_current=True, is_breadcrumb=True),
             TocItem('Page 1.2', 'page2.md'),
         )),
         TocItem('Section 2', '../section2', children=Toc(
@@ -60,9 +60,9 @@ class TestTocCombine_Never(AbstractTestTocCombine):
 class TestTocCombine_Always(AbstractTestTocCombine):
     combine = CombinedToc.ALWAYS
     expected = Toc(
-        TocItem('Section 1', '.', is_selected=True, children=Toc(
+        TocItem('Section 1', '.', is_breadcrumb=True, children=Toc(
             TocItem('Paragraph 1', '.#paragraph-1'),
-            TocItem('Page 1.1', '', is_current=True, is_selected=True, children=Toc(
+            TocItem('Page 1.1', '', is_current=True, is_breadcrumb=True, children=Toc(
                 TocItem('Paragraph 1', '#paragraph-1', children=Toc(
                     TocItem('Subparagraph', '#subparagraph'),
                 )),
@@ -86,8 +86,8 @@ class TestTocCombine_Always(AbstractTestTocCombine):
 class TestTocCombine_Current(AbstractTestTocCombine):
     combine = CombinedToc.CURRENT
     expected = Toc(
-        TocItem('Section 1', '.', is_selected=True, children=Toc(
-            TocItem('Page 1.1', '', is_current=True, is_selected=True, children=Toc(
+        TocItem('Section 1', '.', is_breadcrumb=True, children=Toc(
+            TocItem('Page 1.1', '', is_current=True, is_breadcrumb=True, children=Toc(
                 TocItem('Paragraph 1', '#paragraph-1', children=Toc(
                     TocItem('Subparagraph', '#subparagraph'),
                 )),
@@ -108,8 +108,8 @@ class TestTocCombine_Current_LimitDepth_4(TestTocCombine_Current):
 class TestTocCombine_Current_LimitDepth_3(TestTocCombine_Current):
     toc_depth = 3
     expected = Toc(
-        TocItem('Section 1', '.', is_selected=True, children=Toc(
-            TocItem('Page 1.1', '', is_current=True, is_selected=True, children=Toc(
+        TocItem('Section 1', '.', is_breadcrumb=True, children=Toc(
+            TocItem('Page 1.1', '', is_current=True, is_breadcrumb=True, children=Toc(
                 TocItem('Paragraph 1', '#paragraph-1'),
             )),
             TocItem('Page 1.2', 'page2.md'),
@@ -124,8 +124,8 @@ class TestTocCombine_Current_LimitDepth_3(TestTocCombine_Current):
 class TestTocCombine_Current_LimitDepth_2(TestTocCombine_Current):
     toc_depth = 2
     expected = Toc(
-        TocItem('Section 1', '.', is_selected=True, children=Toc(
-            TocItem('Page 1.1', '', is_current=True, is_selected=True),
+        TocItem('Section 1', '.', is_breadcrumb=True, children=Toc(
+            TocItem('Page 1.1', '', is_current=True, is_breadcrumb=True),
             TocItem('Page 1.2', 'page2.md'),
         )),
         TocItem('Section 2', '../section2', children=Toc(
@@ -138,8 +138,8 @@ class TestTocCombine_Current_LimitDepth_2(TestTocCombine_Current):
 class TestTocCombine_Current_LimitDepth_1(TestTocCombine_Current):
     toc_depth = 1
     expected = Toc(
-        TocItem('Section 1', '.', is_selected=True, children=Toc(
-            TocItem('Page 1.1', '', is_current=True, is_selected=True),
+        TocItem('Section 1', '.', is_breadcrumb=True, children=Toc(
+            TocItem('Page 1.1', '', is_current=True, is_breadcrumb=True),
             TocItem('Page 1.2', 'page2.md'),
         )),
         TocItem('Section 2', '../section2'),

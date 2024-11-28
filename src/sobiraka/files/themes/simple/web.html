@@ -16,7 +16,7 @@
                 <li>
                     {% if item.is_current %}
                         <span class='current'>{{ item.title }}</span>
-                    {% elif item.is_selected %}
+                    {% elif item.is_breadcrumb %}
                         {{ item.number.format('{}.') }} <a class='selected' href='{{ item.url }}'>{{ item.title }}</a>
                     {% else %}
                         {{ item.number.format('{}.') }} <a href='{{ item.url }}'>{{ item.title }}</a>
