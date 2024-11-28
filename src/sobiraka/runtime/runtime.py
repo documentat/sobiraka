@@ -23,7 +23,7 @@ class Runtime:
         # pylint: disable=invalid-name
         self.TMP: AbsolutePath | None = None
         self.DEBUG: bool = bool(os.environ.get('SOBIRAKA_DEBUG'))
-        self.IDS: dict[int, str] = {}
+        self.CLASSES: dict[int, str] = {}
 
     @classmethod
     def init_context_vars(cls):

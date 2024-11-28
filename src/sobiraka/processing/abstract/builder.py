@@ -263,12 +263,13 @@ class Builder(metaclass=ABCMeta):
                     raise TypeError(item)
         argv = shlex.split(line)
 
+        from ..directive import ClassDirective, LocalTocDirective, TocDirective
         match stringify(para.content[0]):
-            case '@local_toc':
-                from ..directive import LocalTocDirective
+            case '@class':
+                return ClassDirective(self, page, argv)
+            case '@local-toc':
                 return LocalTocDirective(self, page, argv)
             case '@toc':
-                from ..directive import TocDirective
                 return TocDirective(self, page, argv)
 
     async def process2(self, page: Page):
