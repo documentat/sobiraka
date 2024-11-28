@@ -6,7 +6,7 @@ from contextlib import suppress
 from os.path import normpath
 from typing import Generic, TypeVar
 
-from panflute import Code, Element, Header, Image, Link, Para, Space, Str, Table, stringify
+from panflute import Code, Element, Header, Image, Link, Para, Space, Str, stringify
 from typing_extensions import override
 
 from sobiraka.models import Anchor, DirPage, FileSystem, Page, Source, Status, Syntax, UrlHref, Volume
@@ -126,14 +126,6 @@ class Processor(Dispatcher, Generic[B], metaclass=ABCMeta):
             for elem in para.content:
                 assert isinstance(elem, (Str, Space))
                 text += stringify(elem)
-
-            if m := re.fullmatch(r'// table-id: (\S+)', text):
-                table_id = m.group(1)
-                table = para.next
-                if not isinstance(table, Table):
-                    raise RuntimeError(f'Wait, where is the table? [{table_id}]')
-                RT.IDS[id(table)] = table_id
-                return ()
 
         return (para,)
 
