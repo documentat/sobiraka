@@ -235,6 +235,11 @@ class WeasyPrintProcessor(AbstractHtmlProcessor[WeasyPrintBuilder]):
             href = PageHref(page, anchor.identifier)
             header.identifier = self.builder.make_internal_url(href)[1:]
 
+        if page.is_root():
+            header.attributes['style'] = 'bookmark-level: none'
+        else:
+            header.attributes['style'] = f'bookmark-level: {page.level + header.level - 1}'
+
         self.builder.add_html_task(self.numerate_header(header, page))
 
         return header,
