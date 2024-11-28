@@ -274,7 +274,7 @@ class Builder(Generic[P, T], metaclass=ABCMeta):
 
     async def process3(self, volume: Volume):
         if volume.config.content.numeration:
-            numerate(volume.root_page.children)
+            numerate(volume)
 
         for page in volume.pages:
             processor = self.get_processor_for_page(page)

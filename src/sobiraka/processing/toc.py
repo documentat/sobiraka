@@ -175,30 +175,32 @@ def toc(
     The `combined_toc` argument indicates whether to include local TOCs as subtrees of the TOC items.
     You may choose to always include them, never include them, or only include the current page's local TOC.
     """
-    pages = base.children
     tree = Toc()
 
-    for page in pages:
+    if combined_toc is CombinedToc.ALWAYS or (combined_toc is CombinedToc.CURRENT and base is current_page):
+        tree += local_toc(base,
+                          builder=builder,
+                          toc_depth=toc_depth,
+                          current_page=current_page)
+
+    for page in base.children:
         item = TocItem(title=RT[page].title,
                        url=builder.make_internal_url(PageHref(page), page=current_page),
                        number=RT[page].number,
                        source=page,
-                       is_current=page is current_page,
-                       is_selected=current_page is not None and page in current_page.breadcrumbs)
+                       is_current=page is current_page)
 
-        if combined_toc is CombinedToc.ALWAYS or (combined_toc is CombinedToc.CURRENT and item.is_current):
-            item.children += local_toc(page,
-                                       builder=builder,
-                                       toc_depth=toc_depth - 1,
-                                       current_page=current_page)
+        if current_page is not None:
+            if page in current_page.breadcrumbs:
+                item.is_selected = True
 
-        if len(page.children) > 0:
+        if len(RT[page].anchors) > 0 or len(page.children) > 0:
             if toc_depth > 1 or item.is_selected:
-                item.children += toc(page,
-                                     builder=builder,
-                                     current_page=current_page,
-                                     toc_depth=toc_depth - 1,
-                                     combined_toc=combined_toc)
+                item.children = toc(page,
+                                    builder=builder,
+                                    current_page=current_page,
+                                    toc_depth=toc_depth - 1,
+                                    combined_toc=combined_toc)
             else:
                 item.children = CollapsedToc()
 

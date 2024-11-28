@@ -19,7 +19,7 @@ Test that:
 """
 
 
-class TestNumerate(ProjectTestCase[FakeBuilder], AbstractTestWithRtPages):
+class TestNumerate(ProjectTestCase[FakeBuilder]):
     REQUIRE = PageStatus.PROCESS3
     numeration_enabled = True
 

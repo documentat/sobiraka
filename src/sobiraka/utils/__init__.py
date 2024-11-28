@@ -10,5 +10,5 @@ from .raw import HtmlBlock, HtmlInline, LatexBlock, LatexInline
 from .replace_element import replace_element
 from .sorted_dict import sorted_dict
 from .super_gather import super_gather
-from .tocnumber import TocNumber, Unnumbered
+from .tocnumber import RootNumber, TocNumber, Unnumbered
 from .unique_list import UniqueList

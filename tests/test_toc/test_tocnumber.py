@@ -28,7 +28,7 @@ class TestTocNumber(TestCase):
                 actual = number.format('<{}>')
                 self.assertEqual(expected, actual)
 
-    def test_append_zero(self):
+    def test_with_new_zero(self):
         data: tuple[tuple[str, TocNumber, str], ...] = (
             ('1 component', TocNumber(12), '12.0'),
             ('2 components', TocNumber(12, 34), '12.34.0'),
@@ -36,7 +36,7 @@ class TestTocNumber(TestCase):
         )
         for name, number, expected in data:
             with self.subTest(name):
-                actual = str(TocNumber(*number, 0))
+                actual = str(number.with_new_zero())
                 self.assertEqual(expected, actual)
 
     def test_plus_1(self):

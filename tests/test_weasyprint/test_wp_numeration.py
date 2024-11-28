@@ -3,7 +3,7 @@ from unittest.mock import Mock
 
 from abstracttests.weasyprintprojecttestcase import WeasyPrintProjectTestCase
 from sobiraka.models import FileSystem, Page, Project, Volume
-from sobiraka.models.config import Config, Config_Content
+from sobiraka.models.config import Config, Config_Content, Config_PDF
 from sobiraka.utils import RelativePath
 
 
@@ -49,6 +49,22 @@ class TestWeasyPrint_Numeration(WeasyPrintProjectTestCase):
                 RelativePath('chapter3/section3'): Page('# Section 3'),
                 RelativePath('chapter3/section3/page1.md'): Page('# Page 1'),
                 RelativePath('chapter3/section3/page2.md'): Page('# Page 2'),
+            }),
+        })
+
+
+class TestWeasyPrint_Numeration_SinglePage(WeasyPrintProjectTestCase):
+    PAGE_LIMIT = 1
+
+    def _init_project(self) -> Project:
+        fs = Mock(FileSystem)
+        config = Config(
+            content=Config_Content(numeration=True),
+            pdf=Config_PDF(combined_toc=True),
+        )
+        return Project(fs, {
+            RelativePath(): Volume(config, {
+                RelativePath(): Page('# Ahaha \n## Section 1 \n## Section 2'),
             }),
         })
 

@@ -41,6 +41,9 @@ class TocNumber:
     def increased(self) -> TocNumber:
         return TocNumber(*self._numbers[:-1], self._numbers[-1] + 1)
 
+    def with_new_zero(self) -> TocNumber:
+        return TocNumber(*self, 0)
+
     def increased_at(self, level: int) -> TocNumber:
         """
         Increase given level by one.
@@ -53,6 +56,17 @@ class TocNumber:
         if n == len(self._numbers):
             return TocNumber(*self._numbers, 1)
         raise ValueError(f'Can\'t increase level {level} in {str(self)!r}.')
+
+
+class RootNumber(TocNumber):
+    def __init__(self):
+        super().__init__()  # empty sequence of numbers!
+
+    def __repr__(self):
+        return f'{self.__class__.__name__}()'
+
+    def format(self, template: str) -> str:
+        raise ValueError(f'{self.__class__.__name__} can be used but can never be rendered.')
 
 
 class Unnumbered(TocNumber):
