@@ -25,7 +25,7 @@ class AbstractHtmlBuilder(Builder, metaclass=ABCMeta):
 
         self._html_builder_tasks: list[Task] = []
         self._results: set[AbsolutePath] = set()
-        self._head: Head = Head()
+        self.head: Head = Head()
 
     def add_html_task(self, coro: Coroutine):
         self._html_builder_tasks.append(create_task(coro))
@@ -42,7 +42,7 @@ class AbstractHtmlBuilder(Builder, metaclass=ABCMeta):
                     if source.suffix in ('.sass', '.scss') and not source.stem.startswith('_'):
                         target = RelativePath('_static') / 'css' / f'{source.stem}.css'
                         tg.create_task(to_thread(self.compile_sass, source, target))
-                        self._head.append(HeadCssFile(target))
+                        self.head.append(HeadCssFile(target))
 
     @abstractmethod
     def compile_sass(self, source: AbsolutePath, target: RelativePath):
