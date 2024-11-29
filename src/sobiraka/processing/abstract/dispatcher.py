@@ -197,8 +197,8 @@ class Dispatcher(metaclass=ABCMeta):
     async def process_code(self, code: Code, page: Page) -> tuple[Element, ...]:
         return await self.process_default(code, page)
 
-    async def process_code_block(self, code: CodeBlock, page: Page) -> tuple[Element, ...]:
-        return await self.process_default(code, page)
+    async def process_code_block(self, block: CodeBlock, page: Page) -> tuple[Element, ...]:
+        return await self.process_default(block, page)
 
     async def process_definition(self, definition: Definition, page: Page) -> tuple[Element, ...]:
         return await self.process_default(definition, page)

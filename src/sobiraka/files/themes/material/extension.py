@@ -29,14 +29,14 @@ class MaterialThemeProcessor(WebProcessor):
         return (header,)
 
     @override
-    async def process_code_block(self, code: CodeBlock, page: Page) -> tuple[Element, ...]:
-        code, = await super().process_code_block(code, page)
-        assert isinstance(code, CodeBlock)
+    async def process_code_block(self, block: CodeBlock, page: Page) -> tuple[Element, ...]:
+        block, = await super().process_code_block(block, page)
+        assert isinstance(block, CodeBlock)
 
-        syntax, = code.classes or ('text',)
+        syntax, = block.classes or ('text',)
         pygments_lexer = get_lexer_by_name(syntax)
         pygments_formatter = HtmlFormatter(nowrap=True)
-        pygments_output = highlight(code.text, pygments_lexer, pygments_formatter)
+        pygments_output = highlight(block.text, pygments_lexer, pygments_formatter)
 
         code_block_id = f'code-{uuid4()}'
 

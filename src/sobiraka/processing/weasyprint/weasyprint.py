@@ -191,16 +191,16 @@ class WeasyPrintBuilder(VolumeBuilder['WeasyPrintProcessor', 'WeasyPrintTheme'],
 class WeasyPrintProcessor(AbstractHtmlProcessor[WeasyPrintBuilder]):
 
     @override
-    async def process_code_block(self, code: CodeBlock, page: Page) -> tuple[Element, ...]:
+    async def process_code_block(self, block: CodeBlock, page: Page) -> tuple[Element, ...]:
         from pygments.lexers import get_lexer_by_name
         from pygments.formatters.html import HtmlFormatter
         from pygments import highlight
         import yattag
 
-        syntax, = code.classes or ('text',)
+        syntax, = block.classes or ('text',)
         pygments_lexer = get_lexer_by_name(syntax)
         pygments_formatter = HtmlFormatter(nowrap=True)
-        pygments_output = highlight(code.text, pygments_lexer, pygments_formatter)
+        pygments_output = highlight(block.text, pygments_lexer, pygments_formatter)
 
         html = yattag.Doc()
         with html.tag('div', klass=f'highlight-{syntax} notranslate'):

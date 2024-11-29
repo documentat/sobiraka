@@ -161,9 +161,9 @@ class PlainTextDispatcher(Dispatcher):
     # Block containers
 
     @override
-    async def process_code_block(self, code: CodeBlock, page: Page):
-        for line in code.text.splitlines():
-            self._atomic(page, code, line)
+    async def process_code_block(self, block: CodeBlock, page: Page):
+        for line in block.text.splitlines():
+            self._atomic(page, block, line)
             self._ensure_new_line(page)
 
     @override
