@@ -24,7 +24,7 @@ release:
 		--build-arg PANDOC=$(PANDOC) \
 		--tag sobiraka:release
 
-test:
+build-tester:
 	@DOCKER_BUILDKIT=1 \
 		docker build . \
 		--target tester \
@@ -33,6 +33,8 @@ test:
 		--build-arg PYTHON=$(PYTHON) \
 		--build-arg PANDOC=$(PANDOC) \
 		--tag sobiraka:test-with-python$(PYTHON)-pandoc$(PANDOC)
+
+test: build-tester
 	@$(DOCKER_RUN) \
 		sobiraka:test-with-python$(PYTHON)-pandoc$(PANDOC)
 

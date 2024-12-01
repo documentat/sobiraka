@@ -2,13 +2,13 @@ ARG PANDOC
 ARG PYTHON
 
 ARG NODE=20.17
-ARG UBUNTU=24.10
+ARG PYTHON_FOR_BUILDING=3.13
 
 
 ################################################################################
 # Install dependencies
 
-FROM python:$PYTHON AS build-package
+FROM python:$PYTHON_FOR_BUILDING AS build-package
 RUN --mount=type=cache,target=/root/.cache/pip pip install setuptools
 COPY setup.py .
 COPY src src
@@ -22,11 +22,11 @@ FROM python:$PYTHON AS get-weasyprint
 RUN apt update
 RUN apt install --yes --download-only weasyprint
 
-FROM python:$PYTHON AS get-conda
+FROM python:$PYTHON_FOR_BUILDING AS get-conda
 RUN wget --progress=bar:force https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /tmp/miniconda.sh
 RUN chmod +x /tmp/miniconda.sh
 
-FROM python:$PYTHON AS get-fonts
+FROM python:$PYTHON_FOR_BUILDING AS get-fonts
 RUN wget --progress=bar:force https://www.latofonts.com/download/lato2ofl-zip/ -O lato.zip
 RUN unzip lato.zip **/*.ttf -d /tmp/fonts
 RUN wget --progress=bar:force https://download.jetbrains.com/fonts/JetBrainsMono-2.304.zip -O jbmono.zip
