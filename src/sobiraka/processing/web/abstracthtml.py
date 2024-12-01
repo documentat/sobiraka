@@ -117,6 +117,10 @@ class AbstractHtmlBuilder(Builder, metaclass=ABCMeta):
     # Functions used for additional tasks
 
     @abstractmethod
+    def add_file_from_data(self, target: RelativePath, data: str | bytes):
+        ...
+
+    @abstractmethod
     async def add_file_from_location(self, source: AbsolutePath, target: RelativePath):
         raise NotImplementedError
 

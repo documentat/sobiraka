@@ -7,10 +7,10 @@ from asyncio import Task, create_task, to_thread
 from contextlib import suppress
 from mimetypes import guess_type
 from typing import final
-from typing_extensions import override
 
 import weasyprint
 from panflute import CodeBlock, Doc, Element, Header, Image, RawBlock, Str
+from typing_extensions import override
 from sobiraka.models import FileSystem, Page, PageHref, PageStatus, Volume
 from sobiraka.models.config import CombinedToc, Config
 from sobiraka.models.exceptions import DisableLink
@@ -149,12 +149,22 @@ class WeasyPrintBuilder(VolumeBuilder['WeasyPrintProcessor', 'WeasyPrintTheme'],
     def get_root_prefix(self, page: Page) -> str:
         return ''
 
+    @override
+    def add_file_from_data(self, target: RelativePath, data: str | bytes):
+        mime_type, _ = guess_type(target, strict=False)
+        if isinstance(data, str):
+            data = data.encode('utf-8')
+        self.pseudofiles[str(target)] = mime_type, data
+
+    @override
     async def add_file_from_location(self, source: AbsolutePath, target: RelativePath):
         raise NotImplementedError
 
+    @override
     async def add_file_from_project(self, source: RelativePath, target: RelativePath):
         raise NotImplementedError
 
+    @override
     def compile_sass(self, source: AbsolutePath, target: RelativePath):
         self.pseudofiles[str(target)] = 'text/css', self.compile_sass_impl(source)
         self.head.append(HeadCssFile(target))

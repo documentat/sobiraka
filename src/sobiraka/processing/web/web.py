@@ -11,6 +11,8 @@ from typing import final
 
 import iso639
 from panflute import Image
+from typing_extensions import override
+
 from sobiraka.models import DirPage, FileSystem, IndexPage, Page, PageHref, PageStatus, Project, Volume
 from sobiraka.models.config import Config, SearchIndexerName
 from sobiraka.runtime import RT
@@ -269,23 +271,33 @@ class WebBuilder(ProjectBuilder['WebProcessor', 'WebTheme'], AbstractHtmlBuilder
         # Put required files to the HTML head
         self.head += indexer.head_tags()
 
+    @override
+    def add_file_from_data(self, target: RelativePath, data: str | bytes):
+        target = self.output / target
+        target.parent.mkdir(parents=True, exist_ok=True)
+        if isinstance(data, str):
+            target.write_text(data)
+        else:
+            target.write_bytes(data)
+        self._results.add(target)
+
+    @override
     async def add_file_from_location(self, source: AbsolutePath, target: RelativePath):
         target = self.output / target
         target.parent.mkdir(parents=True, exist_ok=True)
         await to_thread(copyfile, source, target)
         self._results.add(target)
 
+    @override
     async def add_file_from_project(self, source: RelativePath, target: RelativePath):
         target = self.output / target
         await to_thread(self.project.fs.copy, source, target)
         self._results.add(target)
 
+    @override
     def compile_sass(self, source: AbsolutePath, target: RelativePath):
         css = self.compile_sass_impl(source)
-        target = self.output / target
-        target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_bytes(css)
-        self._results.add(target)
+        self.add_file_from_data(target, css)
 
 
 class WebProcessor(AbstractHtmlProcessor[WebBuilder]):
