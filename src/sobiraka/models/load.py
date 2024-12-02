@@ -9,11 +9,10 @@ import yaml
 from jsonschema.validators import Draft202012Validator
 from utilspie.collectionsutils import frozendict
 
-from sobiraka.models.config import Config_Latex_Headers
 from sobiraka.utils import AbsolutePath, RelativePath, convert_or_none, get_default, merge_dicts
-from .config import CombinedToc, Config, Config_Content, Config_Latex, Config_PDF, \
-    Config_Pagefind_Translations, Config_Paths, Config_Search_LinkTarget, Config_Web, Config_Web_Search, \
-    SearchIndexerName
+from .config import CombinedToc, Config, Config_Content, Config_HighlightJS, Config_Latex, Config_Latex_Headers, \
+    Config_PDF, Config_Pagefind_Translations, Config_Paths, Config_Pdf_Highlight, Config_Prism, Config_Pygments, \
+    Config_Search_LinkTarget, Config_Web, Config_Web_Highlight, Config_Web_Search, SearchIndexerName
 from .filesystem import FileSystem, RealFileSystem
 from .namingscheme import NamingScheme
 from .project import Project
@@ -110,6 +109,7 @@ def _load_volume(lang: str | None, codename: str, volume_data: dict, fs: FileSys
                 link_target=Config_Search_LinkTarget(_('web.search.link_target', 'h1')),
                 translations=Config_Pagefind_Translations(**_('web.search.translations', {})),
             ),
+            highlight=convert_or_none(_load_web_highlight, _('web.highlight')),
         ),
         latex=Config_Latex(
             header=convert_or_none(RelativePath, _('latex.header')),
@@ -130,9 +130,30 @@ def _load_volume(lang: str | None, codename: str, volume_data: dict, fs: FileSys
             custom_styles=tuple(map(RelativePath, _('pdf.custom_styles', ()))),
             toc_depth=int(re.sub(r'^infinity$', '0', str(_('pdf.toc_depth', 'infinity')))) or inf,
             combined_toc=_('pdf.combined_toc', False),
+            highlight=convert_or_none(_load_pdf_highlight, _('pdf.highlight')),
         ),
         variables=frozendict(_('variables', {})),
     ))
+
+
+def _load_web_highlight(data: dict[str, dict]) -> Config_Web_Highlight:
+    assert len(data) == 1
+    engine, config = next(iter(data.items()))
+    match engine:
+        case 'highlightjs':
+            return Config_HighlightJS.load(config or {})
+        case 'prism':
+            return Config_Prism.load(config or {})
+        case 'pygments':
+            return Config_Pygments(**(config or {}))
+
+
+def _load_pdf_highlight(data: dict[str, dict]) -> Config_Pdf_Highlight:
+    assert len(data) == 1
+    engine, config = next(iter(data.items()))
+    match engine:
+        case 'pygments':
+            return Config_Pygments(**(config or {}))
 
 
 def _load_latex_headers_by_global_level(values: dict[str, str]) -> frozendict[int, str]:

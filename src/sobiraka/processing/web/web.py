@@ -4,6 +4,7 @@ import os.path
 import re
 from asyncio import to_thread
 from datetime import datetime
+from functools import lru_cache
 from itertools import chain
 from os.path import relpath
 from shutil import copyfile, rmtree
@@ -14,12 +15,12 @@ from panflute import Image
 from typing_extensions import override
 
 from sobiraka.models import DirPage, FileSystem, IndexPage, Page, PageHref, PageStatus, Project, Volume
-from sobiraka.models.config import Config, SearchIndexerName
+from sobiraka.models.config import Config, Config_HighlightJS, Config_Prism, Config_Pygments, SearchIndexerName
 from sobiraka.runtime import RT
 from sobiraka.utils import AbsolutePath, RelativePath, configured_jinja, convert_or_none
-
 from .abstracthtml import AbstractHtmlBuilder, AbstractHtmlProcessor
 from .head import HeadCssFile, HeadJsFile
+from .highlight import HighlightJs, Highlighter, Prism, Pygments
 from .search import PagefindIndexer, SearchIndexer
 from ..abstract import ProjectBuilder, Theme
 from ..load_processor import load_processor
@@ -301,7 +302,17 @@ class WebBuilder(ProjectBuilder['WebProcessor', 'WebTheme'], AbstractHtmlBuilder
 
 
 class WebProcessor(AbstractHtmlProcessor[WebBuilder]):
-    pass
+    @override
+    @lru_cache
+    def get_highlighter(self, volume: Volume) -> Highlighter:
+        config: Config = volume.config
+        match config.web.highlight:
+            case Config_HighlightJS() as config_highlightjs:
+                return HighlightJs(config_highlightjs, self.builder)
+            case Config_Prism() as config_prism:
+                return Prism(config_prism, self.builder)
+            case Config_Pygments() as config_pygments:
+                return Pygments(config_pygments, self.builder)
 
 
 @final

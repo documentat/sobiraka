@@ -5,18 +5,20 @@ import re
 import sys
 from asyncio import Task, create_task, to_thread
 from contextlib import suppress
+from functools import lru_cache
 from mimetypes import guess_type
 from typing import final
 
 import weasyprint
-from panflute import CodeBlock, Doc, Element, Header, Image, RawBlock, Str
+from panflute import Doc, Element, Header, Image, Str
 from typing_extensions import override
+
 from sobiraka.models import FileSystem, Page, PageHref, PageStatus, Volume
-from sobiraka.models.config import CombinedToc, Config
+from sobiraka.models.config import CombinedToc, Config, Config_Pygments
 from sobiraka.models.exceptions import DisableLink
 from sobiraka.processing import load_processor
 from sobiraka.processing.abstract import Theme, VolumeBuilder
-from sobiraka.processing.web import AbstractHtmlBuilder, AbstractHtmlProcessor, HeadCssFile
+from sobiraka.processing.web import AbstractHtmlBuilder, AbstractHtmlProcessor, HeadCssFile, Highlighter, Pygments
 from sobiraka.report import update_progressbar
 from sobiraka.runtime import RT
 from sobiraka.utils import AbsolutePath, RelativePath, TocNumber, configured_jinja, convert_or_none
@@ -201,24 +203,12 @@ class WeasyPrintBuilder(VolumeBuilder['WeasyPrintProcessor', 'WeasyPrintTheme'],
 class WeasyPrintProcessor(AbstractHtmlProcessor[WeasyPrintBuilder]):
 
     @override
-    async def process_code_block(self, block: CodeBlock, page: Page) -> tuple[Element, ...]:
-        from pygments.lexers import get_lexer_by_name
-        from pygments.formatters.html import HtmlFormatter
-        from pygments import highlight
-        import yattag
-
-        syntax, = block.classes or ('text',)
-        pygments_lexer = get_lexer_by_name(syntax)
-        pygments_formatter = HtmlFormatter(nowrap=True)
-        pygments_output = highlight(block.text, pygments_lexer, pygments_formatter)
-
-        html = yattag.Doc()
-        with html.tag('div', klass=f'highlight-{syntax} notranslate'):
-            with html.tag('div', klass='highlight'):
-                with html.tag('pre'):
-                    html.asis(pygments_output)
-
-        return RawBlock(html.getvalue()),
+    @lru_cache
+    def get_highlighter(self, volume: Volume) -> Highlighter:
+        config: Config = volume.config
+        match config.pdf.highlight:
+            case Config_Pygments() as config_pygments:
+                return Pygments(config_pygments, self.builder)
 
     @override
     async def process_doc(self, doc: Doc, page: Page) -> None:

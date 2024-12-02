@@ -6,15 +6,16 @@ from asyncio import Task, TaskGroup, create_subprocess_exec, create_task, to_thr
 from copy import deepcopy
 from subprocess import PIPE, Popen
 from typing import Awaitable, Coroutine, Generic, TypeVar, final
-from typing_extensions import override
 
-from panflute import Image
+from panflute import CodeBlock, Element, Image
+from typing_extensions import override
 
 from sobiraka.models import Page, Volume
 from sobiraka.models.config import Config
 from sobiraka.runtime import RT
 from sobiraka.utils import AbsolutePath, RelativePath, panflute_to_bytes, super_gather
 from .head import Head, HeadCssFile
+from .highlight import Highlighter
 from ..abstract import Builder, Processor, Theme
 
 
@@ -141,6 +142,22 @@ B = TypeVar('B', bound=AbstractHtmlBuilder)
 
 
 class AbstractHtmlProcessor(Processor[B], Generic[B], metaclass=ABCMeta):
+
+    @abstractmethod
+    def get_highlighter(self, volume: Volume) -> Highlighter:
+        """
+        Load a Highlighter implementation based on the volume's configuration.
+        The implementation and the possible result types differ for different builders.
+        """
+
+    @override
+    async def process_code_block(self, block: CodeBlock, page: Page) -> tuple[Element, ...]:
+        # Use the Highlighter implementation to process the code block and produce head tags
+        highlighter = self.get_highlighter(page.volume)
+        if highlighter is not None:
+            block, head_tags = highlighter.highlight(block)
+            self.builder.head += head_tags
+        return block,
 
     @override
     async def process_image(self, image: Image, page: Page) -> tuple[Image, ...]:
