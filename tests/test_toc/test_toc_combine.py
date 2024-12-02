@@ -3,7 +3,7 @@ from unittest import main
 from unittest.mock import Mock
 
 from abstracttests.projecttestcase import ProjectTestCase
-from helpers.fakebuilder import FakeBuilder
+from helpers import FakeBuilder
 from sobiraka.models import FileSystem, Page, Project, Volume
 from sobiraka.models.config import CombinedToc
 from sobiraka.processing.toc import Toc, TocItem, toc

@@ -2,7 +2,7 @@ from textwrap import dedent
 from unittest import main
 
 from abstracttests.weasyprintprojecttestcase import WeasyPrintProjectTestCase
-from helpers.fakefilesystem import FakeFileSystem
+from helpers import FakeFileSystem
 from sobiraka.models import Page, Project, Volume
 from sobiraka.models.config import Config, Config_PDF
 from sobiraka.utils import RelativePath

@@ -1,8 +1,7 @@
 from math import inf
 
 from abstracttests.projecttestcase import ProjectTestCase
-from helpers.fakebuilder import FakeBuilder
-from helpers.fakefilesystem import FakeFileSystem
+from helpers import FakeBuilder, FakeFileSystem
 from sobiraka.models import Page, PageStatus, Project, Volume
 from sobiraka.models.config import CombinedToc, Config, Config_Content
 from sobiraka.processing.toc import Toc, TocItem, toc

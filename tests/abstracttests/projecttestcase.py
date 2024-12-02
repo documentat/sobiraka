@@ -5,7 +5,7 @@ from typing import Any, Generic, Iterable, TypeVar
 from unittest import SkipTest
 
 from abstracttests.abstracttestwithrt import AbstractTestWithRtPages
-from helpers.fakebuilder import FakeBuilder
+from helpers import FakeBuilder
 from sobiraka.models import Page, PageStatus, Project
 from sobiraka.processing.abstract import Builder
 from sobiraka.utils import AbsolutePath, super_gather

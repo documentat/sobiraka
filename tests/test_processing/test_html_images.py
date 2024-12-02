@@ -3,7 +3,7 @@ from textwrap import dedent
 from unittest import main
 
 from abstracttests.projecttestcase import ProjectTestCase
-from helpers.fakefilesystem import FakeFileSystem
+from helpers import FakeFileSystem
 from sobiraka.models import Project
 from sobiraka.models.load import load_project_from_str
 from sobiraka.processing.web import WebBuilder

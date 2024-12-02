@@ -4,7 +4,7 @@ from unittest import main
 from unittest.mock import Mock
 
 from abstracttests.abstracttestwithrt import AbstractTestWithRtPages
-from helpers.fakebuilder import FakeBuilder
+from helpers import FakeBuilder
 from sobiraka.models import FileSystem, Page, PageStatus, Project, Volume
 from sobiraka.processing.abstract import Builder
 from sobiraka.processing.toc import Toc, TocItem, local_toc
