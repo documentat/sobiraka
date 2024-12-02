@@ -4,9 +4,9 @@ from math import inf
 from textwrap import dedent
 from typing import Iterable
 
-import jsonschema
 import panflute
 import yaml
+from jsonschema.validators import Draft202012Validator
 from utilspie.collectionsutils import frozendict
 
 from sobiraka.models.config import Config_Latex_Headers
@@ -44,7 +44,7 @@ def load_project_from_str(manifest_yaml: str, *, fs: FileSystem) -> Project:
 
 def load_project_from_dict(manifest: dict, *, fs: FileSystem) -> Project:
     if manifest:
-        jsonschema.validate(manifest, MANIFEST_SCHEMA)
+        Draft202012Validator(manifest).validate(MANIFEST_SCHEMA)
 
     volumes: list[Volume] = []
     for lang, language_data in _normalized_and_merged(manifest, 'languages'):
