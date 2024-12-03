@@ -14,7 +14,7 @@ class AbstractHighlightTest(ProjectTestCase[WebBuilder]):
     Load a highlighter configuration, create a project, render a page.
     Check that the necessary HeadTag were added and the expected HTML code was rendered.
     """
-    CONFIG: dict[str, dict]
+    CONFIG: str | dict[str, dict]
     FILES: tuple[str, ...] = ()
     CONTENT: str = '```shell\necho 1\n```'
     EXPECTED_HEAD: Head

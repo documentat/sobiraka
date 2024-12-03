@@ -11,6 +11,15 @@ class AbstractHighlightTest_Prism(AbstractHighlightTest, metaclass=ABCMeta):
     EXPECTED_RENDER = '<pre><code class="language-shell">echo 1</code></pre>'
 
 
+class TestPrism(AbstractHighlightTest_Prism):
+    CONFIG = 'prism'
+    EXPECTED_HEAD = Head((
+        HeadJsUrl('https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js'),
+        HeadJsUrl('https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js'),
+        HeadCssUrl('https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css'),
+    ))
+
+
 class TestPrism_cdnjs(AbstractHighlightTest_Prism):
     CONFIG = {'prism': {
         'version': '1.28.0',

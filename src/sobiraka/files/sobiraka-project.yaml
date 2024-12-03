@@ -114,6 +114,7 @@ $defs:
                   searching: { type: string }
           highlight:
             oneOf:
+              - enum: [highlightjs, prism, pygments]
               - additionalProperties: false
                 properties:
                   highlightjs:
@@ -195,6 +196,7 @@ $defs:
           combined_toc: { type: boolean }
           highlight:
             oneOf:
+              - enum: [pygments]
               - additionalProperties: false
                 properties:
                   pygments:

@@ -11,6 +11,14 @@ class AbstractHighlightTest_HighlightJS(AbstractHighlightTest, metaclass=ABCMeta
     EXPECTED_RENDER = '<pre><code class="language-shell">echo 1</code></pre>'
 
 
+class TestHighlightJS(AbstractHighlightTest_HighlightJS):
+    CONFIG = 'highlightjs'
+    EXPECTED_HEAD = Head((
+        HeadJsUrl('https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/highlight.min.js'),
+        HeadJsFile(RelativePath('_static/js/init-highlight.js')),
+    ))
+
+
 class TestHighlightJS_cdnjs(AbstractHighlightTest_HighlightJS):
     CONFIG = {'highlightjs': {
         'version': '10.0.0',

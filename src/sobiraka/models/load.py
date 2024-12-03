@@ -136,9 +136,13 @@ def _load_volume(lang: str | None, codename: str, volume_data: dict, fs: FileSys
     ))
 
 
-def _load_web_highlight(data: dict[str, dict]) -> Config_Web_Highlight:
-    assert len(data) == 1
-    engine, config = next(iter(data.items()))
+def _load_web_highlight(data: str | dict[str, dict]) -> Config_Web_Highlight:
+    if isinstance(data, str):
+        engine, config = data, {}
+    else:
+        assert len(data) == 1
+        engine, config = next(iter(data.items()))
+
     match engine:
         case 'highlightjs':
             return Config_HighlightJS.load(config or {})
@@ -148,9 +152,13 @@ def _load_web_highlight(data: dict[str, dict]) -> Config_Web_Highlight:
             return Config_Pygments(**(config or {}))
 
 
-def _load_pdf_highlight(data: dict[str, dict]) -> Config_Pdf_Highlight:
-    assert len(data) == 1
-    engine, config = next(iter(data.items()))
+def _load_pdf_highlight(data: str | dict[str, dict]) -> Config_Pdf_Highlight:
+    if isinstance(data, str):
+        engine, config = data, {}
+    else:
+        assert len(data) == 1
+        engine, config = next(iter(data.items()))
+
     match engine:
         case 'pygments':
             return Config_Pygments(**(config or {}))

@@ -16,6 +16,11 @@ class AbstractHighlightTest_Pygments(AbstractHighlightTest, metaclass=ABCMeta):
 
 
 class TestPygments(AbstractHighlightTest_Pygments):
+    CONFIG = 'pygments'
+    EXPECTED_HEAD = Head()
+
+
+class TestPygments_SpecifyStyle(AbstractHighlightTest_Pygments):
     CONFIG = {'pygments': {
         'style': 'xcode',
     }}
