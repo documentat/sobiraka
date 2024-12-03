@@ -16,20 +16,20 @@ class AbstractHighlightTest_Pygments(AbstractHighlightTest, metaclass=ABCMeta):
 
 
 class TestPygments(AbstractHighlightTest_Pygments):
-    CONFIG = Config_Pygments(
-        style='xcode',
-    )
+    CONFIG = {'pygments': {
+        'style': 'xcode',
+    }}
     EXPECTED_HEAD = Head((
         HeadCssFile(RelativePath('_static/css/pygments-xcode.css')),
     ))
 
 
 class TestPygments_CustomClasses(AbstractHighlightTest_Pygments):
-    CONFIG = Config_Pygments(
-        style='xcode',
-        pre_class='mypre',
-        code_class='mycode',
-    )
+    CONFIG = {'pygments': {
+        'style': 'xcode',
+        'pre_class': 'mypre',
+        'code_class': 'mycode',
+    }}
     EXPECTED_HEAD = Head((
         HeadCssFile(RelativePath('_static/css/pygments-xcode.css')),
     ))

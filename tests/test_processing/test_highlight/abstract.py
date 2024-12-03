@@ -3,7 +3,8 @@ from tempfile import TemporaryDirectory
 from abstracttests.projecttestcase import ProjectTestCase
 from helpers import FakeFileSystem
 from sobiraka.models import Page, Project, Volume
-from sobiraka.models.config import Config, Config_Web, Config_Web_Highlight
+from sobiraka.models.config import Config, Config_Web
+from sobiraka.models.load import _load_web_highlight
 from sobiraka.processing.web import Head, WebBuilder
 from sobiraka.utils import AbsolutePath, RelativePath
 
@@ -13,7 +14,7 @@ class AbstractHighlightTest(ProjectTestCase[WebBuilder]):
     Load a highlighter configuration, create a project, render a page.
     Check that the necessary HeadTag were added and the expected HTML code was rendered.
     """
-    CONFIG: Config_Web_Highlight
+    CONFIG: dict[str, dict]
     FILES: tuple[str, ...] = ()
     CONTENT: str = '```shell\necho 1\n```'
     EXPECTED_HEAD: Head
@@ -26,7 +27,7 @@ class AbstractHighlightTest(ProjectTestCase[WebBuilder]):
 
         config = Config(
             web=Config_Web(
-                highlight=self.CONFIG,
+                highlight=_load_web_highlight(self.CONFIG),
             )
         )
 
