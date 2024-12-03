@@ -151,6 +151,6 @@ pygmentize -f html -S tango > _static/pygments-tango.css
 
 Исходные файлы SASS, необходимые для темы, должны находиться в подпапке `sass`. Имена файлов, которые будут переданы препроцессору, не должны начинаться с подчёркивания, хотя в папке могут быть вспомогательные файлы с такими именами. Например, файл `style.sass` будет передан препроцессору (и превращён в `style.css`), а файл `_tables.sass` не будет, однако `style.sass` может подключать `_tables.sass`.
 
-Также возможно добавление стилей SASS на уровне тома, см. [`pdf.custom_styles`](../99-reference/1-configuration.md#volume.pdf.custom_styles).
+Также возможно добавление стилей SASS на уровне тома, см. [`pdf.custom_styles`](../99-reference/1-configuration.md#pdf.custom_styles).
 
 Теги `<link>` со ссылками на все собранные стили CSS будут автоматически включены в переменную `head`, которую рекомендуется подключить в HTML-шаблон, см. [](../99-reference/3-template-api.md).

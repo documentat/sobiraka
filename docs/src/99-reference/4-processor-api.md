@@ -13,8 +13,8 @@
 :::note
 Выберите обработчик для вашего проекта одним из двух способов.
 
-- Включите его в состав темы, заданной в [`web.theme`](1-configuration.md#volume.web.theme), [`pdf.theme`](1-configuration.md#volume.pdf.theme) или [`latex.theme`](1-configuration.md#volume.latex.theme).
-- Укажите путь к файлу Python в [`web.processor`](1-configuration.md#volume.web.processor), [`pdf.processor`](1-configuration.md#volume.pdf.processor) или [`latex.processor`](1-configuration.md#volume.latex.processor).
+- Включите его в состав темы, заданной в [`web.theme`](1-configuration.md#web.theme), [`pdf.theme`](1-configuration.md#pdf.theme) или [`latex.theme`](1-configuration.md#latex.theme).
+- Укажите путь к файлу Python в [`web.processor`](1-configuration.md#web.processor), [`pdf.processor`](1-configuration.md#pdf.processor) или [`latex.processor`](1-configuration.md#latex.processor).
 :::
 
 ## `process_*()` {#process}

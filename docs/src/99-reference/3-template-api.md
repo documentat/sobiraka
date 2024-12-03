@@ -36,7 +36,7 @@
 
 - `STATIC` — относительный путь к директории, в которую будут скопированы ресурсы из поддиректории `_static` используемой темы. Пример: `../static`.
 
-- `theme_data` — словарь с произвольными данными из настройки [`web.theme_data`](../99-reference/1-configuration.md#volume.web.theme_data).
+- `theme_data` — словарь с произвольными данными из настройки [`web.theme_data`](../99-reference/1-configuration.md#web.theme_data).
 
 - `now` — текущие дата и время, полученные с помощью [`datetime.now()`](https://docs.python.org/3/library/datetime.html#datetime.datetime.now).
 
