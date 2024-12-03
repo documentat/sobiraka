@@ -84,7 +84,7 @@ class Config_HighlightJS(Config_Web_Highlight, JavaScriptHighlighterLibraryConfi
                 package_jsdelivr='gh/highlightjs/cdn-release',
                 package_unpkg='@highlightjs/cdn-assets',
             ),
-            style=data.get('style'),
+            style=data.get('style', 'default'),
         )
 
 
@@ -106,6 +106,6 @@ class Config_Prism(Config_Web_Highlight, JavaScriptHighlighterLibraryConfig):
 
 @dataclass(kw_only=True, frozen=True)
 class Config_Pygments(Config_Web_Highlight, Config_Pdf_Highlight):
-    style: str = None
+    style: str = 'default'
     pre_class: str = None
     code_class: str = 'pygments'

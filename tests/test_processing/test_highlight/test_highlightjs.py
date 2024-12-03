@@ -15,11 +15,22 @@ class TestHighlightJS(AbstractHighlightTest_HighlightJS):
     CONFIG = 'highlightjs'
     EXPECTED_HEAD = Head((
         HeadJsUrl('https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/highlight.min.js'),
+        HeadCssUrl('https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/styles/default.min.css'),
         HeadJsFile(RelativePath('_static/js/init-highlight.js')),
     ))
 
 
-class TestHighlightJS_cdnjs(AbstractHighlightTest_HighlightJS):
+class TestHighlightJS_NoStyle(AbstractHighlightTest_HighlightJS):
+    CONFIG = {'highlightjs': {
+        'style': None,
+    }}
+    EXPECTED_HEAD = Head((
+        HeadJsUrl('https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/highlight.min.js'),
+        HeadJsFile(RelativePath('_static/js/init-highlight.js')),
+    ))
+
+
+class TestHighlightJS_CDN_cdnjs(AbstractHighlightTest_HighlightJS):
     CONFIG = {'highlightjs': {
         'version': '10.0.0',
         'location': 'cdnjs',
@@ -32,7 +43,7 @@ class TestHighlightJS_cdnjs(AbstractHighlightTest_HighlightJS):
     ))
 
 
-class TestHighlightJS_jsdelivr(AbstractHighlightTest_HighlightJS):
+class TestHighlightJS_CDN_jsdelivr(AbstractHighlightTest_HighlightJS):
     CONFIG = {'highlightjs': {
         'version': '10.0.0',
         'location': 'jsdelivr',
@@ -45,7 +56,7 @@ class TestHighlightJS_jsdelivr(AbstractHighlightTest_HighlightJS):
     ))
 
 
-class TestHighlightJS_unpkg(AbstractHighlightTest_HighlightJS):
+class TestHighlightJS_CDN_unpkg(AbstractHighlightTest_HighlightJS):
     CONFIG = {'highlightjs': {
         'version': '10.0.0',
         'location': 'unpkg',

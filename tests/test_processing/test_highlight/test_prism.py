@@ -20,7 +20,17 @@ class TestPrism(AbstractHighlightTest_Prism):
     ))
 
 
-class TestPrism_cdnjs(AbstractHighlightTest_Prism):
+class TestPrism_NoStyle(AbstractHighlightTest_Prism):
+    CONFIG = {'prism': {
+        'style': None,
+    }}
+    EXPECTED_HEAD = Head((
+        HeadJsUrl('https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js'),
+        HeadJsUrl('https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js'),
+    ))
+
+
+class TestPrism_CDN_cdnjs(AbstractHighlightTest_Prism):
     CONFIG = {'prism': {
         'version': '1.28.0',
         'location': 'cdnjs',
@@ -33,7 +43,7 @@ class TestPrism_cdnjs(AbstractHighlightTest_Prism):
     ))
 
 
-class TestPrism_jsdelivr(AbstractHighlightTest_Prism):
+class TestPrism_CDN_jsdelivr(AbstractHighlightTest_Prism):
     CONFIG = {'prism': {
         'version': '1.28.0',
         'location': 'jsdelivr',
@@ -46,7 +56,7 @@ class TestPrism_jsdelivr(AbstractHighlightTest_Prism):
     ))
 
 
-class TestPrism_unpkg(AbstractHighlightTest_Prism):
+class TestPrism_CDN_unpkg(AbstractHighlightTest_Prism):
     CONFIG = {'prism': {
         'version': '1.28.0',
         'location': 'unpkg',
@@ -132,8 +142,6 @@ class TestPrism_Local_MissingJS_Autoloader(AbstractHighlightTest_Prism, FailingP
 
 
 del AbstractHighlightTest, AbstractHighlightTest_Prism, FailingProjectTestCase
-
-
 
 if __name__ == '__main__':
     main()
