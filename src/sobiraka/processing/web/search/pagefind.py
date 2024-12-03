@@ -110,7 +110,5 @@ class PagefindIndexer(SearchIndexer, PlainTextDispatcher):
         return isinstance(elem, self.search_config.skip_elements)
 
     async def process_header(self, header: Header, page: Page):
-        if header.level == 1:
-            return ()
-
-        await super().process_header(header, page)
+        if header.level != 1:
+            await super().process_header(header, page)
