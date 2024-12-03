@@ -1,7 +1,11 @@
 from abc import ABCMeta
+from textwrap import dedent
 from unittest import main
+from unittest.mock import Mock
 
-from sobiraka.models.config import Config_Pygments
+from abstracttests.weasyprintprojecttestcase import WeasyPrintProjectTestCase
+from sobiraka.models import FileSystem, Page, Project, Volume
+from sobiraka.models.config import Config, Config_PDF, Config_Pygments
 from sobiraka.processing.web import Head, HeadCssFile
 from sobiraka.utils import RelativePath
 from test_processing.test_highlight.abstract import AbstractHighlightTest
@@ -32,7 +36,42 @@ class TestPygments_CustomClasses(AbstractHighlightTest_Pygments):
     EXPECTED_RENDER = '<pre class="mypre"><code class="mycode"><span class="nb">echo</span><span class="w"> </span><span class="m">1</span></code></pre>'
 
 
-del AbstractHighlightTest, AbstractHighlightTest_Pygments
+class TestPygments_WeasyPrint_PHP(WeasyPrintProjectTestCase):
+    CONTENT = dedent('''
+        # PHP highlighting examples
+        
+        Not highlighted:
+        ```php
+        echo 'Hello, world!'
+        ```
+        
+        Highlighted because of the opening tag:
+        ```php
+        <? echo 'Hello, world!'
+        ```
+        
+        Highlighted because of the option:
+        ```php {startinline=true}
+        echo 'Hello, world!'
+        ```
+    ''')
+
+    def _init_project(self) -> Project:
+        config = Config(
+            pdf=Config_PDF(
+                highlight=Config_Pygments(
+                    style='vs',
+                )
+            )
+        )
+        return Project(Mock(FileSystem), {
+            RelativePath(): Volume(config, {
+                RelativePath(): Page(self.CONTENT),
+            })
+        })
+
+
+del AbstractHighlightTest, AbstractHighlightTest_Pygments, WeasyPrintProjectTestCase
 
 if __name__ == '__main__':
     main()

@@ -1,5 +1,6 @@
 from typing import Iterable, TYPE_CHECKING
 
+import yaml
 import yattag
 from panflute import Block, CodeBlock, RawBlock
 from typing_extensions import override
@@ -16,7 +17,9 @@ if TYPE_CHECKING:
 class Pygments(Highlighter):
     """
     Website: https://pygments.org/
+    List of lexers and their supported options: https://pygments.org/docs/lexers/
     """
+
     def __init__(self, config: Config_Pygments, builder: 'AbstractHtmlBuilder'):
         from pygments.formatters.html import HtmlFormatter
         from pygments.styles import get_style_by_name
@@ -43,8 +46,12 @@ class Pygments(Highlighter):
         from pygments.lexers import get_lexer_by_name
         from pygments import highlight
 
+        # Initialize lexer based on block.classes and block.attributes
         language = block.classes[0] if len(block.classes) > 0 else 'text'
-        lexer = get_lexer_by_name(language)
+        options = {k: yaml.safe_load(v) for k, v in block.attributes.items()}
+        lexer = get_lexer_by_name(language, **options)
+
+        # Highlight the code
         output = highlight(block.text, lexer, self.formatter).rstrip()
 
         pre_attributes = dict(klass=self.config.pre_class) if self.config.pre_class else {}
