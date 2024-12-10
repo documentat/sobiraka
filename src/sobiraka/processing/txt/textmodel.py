@@ -8,6 +8,8 @@ from itertools import pairwise
 from typing import Iterable, Sequence
 
 from panflute import Element
+from utilspie.collectionsutils import frozendict
+
 from sobiraka.models import Anchor
 from sobiraka.utils import update_last_dataclass
 
@@ -33,7 +35,7 @@ class TextModel:
     indirectly reference both the lines numeration and their content, see :class:`Pos`.
     """
 
-    fragments: list[Fragment] = field(default_factory=list, init=False)
+    fragments: Sequence[Fragment] = field(default_factory=list, init=False)
     """
     List of text fragments, usually related to specific elements.
     
@@ -52,7 +54,7 @@ class TextModel:
 
     exceptions_regexp: re.Pattern | None = field(default=None)
     """
-    The regular expression what wil be used for finding `exceptions`.
+    The regular expression what will be used for finding `exceptions`.
     Should be loaded from the volume's configuration.
     """
 
@@ -64,6 +66,8 @@ class TextModel:
         You must call this to be able to use some other methods.
         """
         self.__frozen = True
+        self.fragments = tuple(self.fragments)
+        self.sections = frozendict(self.sections)
 
     @property
     def text(self) -> str:

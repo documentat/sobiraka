@@ -1,7 +1,0 @@
-paths:
-  root: src
-  include: ['**/*.md']
-
-lint:
-  dictionaries:
-    - en_US

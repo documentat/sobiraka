@@ -39,7 +39,7 @@ class MisspelledWords(Issue):
     words: tuple[str, ...]
 
     def __str__(self):
-        return f'Misspelled words in {self.path_in_project}: {", ".join(self.words)}.'
+        return f'Misspelled words: {", ".join(self.words)}.'
 
 
 @dataclass(order=True, frozen=True)

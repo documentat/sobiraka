@@ -21,8 +21,10 @@ class IssuesOccurred(Exception):
         self.issues: tuple[Issue, ...] = tuple(issues)
 
         assert len(issues) > 0
-        message = str(len(issues)) + ' issue' + ('s' if len(issues) > 1 else '') \
-            + ' occurred in ' + str(page.path_in_project)
+        this_many_issues = str(len(issues)) + ' issue' + ('s' if len(issues) > 1 else '')
+        message = f'{this_many_issues} occurred in {page.path_in_project}:'
+        for issue in issues:
+            message += f'\n  {issue}'
         super().__init__(message)
 
 
