@@ -1,7 +1,7 @@
 .PHONY: *
 
 PYTHON := 3.13
-PANDOC := 3.5
+PANDOC := 3.6
 
 DOCKER_RUN := docker run --rm -it
 ifdef CI

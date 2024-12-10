@@ -1,6 +1,6 @@
 variables:
   PYTHON: 3.13
-  PANDOC: 3.5
+  PANDOC: 3.6
 
   PIP_CACHE_DIR: $CI_PROJECT_DIR/.cache/pip
 
@@ -176,6 +176,13 @@ Python 3.11, Pandoc 3.5:
     PANDOC: 3.5
     PYTHON: 3.11
 
+Python 3.11, Pandoc 3.6:
+  stage: Test with Python 3.11
+  extends: .test
+  variables:
+    PANDOC: 3.6
+    PYTHON: 3.11
+
 Python 3.12, Pandoc 3.2:
   stage: Test with Python 3.12
   extends: .test
@@ -204,6 +211,13 @@ Python 3.12, Pandoc 3.5:
     PANDOC: 3.5
     PYTHON: 3.12
 
+Python 3.12, Pandoc 3.6:
+  stage: Test with Python 3.12
+  extends: .test
+  variables:
+    PANDOC: 3.6
+    PYTHON: 3.12
+
 Python 3.13, Pandoc 3.2:
   stage: Test with Python 3.13
   extends: .test
@@ -230,6 +244,13 @@ Python 3.13, Pandoc 3.5:
   extends: .test
   variables:
     PANDOC: 3.5
+    PYTHON: 3.13
+
+Python 3.13, Pandoc 3.6:
+  stage: Test with Python 3.13
+  extends: .test
+  variables:
+    PANDOC: 3.6
     PYTHON: 3.13
   coverage: '/TOTAL .+ (\d+\.\d+)%/'
 
