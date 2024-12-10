@@ -1,0 +1,4 @@
+\b(macOS|Mac OS)( X)?( \d+\.\d+)?\b
+\b\d+\.\d+\b
+\bOS X\b
+\bApple Inc\.

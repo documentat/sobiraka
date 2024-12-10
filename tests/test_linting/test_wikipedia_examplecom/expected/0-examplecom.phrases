@@ -1,0 +1,25 @@
+Example.com
+The domain names example.com, example.net, example.org, and example.edu are second-level domain names in the Domain Name System of the Internet.
+They are reserved by the Internet Assigned Numbers Authority (IANA) at the direction of the Internet Engineering Task Force (IETF) as special-use domain names for documentation purposes.
+The domain names are used widely in books, tutorials, sample network configurations, and generally as examples for the use of domain names.
+The Internet Corporation for Assigned Names and Numbers (ICANN) operates web sites for these domains with content that reflects their purpose.
+Purpose
+The domains example.com, example.net, example.org, and example.edu are intended for general use in any kind of documentation, such as technical and software documentation, manuals, and sample software configurations.
+Thus, documentation writers can be sure to select a domain name without creating naming conflicts if end-users try to use the sample configurations or examples verbatim.
+The domains may be used in documentation without prior consultation with IANA or ICANN.
+In practice, these domain names are also installed in the Domain Name System with the Internet Protocol (IP) addresses for Internet Protocol version 4 (IPv4) and IPv6 of a web server managed by ICANN.
+The domains are digitally signed using Domain Name System Security Extensions (DNSSEC).
+The zone files of each domain also define one subdomain name.
+The third-level domain name www resolves to the IP addresses of the parent domains.
+History
+The second-level domain label example for the top-level domains com, net, and org have been reserved and registered since at least 1992.
+The IETF established the authority of this use in publication RFC 2606 in 1999.
+The reservation for the educational domain edu was sponsored by the Internet Corporation for Assigned Names and Numbers (ICANN) in 2000.
+In 2013, the status and purpose of the domains was restated as belonging to a group of special-use domain names in RFC 6761.
+See also
+.example – Top-level domain name reserved for documentation purposes
+.local – Pseudo-TLD with no meaning in the DNS for use with local zeroconf networking only
+Fictitious domain name
+IPv4 § Special-use addresses – some special-use IPv4 address ranges are reserved for documentation and examples
+Reserved top-level domains
+From Wikipedia, the free encyclopedia

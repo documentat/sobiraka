@@ -11,7 +11,7 @@ from utilspie.collectionsutils import frozendict
 
 from sobiraka.models.config import Config_Latex_Headers
 from sobiraka.utils import AbsolutePath, RelativePath, convert_or_none, get_default, merge_dicts
-from .config import CombinedToc, Config, Config_Content, Config_Latex, Config_PDF, \
+from .config import CombinedToc, Config, Config_Content, Config_Latex, Config_Lint, Config_Lint_Checks, Config_PDF, \
     Config_Pagefind_Translations, Config_Paths, Config_Search_LinkTarget, Config_Web, Config_Web_Search, \
     SearchIndexerName
 from .filesystem import FileSystem, RealFileSystem
@@ -130,6 +130,11 @@ def _load_volume(lang: str | None, codename: str, volume_data: dict, fs: FileSys
             custom_styles=tuple(map(RelativePath, _('pdf.custom_styles', ()))),
             toc_depth=int(re.sub(r'^infinity$', '0', str(_('pdf.toc_depth', 'infinity')))) or inf,
             combined_toc=_('pdf.combined_toc', False),
+        ),
+        lint=Config_Lint(
+            dictionaries=tuple(_('lint.dictionaries', [])),
+            exceptions=tuple(map(RelativePath, _('lint.exceptions', []))),
+            checks=Config_Lint_Checks(**_('lint.checks', {})),
         ),
         variables=frozendict(_('variables', {})),
     ))

@@ -7,6 +7,7 @@ from utilspie.collectionsutils import frozendict
 
 from .config_content import Config_Content
 from .config_latex import Config_Latex
+from .config_lint import Config_Lint
 from .config_paths import Config_Paths
 from .config_pdf import Config_PDF
 from .config_web import Config_Web
@@ -34,6 +35,9 @@ class Config:
 
     pdf: Config_PDF = field(default=Config_PDF, kw_only=True)
     """Settings related to :class:`.WeasyBuilder`."""
+
+    lint: Config_Lint = field(default_factory=Config_Lint, kw_only=True)
+    """Settings related to :class:`.Linter`."""
 
     variables: dict[str, Any] = field(default_factory=frozendict, kw_only=True)
     """Arbitrary variables that can be passed to the template engine."""

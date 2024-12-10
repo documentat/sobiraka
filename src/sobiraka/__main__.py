@@ -2,6 +2,7 @@ import sys
 from argparse import ArgumentParser
 from asyncio import run
 
+from sobiraka.linter import Linter
 from sobiraka.models.load import load_project
 from sobiraka.processing.latex import LatexBuilder
 from sobiraka.processing.weasyprint import WeasyPrintBuilder
@@ -9,7 +10,7 @@ from sobiraka.processing.web import WebBuilder
 from sobiraka.report import run_with_progressbar
 from sobiraka.runtime import RT
 from sobiraka.translating import changelog, check_translations
-from sobiraka.utils import AbsolutePath, absolute_or_relative
+from sobiraka.utils import AbsolutePath, absolute_or_relative, validate_dictionary
 
 
 async def async_main():
@@ -36,6 +37,15 @@ async def async_main():
     cmd_latex.add_argument('config', metavar='CONFIG', type=AbsolutePath)
     cmd_latex.add_argument('volume', nargs='?')
     cmd_latex.add_argument('--output', type=AbsolutePath, default=AbsolutePath('build/pdf'))
+
+    cmd_lint = commands.add_parser('lint', help='Check a volume for various issues.')
+    cmd_lint.add_argument('config', metavar='CONFIG', type=AbsolutePath)
+    cmd_lint.add_argument('volume', nargs='?')
+
+    cmd_validate_dictionary = commands.add_parser('validate_dictionary',
+                                                  help='Validate and fix Hunspell dictionary.')
+    cmd_validate_dictionary.add_argument('dic', type=AbsolutePath)
+    cmd_validate_dictionary.add_argument('--autofix', action='store_true')
 
     cmd_check_translations = commands.add_parser('check_translations',
                                                  help='Display translation status of the project.')
@@ -108,6 +118,15 @@ async def async_main():
                     exit_code = await RT.run_isolated(run_with_progressbar(builder))
                     if exit_code != 0:
                         break
+
+        elif cmd is cmd_lint:
+            project = load_project(args.config)
+            volume = project.get_volume(args.volume)
+            linter = Linter(volume)
+            exit_code = await RT.run_isolated(run_with_progressbar(linter))
+
+        elif cmd is cmd_validate_dictionary:
+            exit_code = validate_dictionary(args.dic, autofix=args.autofix)
 
         elif cmd is cmd_check_translations:
             project = load_project(args.config)

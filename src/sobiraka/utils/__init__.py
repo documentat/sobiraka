@@ -12,3 +12,4 @@ from .sorted_dict import sorted_dict
 from .super_gather import super_gather
 from .tocnumber import RootNumber, TocNumber, Unnumbered
 from .unique_list import UniqueList
+from .validate_dictionary import validate_dictionary

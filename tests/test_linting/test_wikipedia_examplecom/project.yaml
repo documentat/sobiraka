@@ -1,0 +1,12 @@
+paths:
+  root: src
+  include: ['**/*.rst']
+
+lint:
+  dictionaries:
+    - en_US
+    - dictionaries/examplecom
+  exceptions:
+    - exceptions/examplecom.regexp
+    - exceptions/examplecom.txt
+    - exceptions/macos.regexp
