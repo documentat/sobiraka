@@ -7,15 +7,16 @@ from asyncio import Task, create_task, to_thread
 from contextlib import suppress
 from mimetypes import guess_type
 from typing import final
-from typing_extensions import override
 
 import weasyprint
 from panflute import CodeBlock, Doc, Element, Header, Image, RawBlock, Str
+from typing_extensions import override
+
 from sobiraka.models import FileSystem, Page, PageHref, PageStatus, Volume
 from sobiraka.models.config import CombinedToc, Config
 from sobiraka.models.exceptions import DisableLink
 from sobiraka.processing import load_processor
-from sobiraka.processing.abstract import Theme, VolumeBuilder
+from sobiraka.processing.abstract import Theme, ThemeableVolumeBuilder
 from sobiraka.processing.web import AbstractHtmlBuilder, AbstractHtmlProcessor, HeadCssFile
 from sobiraka.report import update_progressbar
 from sobiraka.runtime import RT
@@ -23,10 +24,10 @@ from sobiraka.utils import AbsolutePath, RelativePath, TocNumber, configured_jin
 
 
 @final
-class WeasyPrintBuilder(VolumeBuilder['WeasyPrintProcessor', 'WeasyPrintTheme'], AbstractHtmlBuilder):
+class WeasyPrintBuilder(ThemeableVolumeBuilder['WeasyPrintProcessor', 'WeasyPrintTheme'], AbstractHtmlBuilder):
 
     def __init__(self, volume: Volume, output: AbsolutePath):
-        VolumeBuilder.__init__(self, volume)
+        ThemeableVolumeBuilder.__init__(self, volume)
         AbstractHtmlBuilder.__init__(self)
 
         self.output: AbsolutePath = output

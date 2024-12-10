@@ -1,15 +1,14 @@
 from os.path import relpath
 
 from sobiraka.models import Page, PageHref, Volume
-from sobiraka.processing.abstract import Processor, ProjectBuilder, Theme
-from sobiraka.processing.abstract.builder import P, T
+from sobiraka.processing.abstract import Processor, Theme, ThemeableProjectBuilder
 
 
-class FakeBuilder(ProjectBuilder):
-    def init_processor(self, volume: Volume) -> P:
+class FakeBuilder(ThemeableProjectBuilder):
+    def init_processor(self, volume: Volume) -> Processor:
         return Processor(self)
 
-    def init_theme(self, volume: Volume) -> T:
+    def init_theme(self, volume: Volume) -> Theme:
         return Theme(volume.config.web.theme)
 
     def run(self):
