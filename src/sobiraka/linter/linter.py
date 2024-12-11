@@ -55,7 +55,7 @@ class Linter(VolumeBuilder[LinterProcessor]):
                 words += phrase.split()
             words = list(unique_everseen(words))
             misspelled_words: list[str] = []
-            async for word in run_hunspell(words, self.volume):
+            for word in await run_hunspell(words, self.volume):
                 if word not in misspelled_words:
                     misspelled_words.append(word)
             if misspelled_words:
