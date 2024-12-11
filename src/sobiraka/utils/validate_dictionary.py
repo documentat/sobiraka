@@ -3,7 +3,6 @@ import sys
 from pathlib import Path
 
 # TODO: Refactor validate_dictionary()
-# pylint: disable=no-else-return
 # pylint: disable=too-many-branches
 # pylint: disable=too-many-locals
 # pylint: disable=too-many-statements
@@ -52,7 +51,7 @@ def validate_dictionary(dic_path: Path, *, autofix: bool = False) -> 0:
                 i += 1
                 try:
                     assert aff[i] != ''
-                    assert re.fullmatch(rf'SFX {aff_id} (0|\w+) (0|\w+) \S+', aff[i])
+                    assert re.fullmatch(rf'SFX {aff_id} (0|\w+) (0|\w+)(/\w+)? \S+', aff[i])
                 except (IndexError, AssertionError):
                     actual_size = i - aff_start - 1
                     if actual_size != aff_size:
@@ -104,7 +103,8 @@ def validate_dictionary(dic_path: Path, *, autofix: bool = False) -> 0:
     for (path, i), message in sorted(modifications_and_deletions.items()):
         print(f'{prefix} {path.name}:{i} — {message}\033[0m', file=sys.stderr)
 
+    if autofix and not any((criticals, warnings)):
+        return 0
     if not any((criticals, warnings, modifications, deletions)):
         return 0
-    else:
-        return 1
+    return 1
