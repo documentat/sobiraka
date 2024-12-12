@@ -75,7 +75,9 @@ async def run_hunspell(words: Sequence[str], volume: Volume) -> Sequence[str]:
         assert re.match(br'Hunspell 1\..+\n', hunspell_version), hunspell_version
 
         # Send all the words for Hunspell to analyze
-        hunspell.stdin.write(' '.join(words).encode('utf-8'))
+        # Note that Hunspell may misinterpret something when the lines are too long,
+        # that's why we separate words with newlines, not just spaces
+        hunspell.stdin.write('\n'.join(words).encode('utf-8'))
         hunspell.stdin.close()
 
         misspelled_words: list[str] = []
