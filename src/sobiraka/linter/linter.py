@@ -8,7 +8,7 @@ from typing_extensions import override
 
 from sobiraka.models import Issue, MisspelledWords, Page, PageHref, PageStatus, PhraseBeginsWithLowerCase, Volume
 from sobiraka.processing.abstract import VolumeBuilder
-from sobiraka.processing.txt import Fragment, PlainTextDispatcher, TextModel, exceptions_regexp
+from sobiraka.processing.txt import Fragment, PlainTextDispatcher, TextModel, clean_phrases, exceptions_regexp
 from sobiraka.runtime import RT
 from .hunspell import run_hunspell
 from ..utils import super_gather
@@ -49,9 +49,11 @@ class Linter(VolumeBuilder[LinterProcessor]):
         await super().process1(page)
         tm = self.processor.tm[page]
 
+        phrases = tm.phrases()
+
         if self.volume.config.lint.dictionaries:
             words: list[str] = []
-            for phrase in tm.clean_phrases:
+            for phrase in clean_phrases(phrases, tm.exceptions()):
                 words += phrase.split()
             words = list(unique_everseen(words))
             misspelled_words: list[str] = []
@@ -61,7 +63,7 @@ class Linter(VolumeBuilder[LinterProcessor]):
             if misspelled_words:
                 RT[page].issues.append(MisspelledWords(page.path_in_project, tuple(misspelled_words)))
 
-        for phrase in tm.phrases:
+        for phrase in phrases:
             if self.volume.config.lint.checks.phrases_must_begin_with_capitals:
                 async for issue in self.check__phrases_must_begin_with_capitals(phrase):
                     RT[page].issues.append(issue)
@@ -73,7 +75,7 @@ class Linter(VolumeBuilder[LinterProcessor]):
         if not phrase.text[0].islower():
             return
 
-        for exception in tm.exceptions[phrase.start.line]:
+        for exception in tm.exceptions()[phrase.start.line]:
             if exception.start <= phrase.start < exception.end:
                 return
 

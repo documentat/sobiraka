@@ -3,12 +3,10 @@ from __future__ import annotations
 import re
 from bisect import bisect_left
 from dataclasses import dataclass, field
-from functools import cached_property
 from itertools import pairwise
-from typing import Iterable, Sequence
+from typing import Sequence
 
 from panflute import Element
-from utilspie.collectionsutils import frozendict
 
 from sobiraka.models import Anchor
 from sobiraka.utils import update_last_dataclass
@@ -35,7 +33,7 @@ class TextModel:
     indirectly reference both the lines numeration and their content, see :class:`Pos`.
     """
 
-    fragments: Sequence[Fragment] = field(default_factory=list, init=False)
+    fragments: list[Fragment] = field(default_factory=list, init=False)
     """
     List of text fragments, usually related to specific elements.
     
@@ -66,8 +64,6 @@ class TextModel:
         You must call this to be able to use some other methods.
         """
         self.__frozen = True
-        self.fragments = tuple(self.fragments)
-        self.sections = frozendict(self.sections)
 
     @property
     def text(self) -> str:
@@ -85,7 +81,6 @@ class TextModel:
             return Pos(0, 0)
         return Pos(len(self.lines) - 1, len(self.lines[-1]))
 
-    @cached_property
     def exceptions(self) -> Sequence[Sequence[Fragment]]:
         """
         Find positions of all words or word combinations that match the :data:`exceptions_regexp`.
@@ -105,7 +100,6 @@ class TextModel:
                                                         Pos(linenum, m.end())))
         return tuple(tuple(x) for x in exceptions)
 
-    @cached_property
     def naive_phrases(self) -> Sequence[Sequence[Fragment]]:
         """
         Split each line into phrases by periods, exclamation or question marks or clusters of them.
@@ -134,7 +128,6 @@ class TextModel:
 
         return tuple(tuple(x) for x in result)
 
-    @cached_property
     def phrases(self) -> Sequence[Fragment]:
         """
         Normally, a text is split into phrases by periods, exclamation points, etc.
@@ -150,13 +143,15 @@ class TextModel:
 
         result: list[Fragment] = []
 
+        naive_phrases = self.naive_phrases()
+        exceptions = self.exceptions()
+
         # Each phrase can only be on a single line,
         # so we work with each line separately
         for linenum in range(len(self.lines)):
-            phrases = list(self.naive_phrases[linenum])
-            exceptions = self.exceptions[linenum]
+            phrases = list(naive_phrases[linenum])
 
-            for exc in exceptions:
+            for exc in exceptions[linenum]:
                 # Find the phrases overlapping with the exception from left and right.
                 left = bisect_left(phrases, exc.start.char, key=lambda x: x.end.char)
                 right = bisect_left(phrases, exc.end.char, key=lambda x: x.start.char) - 1
@@ -178,21 +173,6 @@ class TextModel:
             result += phrases
 
         return tuple(result)
-
-    @property
-    def clean_phrases(self) -> Iterable[str]:
-        """
-        A special representation of :data:`lines`, with all :data:`exceptions` removed.
-        This does not affect any elements' positions due to placing necessary amounts of spaces.
-        """
-        for phrase in self.phrases:
-            result = phrase.text
-            for exc in self.exceptions[phrase.start.line]:
-                if phrase.start <= exc.start and exc.end <= phrase.end:
-                    start = exc.start.char - phrase.start.char
-                    end = exc.end.char - phrase.start.char
-                    result = result[:start] + ' ' * len(exc.text) + result[end:]
-            yield result
 
     def sections_up_to_level(self, max_level: int) -> dict[Anchor | None, Fragment]:
         result: dict[Anchor | None, Fragment] = {}

@@ -66,7 +66,7 @@ class AbstractLintingTest(ProjectDirTestCase[Linter]):
 
     async def test_phrases(self):
         tm = self.tm(self.page)
-        phrases = tuple(x.text for x in tm.phrases)
+        phrases = tuple(x.text for x in tm.phrases())
         assertNoDiff(self.EXPECTED_PHRASES, phrases)
 
 

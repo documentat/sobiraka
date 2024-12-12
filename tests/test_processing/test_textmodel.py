@@ -8,7 +8,7 @@ from panflute import stringify
 
 from abstracttests.projecttestcase import ProjectTestCase
 from sobiraka.models import FileSystem, Page, Project, Volume
-from sobiraka.processing.txt import PlainTextDispatcher, TextModel
+from sobiraka.processing.txt import PlainTextDispatcher, TextModel, clean_phrases
 from sobiraka.runtime import RT
 from sobiraka.utils import RelativePath
 
@@ -52,21 +52,24 @@ class AbstractTestTextModel(ProjectTestCase):
 
     def test_exceptions(self):
         expected = self.EXPECTED_EXCEPTIONS
-        actual = tuple(tuple(p.text for p in line) for line in self.tm.exceptions)
+        actual = tuple(tuple(p.text for p in line) for line in self.tm.exceptions())
         actual = tuple(more_itertools.rstrip(actual, lambda x: x == ()))
         self.assertEqual(self.EXPECTED_EXCEPTIONS, actual)
 
     def test_naive_phrases(self):
-        actual = tuple(tuple(p.text for p in line) for line in self.tm.naive_phrases)
+        actual = tuple(tuple(p.text for p in line) for line in self.tm.naive_phrases())
         actual = tuple(more_itertools.rstrip(actual, lambda x: x == ()))
         self.assertEqual(self.EXPECTED_NAIVE_PHRASES, actual)
 
     def test_phrases(self):
-        actual = tuple(p.text for p in self.tm.phrases)
+        actual = tuple(p.text for p in self.tm.phrases())
         self.assertEqual(self.EXPECTED_PHRASES, actual)
 
     def test_clean_phrases(self):
-        actual = tuple(self.tm.clean_phrases)
+        phrases = self.tm.phrases()
+        exceptions = self.tm.exceptions()
+
+        actual = tuple(clean_phrases(phrases, exceptions))
         self.assertEqual(self.EXPECTED_CLEAN_PHRASES, actual)
 
     def test_sections(self):
