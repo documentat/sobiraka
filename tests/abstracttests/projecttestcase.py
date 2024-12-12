@@ -4,8 +4,10 @@ from asyncio import create_task
 from typing import Any, Generic, Iterable, TypeVar
 from unittest import SkipTest
 
+from typing_extensions import override
+
 from abstracttests.abstracttestwithrt import AbstractTestWithRtPages
-from helpers import FakeBuilder
+from helpers import FakeBuilder, unfold_exception_types
 from sobiraka.models import Page, PageStatus, Project
 from sobiraka.processing.abstract import Builder
 from sobiraka.utils import AbsolutePath, super_gather
@@ -60,3 +62,19 @@ class ProjectTestCase(AbstractTestWithRtPages, Generic[T], metaclass=ABCMeta):
                     raise SkipTest
         if not ok:
             raise SkipTest
+
+
+class FailingProjectTestCase(ProjectTestCase, metaclass=ABCMeta):
+    EXPECTED_EXCEPTION_TYPES: set[type[BaseException]]
+
+    @override
+    async def _process(self):
+        try:
+            await super()._process()
+        except* Exception as eg:
+            self.exceptions = eg
+
+    def test_exceptions(self):
+        self.assertIsNotNone(self.exceptions)
+        all_actual = unfold_exception_types(self.exceptions)
+        self.assertEqual(self.EXPECTED_EXCEPTION_TYPES, all_actual)
