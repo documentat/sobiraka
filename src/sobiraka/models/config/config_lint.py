@@ -7,7 +7,7 @@ from sobiraka.utils import RelativePath
 class Config_Lint_Checks:
     """Boolean options representing enabled and disabled checks that should be performed when linting."""
 
-    phrases_must_begin_with_capitals: bool = True
+    phrases_must_begin_with_capitals: bool = False
     """
     For each phrase in the text, check that its first character is a lowercase letter, unless:
     
@@ -35,5 +35,5 @@ class Config_Lint:
     See :func:`.exceptions_regexp()`.
     """
 
-    checks: Config_Lint_Checks = None
+    checks: Config_Lint_Checks = Config_Lint_Checks()
     """Additional checks enabled for this volume."""

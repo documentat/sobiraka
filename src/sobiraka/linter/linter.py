@@ -1,37 +1,53 @@
-from asyncio import gather
+from asyncio import Task, create_task
 from bisect import bisect_left, bisect_right
-from typing import AsyncIterable, Awaitable
+from typing import AsyncIterable
 
 from more_itertools import unique_everseen
-from panflute import Code, ListItem, stringify
+from panflute import Code, CodeBlock, Element, ListItem, stringify
+from typing_extensions import override
 
-from sobiraka.models import Issue, MisspelledWords, Page, PhraseBeginsWithLowerCase
-from sobiraka.processing.abstract import VolumeProcessor
+from sobiraka.models import Issue, MisspelledWords, Page, PageHref, PageStatus, PhraseBeginsWithLowerCase, Volume
+from sobiraka.processing.abstract import VolumeBuilder
 from sobiraka.processing.txt import Fragment, PlainTextDispatcher, TextModel, exceptions_regexp
 from sobiraka.runtime import RT
 from .hunspell import run_hunspell
+from ..utils import super_gather
 
 
-# TODO: Reorganize Processor and related abstract classes
-# pylint: disable=abstract-method
-class Linter(PlainTextDispatcher, VolumeProcessor):
+class LinterProcessor(PlainTextDispatcher):
+    def __init__(self, volume: Volume):
+        super().__init__()
+        self.volume: Volume = volume
 
+    @override
     def _new_text_model(self) -> TextModel:
         return TextModel(exceptions_regexp=exceptions_regexp(self.volume))
 
+    @override
+    async def must_skip(self, elem: Element, page: Page) -> bool:
+        return isinstance(elem, CodeBlock)
+
+
+class Linter(VolumeBuilder[LinterProcessor]):
+    @override
+    def init_processor(self) -> LinterProcessor:
+        return LinterProcessor(self.volume)
+
+    @override
+    def make_internal_url(self, href: PageHref, *, page: Page = None) -> str:
+        raise NotImplementedError
+
+    @override
     async def run(self):
-        tasks: list[Awaitable] = []
+        tasks: list[Task] = []
         for page in self.volume.pages:
-            tasks.append(self.check_page(page))
-        await gather(*tasks)
+            tasks.append(create_task(self.require(page, PageStatus.PROCESS1), name=f'checking {page.path_in_project}'))
+        await super_gather(tasks)
 
-        for page in self.get_pages():
-            if RT[page].issues:
-                return 1
-        return 0
-
-    async def check_page(self, page: Page):
-        tm = self.tm[page]
+    @override
+    async def process1(self, page: Page):
+        await super().process1(page)
+        tm = self.processor.tm[page]
 
         if self.volume.config.lint.dictionaries:
             words: list[str] = []
