@@ -26,21 +26,23 @@ def _prepare_hunspell_environ(fs: FileSystem, dictionaries: list[str]) -> Genera
     # Note that the AFF files are optional, while the DIC files are mandatory
     used_files_from_project: list[RelativePath] = []
     for dictionary in dictionaries:
-        dic_relpath = RelativePath(dictionary).with_suffix('.dic')
-        aff_relpath = RelativePath(dictionary).with_suffix('.aff')
-        if fs.exists(dic_relpath):
-            used_files_from_project.append(dic_relpath)
-            if fs.exists(aff_relpath):
-                used_files_from_project.append(aff_relpath)
+        # If it is a DIC file, it potentially represents a pair of DIC and AFF files
+        if dictionary.endswith('.dic'):
+            dic_relpath = RelativePath(dictionary)
+            aff_relpath = RelativePath(dictionary).with_suffix('.aff')
+            if fs.exists(dic_relpath):
+                used_files_from_project.append(dic_relpath)
+                if fs.exists(aff_relpath):
+                    used_files_from_project.append(aff_relpath)
 
         # If it's not a project dictionary, it must be an existing default dictionary
-        elif not (default_dictionaries_path / dic_relpath).exists():
-            raise FileNotFoundError(dic_relpath)
+        elif not (default_dictionaries_path / f'{dictionary}.dic').exists():
+            raise FileNotFoundError(dictionary)
 
     # Start preparing the environment that will be used to run Hunspell
     environ = os.environ.copy()
     environ['DICPATH'] = str(default_dictionaries_path)
-    environ['DICTIONARY'] = ','.join(dictionaries)
+    environ['DICTIONARY'] = ','.join(re.sub(r'\.dic$', '', d) for d in dictionaries)
 
     if not used_files_from_project:
         # We don't need to add the path to project's dictionaries

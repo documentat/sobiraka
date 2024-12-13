@@ -38,7 +38,7 @@ class AbstractProverTest(ProjectDirTestCase[Prover]):
         ))
 
         if self.DICTIONARY_DIC:
-            config.prover.dictionaries.append('mydic')
+            config.prover.dictionaries.append('mydic.dic')
             fs.pseudofiles[RelativePath('mydic.dic')] = dedent(self.DICTIONARY_DIC).strip()
             if self.DICTIONARY_AFF:
                 fs.pseudofiles[RelativePath('mydic.aff')] = dedent(self.DICTIONARY_AFF).strip()
