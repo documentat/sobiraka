@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 
+from panflute import Element
+
 from sobiraka.utils import RelativePath
 
 
@@ -33,6 +35,11 @@ class Config_Prover:
     Relative paths to the files containing word and phrases that should not be treated as incorrect.
     
     See :func:`.exceptions_regexp()`.
+    """
+
+    skip_elements: tuple[type[Element], ...] = ()
+    """
+    Elements that should not be analyzed for spelling mistakes.
     """
 
     checks: Config_Prover_Checks = Config_Prover_Checks()

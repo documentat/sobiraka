@@ -24,3 +24,6 @@ prover:
     - lint/exceptions/ru.txt
     - lint/exceptions/symbols.txt
     - lint/exceptions/technologies.txt
+  skip_elements:
+    - Code
+    - CodeBlock

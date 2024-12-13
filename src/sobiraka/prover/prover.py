@@ -3,7 +3,7 @@ from bisect import bisect_left, bisect_right
 from typing import AsyncIterable
 
 from more_itertools import unique_everseen
-from panflute import Code, CodeBlock, Element, ListItem, stringify
+from panflute import Code, Element, ListItem, stringify
 from typing_extensions import override
 
 from sobiraka.models import Issue, MisspelledWords, Page, PageHref, PageStatus, PhraseBeginsWithLowerCase, Volume
@@ -25,7 +25,7 @@ class ProverProcessor(PlainTextDispatcher):
 
     @override
     async def must_skip(self, elem: Element, page: Page) -> bool:
-        return isinstance(elem, CodeBlock)
+        return isinstance(elem, self.volume.config.prover.skip_elements)
 
 
 class Prover(VolumeBuilder[ProverProcessor]):

@@ -134,6 +134,7 @@ def _load_volume(lang: str | None, codename: str, volume_data: dict, fs: FileSys
         prover=Config_Prover(
             dictionaries=tuple(_('prover.dictionaries', [])),
             exceptions=tuple(map(RelativePath, _('prover.exceptions', []))),
+            skip_elements=tuple(getattr(panflute.elements, x) for x in _('prover.skip_elements', ())),
             checks=Config_Prover_Checks(**_('prover.checks', {})),
         ),
         variables=frozendict(_('variables', {})),
