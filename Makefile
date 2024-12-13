@@ -38,6 +38,12 @@ test: build-tester
 	@$(DOCKER_RUN) \
 		sobiraka:test-with-python$(PYTHON)-pandoc$(PANDOC)
 
+prover: release
+	@$(DOCKER_RUN) \
+		-v $(PWD)/docs:/W/docs:ro \
+		sobiraka:release \
+		sobiraka prover docs/docs.yaml
+
 docs-web: release
 	@mkdir -p docs/build
 	@$(DOCKER_RUN) \

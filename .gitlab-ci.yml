@@ -7,9 +7,6 @@ variables:
   PANDOC_URL: https://github.com/jgm/pandoc/releases/download/$PANDOC/pandoc-$PANDOC-linux-amd64.tar.gz
   PANDOC_FILENAME: pandoc-$PANDOC-linux-amd64.tar.gz
 
-  LATO_URL: https://www.latofonts.com/download/lato2ofl-zip/
-  JETBRAINS_MONO_URL: https://download.jetbrains.com/fonts/JetBrainsMono-2.304.zip
-
 default:
   image: python:$PYTHON-alpine3.20
   cache:
@@ -142,6 +139,17 @@ Lint:
     - pip install pylint==3.3.1
   script:
     - pylint sobiraka src/sobiraka/files/themes/*/extension.py
+
+Prover:
+  stage: Main
+  needs: [Build images]
+  image: $CI_REGISTRY_IMAGE/tmp/release:commit-$CI_COMMIT_SHA
+  script:
+    - sobiraka validate_dictionary docs/dictionaries/hunspell/english.dic
+    - sobiraka validate_dictionary docs/dictionaries/hunspell/russian/adjectives.dic
+    - sobiraka validate_dictionary docs/dictionaries/hunspell/russian/nouns.dic
+    - sobiraka validate_dictionary docs/dictionaries/hunspell/russian/verbs.dic
+    - sobiraka prover docs/docs.yaml
 
 # endregion
 

@@ -1,0 +1,41 @@
+SET UTF-8
+
+WORDCHARS 0123456789’-.
+
+BREAK 0
+
+NOSPLITSUGS
+MAXNGRAMSUGS 2
+ONLYMAXDIFF
+MAXDIFF 0
+
+# данный
+SFX D N 12
+SFX D ый ого .
+SFX D ый ому .
+SFX D ый ым .
+SFX D ый ом .
+SFX D ый ая .
+SFX D ый ой .
+SFX D ый ую .
+SFX D ый ое .
+SFX D ый ые .
+SFX D ый ых .
+SFX D ый ым .
+SFX D ый ыми .
+
+# моральный
+SFX M N 3
+SFX M льный лен .
+SFX M льный льна .
+SFX M льный льны .
+
+# противный
+SFX P N 3
+SFX P вный вен .
+SFX P вный вна .
+SFX P вный вны .
+
+# сурово
+SFX n N 1
+SFX n о ее .

@@ -1,8 +1,0 @@
-AUTOPREFIX
-GLOBSTAR
-en
-fullmatch
-NODIR
-ru
-sameas
-src

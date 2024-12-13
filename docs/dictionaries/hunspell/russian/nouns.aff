@@ -34,21 +34,6 @@ SFX C 0 ам .
 SFX C 0 ами .
 SFX C 0 ах .
 
-# данный
-SFX D N 12
-SFX D ый ого .
-SFX D ый ому .
-SFX D ый ым .
-SFX D ый ом .
-SFX D ый ая .
-SFX D ый ой .
-SFX D ый ую .
-SFX D ый ое .
-SFX D ый ые .
-SFX D ый ых .
-SFX D ый ым .
-SFX D ый ыми .
-
 # иннокентий
 SFX I N 9
 SFX I ий ия .
@@ -62,21 +47,14 @@ SFX I ий иями .
 SFX I ий иях .
 
 # лодка
-SFX L N 14
-SFX L 0 а .
-SFX L 0 и .
-SFX L 0 е .
-SFX L 0 у .
-SFX L 0 ой .
-SFX L 0 е .
-SFX L 0 и .
-SFX L 0 у .
-SFX L 0 у .
-SFX L 0 у .
-SFX L 0 у .
-SFX L 0 у .
-SFX L 0 у .
-SFX L 0 у .
+SFX L N 7
+SFX L а и .
+SFX L а е .
+SFX L а у .
+SFX L а ой .
+SFX L а ок .
+SFX L а ам .
+SFX L а ах .
 
 # весть
 SFX V N 5
@@ -96,3 +74,25 @@ SFX Z ие ий .
 SFX Z ие иям .
 SFX Z ие иями .
 SFX Z ие иях .
+
+# акция
+SFX A N 7
+SFX A ия ию .
+SFX A ия ии .
+SFX A ия ией .
+SFX A ия ий .
+SFX A ия иям .
+SFX A ия иями .
+SFX A ия иях .
+
+# техписатель
+SFX T N 9
+SFX T ль ля .
+SFX T ль лю .
+SFX T ль лем .
+SFX T ль ле .
+SFX T ль ли .
+SFX T ль лей .
+SFX T ль лям .
+SFX T ль лями .
+SFX T ль лях .
