@@ -2,11 +2,11 @@ from unittest import main
 
 from panflute import Space, Str
 
-from abstracttests.abstractlintingtest import AbstractLintingTest
+from abstracttests.abstractprovertest import AbstractProverTest
 from helpers import assertNoDiff
 
 
-class TestLintPreprocessor(AbstractLintingTest):
+class TestProverPreprocessing(AbstractProverTest):
     SOURCE = r'''
         # Page
         
@@ -248,7 +248,7 @@ class TestLintPreprocessor(AbstractLintingTest):
         assertNoDiff(expected, actual)
 
 
-del AbstractLintingTest
+del AbstractProverTest
 
 if __name__ == '__main__':
     main()

@@ -1,10 +1,10 @@
 from unittest import main
 
-from abstracttests.abstractlintingtest import AbstractLintingTest
+from abstracttests.abstractprovertest import AbstractProverTest
 from sobiraka.models import Syntax
 
 
-class TestWikipediaExampleCom(AbstractLintingTest):
+class TestWikipediaExampleCom(AbstractProverTest):
     DICTIONARY_DIC = '''
         7
         IANA
@@ -94,7 +94,7 @@ class TestWikipediaExampleCom(AbstractLintingTest):
     )
 
 
-del AbstractLintingTest
+del AbstractProverTest
 
 if __name__ == '__main__':
     main()

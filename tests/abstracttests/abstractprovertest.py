@@ -1,22 +1,22 @@
 from textwrap import dedent
 
 from helpers import FakeFileSystem, assertNoDiff
-from sobiraka.linter import Linter
 from sobiraka.models import Page, PageStatus, Project, Syntax, Volume
-from sobiraka.models.config import Config, Config_Lint, Config_Lint_Checks
+from sobiraka.models.config import Config, Config_Prover, Config_Prover_Checks
 from sobiraka.models.exceptions import IssuesOccurred
 from sobiraka.processing.txt import TextModel
+from sobiraka.prover import Prover
 from sobiraka.runtime import RT
 from sobiraka.utils import RelativePath
 from .projectdirtestcase import ProjectDirTestCase
 from .projecttestcase import FailingProjectTestCase
 
 
-class AbstractLintingTest(ProjectDirTestCase[Linter]):
+class AbstractProverTest(ProjectDirTestCase[Prover]):
     maxDiff = None
     REQUIRE = PageStatus.PROCESS1
 
-    CHECKS = Config_Lint_Checks()
+    CHECKS = Config_Prover_Checks()
 
     DICTIONARY_AFF: str = None
     DICTIONARY_DIC: str = ''
@@ -31,22 +31,22 @@ class AbstractLintingTest(ProjectDirTestCase[Linter]):
 
     def _init_project(self) -> Project:
         fs = FakeFileSystem()
-        config = Config(lint=Config_Lint(
+        config = Config(prover=Config_Prover(
             dictionaries=['en_US'],
             exceptions=[],
             checks=self.CHECKS,
         ))
 
         if self.DICTIONARY_DIC:
-            config.lint.dictionaries.append('mydic')
+            config.prover.dictionaries.append('mydic')
             fs.pseudofiles[RelativePath('mydic.dic')] = dedent(self.DICTIONARY_DIC).strip()
             if self.DICTIONARY_AFF:
                 fs.pseudofiles[RelativePath('mydic.aff')] = dedent(self.DICTIONARY_AFF).strip()
         if self.EXCEPTIONS_TXT:
-            config.lint.exceptions.append(RelativePath('exceptions.txt'))
+            config.prover.exceptions.append(RelativePath('exceptions.txt'))
             fs.pseudofiles[RelativePath('exceptions.txt')] = dedent(self.EXCEPTIONS_TXT).strip()
         if self.EXCEPTIONS_REGEXPS:
-            config.lint.exceptions.append(RelativePath('exceptions.regexp'))
+            config.prover.exceptions.append(RelativePath('exceptions.regexp'))
             fs.pseudofiles[RelativePath('exceptions.regexp')] = dedent(self.EXCEPTIONS_REGEXPS).strip()
 
         page_filename = f'page.{self.SYNTAX.value}'
@@ -58,8 +58,8 @@ class AbstractLintingTest(ProjectDirTestCase[Linter]):
             })
         })
 
-    def _init_builder(self) -> Linter:
-        return Linter(self.project.volumes[0])
+    def _init_builder(self) -> Prover:
+        return Prover(self.project.volumes[0])
 
     def tm(self, page: Page) -> TextModel:
         return self.builder.processor.tm[page]
@@ -70,7 +70,7 @@ class AbstractLintingTest(ProjectDirTestCase[Linter]):
         assertNoDiff(self.EXPECTED_PHRASES, phrases)
 
 
-class AbstractFailingLintingTest(AbstractLintingTest, FailingProjectTestCase):
+class AbstractFailingProverTest(AbstractProverTest, FailingProjectTestCase):
     EXPECTED_EXCEPTION_TYPES = {IssuesOccurred}
 
     EXPECTED_ISSUES: tuple[str] = ()

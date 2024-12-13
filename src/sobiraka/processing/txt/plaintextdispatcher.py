@@ -17,7 +17,7 @@ from .textmodel import Fragment, Pos, TextModel
 
 class PlainTextDispatcher(Dispatcher):
     """
-    Base class for features that need to work with text, such as linters or indexers.
+    Base class for features that need to work with plain text.
 
     It works as a :class:`Dispatcher`, analyzing each element in the Panflute tree.
     Unlike some other dispatchers/processors, it is non-destructive: it never modifies or removes elements.

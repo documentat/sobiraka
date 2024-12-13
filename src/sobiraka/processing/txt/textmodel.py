@@ -37,7 +37,7 @@ class TextModel:
     """
     List of text fragments, usually related to specific elements.
     
-    In :class:`Linter`, this is used to quickly find the first element in a phrase.
+    In :class:`Prover`, this is used to quickly find the first element in a phrase.
     """
 
     sections: dict[Anchor | None, Fragment] = field(default_factory=dict, init=False)
@@ -135,9 +135,6 @@ class TextModel:
         that contain periods in them ('e.g.', 'H.265', 'www.example.com').
         This function first calls `naive_phrases()` and then moves the phrase bounds
         for each exception that was accidentally split.
-
-        If `remove_exceptions=True`, the exceptions will be replaced with spaces in the result.
-        This is used to generate phrases that can be sent to another linter.
         """
         assert self.__frozen
 

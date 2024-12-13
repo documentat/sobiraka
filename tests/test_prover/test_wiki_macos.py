@@ -1,10 +1,10 @@
 from unittest import main
 
-from abstracttests.abstractlintingtest import AbstractFailingLintingTest
+from abstracttests.abstractprovertest import AbstractFailingProverTest
 from sobiraka.models import Syntax
 
 
-class TestWikipediaMacOS(AbstractFailingLintingTest):
+class TestWikipediaMacOS(AbstractFailingProverTest):
     EXCEPTIONS_REGEXPS = r'''
         \b(macOS|Mac OS)( X)?( \d+\.\d+)?\b
         \b\d+\.\d+\b
@@ -56,7 +56,7 @@ class TestWikipediaMacOS(AbstractFailingLintingTest):
     )
 
 
-del AbstractFailingLintingTest
+del AbstractFailingProverTest
 
 if __name__ == '__main__':
     main()

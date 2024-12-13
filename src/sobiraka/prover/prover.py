@@ -14,7 +14,7 @@ from .hunspell import run_hunspell
 from ..utils import super_gather
 
 
-class LinterProcessor(PlainTextDispatcher):
+class ProverProcessor(PlainTextDispatcher):
     def __init__(self, volume: Volume):
         super().__init__()
         self.volume: Volume = volume
@@ -28,10 +28,10 @@ class LinterProcessor(PlainTextDispatcher):
         return isinstance(elem, CodeBlock)
 
 
-class Linter(VolumeBuilder[LinterProcessor]):
+class Prover(VolumeBuilder[ProverProcessor]):
     @override
-    def init_processor(self) -> LinterProcessor:
-        return LinterProcessor(self.volume)
+    def init_processor(self) -> ProverProcessor:
+        return ProverProcessor(self.volume)
 
     @override
     def make_internal_url(self, href: PageHref, *, page: Page = None) -> str:
@@ -51,7 +51,7 @@ class Linter(VolumeBuilder[LinterProcessor]):
 
         phrases = tm.phrases()
 
-        if self.volume.config.lint.dictionaries:
+        if self.volume.config.prover.dictionaries:
             words: list[str] = []
             for phrase in clean_phrases(phrases, tm.exceptions()):
                 words += phrase.split()
@@ -64,7 +64,7 @@ class Linter(VolumeBuilder[LinterProcessor]):
                 RT[page].issues.append(MisspelledWords(page.path_in_project, tuple(misspelled_words)))
 
         for phrase in phrases:
-            if self.volume.config.lint.checks.phrases_must_begin_with_capitals:
+            if self.volume.config.prover.checks.phrases_must_begin_with_capitals:
                 async for issue in self.check__phrases_must_begin_with_capitals(phrase):
                     RT[page].issues.append(issue)
 

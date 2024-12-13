@@ -1,12 +1,12 @@
 from unittest import main
 
-from abstracttests.abstractlintingtest import AbstractFailingLintingTest
+from abstracttests.abstractprovertest import AbstractFailingProverTest
 from sobiraka.models import Syntax
-from sobiraka.models.config import Config_Lint_Checks
+from sobiraka.models.config import Config_Prover_Checks
 
 
-class TestLowerCase(AbstractFailingLintingTest):
-    CHECKS = Config_Lint_Checks(phrases_must_begin_with_capitals=True)
+class TestLowerCase(AbstractFailingProverTest):
+    CHECKS = Config_Prover_Checks(phrases_must_begin_with_capitals=True)
 
     EXCEPTIONS_TXT = '''
         PhraseBeginsWithLowerCase
@@ -58,7 +58,7 @@ class TestLowerCase(AbstractFailingLintingTest):
     )
 
 
-del AbstractFailingLintingTest
+del AbstractFailingProverTest
 
 if __name__ == '__main__':
     main()

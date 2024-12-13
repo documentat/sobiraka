@@ -151,7 +151,7 @@ $defs:
               - enum: [infinity]
           combined_toc: { type: boolean }
 
-      lint:
+      prover:
         additionalProperties: false
         properties:
           dictionaries:

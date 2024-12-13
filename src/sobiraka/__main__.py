@@ -2,11 +2,11 @@ import sys
 from argparse import ArgumentParser
 from asyncio import run
 
-from sobiraka.linter import Linter
 from sobiraka.models.load import load_project
 from sobiraka.processing.latex import LatexBuilder
 from sobiraka.processing.weasyprint import WeasyPrintBuilder
 from sobiraka.processing.web import WebBuilder
+from sobiraka.prover import Prover
 from sobiraka.report import run_with_progressbar
 from sobiraka.runtime import RT
 from sobiraka.translating import changelog, check_translations
@@ -38,9 +38,9 @@ async def async_main():
     cmd_latex.add_argument('volume', nargs='?')
     cmd_latex.add_argument('--output', type=AbsolutePath, default=AbsolutePath('build/pdf'))
 
-    cmd_lint = commands.add_parser('lint', help='Check a volume for various issues.')
-    cmd_lint.add_argument('config', metavar='CONFIG', type=AbsolutePath)
-    cmd_lint.add_argument('volume', nargs='?')
+    cmd_prover = commands.add_parser('prover', help='Check a volume for various issues.')
+    cmd_prover.add_argument('config', metavar='CONFIG', type=AbsolutePath)
+    cmd_prover.add_argument('volume', nargs='?')
 
     cmd_validate_dictionary = commands.add_parser('validate_dictionary',
                                                   help='Validate and fix Hunspell dictionary.')
@@ -119,11 +119,11 @@ async def async_main():
                     if exit_code != 0:
                         break
 
-        elif cmd is cmd_lint:
+        elif cmd is cmd_prover:
             project = load_project(args.config)
             volume = project.get_volume(args.volume)
-            linter = Linter(volume)
-            exit_code = await RT.run_isolated(run_with_progressbar(linter))
+            prover = Prover(volume)
+            exit_code = await RT.run_isolated(run_with_progressbar(prover))
 
         elif cmd is cmd_validate_dictionary:
             exit_code = validate_dictionary(args.dic, autofix=args.autofix)

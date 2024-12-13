@@ -1,10 +1,9 @@
-from textwrap import dedent
 from unittest import main
 
-from abstracttests.abstractlintingtest import AbstractLintingTest
+from abstracttests.abstractprovertest import AbstractProverTest
 
 
-class TestWeirdPunctuation(AbstractLintingTest):
+class TestWeirdPunctuation(AbstractProverTest):
     SOURCE = '''
         Ellipsis... Ellipsis and spaces...    And one more ellipsis... Also, exclamation point! Or even two!! And how about a question mark? How about it?! I hope it all works.
         
@@ -26,7 +25,7 @@ class TestWeirdPunctuation(AbstractLintingTest):
     )
 
 
-del AbstractLintingTest
+del AbstractProverTest
 
 if __name__ == '__main__':
     main()

@@ -1,10 +1,9 @@
-from textwrap import dedent
 from unittest import main
 
-from abstracttests.abstractlintingtest import AbstractLintingTest
+from abstracttests.abstractprovertest import AbstractProverTest
 
 
-class TestWeirdWord(AbstractLintingTest):
+class TestWeirdWord(AbstractProverTest):
     EXCEPTIONS_REGEXPS = r'\bWe\.i\.RD\.wor\.d\.'
 
     SOURCE = '''
@@ -35,7 +34,7 @@ class TestWeirdWord(AbstractLintingTest):
     )
 
 
-del AbstractLintingTest
+del AbstractProverTest
 
 if __name__ == '__main__':
     main()

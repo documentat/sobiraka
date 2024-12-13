@@ -13,7 +13,7 @@ web:
       placeholder: Поиск
 pdf:
   combined_toc: true
-lint:
+prover:
   dictionaries:
     - en_US
     - ru_RU

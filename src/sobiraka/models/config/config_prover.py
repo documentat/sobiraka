@@ -4,8 +4,8 @@ from sobiraka.utils import RelativePath
 
 
 @dataclass(kw_only=True, frozen=True)
-class Config_Lint_Checks:
-    """Boolean options representing enabled and disabled checks that should be performed when linting."""
+class Config_Prover_Checks:
+    """Boolean options representing enabled and disabled checks that should be performed."""
 
     phrases_must_begin_with_capitals: bool = False
     """
@@ -17,8 +17,8 @@ class Config_Lint_Checks:
 
 
 @dataclass(kw_only=True, frozen=True)
-class Config_Lint:
-    """Settings related to :class:`.Linter`."""
+class Config_Prover:
+    """Settings related to :class:`.Prover`."""
 
     dictionaries: tuple[str, ...] = ()
     """
@@ -35,5 +35,5 @@ class Config_Lint:
     See :func:`.exceptions_regexp()`.
     """
 
-    checks: Config_Lint_Checks = Config_Lint_Checks()
+    checks: Config_Prover_Checks = Config_Prover_Checks()
     """Additional checks enabled for this volume."""

@@ -67,7 +67,7 @@ async def run_hunspell(words: Sequence[str], volume: Volume) -> Sequence[str]:
     if not words:
         return ()
 
-    with _prepare_hunspell_environ(volume.project.fs, volume.config.lint.dictionaries) as environ:
+    with _prepare_hunspell_environ(volume.project.fs, volume.config.prover.dictionaries) as environ:
         hunspell = await create_subprocess_exec('hunspell', env=environ, stdin=PIPE, stdout=PIPE)
 
         # Verify the Hunspell version in the first line
