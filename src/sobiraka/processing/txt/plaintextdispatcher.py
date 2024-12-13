@@ -209,8 +209,11 @@ class PlainTextDispatcher(Dispatcher):
 
         # Start a new section
         if header.level > 1:
-            anchor = Anchor(header, header.identifier, label=stringify(header), level=header.level)
-            RT[page].anchors.append(anchor)
+            try:
+                anchor = RT[page].anchors.by_header(header)
+            except KeyError:
+                anchor = Anchor(header, header.identifier, label=stringify(header), level=header.level)
+                RT[page].anchors.append(anchor)
             tm.sections[anchor] = Fragment(tm, tm.end_pos, tm.end_pos)
 
     @override
