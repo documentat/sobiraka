@@ -6,7 +6,7 @@ This directory contains some dictionaries copied from other sources, sometimes s
 
 These are the licenses of the original dictionaries.
 
-### en_US
+### english
 
 http://app.aspell.net/create (size 70)
 
@@ -23,7 +23,7 @@ about the suitability of this array for any purpose. It is provided
 "as is" without express or implied warranty.
 ```
 
-### ru_RU
+### russian
 
 https://github.com/LibreOffice/dictionaries/blob/master/ru_RU/
 

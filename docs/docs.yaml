@@ -15,8 +15,8 @@ pdf:
   combined_toc: true
 prover:
   dictionaries:
-    - en_US
-    - ru_RU
+    - english
+    - russian
     - dictionaries/hunspell/branding.dic
     - dictionaries/hunspell/english.dic
     - dictionaries/hunspell/russian/adjectives.dic

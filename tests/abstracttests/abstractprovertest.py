@@ -31,7 +31,7 @@ class AbstractProverTest(ProjectDirTestCase[Prover]):
 
     def _init_project(self) -> Project:
         fs = FakeFileSystem()
-        hunspell_dictionaries = ['en_US']
+        hunspell_dictionaries = ['english']
         plaintext_dictionaries = []
         regexp_dictionaries = []
 

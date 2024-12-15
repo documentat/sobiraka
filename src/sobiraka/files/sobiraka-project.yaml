@@ -159,7 +159,10 @@ $defs:
             minItems: 0
             uniqueItems: true
             items:
-              type: string
+              oneOf:
+                - enum: [english, russian]
+                - type: string
+                  pattern: ^(?!english|russian$).*$
           skip_elements:
             type: array
             uniqueItems: true
