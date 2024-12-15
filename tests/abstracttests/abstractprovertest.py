@@ -2,7 +2,7 @@ from textwrap import dedent
 
 from helpers import FakeFileSystem, assertNoDiff
 from sobiraka.models import Page, PageStatus, Project, Syntax, Volume
-from sobiraka.models.config import Config, Config_Prover, Config_Prover_Checks
+from sobiraka.models.config import Config, Config_Prover, Config_Prover_Checks, Config_Prover_Dictionaries
 from sobiraka.models.exceptions import IssuesOccurred
 from sobiraka.processing.txt import TextModel
 from sobiraka.prover import Prover
@@ -31,23 +31,30 @@ class AbstractProverTest(ProjectDirTestCase[Prover]):
 
     def _init_project(self) -> Project:
         fs = FakeFileSystem()
-        config = Config(prover=Config_Prover(
-            dictionaries=['en_US'],
-            exceptions=[],
-            checks=self.CHECKS,
-        ))
+        hunspell_dictionaries = ['en_US']
+        plaintext_dictionaries = []
+        regexp_dictionaries = []
 
         if self.DICTIONARY_DIC:
-            config.prover.dictionaries.append('mydic.dic')
+            hunspell_dictionaries.append(RelativePath('mydic.dic'))
             fs.pseudofiles[RelativePath('mydic.dic')] = dedent(self.DICTIONARY_DIC).strip()
             if self.DICTIONARY_AFF:
                 fs.pseudofiles[RelativePath('mydic.aff')] = dedent(self.DICTIONARY_AFF).strip()
         if self.EXCEPTIONS_TXT:
-            config.prover.exceptions.append(RelativePath('exceptions.txt'))
+            plaintext_dictionaries.append(RelativePath('exceptions.txt'))
             fs.pseudofiles[RelativePath('exceptions.txt')] = dedent(self.EXCEPTIONS_TXT).strip()
         if self.EXCEPTIONS_REGEXPS:
-            config.prover.exceptions.append(RelativePath('exceptions.regexp'))
+            regexp_dictionaries.append(RelativePath('exceptions.regexp'))
             fs.pseudofiles[RelativePath('exceptions.regexp')] = dedent(self.EXCEPTIONS_REGEXPS).strip()
+
+        config = Config(prover=Config_Prover(
+            dictionaries=Config_Prover_Dictionaries(
+                hunspell_dictionaries=tuple(hunspell_dictionaries),
+                plaintext_dictionaries=tuple(plaintext_dictionaries),
+                regexp_dictionaries=tuple(regexp_dictionaries),
+            ),
+            checks=self.CHECKS,
+        ))
 
         page_filename = f'page.{self.SYNTAX.value}'
         self.page = Page(dedent(self.SOURCE).strip())

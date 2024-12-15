@@ -7,12 +7,13 @@ from subprocess import PIPE
 from tempfile import TemporaryDirectory
 from typing import Generator, Sequence
 
-from sobiraka.models import FileSystem, RealFileSystem, Volume
+from sobiraka.models import FileSystem, RealFileSystem
 from sobiraka.utils import AbsolutePath, RelativePath
 
 
 @contextmanager
-def _prepare_hunspell_environ(fs: FileSystem, dictionaries: list[str]) -> Generator[dict[str, str], None, None]:
+def _prepare_hunspell_environ(fs: FileSystem, dictionaries: Sequence[str | RelativePath]) \
+        -> Generator[dict[str, str], None, None]:
     """
     If necessary, create a temporary directory and copy all dictionaries there.
     If not necessary, don't do it.
@@ -26,23 +27,21 @@ def _prepare_hunspell_environ(fs: FileSystem, dictionaries: list[str]) -> Genera
     # Note that the AFF files are optional, while the DIC files are mandatory
     used_files_from_project: list[RelativePath] = []
     for dictionary in dictionaries:
-        # If it is a DIC file, it potentially represents a pair of DIC and AFF files
-        if dictionary.endswith('.dic'):
-            dic_relpath = RelativePath(dictionary)
-            aff_relpath = RelativePath(dictionary).with_suffix('.aff')
-            if fs.exists(dic_relpath):
-                used_files_from_project.append(dic_relpath)
-                if fs.exists(aff_relpath):
-                    used_files_from_project.append(aff_relpath)
+        match dictionary:
+            case RelativePath() as custom_dic:
+                custom_aff = RelativePath(dictionary).with_suffix('.aff')
+                used_files_from_project.append(custom_dic)
+                if fs.exists(custom_aff):
+                    used_files_from_project.append(custom_aff)
 
-        # If it's not a project dictionary, it must be an existing default dictionary
-        elif not (default_dictionaries_path / f'{dictionary}.dic').exists():
-            raise FileNotFoundError(dictionary)
+            case str() as standard_dic:
+                if not (default_dictionaries_path / f'{standard_dic}.dic').exists():
+                    raise FileNotFoundError(standard_dic)
 
     # Start preparing the environment that will be used to run Hunspell
     environ = os.environ.copy()
     environ['DICPATH'] = str(default_dictionaries_path)
-    environ['DICTIONARY'] = ','.join(re.sub(r'\.dic$', '', d) for d in dictionaries)
+    environ['DICTIONARY'] = ','.join(re.sub(r'\.dic$', '', str(d)) for d in dictionaries)
 
     if not used_files_from_project:
         # We don't need to add the path to project's dictionaries
@@ -65,11 +64,12 @@ def _prepare_hunspell_environ(fs: FileSystem, dictionaries: list[str]) -> Genera
             yield environ
 
 
-async def run_hunspell(words: Sequence[str], volume: Volume) -> Sequence[str]:
+async def run_hunspell(words: Sequence[str], fs: FileSystem, dictionaries: Sequence[str | RelativePath]) -> Sequence[
+    str]:
     if not words:
         return ()
 
-    with _prepare_hunspell_environ(volume.project.fs, volume.config.prover.dictionaries) as environ:
+    with _prepare_hunspell_environ(fs, dictionaries) as environ:
         hunspell = await create_subprocess_exec('hunspell', env=environ, stdin=PIPE, stdout=PIPE)
 
         # Verify the Hunspell version in the first line

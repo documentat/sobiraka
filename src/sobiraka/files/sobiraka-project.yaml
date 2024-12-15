@@ -160,12 +160,6 @@ $defs:
             uniqueItems: true
             items:
               type: string
-          exceptions:
-            type: array
-            minItems: 0
-            uniqueItems: true
-            items:
-              type: string
           skip_elements:
             type: array
             uniqueItems: true

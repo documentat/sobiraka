@@ -1,5 +1,7 @@
+import re
 from asyncio import Task, create_task
 from bisect import bisect_left, bisect_right
+from functools import cached_property
 from typing import AsyncIterable
 
 from more_itertools import unique_everseen
@@ -8,7 +10,7 @@ from typing_extensions import override
 
 from sobiraka.models import Issue, MisspelledWords, Page, PageHref, PageStatus, PhraseBeginsWithLowerCase, Volume
 from sobiraka.processing.abstract import VolumeBuilder
-from sobiraka.processing.txt import Fragment, PlainTextDispatcher, TextModel, clean_phrases, exceptions_regexp
+from sobiraka.processing.txt import Fragment, PlainTextDispatcher, TextModel, clean_phrases
 from sobiraka.runtime import RT
 from .hunspell import run_hunspell
 from ..utils import super_gather
@@ -21,11 +23,36 @@ class ProverProcessor(PlainTextDispatcher):
 
     @override
     def _new_text_model(self) -> TextModel:
-        return TextModel(exceptions_regexp=exceptions_regexp(self.volume))
+        return TextModel(exceptions_regexp=self.exceptions_regexp)
 
     @override
     async def must_skip(self, elem: Element, page: Page) -> bool:
         return isinstance(elem, self.volume.config.prover.skip_elements)
+
+    @cached_property
+    def exceptions_regexp(self) -> re.Pattern | None:
+        """
+        Prepare a regular expression that matches any exception.
+        If the volume declares no exceptions, returns `None`.
+        """
+        dictionaries = self.volume.config.prover.dictionaries
+        fs = self.volume.project.fs
+
+        regexp_parts: list[str] = []
+
+        for dictionary in dictionaries.plaintext_dictionaries:
+            lines = fs.read_text(dictionary).splitlines()
+            for line in lines:
+                regexp_parts.append(r'\b' + re.escape(line.strip()) + r'\b')
+
+        for dictionary in dictionaries.regexp_dictionaries:
+            lines = fs.read_text(dictionary).splitlines()
+            for line in lines:
+                regexp_parts.append(line.strip())
+
+        if regexp_parts:
+            return re.compile('|'.join(regexp_parts))
+        return None
 
 
 class Prover(VolumeBuilder[ProverProcessor]):
@@ -51,20 +78,23 @@ class Prover(VolumeBuilder[ProverProcessor]):
 
         phrases = tm.phrases()
 
-        if self.volume.config.prover.dictionaries:
+        fs = self.volume.project.fs
+        config = self.volume.config.prover
+
+        if config.dictionaries.hunspell_dictionaries:
             words: list[str] = []
             for phrase in clean_phrases(phrases, tm.exceptions()):
                 words += phrase.split()
             words = list(unique_everseen(words))
             misspelled_words: list[str] = []
-            for word in await run_hunspell(words, self.volume):
+            for word in await run_hunspell(words, fs, config.dictionaries.hunspell_dictionaries):
                 if word not in misspelled_words:
                     misspelled_words.append(word)
             if misspelled_words:
                 RT[page].issues.append(MisspelledWords(page.path_in_project, tuple(misspelled_words)))
 
         for phrase in phrases:
-            if self.volume.config.prover.checks.phrases_must_begin_with_capitals:
+            if config.checks.phrases_must_begin_with_capitals:
                 async for issue in self.check__phrases_must_begin_with_capitals(phrase):
                     RT[page].issues.append(issue)
 

@@ -17,12 +17,11 @@ prover:
   dictionaries:
     - en_US
     - ru_RU
+    - dictionaries/hunspell/branding.dic
     - dictionaries/hunspell/english.dic
     - dictionaries/hunspell/russian/adjectives.dic
     - dictionaries/hunspell/russian/nouns.dic
     - dictionaries/hunspell/russian/verbs.dic
-  exceptions:
-    - dictionaries/branding.txt
     - dictionaries/html.txt
     - dictionaries/latex.txt
     - dictionaries/pandoc.txt
