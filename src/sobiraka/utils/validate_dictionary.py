@@ -10,10 +10,10 @@ from pathlib import Path
 
 def validate_dictionary(dic_path: Path, *, autofix: bool = False) -> 0:
     criticals: dict[tuple[Path, int], str] = {}
-    warnings: dict[tuple[Path, int], str] = {}
     modifications: dict[tuple[Path, int], tuple[str, str]] = {}
     deletions: dict[tuple[Path, int], str] = {}
 
+    assert dic_path.suffix == '.dic'
     aff_path = dic_path.with_suffix('.aff')
 
     aff = aff_path.read_bytes()
@@ -80,8 +80,6 @@ def validate_dictionary(dic_path: Path, *, autofix: bool = False) -> 0:
 
     for (path, i), message in sorted(criticals.items()):
         print(f'\033[31m[CRITICAL] {path.name}:{i} — {message}\033[0m', file=sys.stderr)
-    for (path, i), message in sorted(warnings.items()):
-        print(f'\033[33m[WARNING] {path.name}:{i} — {message}\033[0m', file=sys.stderr)
 
     if autofix and not criticals:
         for (path, i), (message, fixed_line) in modifications.items():
@@ -103,8 +101,8 @@ def validate_dictionary(dic_path: Path, *, autofix: bool = False) -> 0:
     for (path, i), message in sorted(modifications_and_deletions.items()):
         print(f'{prefix} {path.name}:{i} — {message}\033[0m', file=sys.stderr)
 
-    if autofix and not any((criticals, warnings)):
+    if autofix and not criticals:
         return 0
-    if not any((criticals, warnings, modifications, deletions)):
+    if not any((criticals, modifications, deletions)):
         return 0
     return 1
