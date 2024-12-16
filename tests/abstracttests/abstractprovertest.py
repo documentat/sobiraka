@@ -2,7 +2,7 @@ from textwrap import dedent
 
 from helpers import FakeFileSystem, assertNoDiff
 from sobiraka.models import Page, PageStatus, Project, Syntax, Volume
-from sobiraka.models.config import Config, Config_Prover, Config_Prover_Checks, Config_Prover_Dictionaries
+from sobiraka.models.config import Config, Config_Prover, Config_Prover_Dictionaries
 from sobiraka.models.exceptions import IssuesOccurred
 from sobiraka.processing.txt import TextModel
 from sobiraka.prover import Prover
@@ -16,7 +16,7 @@ class AbstractProverTest(ProjectDirTestCase[Prover]):
     maxDiff = None
     REQUIRE = PageStatus.PROCESS1
 
-    CHECKS = Config_Prover_Checks()
+    PHRASES_MUST_BEGIN_WITH_CAPITALS = False
 
     DICTIONARY_AFF: str = None
     DICTIONARY_DIC: str = ''
@@ -53,7 +53,7 @@ class AbstractProverTest(ProjectDirTestCase[Prover]):
                 plaintext_dictionaries=tuple(plaintext_dictionaries),
                 regexp_dictionaries=tuple(regexp_dictionaries),
             ),
-            checks=self.CHECKS,
+            phrases_must_begin_with_capitals=self.PHRASES_MUST_BEGIN_WITH_CAPITALS,
         ))
 
         page_filename = f'page.{self.SYNTAX.value}'

@@ -92,5 +92,5 @@ class Prover(VolumeBuilder[ProverProcessor]):
             if misspelled_words:
                 RT[page].issues.append(MisspelledWords(page.path_in_project, tuple(misspelled_words)))
 
-        if config.checks.phrases_must_begin_with_capitals:
+        if config.phrases_must_begin_with_capitals:
             RT[page].issues += phrases_must_begin_with_capitals(tm, phrases)

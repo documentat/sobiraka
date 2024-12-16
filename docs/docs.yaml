@@ -32,5 +32,3 @@ prover:
   skip_elements:
     - Code
     - CodeBlock
-  checks:
-    phrases_must_begin_with_capitals: false

@@ -38,19 +38,6 @@ class Config_Prover_Dictionaries:
 
 
 @dataclass(kw_only=True, frozen=True)
-class Config_Prover_Checks:
-    """Boolean options representing enabled and disabled checks that should be performed."""
-
-    phrases_must_begin_with_capitals: bool = False
-    """
-    For each phrase in the text, check that its first character is a lowercase letter, unless:
-    
-    - the phrase is inside a code span or a code block,
-    - the phrase is an item's first phrase in a list that is preceded by a colon.
-    """
-
-
-@dataclass(kw_only=True, frozen=True)
 class Config_Prover:
     """Settings related to :class:`.Prover`."""
 
@@ -64,5 +51,10 @@ class Config_Prover:
     Elements that should not be analyzed for spelling mistakes.
     """
 
-    checks: Config_Prover_Checks = Config_Prover_Checks()
-    """Additional checks enabled for this volume."""
+    phrases_must_begin_with_capitals: bool = False
+    """
+    For each phrase in the text, check that its first character is a lowercase letter, unless:
+    
+    - the phrase is inside a code span or a code block,
+    - the phrase is an item's first phrase in a list that is preceded by a colon.
+    """

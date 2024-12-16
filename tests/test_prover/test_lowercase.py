@@ -2,11 +2,10 @@ from unittest import main
 
 from abstracttests.abstractprovertest import AbstractFailingProverTest
 from sobiraka.models import Syntax
-from sobiraka.models.config import Config_Prover_Checks
 
 
 class TestLowerCase(AbstractFailingProverTest):
-    CHECKS = Config_Prover_Checks(phrases_must_begin_with_capitals=True)
+    PHRASES_MUST_BEGIN_WITH_CAPITALS = True
 
     EXCEPTIONS_TXT = '''
         PhraseBeginsWithLowerCase
