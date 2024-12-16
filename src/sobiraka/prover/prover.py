@@ -1,17 +1,16 @@
 import re
 from asyncio import Task, create_task
-from bisect import bisect_left, bisect_right
 from functools import cached_property
-from typing import AsyncIterable
 
 from more_itertools import unique_everseen
-from panflute import Code, Element, ListItem, stringify
+from panflute import Element
 from typing_extensions import override
 
-from sobiraka.models import Issue, MisspelledWords, Page, PageHref, PageStatus, PhraseBeginsWithLowerCase, Volume
+from sobiraka.models import MisspelledWords, Page, PageHref, PageStatus, Volume
 from sobiraka.processing.abstract import VolumeBuilder
-from sobiraka.processing.txt import Fragment, PlainTextDispatcher, TextModel, clean_phrases
+from sobiraka.processing.txt import PlainTextDispatcher, TextModel, clean_phrases
 from sobiraka.runtime import RT
+from .checks import phrases_must_begin_with_capitals
 from .hunspell import run_hunspell
 from ..utils import super_gather
 
@@ -93,33 +92,5 @@ class Prover(VolumeBuilder[ProverProcessor]):
             if misspelled_words:
                 RT[page].issues.append(MisspelledWords(page.path_in_project, tuple(misspelled_words)))
 
-        for phrase in phrases:
-            if config.checks.phrases_must_begin_with_capitals:
-                async for issue in self.check__phrases_must_begin_with_capitals(phrase):
-                    RT[page].issues.append(issue)
-
-    @staticmethod
-    async def check__phrases_must_begin_with_capitals(phrase: Fragment) -> AsyncIterable[Issue]:
-        tm = phrase.tm
-
-        if not phrase.text[0].islower():
-            return
-
-        for exception in tm.exceptions()[phrase.start.line]:
-            if exception.start <= phrase.start < exception.end:
-                return
-
-        left = bisect_left(tm.fragments, phrase.start, key=lambda f: f.start)
-        right = bisect_right(tm.fragments, phrase.start, key=lambda f: f.start)
-        fragments_start_here = list(f for f in tm.fragments[left:right] if f.start == phrase.start)
-        for fragment in fragments_start_here:
-            match fragment.element:
-
-                case Code():
-                    return
-
-                case ListItem() as li:
-                    if stringify(li.parent.prev).rstrip().endswith(':'):
-                        return
-
-        yield PhraseBeginsWithLowerCase(phrase.text)
+        if config.checks.phrases_must_begin_with_capitals:
+            RT[page].issues += phrases_must_begin_with_capitals(tm, phrases)
