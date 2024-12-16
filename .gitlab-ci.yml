@@ -145,10 +145,7 @@ Prover:
   needs: [Build images]
   image: $CI_REGISTRY_IMAGE/tmp/release:commit-$CI_COMMIT_SHA
   script:
-    - sobiraka validate_dictionary docs/dictionaries/hunspell/english.dic
-    - sobiraka validate_dictionary docs/dictionaries/hunspell/russian/adjectives.dic
-    - sobiraka validate_dictionary docs/dictionaries/hunspell/russian/nouns.dic
-    - sobiraka validate_dictionary docs/dictionaries/hunspell/russian/verbs.dic
+    - find docs/dictionaries -name "*.dic" | xargs --verbose -I% sobiraka validate_dictionary --autofix %
     - sobiraka prover docs/docs.yaml
 
 # endregion

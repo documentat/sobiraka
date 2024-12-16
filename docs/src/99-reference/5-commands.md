@@ -1,6 +1,8 @@
 # Список команд
 
-## `web`
+## Сборка документации {#building}
+
+### `web`
 
 ```
 sobiraka web CONFIG [--output OUTPUT] [--hide-index-html]
@@ -8,7 +10,7 @@ sobiraka web CONFIG [--output OUTPUT] [--hide-index-html]
 
 Команда собирает HTML-документацию, см. [](../21-build-html/1-web.md).
 
-## `pdf`
+### `pdf`
 
 ```
 sobiraka pdf CONFIG [VOLUME] [--output OUTPUT]
@@ -16,7 +18,7 @@ sobiraka pdf CONFIG [VOLUME] [--output OUTPUT]
 
 Команда собирает PDF-документацию с помощью WeasyPrint, см. [](../22-build-pdf/1-weasyprint.md).
 
-## `latex`
+### `latex`
 
 ```
 sobiraka [--tmpdir TMPDIR] latex CONFIG [VOLUME] [--output OUTPUT]
@@ -24,7 +26,47 @@ sobiraka [--tmpdir TMPDIR] latex CONFIG [VOLUME] [--output OUTPUT]
 
 Команда собирает PDF-документацию с помощью LaTeX, см. [](../22-build-pdf/3-latex.md).
 
-## `check_translations`
+## Проверка проекта {#validation}
+
+### `prover`
+
+```
+sobiraka prover CONFIG
+```
+
+Команда выполняет [проверку проекта](../11-overview/05-prover.md), руководствуясь соответствующими настройками.
+
+- Если в настройке [`prover.dictionaries`](1-configuration.md#prover.dictionaries) указан хотя бы один словарь Hunspell (и, опционально, другие словари), выполняется [проверка орфографии](../11-overview/05-prover.md#spell-check).
+
+- Если включена настройка [`prover.phrases_must_begin_with_capitals`](1-configuration.md#prover.phrases_must_begin_with_capitals), выполняется [проверка заглавных букв в начале фраз](../11-overview/05-prover.md#phrases-must-begin-with-capitals).
+
+Название команды читается как «Собирака Прувер» или «Собирака, проверь» — оба варианта верны.
+
+### `validate_dictionary`
+
+```
+sobiraka validate_dictionary [--autofix] DICTIONARY
+```
+
+Команда загружает и проверяет пару файлов для [словаря Hunspell](../11-overview/05-prover.md#hunspell-dictionaries). В качестве аргумента необходимо передавать путь к файлу `*.dic`, но соответствующий ему файл `*.aff` из той же директории тоже будет проверен. Эта команда полностью автономна: она не работает с настройками проекта или другими данными, кроме этих двух файлов.
+
+Некоторые некритические ошибки поддаются автоматическому исправлению. Если команде передан аргумент `--autofix` и при этом все ошибки в файлах некритические, команда автоматически внесёт соответствующие изменения.
+
+В файле `*.dic` могут быть найдены следующие ошибки:
+
+- в файле содержится пустая строка (она может быть автоматически удалена),
+- файл ссылается на аффикс, которого нет в файле `*.aff`,
+- количество записей в словаре не соответствует его заявленной длине (длина может быть автоматически обновлена).
+
+В файле `*.aff` могут быть найдены следующие ошибки:
+
+- два аффикса имеют одинаковые идентификаторы,
+- идентификатор аффикса содержит больше одного символа,
+- количество записей для аффикса не соответствует его заявленной длине (длина может быть автоматически обновлена).
+
+## Работа с переводами {#translation}
+
+### `check_translations`
 
 ```
 sobiraka check_translations CONFIG [--strict]
@@ -52,7 +94,7 @@ ru:
     src-ru/bbb.md
 ```
 
-## `changelog`
+### `changelog`
 
 ```
 sobiraka changelog CONFIG COMMIT1 [COMMIT2]

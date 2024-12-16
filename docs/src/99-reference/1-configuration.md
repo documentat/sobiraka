@@ -381,3 +381,25 @@ pdf:
 ### `latex.toc`
 
 Если `true` (по умолчанию), то в PDF будет включено оглавление, автоматически сгенерированное при помощи LaTeX.
+
+## Настройки автоматических проверок {#prover}
+
+### `prover.dictionaries`
+
+Список словарей, которые будут использоваться для [проверки орфографии](../11-overview/05-prover.md#spell-check).
+
+Допустимые элементы списка:
+
+- `english` — словарь английского языка [с сайта aspell](http://app.aspell.net/create),
+- `russian` — словарь русского языка [из репозитория LibreOffice](https://github.com/LibreOffice/dictionaries/tree/master/ru_RU),
+- пути к произвольным файлам `*.dic`, `*.txt` или `*.regexp`.
+
+### `prover.skip_elements`
+
+Список типов элементов, содержимое которых должно игнорироваться при [проверках текста](../11-overview/05-prover.md).
+
+Допустимые значения — названия классов элементов из [Panflute API](https://scorreia.com/software/panflute/code.html), например, `CodeBlock`, `Image`, `Math` и т.п.
+
+### `prover.phrases_must_begin_with_capitals`
+
+Если `true`, то будет включена [проверка заглавных букв в начале фраз](../11-overview/05-prover.md#phrases-must-begin-with-capitals).

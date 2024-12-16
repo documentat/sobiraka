@@ -26,3 +26,4 @@ CodeBlock
 JS
 svg
 ГБ
+aspell
