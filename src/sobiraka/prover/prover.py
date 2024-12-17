@@ -55,6 +55,21 @@ class ProverProcessor(PlainTextDispatcher):
 
 
 class Prover(VolumeBuilder[ProverProcessor]):
+    def __init__(self, volume: Volume, variables: dict = None):
+        super().__init__(volume)
+        self._variables: dict = variables or {}
+
+    @override
+    def additional_variables(self) -> dict:
+        return self._variables or dict(
+            HTML=True,
+            LATEX=True,
+            PDF=True,
+            PROVER=True,
+            WEASYPRINT=True,
+            WEB=True,
+        )
+
     @override
     def init_processor(self) -> ProverProcessor:
         return ProverProcessor(self.volume)

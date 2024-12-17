@@ -11,6 +11,9 @@ class FakeBuilder(ThemeableProjectBuilder):
     def init_theme(self, volume: Volume) -> Theme:
         return Theme(volume.config.web.theme)
 
+    def additional_variables(self) -> dict:
+        return {}
+
     def run(self):
         raise NotImplementedError
 

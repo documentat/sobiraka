@@ -11,6 +11,7 @@ from typing import final
 
 import iso639
 from panflute import Image
+from typing_extensions import override
 
 from sobiraka.models import DirPage, FileSystem, IndexPage, Page, PageHref, PageStatus, Project, Volume
 from sobiraka.models.config import Config, SearchIndexerName
@@ -46,6 +47,10 @@ class WebBuilder(ThemeableProjectBuilder['WebProcessor', 'WebTheme'], AbstractHt
 
     def init_theme(self, volume: Volume) -> WebTheme:
         return WebTheme(volume.config.web.theme)
+
+    @override
+    def additional_variables(self) -> dict:
+        return dict(HTML=True, WEB=True)
 
     async def run(self):
         self.output.mkdir(parents=True, exist_ok=True)

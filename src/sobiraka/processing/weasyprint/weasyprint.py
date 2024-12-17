@@ -45,6 +45,10 @@ class WeasyPrintBuilder(ThemeableVolumeBuilder['WeasyPrintProcessor', 'WeasyPrin
     def init_theme(self) -> WeasyPrintTheme:
         return WeasyPrintTheme(self.volume.config.pdf.theme)
 
+    @override
+    def additional_variables(self) -> dict:
+        return dict(PDF=True, HTML=True, WEASYPRINT=True)
+
     async def run(self):
         from ..toc import toc
 

@@ -10,7 +10,7 @@ from sobiraka.prover import Prover
 from sobiraka.report import run_with_progressbar
 from sobiraka.runtime import RT
 from sobiraka.translating import changelog, check_translations
-from sobiraka.utils import AbsolutePath, absolute_or_relative, validate_dictionary
+from sobiraka.utils import AbsolutePath, absolute_or_relative, parse_vars, validate_dictionary
 
 
 async def async_main():
@@ -41,6 +41,7 @@ async def async_main():
     cmd_prover = commands.add_parser('prover', help='Check a volume for various issues.')
     cmd_prover.add_argument('config', metavar='CONFIG', type=AbsolutePath)
     cmd_prover.add_argument('volume', nargs='?')
+    cmd_prover.add_argument('--var', metavar='KEY[=VALUE]', action='append')
 
     cmd_validate_dictionary = commands.add_parser('validate_dictionary',
                                                   help='Validate and fix Hunspell dictionary.')
@@ -122,7 +123,7 @@ async def async_main():
         elif cmd is cmd_prover:
             project = load_project(args.config)
             volume = project.get_volume(args.volume)
-            prover = Prover(volume)
+            prover = Prover(volume, parse_vars(args.var or ()))
             exit_code = await RT.run_isolated(run_with_progressbar(prover))
 
         elif cmd is cmd_validate_dictionary:

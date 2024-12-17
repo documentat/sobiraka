@@ -177,34 +177,36 @@ class Builder(metaclass=ABCMeta):
                 update_progressbar()
                 raise IssuesOccurred(page, RT[page].issues)
 
+    @abstractmethod
+    def additional_variables(self) -> dict:
+        ...
+
     async def prepare(self, page: Page):
         """
         Parse syntax tree with Pandoc and save its syntax tree into :obj:`.Page.doc`.
 
         This method is called by :obj:`.Page.loaded`.
         """
-        from sobiraka.processing.latex import LatexBuilder
-        from sobiraka.processing.weasyprint import WeasyPrintBuilder
-        from sobiraka.processing.web import WebBuilder, AbstractHtmlBuilder
-
         volume: Volume = page.volume
         config: Config = page.volume.config
         project: Project = page.volume.project
         fs: FileSystem = page.volume.project.fs
 
-        variables = config.variables | dict(
-            HTML=isinstance(self, AbstractHtmlBuilder),
-            PDF=isinstance(self, (WeasyPrintBuilder, LatexBuilder)),
-
-            WEB=isinstance(self, WebBuilder),
-            WEASYPRINT=isinstance(self, WeasyPrintBuilder),
-            LATEX=isinstance(self, LatexBuilder),
-
+        default_variables = dict(
             page=page,
             volume=volume,
             project=project,
             LANG=volume.lang,
+
+            # Format-specific variables
+            HTML=False,
+            LATEX=False,
+            PDF=False,
+            PROVER=False,
+            WEASYPRINT=False,
+            WEB=False,
         )
+        variables = config.variables | default_variables | self.additional_variables()
 
         page_text = page.text
 

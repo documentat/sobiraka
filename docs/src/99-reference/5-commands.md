@@ -31,7 +31,7 @@ sobiraka [--tmpdir TMPDIR] latex CONFIG [VOLUME] [--output OUTPUT]
 ### `prover`
 
 ```
-sobiraka prover CONFIG
+sobiraka prover CONFIG [--var KEY1=VAL1 --var KEY2=VAL2 ...]
 ```
 
 Команда выполняет [проверку проекта](../11-overview/05-prover.md), руководствуясь соответствующими настройками.
@@ -40,12 +40,14 @@ sobiraka prover CONFIG
 
 - Если включена настройка [`prover.phrases_must_begin_with_capitals`](1-configuration.md#prover.phrases_must_begin_with_capitals), выполняется [проверка заглавных букв в начале фраз](../11-overview/05-prover.md#phrases-must-begin-with-capitals).
 
+Все переменные, соответствующие выходным форматам (`HTML`, `PDF` и другие), устанавливаются в `True`. Обычно это позволяет за один раз проверить все абзацы в проектах, использующих [условия Jinja](../12-syntax/2-jinja.md#conditions). Если для вашего проекта такое поведение не подходит, определите необходимые переменные самостоятельно с помощью аргументов `--var`. Если передан хотя бы аргумент `--var`, то остальные переменные, соответствующие выходным форматам, установятся в `False`. Например, вы можете завести две отдельные задачи в CI: одну с `--var HTML=1`, вторую с `--var PDF=1`.
+
 Название команды читается как «Собирака Прувер» или «Собирака, проверь» — оба варианта верны.
 
 ### `validate_dictionary`
 
 ```
-sobiraka validate_dictionary [--autofix] DICTIONARY
+sobiraka validate_dictionary DICTIONARY [--autofix]
 ```
 
 Команда загружает и проверяет пару файлов для [словаря Hunspell](../11-overview/05-prover.md#hunspell-dictionaries). В качестве аргумента необходимо передавать путь к файлу `*.dic`, но соответствующий ему файл `*.aff` из той же директории тоже будет проверен. Эта команда полностью автономна: она не работает с настройками проекта или другими данными, кроме этих двух файлов.

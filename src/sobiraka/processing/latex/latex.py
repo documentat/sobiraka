@@ -44,6 +44,10 @@ class LatexBuilder(ThemeableVolumeBuilder['LatexProcessor', 'LatexTheme']):
     def init_theme(self) -> LatexTheme:
         return LatexTheme(self.volume.config.web.theme)
 
+    @override
+    def additional_variables(self) -> dict:
+        return dict(PDF=True, LATEX=True)
+
     async def run(self):
         xelatex_workdir = RT.TMP / 'tex'
         xelatex_workdir.mkdir(parents=True, exist_ok=True)
