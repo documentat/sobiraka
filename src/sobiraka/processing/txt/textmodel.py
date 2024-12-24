@@ -1,15 +1,14 @@
-from __future__ import annotations
-
 import re
 from bisect import bisect_left
 from dataclasses import dataclass, field
 from itertools import pairwise
 from typing import Sequence
 
-from panflute import Element
-
 from sobiraka.models import Anchor
 from sobiraka.utils import update_last_dataclass
+
+from .fragment import Fragment
+from .pos import Pos
 
 SEP = re.compile(r'[?!.]+\s*')
 END = re.compile(r'[?!.]+\s*$')
@@ -180,59 +179,3 @@ class TextModel:
             else:
                 update_last_dataclass(result, end=fragment.end)
         return result
-
-
-@dataclass(frozen=True)
-class Fragment:
-    """
-    A specific fragment of text in a :class:`TextModel`,
-    usually (but not necessarily) related to a single Panflute element.
-    """
-
-    tm: TextModel
-    """The model this fragments belong to. Used for getting the text representation."""
-
-    start: Pos
-    """The first character position."""
-
-    end: Pos
-    """The last character position."""
-
-    element: Element | None = None
-    """An optional reference to the element which contents this fragment represents."""
-
-    def __repr__(self):
-        return f'<[{self.start}-{self.end}] {self.text!r}>'
-
-    def __hash__(self):
-        return hash((id(self.tm), self.start, self.end))
-
-    @property
-    def text(self) -> str:
-        if self.start == self.end:
-            return ''
-
-        if self.start.line == self.end.line:
-            return self.tm.lines[self.start.line][self.start.char:self.end.char]
-
-        result = self.tm.lines[self.start.line][self.start.char:]
-        for line in range(self.start.line + 1, self.end.line):
-            result += '\n' + self.tm.lines[line]
-        result += '\n' + self.tm.lines[self.end.line][:self.end.char]
-        return result
-
-
-@dataclass(frozen=True, eq=True, order=True)
-class Pos:
-    """
-    An exact position of a character in a :class:`TextModel`.
-    Consists of a line number and a character number within that line.
-    """
-    line: int
-    char: int
-
-    def __repr__(self):
-        return f'{self.__class__.__name__}({self.line}, {self.char})'
-
-    def __str__(self):
-        return f'{self.line}:{self.char}'

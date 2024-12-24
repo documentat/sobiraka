@@ -1,6 +1,6 @@
 from typing import Iterable, Sequence
 
-from .textmodel import Fragment
+from .fragment import Fragment
 
 
 def clean_phrases(phrases: Sequence[Fragment], exceptions: Sequence[Sequence[Fragment]]) -> Iterable[str]:

@@ -12,7 +12,10 @@ from sobiraka.models import Anchor, Page
 from sobiraka.processing.abstract import Dispatcher
 from sobiraka.runtime import RT
 from sobiraka.utils import update_last_dataclass
-from .textmodel import Fragment, Pos, TextModel
+
+from .fragment import Fragment
+from .pos import Pos
+from .textmodel import TextModel
 
 
 class PlainTextDispatcher(Dispatcher):
