@@ -7,7 +7,7 @@ from sobiraka.utils import RelativePath
 
 
 class TestClassDirective(ProjectTestCase):
-    REQUIRE = PageStatus.PROCESS1
+    REQUIRE = PageStatus.PROCESS3
 
     def _init_project(self) -> Project:
         return Project(Mock(FileSystem), {
@@ -18,5 +18,5 @@ class TestClassDirective(ProjectTestCase):
 
     def test_paragraph_class(self):
         doc = RT[self.project.pages[0]].doc
-        header, directive, para = doc.content
+        header, para = doc.content
         self.assertEqual('MyClass', RT.CLASSES[id(para)])

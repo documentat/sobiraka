@@ -6,7 +6,6 @@ from panflute import BulletList, Div, Element, Header, Link, ListItem, Plain, St
 
 from sobiraka.models import Page
 from sobiraka.models.config import CombinedToc, Config
-from sobiraka.utils import replace_element
 from .directive import Directive
 from ..toc import Toc, local_toc, toc
 
@@ -42,8 +41,7 @@ class TocDirective(Directive):
         bullet_list = BulletList(*_make_items(toc_items,
                                               format=self.format,
                                               numeration=config.content.numeration))
-        div = Div(bullet_list, classes=['toc'])
-        replace_element(self, div)
+        return Div(bullet_list, classes=['toc'])
 
 
 class LocalTocDirective(Directive):
@@ -93,8 +91,7 @@ class LocalTocDirective(Directive):
         bullet_list = BulletList(*_make_items(toc_items,
                                               format=self.format,
                                               numeration=config.content.numeration))
-        div = Div(bullet_list, classes=['toc'])
-        replace_element(self, div)
+        return Div(bullet_list, classes=['toc'])
 
 
 def _make_items(toc_items: Toc, *, format: str, numeration: bool) -> Iterable[ListItem]:

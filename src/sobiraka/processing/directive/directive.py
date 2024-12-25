@@ -38,5 +38,5 @@ class Directive(Block, metaclass=ABCMeta):
     def process(self):
         pass
 
-    def postprocess(self):
-        pass
+    def postprocess(self) -> Block | None:
+        return None

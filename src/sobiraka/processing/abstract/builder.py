@@ -17,7 +17,7 @@ from sobiraka.models.config import Config
 from sobiraka.models.exceptions import DependencyFailed, IssuesOccurred, VolumeFailed
 from sobiraka.report import update_progressbar
 from sobiraka.runtime import RT
-from sobiraka.utils import super_gather
+from sobiraka.utils import replace_element, super_gather
 from .processor import Processor
 from .theme import Theme
 from ..numerate import numerate
@@ -282,7 +282,7 @@ class Builder(metaclass=ABCMeta):
         for page in volume.pages:
             processor = self.get_processor_for_page(page)
             for toc_placeholder in processor.directives[page]:
-                toc_placeholder.postprocess()
+                replace_element(toc_placeholder, toc_placeholder.postprocess())
 
     async def process4(self, page: Page):
         pass
