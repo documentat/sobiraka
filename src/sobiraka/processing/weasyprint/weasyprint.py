@@ -8,6 +8,7 @@ from contextlib import suppress
 from functools import lru_cache
 from mimetypes import guess_type
 from typing import final
+from urllib.parse import unquote
 
 import weasyprint
 from panflute import Doc, Element, Header, Image, Str
@@ -114,6 +115,7 @@ class WeasyPrintBuilder(ThemeableVolumeBuilder['WeasyPrintProcessor', 'WeasyPrin
 
     def fetch_url(self, url: str) -> dict:
         config: Config = self.volume.config
+        fs: FileSystem = self.get_project().fs
 
         with suppress(KeyError):
             mime_type, content = self.pseudofiles[url]
@@ -122,12 +124,12 @@ class WeasyPrintBuilder(ThemeableVolumeBuilder['WeasyPrintProcessor', 'WeasyPrin
         if re.match('^_static/(.+)$', url):
             file_path = self.theme.theme_dir / url
             mime_type, _ = guess_type(file_path, strict=False)
-            return dict(file_obj=file_path.open('rb'), mime_type=mime_type)
+            return dict(string=file_path.read_bytes(), mime_type=mime_type)
 
         if ':' not in url:
-            file_path = config.paths.resources / url
-            mime_type, _ = guess_type(file_path, strict=False)[0]
-            return dict(file_obj=file_path.open('rb'), mime_type=mime_type)
+            file_path = config.paths.resources / unquote(url)
+            mime_type, _ = guess_type(file_path, strict=False)
+            return dict(string=fs.read_bytes(file_path), mime_type=mime_type)
 
         print(url, file=sys.stderr)
         return weasyprint.default_url_fetcher(url)
@@ -161,7 +163,8 @@ class WeasyPrintBuilder(ThemeableVolumeBuilder['WeasyPrintProcessor', 'WeasyPrin
 
     @override
     async def add_file_from_project(self, source: RelativePath, target: RelativePath):
-        raise NotImplementedError
+        # Do nothing. We will just load the file from the source in fetch_url().
+        pass
 
     @override
     def compile_sass(self, volume: Volume, source: AbsolutePath | bytes, target: RelativePath):
