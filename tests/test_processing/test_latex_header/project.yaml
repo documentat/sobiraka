@@ -1,6 +1,6 @@
 paths:
   root: src
 latex:
-  headers:
+  headers_transform:
     by_global_level:
       '1': section*

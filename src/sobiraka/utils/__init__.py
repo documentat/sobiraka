@@ -3,7 +3,6 @@ from .betterpath import AbsolutePath, IncompatiblePathTypes, PathGoesOutsideStar
     WrongPathType, absolute_or_relative
 from .convert_or_none import convert_or_none
 from .expand_vars import expand_vars
-from .get_default import get_default
 from .jinja import configured_jinja
 from .keydefaultdict import KeyDefaultDict
 from .last_item import last_key, last_value, update_last_dataclass, update_last_value

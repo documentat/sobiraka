@@ -7,11 +7,10 @@ from utilspie.collectionsutils import frozendict
 
 from sobiraka.models import FileSystem, NamingScheme, Volume
 from sobiraka.models.config import CombinedToc, Config, Config_Content, Config_HighlightJS, Config_Latex, \
-    Config_Latex_Headers, Config_PDF, Config_Pagefind_Translations, Config_Paths, Config_Pdf_Highlight, Config_Prism, \
-    Config_Prover, Config_Prover_Dictionaries, Config_Pygments, Config_Search_LinkTarget, Config_Web, \
+    Config_Latex_HeadersTransform, Config_PDF, Config_Pagefind_Translations, Config_Paths, Config_Pdf_Highlight, \
+    Config_Prism, Config_Prover, Config_Prover_Dictionaries, Config_Pygments, Config_Search_LinkTarget, Config_Web, \
     Config_Web_Highlight, Config_Web_Search, SearchIndexerName
-from sobiraka.utils import AbsolutePath, Apostrophe, QuotationMark, RelativePath, convert_or_none, expand_vars, \
-    get_default
+from sobiraka.utils import AbsolutePath, Apostrophe, QuotationMark, RelativePath, convert_or_none, expand_vars
 
 
 def load_volume(lang: str | None, codename: str, volume_data: dict, fs: FileSystem) -> Volume:
@@ -71,12 +70,7 @@ def load_volume(lang: str | None, codename: str, volume_data: dict, fs: FileSyst
             processor=convert_or_none(RelativePath, _expand(_('latex.processor'))),
             toc=_('latex.toc', True),
             paths=frozendict({k: RelativePath(_expand(v)) for k, v in _('latex.paths', {}).items()}),
-            headers=Config_Latex_Headers(
-                by_class=frozendict(_('latex.headers.by_class', {})),
-                by_global_level=_load_latex_headers_by_global_level(_('latex.headers.by_global_level', {})),
-                by_page_level=frozendict({int(k): v for k, v in _('latex.headers.by_page_level', {}).items()}),
-                by_element=frozendict(_('latex.headers.by_element', {})),
-            )
+            headers_transform=Config_Latex_HeadersTransform.load(_('latex.headers_transform', {})),
         ),
         pdf=Config_PDF(
             theme=_find_theme_dir(_expand(_('pdf.theme', 'printable')), fs=fs),
@@ -123,12 +117,6 @@ def _load_pdf_highlight(data: str | dict[str, dict]) -> Config_Pdf_Highlight:
     match engine:
         case 'pygments':
             return Config_Pygments(**(config or {}))
-
-
-def _load_latex_headers_by_global_level(values: dict[str, str]) -> frozendict[int, str]:
-    if values:
-        return frozendict({int(k): v for k, v in values.items()})
-    return get_default(Config_Latex_Headers, 'by_global_level')
 
 
 def _find_theme_dir(name: str, *, fs: FileSystem) -> AbsolutePath:

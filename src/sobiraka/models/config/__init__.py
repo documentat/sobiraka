@@ -2,7 +2,7 @@ from .config import Config
 from .config_content import Config_Content
 from .config_highlight import Config_HighlightJS, Config_Pdf_Highlight, Config_Prism, Config_Pygments, \
     Config_Web_Highlight, JavaScriptHighlighterLibraryConfig, JavaScriptLibraryConfig
-from .config_latex import Config_Latex, Config_Latex_Headers
+from .config_latex import Config_Latex, Config_Latex_HeadersTransform
 from .config_paths import Config_Paths
 from .config_pdf import Config_PDF
 from .config_prover import Config_Prover, Config_Prover_Dictionaries
