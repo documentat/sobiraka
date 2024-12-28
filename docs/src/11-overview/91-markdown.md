@@ -72,7 +72,7 @@ Markdown — основной синтаксис исходного текста
 
 При сборке PDF-документации можно использовать только [Pygments](https://pygments.org/) — её следует включить настройкой [`pdf.highlight`](../99-reference/1-configuration.md#pdf.highlight).
 
-Обратите внимание, что когда вы используете библиотеку Pygments (для HTML или PDF), её поведение может меняться в зависимости от аргументов, переданных при инициализации _лексера_. Полный список аргументов для каждого лексера [описано в официальной документации](https://pygments.org/docs/lexers/). Так, лексер [`PhpLexer`](https://pygments.org/docs/lexers/#pygments.lexers.php.PhpLexer), отвечающий в Pygments за подсветку языка PHP, не подсвечивает PHP-код без открывающего тэга `<?php`, если ему не передан аргумент `startinline=true`. Чтобы передать этот или любой другой аргумент, укажите его в фигурных скобках (см. синтаксис [`fenced_code_attributes`](https://pandoc.org/MANUAL.html#extension-fenced_code_attributes) в Pandoc). Например:
+Обратите внимание, что поведение библиотеки Pygments (при использовании для HTML или PDF) может меняться в зависимости от аргументов, переданных при инициализации _лексера_. Полный список аргументов для каждого лексера [приведён в официальной документации](https://pygments.org/docs/lexers/). Так, лексер [`PhpLexer`](https://pygments.org/docs/lexers/#pygments.lexers.php.PhpLexer), отвечающий в Pygments за подсветку языка PHP, не подсвечивает PHP-код без открывающего тега `<?php`, если ему не передан аргумент `startinline=true`. Чтобы передать этот или любой другой аргумент, укажите его в фигурных скобках (см. синтаксис [`fenced_code_attributes`](https://pandoc.org/MANUAL.html#extension-fenced_code_attributes) в Pandoc). Например:
 
 `````
 ```php {startinline=true}
