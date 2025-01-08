@@ -59,7 +59,7 @@ class WeasyPrintBuilder(VolumeBuilder['WeasyPrintProcessor', 'WeasyPrintTheme'],
 
         # Launch non-page processing tasks
         self.add_html_task(self.add_custom_files())
-        self.add_html_task(self.compile_theme_sass(self.theme))
+        self.add_html_task(self.compile_theme_sass(self.theme, volume))
 
         # Combine rendered pages into a single page
         content: list[tuple[Page, TocNumber, str, str]] = []
@@ -69,7 +69,7 @@ class WeasyPrintBuilder(VolumeBuilder['WeasyPrintProcessor', 'WeasyPrintTheme'],
 
         await self.await_all_html_tasks()
 
-        head = self.head.render('')
+        head = self._heads[volume].render('')
 
         # Apply the rendering template
         html = await self.theme.page_template.render_async(
@@ -155,9 +155,9 @@ class WeasyPrintBuilder(VolumeBuilder['WeasyPrintProcessor', 'WeasyPrintTheme'],
     async def add_file_from_project(self, source: RelativePath, target: RelativePath):
         raise NotImplementedError
 
-    def compile_sass(self, source: AbsolutePath, target: RelativePath):
+    def compile_sass(self, volume: Volume, source: AbsolutePath, target: RelativePath):
         self.pseudofiles[str(target)] = 'text/css', self.compile_sass_impl(source)
-        self.head.append(HeadCssFile(target))
+        self._heads[volume].append(HeadCssFile(target))
 
     def get_path_to_resources(self, page: Page) -> RelativePath:
         return RelativePath('_resources')
@@ -174,12 +174,12 @@ class WeasyPrintBuilder(VolumeBuilder['WeasyPrintProcessor', 'WeasyPrintTheme'],
             match source.suffix:
                 case '.css':
                     self.pseudofiles[f'css/{source.name}'] = 'text/css', fs.read_bytes(source)
-                    self.head.append(HeadCssFile(RelativePath(f'css/{source.name}')))
+                    self._heads[self.volume].append(HeadCssFile(RelativePath(f'css/{source.name}')))
 
                 case '.sass' | '.scss':
                     source = fs.resolve(source)
                     target = RelativePath('_static') / 'css' / f'{source.stem}.css'
-                    self.add_html_task(to_thread(self.compile_sass, source, target))
+                    self.add_html_task(to_thread(self.compile_sass, self.volume, source, target))
 
                 case _:
                     raise ValueError(source)
