@@ -28,7 +28,7 @@ class AbstractHtmlBuilder(Builder, metaclass=ABCMeta):
 
         self._html_builder_tasks: list[Task] = []
         self._results: set[AbsolutePath] = set()
-        self._heads: dict[Volume, Head] = defaultdict(Head)
+        self.heads: dict[Volume, Head] = defaultdict(Head)
 
     def add_html_task(self, coro: Coroutine):
         self._html_builder_tasks.append(create_task(coro))
@@ -45,7 +45,7 @@ class AbstractHtmlBuilder(Builder, metaclass=ABCMeta):
                     if source.suffix in ('.sass', '.scss') and not source.stem.startswith('_'):
                         target = RelativePath('_static') / 'css' / f'{source.stem}.css'
                         tg.create_task(to_thread(self.compile_sass, volume, source, target))
-                        self._heads[volume].append(HeadCssFile(target))
+                        self.heads[volume].append(HeadCssFile(target))
 
     @abstractmethod
     def compile_sass(self, volume: Volume, source: AbsolutePath, target: RelativePath):
@@ -158,7 +158,7 @@ class AbstractHtmlProcessor(Processor[B], Generic[B], metaclass=ABCMeta):
         highlighter = self.get_highlighter(page.volume)
         if highlighter is not None:
             block, head_tags = highlighter.highlight(block)
-            self.builder.head += head_tags
+            self.builder.heads[page.volume] += head_tags
         return block,
 
     @override

@@ -114,7 +114,7 @@ class WebBuilder(ProjectBuilder['WebProcessor', 'WebTheme'], AbstractHtmlBuilder
         theme = self.themes[page.volume]
 
         root_prefix = self.get_root_prefix(page)
-        head = self._heads[volume].render(root_prefix)
+        head = self.heads[volume].render(root_prefix)
 
         html = await theme.page_template.render_async(
             builder=self,
@@ -230,7 +230,7 @@ class WebBuilder(ProjectBuilder['WebProcessor', 'WebTheme'], AbstractHtmlBuilder
             assert source.suffix == '.js'
             target = RelativePath() / 'js' / source.name
             await self.add_file_from_project(source, target)
-            self._heads[volume].append(HeadJsFile(target))
+            self.heads[volume].append(HeadJsFile(target))
 
         for style in config.web.custom_styles:
             source = RelativePath(style)
@@ -238,13 +238,13 @@ class WebBuilder(ProjectBuilder['WebProcessor', 'WebTheme'], AbstractHtmlBuilder
                 case '.css':
                     target = RelativePath() / 'css' / source.name
                     self.add_html_task(self.add_file_from_project(source, target))
-                    self._heads[volume].append(HeadCssFile(target))
+                    self.heads[volume].append(HeadCssFile(target))
 
                 case '.sass' | '.scss':
                     source = fs.resolve(source)
                     target = RelativePath('_static') / 'css' / f'{source.stem}.css'
                     self.add_html_task(to_thread(self.compile_sass, volume, source, target))
-                    self._heads[volume].append(HeadCssFile(target))
+                    self.heads[volume].append(HeadCssFile(target))
 
                 case _:
                     raise ValueError(source)
@@ -270,7 +270,7 @@ class WebBuilder(ProjectBuilder['WebProcessor', 'WebTheme'], AbstractHtmlBuilder
         self._indexers[volume] = indexer
 
         # Put required files to the HTML head
-        self._heads[volume] += indexer.head_tags()
+        self.heads[volume] += indexer.head_tags()
 
     @override
     def add_file_from_data(self, target: RelativePath, data: str | bytes):

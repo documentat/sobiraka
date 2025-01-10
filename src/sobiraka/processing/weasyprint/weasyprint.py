@@ -71,7 +71,7 @@ class WeasyPrintBuilder(VolumeBuilder['WeasyPrintProcessor', 'WeasyPrintTheme'],
 
         await self.await_all_html_tasks()
 
-        head = self._heads[volume].render('')
+        head = self.heads[volume].render('')
 
         # Apply the rendering template
         html = await self.theme.page_template.render_async(
@@ -169,7 +169,7 @@ class WeasyPrintBuilder(VolumeBuilder['WeasyPrintProcessor', 'WeasyPrintTheme'],
     @override
     def compile_sass(self, volume: Volume, source: AbsolutePath, target: RelativePath):
         self.pseudofiles[str(target)] = 'text/css', self.compile_sass_impl(source)
-        self._heads[volume].append(HeadCssFile(target))
+        self.heads[volume].append(HeadCssFile(target))
 
     def get_path_to_resources(self, page: Page) -> RelativePath:
         return RelativePath('_resources')
@@ -186,7 +186,7 @@ class WeasyPrintBuilder(VolumeBuilder['WeasyPrintProcessor', 'WeasyPrintTheme'],
             match source.suffix:
                 case '.css':
                     self.pseudofiles[f'css/{source.name}'] = 'text/css', fs.read_bytes(source)
-                    self._heads[self.volume].append(HeadCssFile(RelativePath(f'css/{source.name}')))
+                    self.heads[self.volume].append(HeadCssFile(RelativePath(f'css/{source.name}')))
 
                 case '.sass' | '.scss':
                     source = fs.resolve(source)

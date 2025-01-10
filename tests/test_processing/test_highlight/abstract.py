@@ -42,7 +42,7 @@ class AbstractHighlightTest(ProjectTestCase[WebBuilder]):
         return WebBuilder(self.project, AbsolutePath(output))
 
     def test_head(self):
-        self.assertEqual(self.EXPECTED_HEAD, self.builder.head)
+        self.assertEqual(self.EXPECTED_HEAD, self.builder.heads[self.project.volumes[0]])
 
     async def test_render(self):
         page = self.project.get_volume().root_page
