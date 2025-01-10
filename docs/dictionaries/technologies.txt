@@ -1,6 +1,7 @@
 HTML
 html
 iso639
+jsDelivr
 JSON
 json
 md
