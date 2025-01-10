@@ -13,6 +13,10 @@ class HeadTag(metaclass=ABCMeta):
 
 
 class Head(list[HeadTag]):
+    def append(self, tag: HeadTag):
+        if tag not in self:
+            super().append(tag)
+
     def render(self, root_prefix: str) -> str:
         head = ''
         for tag in unique_everseen(self):

@@ -63,7 +63,7 @@ class WebBuilder(ProjectBuilder['WebProcessor', 'WebTheme'], AbstractHtmlBuilder
             # Launch non-page processing tasks
             self.add_html_task(self.add_directory_from_location(theme.static_dir, RelativePath('_static')))
             self.add_html_task(self.add_custom_files(volume))
-            self.add_html_task(self.compile_theme_sass(theme))
+            self.add_html_task(self.compile_theme_sass(theme, volume))
             self.add_html_task(self.prepare_search_indexer(volume))
 
         # Wait until all pages will be generated and all additional files will be copied to the output directory
@@ -114,7 +114,7 @@ class WebBuilder(ProjectBuilder['WebProcessor', 'WebTheme'], AbstractHtmlBuilder
         theme = self.themes[page.volume]
 
         root_prefix = self.get_root_prefix(page)
-        head = self.head.render(root_prefix)
+        head = self._heads[volume].render(root_prefix)
 
         html = await theme.page_template.render_async(
             builder=self,
@@ -230,7 +230,7 @@ class WebBuilder(ProjectBuilder['WebProcessor', 'WebTheme'], AbstractHtmlBuilder
             assert source.suffix == '.js'
             target = RelativePath() / 'js' / source.name
             await self.add_file_from_project(source, target)
-            self.head.append(HeadJsFile(target))
+            self._heads[volume].append(HeadJsFile(target))
 
         for style in config.web.custom_styles:
             source = RelativePath(style)
@@ -238,13 +238,13 @@ class WebBuilder(ProjectBuilder['WebProcessor', 'WebTheme'], AbstractHtmlBuilder
                 case '.css':
                     target = RelativePath() / 'css' / source.name
                     self.add_html_task(self.add_file_from_project(source, target))
-                    self.head.append(HeadCssFile(target))
+                    self._heads[volume].append(HeadCssFile(target))
 
                 case '.sass' | '.scss':
                     source = fs.resolve(source)
                     target = RelativePath('_static') / 'css' / f'{source.stem}.css'
-                    self.add_html_task(to_thread(self.compile_sass, source, target))
-                    self.head.append(HeadCssFile(target))
+                    self.add_html_task(to_thread(self.compile_sass, volume, source, target))
+                    self._heads[volume].append(HeadCssFile(target))
 
                 case _:
                     raise ValueError(source)
@@ -270,7 +270,7 @@ class WebBuilder(ProjectBuilder['WebProcessor', 'WebTheme'], AbstractHtmlBuilder
         self._indexers[volume] = indexer
 
         # Put required files to the HTML head
-        self.head += indexer.head_tags()
+        self._heads[volume] += indexer.head_tags()
 
     @override
     def add_file_from_data(self, target: RelativePath, data: str | bytes):
@@ -296,7 +296,7 @@ class WebBuilder(ProjectBuilder['WebProcessor', 'WebTheme'], AbstractHtmlBuilder
         self._results.add(target)
 
     @override
-    def compile_sass(self, source: AbsolutePath, target: RelativePath):
+    def compile_sass(self, volume: Volume, source: AbsolutePath, target: RelativePath):
         css = self.compile_sass_impl(source)
         self.add_file_from_data(target, css)
 

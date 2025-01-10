@@ -7,7 +7,7 @@ from panflute import BulletList, Element, LineBreak, Plain, Space, Str, Table
 from sobiraka.models import Page
 from sobiraka.utils import LatexBlock, LatexInline
 from sobiraka.processing.abstract import Dispatcher
-from sobiraka.processing.helpers.table import CellContinuation, CellPlacement, make_grid
+from sobiraka.processing.helpers import CellContinuation, CellPlacement, make_grid
 from sobiraka.processing.replacement import TableReplPara
 
 

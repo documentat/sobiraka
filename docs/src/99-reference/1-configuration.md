@@ -109,9 +109,9 @@ paths:
 
 ```yaml
 variables:
-   PRODUCT: Sobiraka
-   PYTHON_VERSION: 3.11
-   YEAR: 2024
+  PRODUCT: Sobiraka
+  PYTHON_VERSION: 3.11
+  YEAR: 2024
 ```
 
 ## Пути к файлам {#paths}

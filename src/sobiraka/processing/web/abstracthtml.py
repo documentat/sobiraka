@@ -3,11 +3,13 @@ from __future__ import annotations
 import re
 from abc import ABCMeta, abstractmethod
 from asyncio import Task, TaskGroup, create_subprocess_exec, create_task, to_thread
+from collections import defaultdict
 from copy import deepcopy
 from subprocess import PIPE, Popen
 from typing import Awaitable, Coroutine, Generic, TypeVar, final
 
-from panflute import CodeBlock, Element, Image
+from panflute import CodeBlock, Element
+from panflute import Image
 from typing_extensions import override
 
 from sobiraka.models import Page, Volume
@@ -26,7 +28,7 @@ class AbstractHtmlBuilder(Builder, metaclass=ABCMeta):
 
         self._html_builder_tasks: list[Task] = []
         self._results: set[AbsolutePath] = set()
-        self.head: Head = Head()
+        self._heads: dict[Volume, Head] = defaultdict(Head)
 
     def add_html_task(self, coro: Coroutine):
         self._html_builder_tasks.append(create_task(coro))
@@ -35,18 +37,18 @@ class AbstractHtmlBuilder(Builder, metaclass=ABCMeta):
         return super_gather(self._html_builder_tasks, 'Some tasks failed when building HTML')
 
     @final
-    async def compile_theme_sass(self, theme: Theme):
+    async def compile_theme_sass(self, theme: Theme, volume: Volume):
         async with TaskGroup() as tg:
             theme_sass_dir = theme.theme_dir / 'sass'
             if theme_sass_dir.exists():
                 for source in theme_sass_dir.iterdir():
                     if source.suffix in ('.sass', '.scss') and not source.stem.startswith('_'):
                         target = RelativePath('_static') / 'css' / f'{source.stem}.css'
-                        tg.create_task(to_thread(self.compile_sass, source, target))
-                        self.head.append(HeadCssFile(target))
+                        tg.create_task(to_thread(self.compile_sass, volume, source, target))
+                        self._heads[volume].append(HeadCssFile(target))
 
     @abstractmethod
-    def compile_sass(self, source: AbsolutePath, target: RelativePath):
+    def compile_sass(self, volume: Volume, source: AbsolutePath, target: RelativePath):
         ...
 
     @final
