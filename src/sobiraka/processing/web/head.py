@@ -1,6 +1,8 @@
 from abc import ABCMeta, abstractmethod
 from dataclasses import dataclass
 
+from more_itertools import unique_everseen
+
 from sobiraka.utils import RelativePath
 
 
@@ -17,7 +19,7 @@ class Head(list[HeadTag]):
 
     def render(self, root_prefix: str) -> str:
         head = ''
-        for tag in self:
+        for tag in unique_everseen(self):
             head += tag.render(root_prefix) + '\n'
         return head
 

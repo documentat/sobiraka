@@ -4,6 +4,7 @@ import os.path
 import re
 from asyncio import to_thread
 from datetime import datetime
+from functools import lru_cache
 from itertools import chain
 from os.path import relpath
 from shutil import copyfile, rmtree
@@ -11,13 +12,15 @@ from typing import final
 
 import iso639
 from panflute import Image
+from typing_extensions import override
+
 from sobiraka.models import DirPage, FileSystem, IndexPage, Page, PageHref, PageStatus, Project, Volume
-from sobiraka.models.config import Config, SearchIndexerName
+from sobiraka.models.config import Config, Config_HighlightJS, Config_Prism, Config_Pygments, SearchIndexerName
 from sobiraka.runtime import RT
 from sobiraka.utils import AbsolutePath, RelativePath, configured_jinja, convert_or_none
-
 from .abstracthtml import AbstractHtmlBuilder, AbstractHtmlProcessor
 from .head import HeadCssFile, HeadJsFile
+from .highlight import HighlightJs, Highlighter, Prism, Pygments
 from .search import PagefindIndexer, SearchIndexer
 from ..abstract import ProjectBuilder, Theme
 from ..load_processor import load_processor
@@ -111,7 +114,7 @@ class WebBuilder(ProjectBuilder['WebProcessor', 'WebTheme'], AbstractHtmlBuilder
         theme = self.themes[page.volume]
 
         root_prefix = self.get_root_prefix(page)
-        head = self._heads[volume].render(root_prefix)
+        head = self.heads[volume].render(root_prefix)
 
         html = await theme.page_template.render_async(
             builder=self,
@@ -227,7 +230,7 @@ class WebBuilder(ProjectBuilder['WebProcessor', 'WebTheme'], AbstractHtmlBuilder
             assert source.suffix == '.js'
             target = RelativePath() / 'js' / source.name
             await self.add_file_from_project(source, target)
-            self._heads[volume].append(HeadJsFile(target))
+            self.heads[volume].append(HeadJsFile(target))
 
         for style in config.web.custom_styles:
             source = RelativePath(style)
@@ -235,13 +238,13 @@ class WebBuilder(ProjectBuilder['WebProcessor', 'WebTheme'], AbstractHtmlBuilder
                 case '.css':
                     target = RelativePath() / 'css' / source.name
                     self.add_html_task(self.add_file_from_project(source, target))
-                    self._heads[volume].append(HeadCssFile(target))
+                    self.heads[volume].append(HeadCssFile(target))
 
                 case '.sass' | '.scss':
                     source = fs.resolve(source)
                     target = RelativePath('_static') / 'css' / f'{source.stem}.css'
                     self.add_html_task(to_thread(self.compile_sass, volume, source, target))
-                    self._heads[volume].append(HeadCssFile(target))
+                    self.heads[volume].append(HeadCssFile(target))
 
                 case _:
                     raise ValueError(source)
@@ -267,29 +270,49 @@ class WebBuilder(ProjectBuilder['WebProcessor', 'WebTheme'], AbstractHtmlBuilder
         self._indexers[volume] = indexer
 
         # Put required files to the HTML head
-        self._heads[volume] += indexer.head_tags()
+        self.heads[volume] += indexer.head_tags()
 
+    @override
+    def add_file_from_data(self, target: RelativePath, data: str | bytes):
+        target = self.output / target
+        target.parent.mkdir(parents=True, exist_ok=True)
+        if isinstance(data, str):
+            target.write_text(data)
+        else:
+            target.write_bytes(data)
+        self._results.add(target)
+
+    @override
     async def add_file_from_location(self, source: AbsolutePath, target: RelativePath):
         target = self.output / target
         target.parent.mkdir(parents=True, exist_ok=True)
         await to_thread(copyfile, source, target)
         self._results.add(target)
 
+    @override
     async def add_file_from_project(self, source: RelativePath, target: RelativePath):
         target = self.output / target
         await to_thread(self.project.fs.copy, source, target)
         self._results.add(target)
 
+    @override
     def compile_sass(self, volume: Volume, source: AbsolutePath, target: RelativePath):
         css = self.compile_sass_impl(source)
-        target = self.output / target
-        target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_bytes(css)
-        self._results.add(target)
+        self.add_file_from_data(target, css)
 
 
 class WebProcessor(AbstractHtmlProcessor[WebBuilder]):
-    pass
+    @override
+    @lru_cache
+    def get_highlighter(self, volume: Volume) -> Highlighter:
+        config: Config = volume.config
+        match config.web.highlight:
+            case Config_HighlightJS() as config_highlightjs:
+                return HighlightJs(config_highlightjs, self.builder)
+            case Config_Prism() as config_prism:
+                return Prism(config_prism, self.builder)
+            case Config_Pygments() as config_pygments:
+                return Pygments(config_pygments, self.builder)
 
 
 @final

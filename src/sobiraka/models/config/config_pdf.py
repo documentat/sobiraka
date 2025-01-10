@@ -3,6 +3,7 @@ from importlib.resources import files
 from math import inf
 
 from sobiraka.utils import AbsolutePath, RelativePath
+from .config_highlight import Config_Pdf_Highlight
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -20,3 +21,5 @@ class Config_PDF:
     toc_depth: int | float = inf
 
     combined_toc: bool = False
+
+    highlight: Config_Pdf_Highlight = None

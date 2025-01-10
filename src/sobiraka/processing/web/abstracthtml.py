@@ -8,6 +8,7 @@ from copy import deepcopy
 from subprocess import PIPE, Popen
 from typing import Awaitable, Coroutine, Generic, TypeVar, final
 
+from panflute import CodeBlock, Element
 from panflute import Image
 from typing_extensions import override
 
@@ -16,6 +17,7 @@ from sobiraka.models.config import Config
 from sobiraka.runtime import RT
 from sobiraka.utils import AbsolutePath, RelativePath, panflute_to_bytes, super_gather
 from .head import Head, HeadCssFile
+from .highlight import Highlighter
 from ..abstract import Builder, Processor, Theme
 
 
@@ -26,7 +28,7 @@ class AbstractHtmlBuilder(Builder, metaclass=ABCMeta):
 
         self._html_builder_tasks: list[Task] = []
         self._results: set[AbsolutePath] = set()
-        self._heads: dict[Volume, Head] = defaultdict(Head)
+        self.heads: dict[Volume, Head] = defaultdict(Head)
 
     def add_html_task(self, coro: Coroutine):
         self._html_builder_tasks.append(create_task(coro))
@@ -43,7 +45,7 @@ class AbstractHtmlBuilder(Builder, metaclass=ABCMeta):
                     if source.suffix in ('.sass', '.scss') and not source.stem.startswith('_'):
                         target = RelativePath('_static') / 'css' / f'{source.stem}.css'
                         tg.create_task(to_thread(self.compile_sass, volume, source, target))
-                        self._heads[volume].append(HeadCssFile(target))
+                        self.heads[volume].append(HeadCssFile(target))
 
     @abstractmethod
     def compile_sass(self, volume: Volume, source: AbsolutePath, target: RelativePath):
@@ -118,6 +120,10 @@ class AbstractHtmlBuilder(Builder, metaclass=ABCMeta):
     # Functions used for additional tasks
 
     @abstractmethod
+    def add_file_from_data(self, target: RelativePath, data: str | bytes):
+        ...
+
+    @abstractmethod
     async def add_file_from_location(self, source: AbsolutePath, target: RelativePath):
         raise NotImplementedError
 
@@ -138,6 +144,22 @@ B = TypeVar('B', bound=AbstractHtmlBuilder)
 
 
 class AbstractHtmlProcessor(Processor[B], Generic[B], metaclass=ABCMeta):
+
+    @abstractmethod
+    def get_highlighter(self, volume: Volume) -> Highlighter:
+        """
+        Load a Highlighter implementation based on the volume's configuration.
+        The implementation and the possible result types differ for different builders.
+        """
+
+    @override
+    async def process_code_block(self, block: CodeBlock, page: Page) -> tuple[Element, ...]:
+        # Use the Highlighter implementation to process the code block and produce head tags
+        highlighter = self.get_highlighter(page.volume)
+        if highlighter is not None:
+            block, head_tags = highlighter.highlight(block)
+            self.builder.heads[page.volume] += head_tags
+        return block,
 
     @override
     async def process_image(self, image: Image, page: Page) -> tuple[Image, ...]:
