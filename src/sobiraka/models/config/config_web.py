@@ -6,6 +6,7 @@ from typing import Any
 from utilspie.collectionsutils import frozendict
 
 from sobiraka.utils import AbsolutePath, RelativePath
+from .config_highlight import Config_Web_Highlight
 from .config_search import Config_Web_Search
 from .config_utils import CombinedToc
 
@@ -47,3 +48,5 @@ class Config_Web:
     combined_toc: CombinedToc = CombinedToc.NEVER
 
     search: Config_Web_Search = field(default_factory=Config_Web_Search)
+
+    highlight: Config_Web_Highlight = None

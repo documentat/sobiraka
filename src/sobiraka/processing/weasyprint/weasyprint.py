@@ -5,19 +5,20 @@ import re
 import sys
 from asyncio import Task, create_task, to_thread
 from contextlib import suppress
+from functools import lru_cache
 from mimetypes import guess_type
 from typing import final
 
 import weasyprint
-from panflute import CodeBlock, Doc, Element, Header, Image, RawBlock, Str
+from panflute import Doc, Element, Header, Image, Str
 from typing_extensions import override
 
 from sobiraka.models import FileSystem, Page, PageHref, PageStatus, Volume
-from sobiraka.models.config import CombinedToc, Config
+from sobiraka.models.config import CombinedToc, Config, Config_Pygments
 from sobiraka.models.exceptions import DisableLink
 from sobiraka.processing import load_processor
 from sobiraka.processing.abstract import Theme, ThemeableVolumeBuilder
-from sobiraka.processing.web import AbstractHtmlBuilder, AbstractHtmlProcessor, HeadCssFile
+from sobiraka.processing.web import AbstractHtmlBuilder, AbstractHtmlProcessor, HeadCssFile, Highlighter, Pygments
 from sobiraka.report import update_progressbar
 from sobiraka.runtime import RT
 from sobiraka.utils import AbsolutePath, RelativePath, TocNumber, configured_jinja, convert_or_none
@@ -64,7 +65,7 @@ class WeasyPrintBuilder(ThemeableVolumeBuilder['WeasyPrintProcessor', 'WeasyPrin
 
         # Launch non-page processing tasks
         self.add_html_task(self.add_custom_files())
-        self.add_html_task(self.compile_theme_sass(self.theme))
+        self.add_html_task(self.compile_theme_sass(self.theme, volume))
 
         # Combine rendered pages into a single page
         content: list[tuple[Page, TocNumber, str, str]] = []
@@ -74,7 +75,7 @@ class WeasyPrintBuilder(ThemeableVolumeBuilder['WeasyPrintProcessor', 'WeasyPrin
 
         await self.await_all_html_tasks()
 
-        head = self.head.render('')
+        head = self.heads[volume].render('')
 
         # Apply the rendering template
         html = await self.theme.page_template.render_async(
@@ -154,15 +155,25 @@ class WeasyPrintBuilder(ThemeableVolumeBuilder['WeasyPrintProcessor', 'WeasyPrin
     def get_root_prefix(self, page: Page) -> str:
         return ''
 
+    @override
+    def add_file_from_data(self, target: RelativePath, data: str | bytes):
+        mime_type, _ = guess_type(target, strict=False)
+        if isinstance(data, str):
+            data = data.encode('utf-8')
+        self.pseudofiles[str(target)] = mime_type, data
+
+    @override
     async def add_file_from_location(self, source: AbsolutePath, target: RelativePath):
         raise NotImplementedError
 
+    @override
     async def add_file_from_project(self, source: RelativePath, target: RelativePath):
         raise NotImplementedError
 
-    def compile_sass(self, source: AbsolutePath, target: RelativePath):
+    @override
+    def compile_sass(self, volume: Volume, source: AbsolutePath, target: RelativePath):
         self.pseudofiles[str(target)] = 'text/css', self.compile_sass_impl(source)
-        self.head.append(HeadCssFile(target))
+        self.heads[volume].append(HeadCssFile(target))
 
     def get_path_to_resources(self, page: Page) -> RelativePath:
         return RelativePath('_resources')
@@ -179,12 +190,12 @@ class WeasyPrintBuilder(ThemeableVolumeBuilder['WeasyPrintProcessor', 'WeasyPrin
             match source.suffix:
                 case '.css':
                     self.pseudofiles[f'css/{source.name}'] = 'text/css', fs.read_bytes(source)
-                    self.head.append(HeadCssFile(RelativePath(f'css/{source.name}')))
+                    self.heads[self.volume].append(HeadCssFile(RelativePath(f'css/{source.name}')))
 
                 case '.sass' | '.scss':
                     source = fs.resolve(source)
                     target = RelativePath('_static') / 'css' / f'{source.stem}.css'
-                    self.add_html_task(to_thread(self.compile_sass, source, target))
+                    self.add_html_task(to_thread(self.compile_sass, self.volume, source, target))
 
                 case _:
                     raise ValueError(source)
@@ -196,24 +207,12 @@ class WeasyPrintBuilder(ThemeableVolumeBuilder['WeasyPrintProcessor', 'WeasyPrin
 class WeasyPrintProcessor(AbstractHtmlProcessor[WeasyPrintBuilder]):
 
     @override
-    async def process_code_block(self, block: CodeBlock, page: Page) -> tuple[Element, ...]:
-        from pygments.lexers import get_lexer_by_name
-        from pygments.formatters.html import HtmlFormatter
-        from pygments import highlight
-        import yattag
-
-        syntax, = block.classes or ('text',)
-        pygments_lexer = get_lexer_by_name(syntax)
-        pygments_formatter = HtmlFormatter(nowrap=True)
-        pygments_output = highlight(block.text, pygments_lexer, pygments_formatter)
-
-        html = yattag.Doc()
-        with html.tag('div', klass=f'highlight-{syntax} notranslate'):
-            with html.tag('div', klass='highlight'):
-                with html.tag('pre'):
-                    html.asis(pygments_output)
-
-        return RawBlock(html.getvalue()),
+    @lru_cache
+    def get_highlighter(self, volume: Volume) -> Highlighter:
+        config: Config = volume.config
+        match config.pdf.highlight:
+            case Config_Pygments() as config_pygments:
+                return Pygments(config_pygments, self.builder)
 
     @override
     async def process_doc(self, doc: Doc, page: Page) -> None:

@@ -11,8 +11,14 @@ web:
     link_target: h2
     translations:
       placeholder: Поиск
+  highlight:
+    highlightjs:
+      style: github
 pdf:
   combined_toc: true
+  highlight:
+    pygments:
+      style: colorful
 prover:
   dictionaries:
     - english
