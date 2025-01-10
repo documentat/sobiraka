@@ -251,9 +251,15 @@ variables:
 
 ### `web.search.skip_elements`
 
-Список типов элементов, содержимое которых должно игнорироваться при индексации.
+Список типов элементов, содержимое которых должно игнорироваться при индексации. Допустимые значения — названия классов элементов из [Panflute API](https://scorreia.com/software/panflute/code.html).
 
-Допустимые значения — названия классов элементов из [Panflute API](https://scorreia.com/software/panflute/code.html), например, `CodeBlock`, `Image`, `Math` и т.п.
+Пример:
+
+```yaml
+web:
+  search:
+    skip_elements: [ CodeBlock, Image ]
+```
 
 ### `web.search.link_target`
 
@@ -396,9 +402,14 @@ pdf:
 
 ### `prover.skip_elements`
 
-Список типов элементов, содержимое которых должно игнорироваться при [проверках текста](../11-overview/05-prover.md).
+Список типов элементов, содержимое которых должно игнорироваться при [проверках текста](../11-overview/05-prover.md). Допустимые значения — названия классов элементов из [Panflute API](https://scorreia.com/software/panflute/code.html).
 
-Допустимые значения — названия классов элементов из [Panflute API](https://scorreia.com/software/panflute/code.html), например, `CodeBlock`, `Image`, `Math` и т.п.
+Пример:
+
+```yaml
+prover:
+  skip_elements: [ CodeBlock, Image ]
+```
 
 ### `prover.phrases_must_begin_with_capitals`
 
