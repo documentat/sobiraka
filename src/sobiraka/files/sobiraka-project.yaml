@@ -209,5 +209,24 @@ $defs:
                       code_class:
                         type: [string, null]
 
+      prover:
+        additionalProperties: false
+        properties:
+          dictionaries:
+            type: array
+            minItems: 0
+            uniqueItems: true
+            items:
+              oneOf:
+                - enum: [english, russian]
+                - type: string
+                  pattern: ^(?!english|russian$).*$
+          skip_elements:
+            type: array
+            uniqueItems: true
+            items:
+              enum: [BlockQuote, BulletList, Caption, Citation, Cite, Code, CodeBlock, Definition, DefinitionItem, DefinitionList, Div, Doc, Emph, Header, HorizontalRule, Image, LineBlock, LineBreak, LineItem, Link, ListContainer, ListItem, Math, Note, Null, OrderedList, Para, Plain, Quoted, RawBlock, RawInline, SmallCaps, SoftBreak, Space, Span, Str, Strikeout, Strong, Subscript, Superscript, Table, TableBody, TableCell, TableFoot, TableHead, TableRow, Underline]
+          phrases_must_begin_with_capitals: { type: boolean }
+
       variables:
         type: object

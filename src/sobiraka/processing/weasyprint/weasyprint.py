@@ -17,7 +17,7 @@ from sobiraka.models import FileSystem, Page, PageHref, PageStatus, Volume
 from sobiraka.models.config import CombinedToc, Config, Config_Pygments
 from sobiraka.models.exceptions import DisableLink
 from sobiraka.processing import load_processor
-from sobiraka.processing.abstract import Theme, VolumeBuilder
+from sobiraka.processing.abstract import Theme, ThemeableVolumeBuilder
 from sobiraka.processing.web import AbstractHtmlBuilder, AbstractHtmlProcessor, HeadCssFile, Highlighter, Pygments
 from sobiraka.report import update_progressbar
 from sobiraka.runtime import RT
@@ -25,10 +25,10 @@ from sobiraka.utils import AbsolutePath, RelativePath, TocNumber, configured_jin
 
 
 @final
-class WeasyPrintBuilder(VolumeBuilder['WeasyPrintProcessor', 'WeasyPrintTheme'], AbstractHtmlBuilder):
+class WeasyPrintBuilder(ThemeableVolumeBuilder['WeasyPrintProcessor', 'WeasyPrintTheme'], AbstractHtmlBuilder):
 
     def __init__(self, volume: Volume, output: AbsolutePath):
-        VolumeBuilder.__init__(self, volume)
+        ThemeableVolumeBuilder.__init__(self, volume)
         AbstractHtmlBuilder.__init__(self)
 
         self.output: AbsolutePath = output
@@ -45,6 +45,10 @@ class WeasyPrintBuilder(VolumeBuilder['WeasyPrintProcessor', 'WeasyPrintTheme'],
 
     def init_theme(self) -> WeasyPrintTheme:
         return WeasyPrintTheme(self.volume.config.pdf.theme)
+
+    @override
+    def additional_variables(self) -> dict:
+        return dict(PDF=True, HTML=True, WEASYPRINT=True)
 
     async def run(self):
         from ..toc import toc

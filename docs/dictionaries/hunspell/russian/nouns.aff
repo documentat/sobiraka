@@ -1,0 +1,98 @@
+SET UTF-8
+
+WORDCHARS 0123456789’-.
+
+BREAK 0
+
+NOSPLITSUGS
+MAXNGRAMSUGS 2
+ONLYMAXDIFF
+MAXDIFF 0
+
+# блок
+SFX B N 10
+SFX B 0 а .
+SFX B 0 у .
+SFX B 0 ом .
+SFX B 0 е .
+SFX B 0 и [^бвгдзлмнпрстфц]
+SFX B 0 ы [бвгдзлмнпрстфц]
+SFX B 0 ов .
+SFX B 0 ам .
+SFX B 0 ами .
+SFX B 0 ах .
+
+# краш
+SFX C N 9
+SFX C 0 а .
+SFX C 0 у .
+SFX C 0 ем .
+SFX C 0 е .
+SFX C 0 и .
+SFX C 0 ей .
+SFX C 0 ам .
+SFX C 0 ами .
+SFX C 0 ах .
+
+# иннокентий
+SFX I N 9
+SFX I ий ия .
+SFX I ий ию .
+SFX I ий ием .
+SFX I ий ии .
+SFX I ий иев .
+SFX I ий иям .
+SFX I ий иев .
+SFX I ий иями .
+SFX I ий иях .
+
+# лодка
+SFX L N 7
+SFX L а и .
+SFX L а е .
+SFX L а у .
+SFX L а ой .
+SFX L а ок .
+SFX L а ам .
+SFX L а ах .
+
+# весть
+SFX V N 5
+SFX V сть сти .
+SFX V сть стью .
+SFX V сть стей .
+SFX V сть стями .
+SFX V сть стях .
+
+# знание
+SFX Z N 8
+SFX Z ие ия .
+SFX Z ие ию .
+SFX Z ие ием .
+SFX Z ие ии .
+SFX Z ие ий .
+SFX Z ие иям .
+SFX Z ие иями .
+SFX Z ие иях .
+
+# акция
+SFX A N 7
+SFX A ия ию .
+SFX A ия ии .
+SFX A ия ией .
+SFX A ия ий .
+SFX A ия иям .
+SFX A ия иями .
+SFX A ия иях .
+
+# техписатель
+SFX T N 9
+SFX T ль ля .
+SFX T ль лю .
+SFX T ль лем .
+SFX T ль ле .
+SFX T ль ли .
+SFX T ль лей .
+SFX T ль лям .
+SFX T ль лями .
+SFX T ль лях .

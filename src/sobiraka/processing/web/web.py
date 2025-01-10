@@ -22,15 +22,15 @@ from .abstracthtml import AbstractHtmlBuilder, AbstractHtmlProcessor
 from .head import HeadCssFile, HeadJsFile
 from .highlight import HighlightJs, Highlighter, Prism, Pygments
 from .search import PagefindIndexer, SearchIndexer
-from ..abstract import ProjectBuilder, Theme
+from ..abstract import Theme, ThemeableProjectBuilder
 from ..load_processor import load_processor
 
 
 @final
-class WebBuilder(ProjectBuilder['WebProcessor', 'WebTheme'], AbstractHtmlBuilder):
+class WebBuilder(ThemeableProjectBuilder['WebProcessor', 'WebTheme'], AbstractHtmlBuilder):
 
     def __init__(self, project: Project, output: AbsolutePath, *, hide_index_html: bool = False):
-        ProjectBuilder.__init__(self, project)
+        ThemeableProjectBuilder.__init__(self, project)
         AbstractHtmlBuilder.__init__(self)
 
         self.output: AbsolutePath = output
@@ -49,6 +49,10 @@ class WebBuilder(ProjectBuilder['WebProcessor', 'WebTheme'], AbstractHtmlBuilder
 
     def init_theme(self, volume: Volume) -> WebTheme:
         return WebTheme(volume.config.web.theme)
+
+    @override
+    def additional_variables(self) -> dict:
+        return dict(HTML=True, WEB=True)
 
     async def run(self):
         self.output.mkdir(parents=True, exist_ok=True)

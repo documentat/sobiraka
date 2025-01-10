@@ -10,7 +10,7 @@ from .config_highlight import Config_Pdf_Highlight
 class Config_PDF:
     """Settings related to :class:`.WeasyBuilder`."""
 
-    theme: AbsolutePath = files('sobiraka') / 'files' / 'themes' / 'printable'
+    theme: AbsolutePath = AbsolutePath(files('sobiraka')) / 'files' / 'themes' / 'printable'
     """Path to the theme that should be used when generating PDF via WeasyPrint."""
 
     processor: RelativePath = None

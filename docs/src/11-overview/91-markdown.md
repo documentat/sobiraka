@@ -2,7 +2,7 @@
 
 Markdown — основной синтаксис исходного текста, поддерживаемый Собиракой. Все файлы с расширением `.md`, а также все файлы с неопознанными расширениями (то есть не [`.rst`](92-rest.md)), интерпретируются как файлы в формате Markdown.
 
-Собирака использует вариацию Markdown, реализованную в конвертере Pandoc. Полную документацию по его особенностям можно найти здесь: [Pandoc’s Markdown](https://pandoc.org/MANUAL.html#pandocs-markdown).
+Собирака использует вариацию Markdown, реализованную в конвертере Pandoc. Полную документацию по его особенностям можно найти здесь: [Pandoc's Markdown](https://pandoc.org/MANUAL.html#pandocs-markdown).
 
 По сравнению с конфигурацией Pandoc по умолчанию, в Собираке выключены расширения [`smart`](https://pandoc.org/MANUAL.html#extension-smart), [`raw_html`](https://pandoc.org/MANUAL.html#extension-raw_html), [`raw_tex`](https://pandoc.org/MANUAL.html#extension-raw_tex) и [`implicit_figures`](https://pandoc.org/MANUAL.html#extension-implicit_figures), а также добавлено расширение [`mark`](https://pandoc.org/MANUAL.html#extension-mark). Также в файлах Markdown, как и в любых текстовых файлах для Собираки, можно использовать [директивы](../12-syntax/3-directives.md) и [синтаксис Jinja](../12-syntax/2-jinja.md).
 

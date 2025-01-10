@@ -14,13 +14,13 @@ COPY setup.py .
 COPY src src
 RUN python setup.py sdist
 
-FROM python:$PYTHON AS get-tester-dependencies
+FROM python:$PYTHON_FOR_BUILDING AS get-tester-dependencies
 RUN apt update
 RUN apt install --yes --download-only git poppler-utils
 
-FROM python:$PYTHON AS get-weasyprint
+FROM python:$PYTHON AS get-deb-packages
 RUN apt update
-RUN apt install --yes --download-only weasyprint
+RUN apt install --yes --download-only weasyprint hunspell
 
 FROM python:$PYTHON_FOR_BUILDING AS get-conda
 RUN wget --progress=bar:force https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /tmp/miniconda.sh
@@ -79,15 +79,15 @@ RUN pip install --prefix /prefix *.tar.gz
 # The base image for all final images
 
 FROM latex-python-nodejs AS common-latex
-COPY --from=get-weasyprint /var/cache/apt /var/cache/apt
-RUN apt install --yes weasyprint
+COPY --from=get-deb-packages /var/cache/apt /var/cache/apt
+RUN apt install --yes weasyprint hunspell
 RUN --mount=type=cache,target=/root/.npm npm install -g pagefind sass
 COPY --from=get-fonts /tmp/fonts /usr/share/fonts
 ENTRYPOINT [""]
 
 FROM python-nodejs AS common
-COPY --from=get-weasyprint /var/cache/apt /var/cache/apt
-RUN apt install --yes weasyprint
+COPY --from=get-deb-packages /var/cache/apt /var/cache/apt
+RUN apt install --yes weasyprint hunspell
 RUN --mount=type=cache,target=/root/.npm npm install -g pagefind sass
 COPY --from=get-fonts /tmp/fonts /usr/share/fonts
 ENTRYPOINT [""]

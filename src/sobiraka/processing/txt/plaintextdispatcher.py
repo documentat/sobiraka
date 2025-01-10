@@ -1,14 +1,14 @@
 from collections import defaultdict
 from typing import Awaitable, Callable
-from typing_extensions import override
 
 from panflute import BlockQuote, BulletList, Caption, Citation, Cite, Code, CodeBlock, Definition, DefinitionItem, \
     DefinitionList, Div, Doc, Element, Emph, Header, HorizontalRule, Image, LineBlock, LineBreak, LineItem, Link, \
     ListItem, Math, Note, Null, OrderedList, Para, Plain, Quoted, RawBlock, RawInline, SmallCaps, SoftBreak, Space, \
     Span, Str, Strikeout, Strong, Subscript, Superscript, Table, TableBody, TableCell, TableFoot, TableHead, TableRow, \
-    Underline
+    Underline, stringify
+from typing_extensions import override
 
-from sobiraka.models import Page
+from sobiraka.models import Anchor, Page
 from sobiraka.processing.abstract import Dispatcher
 from sobiraka.runtime import RT
 from sobiraka.utils import update_last_dataclass
@@ -17,7 +17,7 @@ from .textmodel import Fragment, Pos, TextModel
 
 class PlainTextDispatcher(Dispatcher):
     """
-    Base class for features that need to work with text, such as linters or indexers.
+    Base class for features that need to work with plain text.
 
     It works as a :class:`Dispatcher`, analyzing each element in the Panflute tree.
     Unlike some other dispatchers/processors, it is non-destructive: it never modifies or removes elements.
@@ -209,7 +209,11 @@ class PlainTextDispatcher(Dispatcher):
 
         # Start a new section
         if header.level > 1:
-            anchor = RT[page].anchors.by_header(header)
+            try:
+                anchor = RT[page].anchors.by_header(header)
+            except KeyError:
+                anchor = Anchor(header, header.identifier, label=stringify(header), level=header.level)
+                RT[page].anchors.append(anchor)
             tm.sections[anchor] = Fragment(tm, tm.end_pos, tm.end_pos)
 
     @override
@@ -346,4 +350,4 @@ class PlainTextDispatcher(Dispatcher):
 
     @override
     async def process_default(self, elem: Element, page: Page):
-        raise NotImplementedError(elem.__class__.__name__)
+        raise RuntimeError(elem.__class__.__name__)

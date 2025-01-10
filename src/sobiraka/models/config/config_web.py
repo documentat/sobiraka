@@ -31,7 +31,7 @@ class Config_Web:
     resources_prefix: str = '_resources'
     """Relative path to the directory for placing the resources, such as images."""
 
-    theme: AbsolutePath = files('sobiraka') / 'files' / 'themes' / 'simple'
+    theme: AbsolutePath = AbsolutePath(files('sobiraka')) / 'files' / 'themes' / 'simple'
     """Path to the theme that should be used when generating HTML."""
 
     theme_data: dict[str, Any] = field(default=frozendict)

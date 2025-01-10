@@ -5,7 +5,7 @@ from collections import defaultdict
 from functools import partial
 from io import BytesIO
 from subprocess import PIPE
-from typing import Awaitable, Generic, TypeVar, final
+from typing import Awaitable, TypeVar, final
 
 import jinja2
 import panflute
@@ -26,7 +26,7 @@ T = TypeVar('T', bound=Theme)
 P = TypeVar('P', bound=Processor)
 
 
-class Builder(Generic[P, T], metaclass=ABCMeta):
+class Builder(metaclass=ABCMeta):
     def __init__(self):
         self.tasks: dict[Page | Volume, dict[PageStatus, Task]] = defaultdict(dict)
         """
@@ -177,34 +177,36 @@ class Builder(Generic[P, T], metaclass=ABCMeta):
                 update_progressbar()
                 raise IssuesOccurred(page, RT[page].issues)
 
+    @abstractmethod
+    def additional_variables(self) -> dict:
+        ...
+
     async def prepare(self, page: Page):
         """
         Parse syntax tree with Pandoc and save its syntax tree into :obj:`.Page.doc`.
 
         This method is called by :obj:`.Page.loaded`.
         """
-        from sobiraka.processing.latex import LatexBuilder
-        from sobiraka.processing.weasyprint import WeasyPrintBuilder
-        from sobiraka.processing.web import WebBuilder, AbstractHtmlBuilder
-
         volume: Volume = page.volume
         config: Config = page.volume.config
         project: Project = page.volume.project
         fs: FileSystem = page.volume.project.fs
 
-        variables = config.variables | dict(
-            HTML=isinstance(self, AbstractHtmlBuilder),
-            PDF=isinstance(self, (WeasyPrintBuilder, LatexBuilder)),
-
-            WEB=isinstance(self, WebBuilder),
-            WEASYPRINT=isinstance(self, WeasyPrintBuilder),
-            LATEX=isinstance(self, LatexBuilder),
-
+        default_variables = dict(
             page=page,
             volume=volume,
             project=project,
             LANG=volume.lang,
+
+            # Format-specific variables
+            HTML=False,
+            LATEX=False,
+            PDF=False,
+            PROVER=False,
+            WEASYPRINT=False,
+            WEB=False,
         )
+        variables = config.variables | default_variables | self.additional_variables()
 
         page_text = page.text
 
@@ -291,77 +293,3 @@ class Builder(Generic[P, T], metaclass=ABCMeta):
     @abstractmethod
     def make_internal_url(self, href: PageHref, *, page: Page = None) -> str:
         ...
-
-
-class ProjectBuilder(Builder, Generic[P, T], metaclass=ABCMeta):
-    """
-    A builder that works with the whole project at once.
-    Each volume can still have its own `Processor` and `Theme`, though.
-    """
-
-    def __init__(self, project: Project):
-        Builder.__init__(self)
-
-        self.project: Project = project
-        self.processors: dict[Volume, P] = {}
-        self.themes: dict[Volume, T] = {}
-
-        for volume in project.volumes:
-            self.processors[volume] = self.init_processor(volume)
-            self.themes[volume] = self.init_theme(volume)
-
-    @final
-    def get_project(self) -> Project:
-        return self.project
-
-    @final
-    def get_volumes(self) -> tuple[Volume, ...]:
-        return self.project.volumes
-
-    @final
-    def get_pages(self) -> tuple[Page, ...]:
-        return self.project.pages
-
-    @final
-    def get_processor_for_page(self, page: Page) -> P:
-        return self.processors[page.volume]
-
-    @abstractmethod
-    def init_processor(self, volume: Volume) -> P: ...
-
-    @abstractmethod
-    def init_theme(self, volume: Volume) -> T: ...
-
-
-class VolumeBuilder(Builder, Generic[P, T], metaclass=ABCMeta):
-    """
-    A builder that works with an individual volume.
-    """
-
-    def __init__(self, volume: Volume):
-        Builder.__init__(self)
-        self.volume: Volume = volume
-        self.processor: P = self.init_processor()
-        self.theme: T = self.init_theme()
-
-    @final
-    def get_project(self) -> Project:
-        return self.volume.project
-
-    @final
-    def get_volumes(self) -> tuple[Volume, ...]:
-        return self.volume,
-
-    @final
-    def get_pages(self) -> tuple[Page, ...]:
-        return self.volume.pages
-
-    @final
-    def get_processor_for_page(self, page: Page) -> P:
-        return self.processor
-
-    @abstractmethod
-    def init_processor(self) -> P: ...
-
-    @abstractmethod
-    def init_theme(self) -> T: ...

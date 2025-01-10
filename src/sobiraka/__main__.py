@@ -6,10 +6,11 @@ from sobiraka.models.load import load_project
 from sobiraka.processing.latex import LatexBuilder
 from sobiraka.processing.weasyprint import WeasyPrintBuilder
 from sobiraka.processing.web import WebBuilder
+from sobiraka.prover import Prover
 from sobiraka.report import run_with_progressbar
 from sobiraka.runtime import RT
 from sobiraka.translating import changelog, check_translations
-from sobiraka.utils import AbsolutePath, absolute_or_relative
+from sobiraka.utils import AbsolutePath, absolute_or_relative, parse_vars, validate_dictionary
 
 
 async def async_main():
@@ -36,6 +37,16 @@ async def async_main():
     cmd_latex.add_argument('config', metavar='CONFIG', type=AbsolutePath)
     cmd_latex.add_argument('volume', nargs='?')
     cmd_latex.add_argument('--output', type=AbsolutePath, default=AbsolutePath('build/pdf'))
+
+    cmd_prover = commands.add_parser('prover', help='Check a volume for various issues.')
+    cmd_prover.add_argument('config', metavar='CONFIG', type=AbsolutePath)
+    cmd_prover.add_argument('volume', nargs='?')
+    cmd_prover.add_argument('--var', metavar='KEY[=VALUE]', action='append')
+
+    cmd_validate_dictionary = commands.add_parser('validate_dictionary',
+                                                  help='Validate and fix Hunspell dictionary.')
+    cmd_validate_dictionary.add_argument('dic', type=AbsolutePath)
+    cmd_validate_dictionary.add_argument('--autofix', action='store_true')
 
     cmd_check_translations = commands.add_parser('check_translations',
                                                  help='Display translation status of the project.')
@@ -108,6 +119,15 @@ async def async_main():
                     exit_code = await RT.run_isolated(run_with_progressbar(builder))
                     if exit_code != 0:
                         break
+
+        elif cmd is cmd_prover:
+            project = load_project(args.config)
+            volume = project.get_volume(args.volume)
+            prover = Prover(volume, parse_vars(args.var or ()))
+            exit_code = await RT.run_isolated(run_with_progressbar(prover))
+
+        elif cmd is cmd_validate_dictionary:
+            exit_code = validate_dictionary(args.dic, autofix=args.autofix)
 
         elif cmd is cmd_check_translations:
             project = load_project(args.config)

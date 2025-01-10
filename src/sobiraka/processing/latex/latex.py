@@ -10,9 +10,9 @@ from contextlib import suppress
 from shutil import copyfile
 from subprocess import DEVNULL, PIPE
 from typing import BinaryIO, final
-from typing_extensions import override
 
 from panflute import Element, Header, Str, stringify
+from typing_extensions import override
 
 from sobiraka.models import FileSystem, Page, PageHref, PageStatus, Volume
 from sobiraka.models.config import Config, Config_Latex_Headers
@@ -20,13 +20,13 @@ from sobiraka.models.exceptions import DisableLink
 from sobiraka.report import update_progressbar
 from sobiraka.runtime import RT
 from sobiraka.utils import AbsolutePath, LatexInline, convert_or_none, panflute_to_bytes
-from ..abstract import Processor, Theme, VolumeBuilder
+from ..abstract import Processor, Theme, ThemeableVolumeBuilder
 from ..load_processor import load_processor
 from ..replacement import HeaderReplPara
 
 
 @final
-class LatexBuilder(VolumeBuilder['LatexProcessor', 'LatexTheme']):
+class LatexBuilder(ThemeableVolumeBuilder['LatexProcessor', 'LatexTheme']):
     def __init__(self, volume: Volume, output: AbsolutePath):
         super().__init__(volume)
 
@@ -43,6 +43,10 @@ class LatexBuilder(VolumeBuilder['LatexProcessor', 'LatexTheme']):
 
     def init_theme(self) -> LatexTheme:
         return LatexTheme(self.volume.config.web.theme)
+
+    @override
+    def additional_variables(self) -> dict:
+        return dict(PDF=True, LATEX=True)
 
     async def run(self):
         xelatex_workdir = RT.TMP / 'tex'
