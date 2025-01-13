@@ -3,7 +3,7 @@ from typing import Iterable, Sequence
 
 from panflute import Code, ListItem, stringify
 
-from sobiraka.models import Issue, PhraseBeginsWithLowerCase
+from sobiraka.models.issues import Issue, PhraseBeginsWithLowerCase
 from sobiraka.processing.txt import Fragment, TextModel
 
 

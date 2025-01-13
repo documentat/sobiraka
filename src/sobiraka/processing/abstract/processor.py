@@ -4,13 +4,14 @@ from collections import defaultdict
 from contextlib import suppress
 from os.path import normpath
 from typing import Generic, TYPE_CHECKING, TypeVar
-from typing_extensions import override
 
 from panflute import Code, Element, Header, Image, Link, Para, Space, Str, Table, stringify
+from typing_extensions import override
 
-from sobiraka.models import Anchor, BadImage, BadLink, DirPage, FileSystem, Page, PageHref, PageStatus, UrlHref, Volume
+from sobiraka.models import Anchor, DirPage, FileSystem, Page, PageHref, PageStatus, UrlHref, Volume
 from sobiraka.models.config import Config
 from sobiraka.models.exceptions import DisableLink
+from sobiraka.models.issues import BadImage, BadLink
 from sobiraka.runtime import RT
 from sobiraka.utils import AbsolutePath, PathGoesOutsideStartDirectory, RelativePath, absolute_or_relative
 from .dispatcher import Dispatcher

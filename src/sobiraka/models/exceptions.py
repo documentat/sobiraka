@@ -1,7 +1,8 @@
 from abc import ABCMeta
 from typing import Sequence
 
-from sobiraka.models import Issue, Page, Volume
+from sobiraka.models import Page, Volume
+from sobiraka.models.issues import Issue
 
 
 class Ignorable(Exception, metaclass=ABCMeta):

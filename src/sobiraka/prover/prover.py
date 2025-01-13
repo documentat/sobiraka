@@ -6,13 +6,14 @@ from more_itertools import unique_everseen
 from panflute import Element
 from typing_extensions import override
 
-from sobiraka.models import MisspelledWords, Page, PageHref, PageStatus, Volume
+from sobiraka.models import Page, PageHref, PageStatus, Volume
+from sobiraka.models.issues import MisspelledWords
 from sobiraka.processing.abstract import VolumeBuilder
 from sobiraka.processing.txt import PlainTextDispatcher, TextModel, clean_phrases
 from sobiraka.runtime import RT
+from sobiraka.utils import super_gather
 from .checks import phrases_must_begin_with_capitals
 from .hunspell import run_hunspell
-from ..utils import super_gather
 
 
 class ProverProcessor(PlainTextDispatcher):

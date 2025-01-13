@@ -1,7 +1,8 @@
 from contextlib import suppress
 
 from abstracttests.projectdirtestcase import ProjectDirTestCase
-from sobiraka.models import BadLink, Href, Issue, Page, PageHref, UrlHref
+from sobiraka.models import Href, Page, PageHref, UrlHref
+from sobiraka.models.issues import BadLink, Issue
 from sobiraka.runtime import RT
 
 

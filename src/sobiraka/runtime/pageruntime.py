@@ -2,7 +2,8 @@ from dataclasses import dataclass, field
 
 from panflute import Doc, Image, Link
 
-from sobiraka.models import Anchors, Href, Issue, Page, PageStatus
+from sobiraka.models import Anchors, Href, Page, PageStatus
+from sobiraka.models.issues import Issue
 from sobiraka.utils import TocNumber, UniqueList, Unnumbered
 
 
