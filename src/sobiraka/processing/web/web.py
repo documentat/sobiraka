@@ -300,7 +300,7 @@ class WebBuilder(ThemeableProjectBuilder['WebProcessor', 'WebTheme'], AbstractHt
         self._results.add(target)
 
     @override
-    def compile_sass(self, volume: Volume, source: AbsolutePath, target: RelativePath):
+    def compile_sass(self, volume: Volume, source: AbsolutePath | bytes, target: RelativePath):
         css = self.compile_sass_impl(source)
         self.add_file_from_data(target, css)
 

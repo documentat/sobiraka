@@ -13,7 +13,7 @@ import weasyprint
 from panflute import Doc, Element, Header, Image, Str
 from typing_extensions import override
 
-from sobiraka.models import FileSystem, Page, PageHref, PageStatus, Volume
+from sobiraka.models import FileSystem, Page, PageHref, PageStatus, Volume, RealFileSystem
 from sobiraka.models.config import CombinedToc, Config, Config_Pygments
 from sobiraka.models.exceptions import DisableLink
 from sobiraka.processing import load_processor
@@ -171,7 +171,7 @@ class WeasyPrintBuilder(ThemeableVolumeBuilder['WeasyPrintProcessor', 'WeasyPrin
         raise NotImplementedError
 
     @override
-    def compile_sass(self, volume: Volume, source: AbsolutePath, target: RelativePath):
+    def compile_sass(self, volume: Volume, source: AbsolutePath | bytes, target: RelativePath):
         self.pseudofiles[str(target)] = 'text/css', self.compile_sass_impl(source)
         self.heads[volume].append(HeadCssFile(target))
 
@@ -193,9 +193,16 @@ class WeasyPrintBuilder(ThemeableVolumeBuilder['WeasyPrintProcessor', 'WeasyPrin
                     self.heads[self.volume].append(HeadCssFile(RelativePath(f'css/{source.name}')))
 
                 case '.sass' | '.scss':
-                    source = fs.resolve(source)
+                    # When building a real project, we rely on a RealFileSystem,
+                    # so that SASS can include other files from the same directory.
+                    # When in a test with a FakeFileSystem which cannot resolve(),
+                    # we just read the source text and pipe it to SASS.
+                    # Typically, tests do not use includes, so that's ok.
                     target = RelativePath('_static') / 'css' / f'{source.stem}.css'
-                    self.add_html_task(to_thread(self.compile_sass, self.volume, source, target))
+                    if isinstance(fs, RealFileSystem):
+                        self.add_html_task(to_thread(self.compile_sass, self.volume, fs.resolve(source), target))
+                    else:
+                        self.add_html_task(to_thread(self.compile_sass, self.volume, fs.read_bytes(source), target))
 
                 case _:
                     raise ValueError(source)

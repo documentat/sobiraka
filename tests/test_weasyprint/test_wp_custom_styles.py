@@ -14,7 +14,7 @@ class TestWeasyPrint_CustomStyles(WeasyPrintProjectTestCase):
             RelativePath('theme/style1.css'): b'''
                 h1 { color: lightgreen; }
             ''',
-            RelativePath('theme/style2.sass'): b'''
+            RelativePath('theme/style2.scss'): b'''
                 @mixin red_text { color: indianred; }
                 p { @include red_text; }
             ''',
@@ -24,6 +24,7 @@ class TestWeasyPrint_CustomStyles(WeasyPrintProjectTestCase):
             pdf=Config_PDF(
                 custom_styles=(
                     RelativePath('theme/style1.css'),
+                    RelativePath('theme/style2.scss'),
                 )))
 
         return Project(fs, {

@@ -5,7 +5,7 @@ from abc import ABCMeta, abstractmethod
 from asyncio import Task, TaskGroup, create_subprocess_exec, create_task, to_thread
 from collections import defaultdict
 from copy import deepcopy
-from subprocess import PIPE, Popen
+from subprocess import PIPE, run
 from typing import Awaitable, Coroutine, Generic, TypeVar, final
 
 from panflute import CodeBlock, Element
@@ -48,16 +48,16 @@ class AbstractHtmlBuilder(Builder, metaclass=ABCMeta):
                         self.heads[volume].append(HeadCssFile(target))
 
     @abstractmethod
-    def compile_sass(self, volume: Volume, source: AbsolutePath, target: RelativePath):
+    def compile_sass(self, volume: Volume, source: AbsolutePath | bytes, target: RelativePath):
         ...
 
     @final
-    def compile_sass_impl(self, source: AbsolutePath) -> bytes:
-        with Popen(['sass', '--style=compressed', source.name], cwd=source.parent, stdout=PIPE, stderr=PIPE) as process:
-            stdout, stderr = process.communicate()
-            if process.returncode != 0:
-                raise RuntimeError(f'SASS compilation failed.\n\n{stderr.decode()}')
-            return stdout
+    def compile_sass_impl(self, source: AbsolutePath | bytes) -> bytes:
+        if isinstance(source, AbsolutePath):
+            process = run(['sass', '--style=compressed', source.name], cwd=source.parent, stdout=PIPE, check=True)
+        else:
+            process = run(['sass', '--style=compressed', '--stdin'], input=source, stdout=PIPE, check=True)
+        return process.stdout
 
     async def process4(self, page: Page):
         self.apply_postponed_image_changes(page)
