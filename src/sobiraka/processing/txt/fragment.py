@@ -36,14 +36,4 @@ class Fragment:
 
     @property
     def text(self) -> str:
-        if self.start == self.end:
-            return ''
-
-        if self.start.line == self.end.line:
-            return self.tm.lines[self.start.line][self.start.char:self.end.char]
-
-        result = self.tm.lines[self.start.line][self.start.char:]
-        for line in range(self.start.line + 1, self.end.line):
-            result += '\n' + self.tm.lines[line]
-        result += '\n' + self.tm.lines[self.end.line][:self.end.char]
-        return result
+        return self.tm[self.start:self.end]

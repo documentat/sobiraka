@@ -71,6 +71,29 @@ class TextModel:
         """
         return '\n'.join(self.lines)
 
+    def __getitem__(self, key: Pos | slice) -> str:
+        """
+        Get a character at a given position or a string from a given slice.
+        """
+        match key:
+            case Pos() as pos:
+                return self.lines[pos.line][pos.char]
+
+            case slice() as s:
+                start, end = s.start, s.stop
+
+                if start == end:
+                    return ''
+
+                if start.line == end.line:
+                    return self.lines[start.line][start.char:end.char]
+
+                result = self.lines[start.line][start.char:]
+                for line in range(start.line + 1, end.line):
+                    result += '\n' + self.lines[line]
+                result += '\n' + self.lines[end.line][:end.char]
+                return result
+
     @property
     def end_pos(self) -> Pos:
         """
