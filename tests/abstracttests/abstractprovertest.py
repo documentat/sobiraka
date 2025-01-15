@@ -1,4 +1,5 @@
 from textwrap import dedent
+from typing import Sequence
 
 from helpers import FakeFileSystem, assertNoDiff
 from sobiraka.models import Page, PageStatus, Project, Syntax, Volume
@@ -7,7 +8,7 @@ from sobiraka.models.exceptions import IssuesOccurred
 from sobiraka.processing.txt import TextModel
 from sobiraka.prover import Prover
 from sobiraka.runtime import RT
-from sobiraka.utils import RelativePath
+from sobiraka.utils import QuotationMark, RelativePath
 from .projectdirtestcase import ProjectDirTestCase
 from .projecttestcase import FailingProjectTestCase
 
@@ -17,6 +18,7 @@ class AbstractProverTest(ProjectDirTestCase[Prover]):
     REQUIRE = PageStatus.PROCESS1
 
     PHRASES_MUST_BEGIN_WITH_CAPITALS = False
+    ALLOWED_QUOTATION_MARKS: Sequence[Sequence[QuotationMark]] = ()
 
     LANGUAGE: str | None = 'english'
     DICTIONARY_AFF: str = None
@@ -57,6 +59,7 @@ class AbstractProverTest(ProjectDirTestCase[Prover]):
                 regexp_dictionaries=tuple(regexp_dictionaries),
             ),
             phrases_must_begin_with_capitals=self.PHRASES_MUST_BEGIN_WITH_CAPITALS,
+            allowed_quotation_marks=tuple(map(tuple, self.ALLOWED_QUOTATION_MARKS)),
         ))
 
         page_filename = f'page.{self.SYNTAX.value}'

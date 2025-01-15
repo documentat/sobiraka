@@ -69,6 +69,7 @@ class FailingProjectTestCase(ProjectTestCase, metaclass=ABCMeta):
 
     @override
     async def _process(self):
+        self.exceptions = ExceptionGroup('', [NoExceptionsWereRaisesDuringTheTest()])
         try:
             await super()._process()
         except* Exception as eg:
@@ -78,3 +79,7 @@ class FailingProjectTestCase(ProjectTestCase, metaclass=ABCMeta):
         self.assertIsNotNone(self.exceptions)
         all_actual = unfold_exception_types(self.exceptions)
         self.assertEqual(self.EXPECTED_EXCEPTION_TYPES, all_actual)
+
+
+class NoExceptionsWereRaisesDuringTheTest(Exception):
+    pass

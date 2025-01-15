@@ -38,3 +38,6 @@ prover:
   skip_elements:
     - Code
     - CodeBlock
+  allowed_quotation_marks:
+    - curly
+    - guillemets+curly

@@ -14,6 +14,7 @@ from sobiraka.runtime import RT
 from sobiraka.utils import super_gather
 from .checks import phrases_must_begin_with_capitals
 from .hunspell import run_hunspell
+from .quotationsanalyzer import QuotationsAnalyzer
 
 
 class ProverProcessor(PlainTextDispatcher):
@@ -110,3 +111,7 @@ class Prover(VolumeBuilder[ProverProcessor]):
 
         if config.phrases_must_begin_with_capitals:
             RT[page].issues += phrases_must_begin_with_capitals(tm, phrases)
+
+        if config.allowed_quotation_marks:
+            quotation_analyzer = QuotationsAnalyzer(tm, config.allowed_quotation_marks)
+            RT[page].issues += quotation_analyzer.issues

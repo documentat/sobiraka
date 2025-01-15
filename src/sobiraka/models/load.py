@@ -10,11 +10,10 @@ from jsonschema.validators import Draft202012Validator
 from utilspie.collectionsutils import frozendict
 
 from sobiraka.models.config import Config_Prover_Dictionaries
-from sobiraka.utils import AbsolutePath, RelativePath, convert_or_none, get_default, merge_dicts
+from sobiraka.utils import AbsolutePath, QuotationMark, RelativePath, convert_or_none, get_default, merge_dicts
 from .config import CombinedToc, Config, Config_Content, Config_HighlightJS, Config_Latex, Config_Latex_Headers, \
-    Config_PDF, Config_Pagefind_Translations, Config_Paths, Config_Pdf_Highlight, Config_Prism, Config_Pygments, \
-    Config_Search_LinkTarget, Config_Web, Config_Web_Highlight, Config_Web_Search, SearchIndexerName
-from .config import Config_Prover
+    Config_PDF, Config_Pagefind_Translations, Config_Paths, Config_Pdf_Highlight, Config_Prism, Config_Prover, \
+    Config_Pygments, Config_Search_LinkTarget, Config_Web, Config_Web_Highlight, Config_Web_Search, SearchIndexerName
 from .filesystem import FileSystem, RealFileSystem
 from .namingscheme import NamingScheme
 from .project import Project
@@ -138,6 +137,7 @@ def _load_volume(lang: str | None, codename: str, volume_data: dict, fs: FileSys
             dictionaries=Config_Prover_Dictionaries.load(_('prover.dictionaries', ())),
             skip_elements=tuple(getattr(panflute.elements, x) for x in _('prover.skip_elements', ())),
             phrases_must_begin_with_capitals=_('prover.phrases_must_begin_with_capitals', False),
+            allowed_quotation_marks=tuple(map(QuotationMark.load_list, _('prover.allowed_quotation_marks', ()))),
         ),
         variables=frozendict(_('variables', {})),
     ))
