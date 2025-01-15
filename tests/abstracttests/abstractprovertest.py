@@ -18,6 +18,7 @@ class AbstractProverTest(ProjectDirTestCase[Prover]):
 
     PHRASES_MUST_BEGIN_WITH_CAPITALS = False
 
+    LANGUAGE: str | None = 'english'
     DICTIONARY_AFF: str = None
     DICTIONARY_DIC: str = ''
 
@@ -31,10 +32,12 @@ class AbstractProverTest(ProjectDirTestCase[Prover]):
 
     def _init_project(self) -> Project:
         fs = FakeFileSystem()
-        hunspell_dictionaries = ['english']
+        hunspell_dictionaries = []
         plaintext_dictionaries = []
         regexp_dictionaries = []
 
+        if self.LANGUAGE:
+            hunspell_dictionaries.append('english')
         if self.DICTIONARY_DIC:
             hunspell_dictionaries.append(RelativePath('mydic.dic'))
             fs.pseudofiles[RelativePath('mydic.dic')] = dedent(self.DICTIONARY_DIC).strip()
@@ -71,7 +74,7 @@ class AbstractProverTest(ProjectDirTestCase[Prover]):
     def tm(self, page: Page) -> TextModel:
         return self.builder.processor.tm[page]
 
-    async def test_phrases(self):
+    def test_phrases(self):
         tm = self.tm(self.page)
         phrases = tuple(x.text for x in tm.phrases())
         assertNoDiff(self.EXPECTED_PHRASES, phrases)
