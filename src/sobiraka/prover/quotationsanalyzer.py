@@ -19,12 +19,12 @@ class QuotationsAnalyzer:
         openings: list[tuple[int, QuotationMark]] = []
 
         # Search for all kind of quotation marks, both opening and closing
-        for m in re.finditer(r'["“”«»]', line):
+        for m in re.finditer(QuotationMark.regexp(), line):
             mark = m.group()
 
             if self.is_opening(m):
                 # Remember the opening position
-                openings.append((m.start(), QuotationMark.by_char(mark)))
+                openings.append((m.start(), QuotationMark.by_opening(mark)))
 
                 # Make sure that the current nesting is allowed
                 if self.allowed_quotation_marks:
@@ -36,12 +36,11 @@ class QuotationsAnalyzer:
                         yield IllegalQuotationMarks(nesting, line[m.start():])
 
             else:
-                start, qm1 = openings.pop()
+                start, qm = openings.pop()
                 end = m.end()
-                qm2 = QuotationMark.by_char(mark)
 
                 # Check if the latest opening mark matched this closing mark
-                if qm1 != qm2 or qm1.closing != mark:
+                if qm.closing != mark:
                     yield MismatchingQuotationMarks(line[start:end])
                     continue
 
@@ -62,7 +61,7 @@ class QuotationsAnalyzer:
             case '»':
                 return False
 
-            case '“' | '”' | '"':
+            case _:
                 is_start = m.start() == 0
                 is_end = m.start() == len(m.string) - 1
 
@@ -83,6 +82,3 @@ class QuotationsAnalyzer:
 
                 # When unsure, let's call it an opening
                 return True
-
-            case _:
-                raise ValueError(m.group())

@@ -231,12 +231,17 @@ $defs:
             type: array
             uniqueItems: true
             items:
-              enum:
-                - straight
-                - curly
-                - guillemets
-                - guillemets+straight
-                - guillemets+curly
+              type: array
+              uniqueItems: true
+              items:
+                enum:
+                  - Angled
+                  - CurvedDouble
+                  - CurvedSingle
+                  - LowDouble
+                  - LowSingle
+                  - StraightDouble
+                  - StraightSingle
 
       variables:
         type: object

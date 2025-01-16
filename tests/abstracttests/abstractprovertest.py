@@ -93,4 +93,18 @@ class AbstractFailingProverTest(AbstractProverTest, FailingProjectTestCase):
         self.assertEqual(self.EXPECTED_ISSUES, actual)
 
 
+class AbstractQuotationMarkTest(AbstractFailingProverTest):
+    LANGUAGE = None
+    ALLOWED_QUOTATION_MARKS = (
+        [QuotationMark.ANGLED],
+        [QuotationMark.CURVED_DOUBLE],
+        [QuotationMark.CURVED_SINGLE],
+        [QuotationMark.LOW_DOUBLE],
+        [QuotationMark.LOW_SINGLE],
+        [QuotationMark.STRAIGHT_DOUBLE],
+        [QuotationMark.STRAIGHT_SINGLE],
+    )
+    test_phrases = None
+
+
 del ProjectDirTestCase

@@ -39,5 +39,5 @@ prover:
     - Code
     - CodeBlock
   allowed_quotation_marks:
-    - curly
-    - guillemets+curly
+    - [Angled, CurvedDouble]
+    - [CurvedDouble]
