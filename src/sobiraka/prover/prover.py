@@ -113,5 +113,5 @@ class Prover(VolumeBuilder[ProverProcessor]):
             RT[page].issues += phrases_must_begin_with_capitals(tm, phrases)
 
         if config.allowed_quotation_marks:
-            quotation_analyzer = QuotationsAnalyzer(tm, config.allowed_quotation_marks)
+            quotation_analyzer = QuotationsAnalyzer(tm.lines, config.allowed_quotation_marks)
             RT[page].issues += quotation_analyzer.issues

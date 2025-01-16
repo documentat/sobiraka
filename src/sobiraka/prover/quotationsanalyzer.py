@@ -1,18 +1,18 @@
 import re
-from typing import Iterable
+from typing import Iterable, Sequence
 
 from sobiraka.models.issues import IllegalQuotationMarks, Issue, MismatchingQuotationMarks, UnclosedQuotationSpan
-from sobiraka.processing.txt.textmodel import TextModel
 from sobiraka.utils import QuotationMark
 
 
 class QuotationsAnalyzer:
-    def __init__(self, tm: TextModel, allowed_quotation_marks: tuple[QuotationMark, ...]):
-        self.tm: TextModel = tm
-        self.allowed_quotation_marks: tuple[QuotationMark, ...] = allowed_quotation_marks
+    def __init__(self, lines: Sequence[str], allowed_quotation_marks: Sequence[Sequence[QuotationMark]] = None):
+        self.lines = tuple(lines)
+        self.allowed_quotation_marks = allowed_quotation_marks
+
         self.issues: list[Issue] = []
 
-        for line in self.tm.lines:
+        for line in self.lines:
             self.issues += self.analyze_line(line)
 
     def analyze_line(self, line: str) -> Iterable[Issue]:
@@ -27,12 +27,13 @@ class QuotationsAnalyzer:
                 openings.append((m.start(), QuotationMark.by_char(mark)))
 
                 # Make sure that the current nesting is allowed
-                nesting = tuple(x[1] for x in openings)
-                for allowed_nesting in self.allowed_quotation_marks:
-                    if allowed_nesting[:len(nesting)] == nesting:
-                        break
-                else:
-                    yield IllegalQuotationMarks(nesting, line[m.start():])
+                if self.allowed_quotation_marks:
+                    nesting = tuple(x[1] for x in openings)
+                    for allowed_nesting in self.allowed_quotation_marks:
+                        if allowed_nesting[:len(nesting)] == nesting:
+                            break
+                    else:
+                        yield IllegalQuotationMarks(nesting, line[m.start():])
 
             else:
                 start, qm1 = openings.pop()
