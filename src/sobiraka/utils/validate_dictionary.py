@@ -178,12 +178,13 @@ class DictionaryValidator:
         aff = self.aff
         dic = self.dic
 
-        dic_size = int(dic[0])
+        dic_size = 0
 
         for i in range(1, len(dic)):
             if dic[i] == '':
                 dic.issues.append(Deletable(i, 'Empty line in dictionary file'))
             elif m := re.fullmatch(r'([^/\s]*) (?: / (\w+) )?', dic[i], flags=re.VERBOSE):
+                dic_size += 1
                 word_flags = m.group(2)
                 for word_flag in word_flags or ():
                     if word_flag not in aff.ids:
@@ -191,9 +192,8 @@ class DictionaryValidator:
             else:
                 dic.issues.append(Critical(i, f'Wrong dictionary line format: {dic[i]}'))
 
-        actual_dic_size = len(dic) - 1
-        if dic_size != actual_dic_size:
-            dic.issues.append(Fixable(0, f'Wrong dictionary size (should be {actual_dic_size})', str(actual_dic_size)))
+        if int(dic[0]) != dic_size:
+            dic.issues.append(Fixable(0, f'Wrong dictionary size (should be {dic_size})', str(dic_size)))
 
     def can_autofix(self) -> bool:
         return self.aff.can_autofix() and self.dic.can_autofix()
