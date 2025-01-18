@@ -38,23 +38,27 @@ class HunspellFile:
     path: Path
     encoding: str
 
-    lines: list[str] = field(default_factory=list)
+    lines: list[str] = field(init=False)
 
     issues: list[HunspellFileIssue] = field(default_factory=list)
 
     def __post_init__(self):
-        self.lines = self.path.read_text(self.encoding).splitlines()
+        # Read lines from the file
+        # Add a zeroth line to make the indexes human-readable
+        self.lines = [''] + self.path.read_text(self.encoding).splitlines()
 
     def __str__(self):
         return self.path.name
 
     def __len__(self):
-        return len(self.lines)
+        return len(self.lines) - 1
 
     def __getitem__(self, i: int) -> str:
+        assert i != 0
         return self.lines[i]
 
     def __setitem__(self, i: int, line: str):
+        assert i != 0
         self.lines[i] = line
 
     def can_autofix(self) -> bool:
@@ -73,7 +77,7 @@ class HunspellFile:
         for issue in reversed(sorted(deletables, key=lambda x: x.lineno)):
             del self.lines[issue.lineno]
 
-        self.path.write_text('\n'.join(self.lines), self.encoding)
+        self.path.write_text('\n'.join(self.lines[1:]), self.encoding)
 
         self.issues = list(Fixed(x.lineno, x.message) for x in self.issues)
 
@@ -144,8 +148,8 @@ class DictionaryValidator:
     def _validate_aff(self):
         aff = self.aff
 
-        i = -1
-        while i < len(aff) - 2:
+        i = 0
+        while i < len(aff) - 1:
             i += 1
 
             if m := re.fullmatch(r'(SFX|PFX) (\w+) (Y|N) (\d+)', aff[i]):
@@ -180,7 +184,7 @@ class DictionaryValidator:
 
         dic_size = 0
 
-        for i in range(1, len(dic)):
+        for i in range(2, len(dic) + 1):
             if dic[i] == '':
                 dic.issues.append(Deletable(i, 'Empty line in dictionary file'))
             elif m := re.fullmatch(r'([^/\s]*) (?: / (\w+) )?', dic[i], flags=re.VERBOSE):
@@ -192,8 +196,8 @@ class DictionaryValidator:
             else:
                 dic.issues.append(Critical(i, f'Wrong dictionary line format: {dic[i]}'))
 
-        if int(dic[0]) != dic_size:
-            dic.issues.append(Fixable(0, f'Wrong dictionary size (should be {dic_size})', str(dic_size)))
+        if int(dic[1]) != dic_size:
+            dic.issues.append(Fixable(1, f'Wrong dictionary size (should be {dic_size})', str(dic_size)))
 
     def can_autofix(self) -> bool:
         return self.aff.can_autofix() and self.dic.can_autofix()

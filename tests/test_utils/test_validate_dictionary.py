@@ -104,7 +104,7 @@ class TestDictionaryValidator_UnknownAffix(AbstractDictionaryValidatorTest):
     '''
 
     EXPECTED_MESSAGES = (
-        Fore.RED + '[CRITICAL]  dictionary.dic:4 — Unknown affix: D',
+        Fore.RED + '[CRITICAL]  dictionary.dic:5 — Unknown affix: D',
     )
 
 
@@ -140,8 +140,8 @@ class TestDictionaryValidator_FixableAff(AbstractDictionaryValidatorTest_Autofix
     '''
 
     EXPECTED_MESSAGES = (
-        Fore.GREEN + '[FIXED]     dictionary.aff:0 — Wrong affix size for A (should be 3)',
-        Fore.GREEN + '[FIXED]     dictionary.aff:5 — Wrong affix size for B (should be 3)',
+        Fore.GREEN + '[FIXED]     dictionary.aff:1 — Wrong affix size for A (should be 3)',
+        Fore.GREEN + '[FIXED]     dictionary.aff:6 — Wrong affix size for B (should be 3)',
     )
 
 
@@ -167,9 +167,9 @@ class TestDictionaryValidator_FixableDic(AbstractDictionaryValidatorTest_Autofix
     '''
 
     EXPECTED_MESSAGES = (
-        Fore.GREEN + '[FIXED]     dictionary.dic:0 — Wrong dictionary size (should be 3)',
-        Fore.GREEN + '[FIXED]     dictionary.dic:2 — Empty line in dictionary file',
-        Fore.GREEN + '[FIXED]     dictionary.dic:4 — Empty line in dictionary file',
+        Fore.GREEN + '[FIXED]     dictionary.dic:1 — Wrong dictionary size (should be 3)',
+        Fore.GREEN + '[FIXED]     dictionary.dic:3 — Empty line in dictionary file',
+        Fore.GREEN + '[FIXED]     dictionary.dic:5 — Empty line in dictionary file',
     )
 
 
