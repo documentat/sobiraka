@@ -10,7 +10,7 @@ from sobiraka.prover import Prover
 from sobiraka.report import run_with_progressbar
 from sobiraka.runtime import RT
 from sobiraka.translating import changelog, check_translations
-from sobiraka.utils import AbsolutePath, absolute_or_relative, parse_vars, validate_dictionary
+from sobiraka.utils import AbsolutePath, DictionaryValidator, absolute_or_relative, parse_vars
 
 
 async def async_main():
@@ -127,7 +127,10 @@ async def async_main():
             exit_code = await RT.run_isolated(run_with_progressbar(prover))
 
         elif cmd is cmd_validate_dictionary:
-            exit_code = validate_dictionary(args.dic, autofix=args.autofix)
+            dic_path = args.dic
+            aff_path = dic_path.with_suffix('.aff')
+            assert args.dic.suffix == '.dic'
+            exit_code = DictionaryValidator(aff_path, dic_path).run(args.autofix)
 
         elif cmd is cmd_check_translations:
             project = load_project(args.config)
