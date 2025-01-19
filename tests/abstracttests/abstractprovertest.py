@@ -8,7 +8,7 @@ from sobiraka.models.exceptions import IssuesOccurred
 from sobiraka.processing.txt import TextModel
 from sobiraka.prover import Prover
 from sobiraka.runtime import RT
-from sobiraka.utils import QuotationMark, RelativePath
+from sobiraka.utils import Apostrophe, QuotationMark, RelativePath
 from .projectdirtestcase import ProjectDirTestCase
 from .projecttestcase import FailingProjectTestCase
 
@@ -19,6 +19,7 @@ class AbstractProverTest(ProjectDirTestCase[Prover]):
 
     PHRASES_MUST_BEGIN_WITH_CAPITALS = False
     ALLOWED_QUOTATION_MARKS: Sequence[Sequence[QuotationMark]] = ()
+    ALLOWED_APOSTROPHES: Sequence[Apostrophe] = ()
 
     LANGUAGE: str | None = 'english'
     DICTIONARY_AFF: str = None
@@ -60,6 +61,7 @@ class AbstractProverTest(ProjectDirTestCase[Prover]):
             ),
             phrases_must_begin_with_capitals=self.PHRASES_MUST_BEGIN_WITH_CAPITALS,
             allowed_quotation_marks=tuple(map(tuple, self.ALLOWED_QUOTATION_MARKS)),
+            allowed_apostrophes=tuple(self.ALLOWED_APOSTROPHES),
         ))
 
         page_filename = f'page.{self.SYNTAX.value}'
@@ -89,8 +91,9 @@ class AbstractFailingProverTest(AbstractProverTest, FailingProjectTestCase):
     EXPECTED_ISSUES: tuple[str] = ()
 
     def test_issues(self):
-        actual = tuple(map(str, RT[self.page].issues))
-        self.assertEqual(self.EXPECTED_ISSUES, actual)
+        expected = '\n'.join(self.EXPECTED_ISSUES) + '\n'
+        actual = '\n'.join(map(str, RT[self.page].issues)) + '\n'
+        self.assertEqual(expected, actual)
 
 
 class AbstractQuotationMarkTest(AbstractFailingProverTest):

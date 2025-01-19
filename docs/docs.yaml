@@ -41,3 +41,5 @@ prover:
   allowed_quotation_marks:
     - [Angled, CurvedDouble]
     - [CurvedDouble]
+  allowed_apostrophes:
+    - Straight

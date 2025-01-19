@@ -1,6 +1,7 @@
 import inspect
 from abc import ABCMeta, abstractmethod
 from asyncio import create_task
+from traceback import format_exception
 from typing import Any, Generic, Iterable, TypeVar
 from unittest import SkipTest
 
@@ -78,7 +79,10 @@ class FailingProjectTestCase(ProjectTestCase, metaclass=ABCMeta):
     def test_exceptions(self):
         self.assertIsNotNone(self.exceptions)
         all_actual = unfold_exception_types(self.exceptions)
-        self.assertEqual(self.EXPECTED_EXCEPTION_TYPES, all_actual, f'Actual exceptions: {self.exceptions}')
+
+        if self.EXPECTED_EXCEPTION_TYPES != all_actual:
+            self.assertEqual(self.EXPECTED_EXCEPTION_TYPES, all_actual,
+                             ''.join(format_exception(self.exceptions)))
 
 
 class NoExceptionsWereRaisesDuringTheTest(Exception):

@@ -3,7 +3,7 @@ from typing import Iterable, Self
 
 from panflute import Element
 
-from sobiraka.utils import QuotationMark, RelativePath
+from sobiraka.utils import Apostrophe, QuotationMark, RelativePath
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -60,3 +60,5 @@ class Config_Prover:
     """
 
     allowed_quotation_marks: tuple[tuple[QuotationMark, ...], ...] = ()
+
+    allowed_apostrophes: tuple[Apostrophe, ...] = ()

@@ -242,6 +242,13 @@ $defs:
                   - LowSingle
                   - StraightDouble
                   - StraightSingle
+          allowed_apostrophes:
+            type: array
+            uniqueItems: true
+            items:
+              enum:
+                - Curved
+                - Straight
 
       variables:
         type: object
