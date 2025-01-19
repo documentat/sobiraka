@@ -152,6 +152,12 @@ class DictionaryValidator:
         while i < len(aff) - 1:
             i += 1
 
+            if aff[i] == '':
+                continue
+
+            if re.match(r'^(SET|WORDCHARS|BREAK|NOSPLITSUGS|MAXNGRAMSUGS|ONLYMAXDIFF|MAXDIFF|#)', aff[i]):
+                continue
+
             if m := re.fullmatch(r'(SFX|PFX) (\w+) (Y|N) (\d+)', aff[i]):
                 aff_start = i
                 aff_type, aff_id, aff_yesno, aff_size = m.groups()
@@ -166,17 +172,22 @@ class DictionaryValidator:
 
                 while True:
                     i += 1
-                    try:
-                        assert aff[i] != ''
-                        assert re.fullmatch(rf'SFX {aff_id} (0|\w+) (0|\w+)(/\w+)? \S+', aff[i])
-                    except (IndexError, AssertionError):
+
+                    if i > len(aff) or aff[i] == '':
                         actual_size = i - aff_start - 1
                         if actual_size != aff_size:
                             aff.issues.append(Fixable(aff_start,
                                                       f'Wrong affix size for {aff_id} (should be {actual_size})',
                                                       f'{aff_type} {aff_id} {aff_yesno} {actual_size}'))
                         break
-                continue
+
+                    if not re.fullmatch(rf'SFX {aff_id} (0|\w+) (0|\w+)(/\w+)? \S+', aff[i]):
+                        i -= 1
+                        break
+
+            else:
+                aff.issues.append(Critical(i, f'Invalid line, cannot parse further: {aff[i]}'))
+                break
 
     def _validate_dic(self):
         aff = self.aff
@@ -194,7 +205,7 @@ class DictionaryValidator:
                     if word_flag not in aff.ids:
                         dic.issues.append(Critical(i, f'Unknown affix: {word_flag}'))
             else:
-                dic.issues.append(Critical(i, f'Wrong dictionary line format: {dic[i]}'))
+                dic.issues.append(Critical(i, f'Invalid line: {dic[i]}'))
 
         if int(dic[1]) != dic_size:
             dic.issues.append(Fixable(1, f'Wrong dictionary size (should be {dic_size})', str(dic_size)))

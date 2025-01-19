@@ -173,6 +173,39 @@ class TestDictionaryValidator_FixableDic(AbstractDictionaryValidatorTest_Autofix
     )
 
 
+class TestDictionaryValidator_InvalidLines(AbstractDictionaryValidatorTest):
+    AFF = '''
+        SFX A N 3
+        SFX A 0 a .
+        SFX A 0 a .
+        SFX A 0 a .
+        
+        SFX B N 3
+        SFX B 0 b .
+        SFX B 0
+        SFX B 0 b .
+        
+        SFX C N 3
+        SFX C 0 c .
+        SFX C 0 c .
+        SFX C 0 c .
+    '''
+
+    DIC = '''
+        3
+        aaa/A
+        aaa/B
+        aaa/C
+        aaa///
+    '''
+
+    EXPECTED_MESSAGES = (
+        Fore.RED + '[CRITICAL]  dictionary.aff:8 — Invalid line, cannot parse further: SFX B 0',
+        Fore.RED + '[CRITICAL]  dictionary.dic:4 — Unknown affix: C',
+        Fore.RED + '[CRITICAL]  dictionary.dic:5 — Invalid line: aaa///',
+    )
+
+
 del AbstractDictionaryValidatorTest, AbstractDictionaryValidatorTest_Autofix
 
 if __name__ == '__main__':
