@@ -9,7 +9,7 @@ from typing_extensions import override
 from sobiraka.models import Page, PageHref, PageStatus, Volume
 from sobiraka.models.issues import MisspelledWords
 from sobiraka.processing.abstract import VolumeBuilder
-from sobiraka.processing.txt import PlainTextDispatcher, TextModel, clean_phrases
+from sobiraka.processing.txt import PlainTextDispatcher, TextModel, clean_lines, clean_phrases
 from sobiraka.runtime import RT
 from sobiraka.utils import super_gather
 from .checks import phrases_must_begin_with_capitals
@@ -113,7 +113,8 @@ class Prover(VolumeBuilder[ProverProcessor]):
             RT[page].issues += phrases_must_begin_with_capitals(tm, phrases)
 
         if config.allowed_quotation_marks:
-            quotation_analyzer = QuotationsAnalyzer(tm.lines,
+            lines = tuple(clean_lines(tm.lines, tm.exceptions()))
+            quotation_analyzer = QuotationsAnalyzer(lines,
                                                     config.allowed_quotation_marks,
                                                     config.allowed_apostrophes)
             RT[page].issues += quotation_analyzer.issues
