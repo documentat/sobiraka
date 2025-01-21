@@ -19,12 +19,11 @@ class TestQM_Illegal_QuotationMarks(AbstractQuotationMarkTest):
     ALLOWED_APOSTROPHES = ALLOWED_APOSTROPHES
     SOURCE = '''
         This config supports «angled», "straight double", and “curved double” quotation marks.
-        It is forbidden to use ‘curved single’, ‚low single’, and „low double” quotation marks.
+        It is forbidden to use ‘curved single’ and „german“ quotation marks.
     '''
     EXPECTED_ISSUES = (
         'Curved single quotation marks are not allowed here: ‘curved single’',
-        'Low single quotation marks are not allowed here: ‚low single’',
-        'Low double quotation marks are not allowed here: „low double”',
+        'German quotation marks are not allowed here: „german“',
     )
 
 

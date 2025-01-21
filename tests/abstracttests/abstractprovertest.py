@@ -102,8 +102,7 @@ class AbstractQuotationMarkTest(AbstractFailingProverTest):
         [QuotationMark.ANGLED],
         [QuotationMark.CURVED_DOUBLE],
         [QuotationMark.CURVED_SINGLE],
-        [QuotationMark.LOW_DOUBLE],
-        [QuotationMark.LOW_SINGLE],
+        [QuotationMark.GERMAN],
         [QuotationMark.STRAIGHT_DOUBLE],
         [QuotationMark.STRAIGHT_SINGLE],
     )

@@ -238,8 +238,7 @@ $defs:
                   - Angled
                   - CurvedDouble
                   - CurvedSingle
-                  - LowDouble
-                  - LowSingle
+                  - German
                   - StraightDouble
                   - StraightSingle
           allowed_apostrophes:

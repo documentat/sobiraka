@@ -7,8 +7,7 @@ class QuotationMark(Enum):
     ANGLED = '«»'
     CURVED_DOUBLE = '“”'
     CURVED_SINGLE = '‘’'
-    LOW_DOUBLE = '„”'
-    LOW_SINGLE = '‚’'
+    GERMAN = '„“'
     STRAIGHT_DOUBLE = '""'
     STRAIGHT_SINGLE = "''"
 
@@ -18,8 +17,7 @@ class QuotationMark(Enum):
             'Angled': QuotationMark.ANGLED,
             'CurvedDouble': QuotationMark.CURVED_DOUBLE,
             'CurvedSingle': QuotationMark.CURVED_SINGLE,
-            'LowDouble': QuotationMark.LOW_DOUBLE,
-            'LowSingle': QuotationMark.LOW_SINGLE,
+            'German': QuotationMark.GERMAN,
             'StraightDouble': QuotationMark.STRAIGHT_DOUBLE,
             'StraightSingle': QuotationMark.STRAIGHT_SINGLE,
         }
@@ -71,7 +69,4 @@ class Apostrophe(Enum):
 
     @property
     def incompatible_quotation_marks(self) -> Sequence[QuotationMark]:
-        return {
-            Apostrophe.CURVED: (QuotationMark.CURVED_SINGLE, QuotationMark.LOW_SINGLE),
-            Apostrophe.STRAIGHT: (QuotationMark.STRAIGHT_SINGLE,),
-        }[self]
+        return tuple(qm for qm in QuotationMark if self.value in qm.value)

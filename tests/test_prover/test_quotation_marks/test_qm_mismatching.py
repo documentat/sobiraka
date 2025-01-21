@@ -19,7 +19,7 @@ class TestQM_Mismatching(TestCase):
                 # Apostrophe-like closings are stupid, that's not the case we're testing here
                 if qm1 is QuotationMark.STRAIGHT_SINGLE:
                     continue
-                if qm2 in (QuotationMark.CURVED_SINGLE, QuotationMark.LOW_SINGLE, QuotationMark.STRAIGHT_SINGLE):
+                if qm2 in (QuotationMark.CURVED_SINGLE, QuotationMark.STRAIGHT_SINGLE):
                     continue
 
                 with self.subTest(qm1=qm1.name, qm2=qm2.name):
