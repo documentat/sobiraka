@@ -1,16 +1,30 @@
+from abc import ABCMeta
 from tempfile import TemporaryDirectory
+from textwrap import dedent
+from unittest.mock import Mock
 
 from abstracttests.projectdirtestcase import ProjectDirTestCase
-from sobiraka.models import Href, Page, PageHref, UrlHref
+from abstracttests.projecttestcase import ProjectTestCase
+from sobiraka.models import FileSystem, Href, Page, PageHref, Project, UrlHref, Volume
 from sobiraka.processing.web import WebBuilder
 from sobiraka.runtime import RT
-from sobiraka.utils import AbsolutePath
+from sobiraka.utils import AbsolutePath, RelativePath
 
 
-class AbstractTestLinksGoodHtml(ProjectDirTestCase):
+class AbstractTestLinksGoodHtml(ProjectTestCase, metaclass=ABCMeta):
+    SOURCES: dict[str, str]
+
     def _init_builder(self):
         output = self.enterContext(TemporaryDirectory(prefix='sobiraka-test-'))
         return WebBuilder(self.project, AbsolutePath(output))
+
+    def _init_project(self) -> Project:
+        return Project(Mock(FileSystem), {
+            RelativePath('src'): Volume({
+                RelativePath(k): Page(dedent(v).strip())
+                for k, v in self.SOURCES.items()
+            }),
+        })
 
     async def asyncSetUp(self):
         await super().asyncSetUp()
@@ -82,6 +96,3 @@ class AbstractTestLinksGoodHtml(ProjectDirTestCase):
                     ):
                         actual_url = self.builder.make_internal_url(href, page=page)
                         self.assertEqual(expected_url, actual_url)
-
-
-del ProjectDirTestCase

@@ -1,9 +1,24 @@
-from abstracttests.projectdirtestcase import ProjectDirTestCase
-from sobiraka.models import Href, Page, PageHref, UrlHref
+from abc import ABCMeta
+from textwrap import dedent
+from unittest.mock import Mock
+
+from abstracttests.projecttestcase import ProjectTestCase
+from sobiraka.models import FileSystem, Href, Page, PageHref, Project, UrlHref, Volume
 from sobiraka.runtime import RT
+from sobiraka.utils import RelativePath
 
 
-class AbstractTestLinksGood(ProjectDirTestCase):
+class AbstractTestLinksGood(ProjectTestCase, metaclass=ABCMeta):
+    SOURCES: dict[str, str]
+
+    def _init_project(self) -> Project:
+        return Project(Mock(FileSystem), {
+            RelativePath('src'): Volume({
+                RelativePath(k): Page(dedent(v).strip())
+                for k, v in self.SOURCES.items()
+            }),
+        })
+
     async def asyncSetUp(self):
         await super().asyncSetUp()
         _, self.document0, _, self.document1, _, self.document2, self.document3, _, self.document4 = self.project.pages
@@ -64,6 +79,3 @@ class AbstractTestLinksGood(ProjectDirTestCase):
         for page, expected_links in data.items():
             with self.subTest(page):
                 self.assertSequenceEqual(expected_links, tuple(RT[page].links))
-
-
-del ProjectDirTestCase

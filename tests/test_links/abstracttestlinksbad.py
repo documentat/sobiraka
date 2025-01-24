@@ -1,13 +1,27 @@
+from abc import ABCMeta
 from contextlib import suppress
+from textwrap import dedent
+from unittest.mock import Mock
 
 from abstracttests.projectdirtestcase import ProjectDirTestCase
-from sobiraka.models import Href, Page, PageHref, UrlHref
+from abstracttests.projecttestcase import ProjectTestCase
+from sobiraka.models import FileSystem, Href, Page, PageHref, Project, UrlHref, Volume
 from sobiraka.models.issues import BadLink, Issue
 from sobiraka.runtime import RT
+from sobiraka.utils import RelativePath
 
 
-class AbstractTestLinksBad(ProjectDirTestCase):
+class AbstractTestLinksBad(ProjectTestCase, metaclass=ABCMeta):
+    SOURCE: dict[str, str]
     EXT: str
+
+    def _init_project(self) -> Project:
+        return Project(Mock(FileSystem), {
+            RelativePath('src'): Volume({
+                RelativePath(k): Page(dedent(v).strip())
+                for k, v in self.SOURCES.items()
+            }),
+        })
 
     async def asyncSetUp(self):
         await super().asyncSetUp()
