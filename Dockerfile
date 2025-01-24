@@ -38,6 +38,7 @@ RUN unzip jbmono.zip **/*.ttf -d /tmp/fonts
 
 FROM pandoc/latex:$PANDOC-ubuntu AS latex-python-nodejs
 WORKDIR /W
+RUN tlmgr update --self
 RUN tlmgr install koma-script
 RUN apt update
 COPY --from=get-conda /tmp/miniconda.sh /tmp/miniconda.sh
