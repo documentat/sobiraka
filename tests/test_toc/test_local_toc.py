@@ -1,12 +1,8 @@
 from math import inf
-from textwrap import dedent
 from unittest import main
-from unittest.mock import Mock
 
-from abstracttests.abstracttestwithrt import AbstractTestWithRtPages
-from helpers import FakeBuilder
-from sobiraka.models import FileSystem, Page, PageStatus, Project, Volume
-from sobiraka.processing.abstract import Builder
+from abstracttests.singlepageprojecttest import SinglePageProjectTest
+from sobiraka.models import PageStatus
 from sobiraka.processing.toc import Toc, TocItem, local_toc
 from sobiraka.utils import RelativePath
 
@@ -16,37 +12,32 @@ This tests do not use a full project, instead calling `local_toc()` for a single
 """
 
 
-class AbstractTestLocalToc(AbstractTestWithRtPages):
-    source: str
-    toc_depth: int | float = inf
-    expected: Toc
+class AbstractTestLocalToc(SinglePageProjectTest):
+    REQUIRE = PageStatus.PROCESS1
+
+    PATH = RelativePath('page.md')
+
+    TOC_DEPTH: int | float = inf
+    EXPECTED: Toc
 
     async def test_local_toc(self):
-        project = Project(Mock(FileSystem), {
-            RelativePath('src'): Volume({
-                RelativePath('page.md'):
-                    (page := Page(dedent(self.source))),
-            }),
-        })
-        builder = FakeBuilder(project)
-        await builder.require(page, PageStatus.PROCESS1)
-        actual = local_toc(page, builder=builder, toc_depth=self.toc_depth)
-        self.assertEqual(self.expected, actual)
+        actual = local_toc(self.page, builder=self.builder, toc_depth=self.TOC_DEPTH)
+        self.assertEqual(self.EXPECTED, actual)
 
 
 class TestLocalToc_Empty(AbstractTestLocalToc):
-    source = ''
-    expected = Toc()
+    SOURCE = ''
+    EXPECTED = Toc()
 
 
 class TestLocalToc_Linear(AbstractTestLocalToc):
-    source = '''
+    SOURCE = '''
         ## Paragraph 1
         ## Paragraph 2
         ## Paragraph 3
     '''
 
-    expected = Toc(
+    EXPECTED = Toc(
         TocItem('Paragraph 1', 'page.md#paragraph-1'),
         TocItem('Paragraph 2', 'page.md#paragraph-2'),
         TocItem('Paragraph 3', 'page.md#paragraph-3'),
@@ -54,13 +45,13 @@ class TestLocalToc_Linear(AbstractTestLocalToc):
 
 
 class TestLocalToc_Linear_CustomAnchors(AbstractTestLocalToc):
-    source = '''
+    SOURCE = '''
         ## Paragraph 1 {#para1}
         ## Paragraph 2 {#para2}
         ## Paragraph 3 {#para3}
     '''
 
-    expected = Toc(
+    EXPECTED = Toc(
         TocItem('Paragraph 1', 'page.md#para1'),
         TocItem('Paragraph 2', 'page.md#para2'),
         TocItem('Paragraph 3', 'page.md#para3'),
@@ -68,7 +59,7 @@ class TestLocalToc_Linear_CustomAnchors(AbstractTestLocalToc):
 
 
 class TestLocalToc_Deep(AbstractTestLocalToc):
-    source = '''
+    SOURCE = '''
         ## Paragraph 1
         ### Paragraph 1.1
         #### Paragraph 1.1.1
@@ -85,7 +76,7 @@ class TestLocalToc_Deep(AbstractTestLocalToc):
         #### Paragraph 2.2.2
     '''
 
-    expected = Toc(
+    EXPECTED = Toc(
         TocItem('Paragraph 1', 'page.md#paragraph-1', children=Toc(
             TocItem('Paragraph 1.1', 'page.md#paragraph-1.1', children=Toc(
                 TocItem('Paragraph 1.1.1', 'page.md#paragraph-1.1.1'),
@@ -110,13 +101,13 @@ class TestLocalToc_Deep(AbstractTestLocalToc):
 
 
 class TestLocalToc_Deep_LimitDepth_3(TestLocalToc_Deep):
-    toc_depth = 3
+    TOC_DEPTH = 3
 
 
 class TestLocalToc_Deep_LimitDepth_2(TestLocalToc_Deep):
-    toc_depth = 2
+    TOC_DEPTH = 2
 
-    expected = Toc(
+    EXPECTED = Toc(
         TocItem('Paragraph 1', 'page.md#paragraph-1', children=Toc(
             TocItem('Paragraph 1.1', 'page.md#paragraph-1.1'),
             TocItem('Paragraph 1.2', 'page.md#paragraph-1.2'),
@@ -129,16 +120,16 @@ class TestLocalToc_Deep_LimitDepth_2(TestLocalToc_Deep):
 
 
 class TestLocalToc_Deep_LimitDepth_1(TestLocalToc_Deep):
-    toc_depth = 1
+    TOC_DEPTH = 1
 
-    expected = Toc(
+    EXPECTED = Toc(
         TocItem('Paragraph 1', 'page.md#paragraph-1'),
         TocItem('Paragraph 2', 'page.md#paragraph-2'),
     )
 
 
 class TestLocalToc_Deep_CustomAnchors(AbstractTestLocalToc):
-    source = '''
+    SOURCE = '''
         ## Paragraph 1 {#para1}
         ### Paragraph 1.1 {#para11}
         #### Paragraph 1.1.1 {#para111}
@@ -155,7 +146,7 @@ class TestLocalToc_Deep_CustomAnchors(AbstractTestLocalToc):
         #### Paragraph 2.2.2 {#para222}
     '''
 
-    expected = Toc(
+    EXPECTED = Toc(
         TocItem('Paragraph 1', 'page.md#para1', children=Toc(
             TocItem('Paragraph 1.1', 'page.md#para11', children=Toc(
                 TocItem('Paragraph 1.1.1', 'page.md#para111'),
@@ -179,7 +170,7 @@ class TestLocalToc_Deep_CustomAnchors(AbstractTestLocalToc):
     )
 
 
-del AbstractTestLocalToc
+del AbstractTestLocalToc, SinglePageProjectTest
 
 if __name__ == '__main__':
     main()
