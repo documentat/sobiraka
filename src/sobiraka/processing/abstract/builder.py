@@ -142,8 +142,8 @@ class Builder(Generic[P], metaclass=ABCMeta):
 
         for page in volume.root.all_pages():
             processor = self.get_processor_for_page(page)
-            for toc_placeholder in processor.directives[page]:
-                replace_element(toc_placeholder, toc_placeholder.postprocess())
+            for directive in processor.directives[page]:
+                replace_element(directive, directive.postprocess())
 
     async def do_finalize(self, page: Page):
         """
