@@ -8,6 +8,42 @@ ifdef CI
   DOCKER_RUN := docker run --rm
 endif
 
+prepull-all:
+	docker pull python:3.11
+	docker pull python:3.12
+	docker pull python:3.13
+
+	docker pull pandoc/latex:3.2-ubuntu
+	docker pull pandoc/latex:3.3-ubuntu
+	docker pull pandoc/latex:3.4-ubuntu
+	docker pull pandoc/latex:3.5-ubuntu
+	docker pull pandoc/latex:3.6-ubuntu
+
+	docker pull pandoc/core:3.2-ubuntu
+	docker pull pandoc/core:3.3-ubuntu
+	docker pull pandoc/core:3.4-ubuntu
+	docker pull pandoc/core:3.5-ubuntu
+	docker pull pandoc/core:3.6-ubuntu
+
+prebuild-all:
+	$(MAKE) build-tester PYTHON=3.11 PANDOC=3.2
+	$(MAKE) build-tester PYTHON=3.11 PANDOC=3.3
+	$(MAKE) build-tester PYTHON=3.11 PANDOC=3.4
+	$(MAKE) build-tester PYTHON=3.11 PANDOC=3.5
+	$(MAKE) build-tester PYTHON=3.11 PANDOC=3.6
+
+	$(MAKE) build-tester PYTHON=3.12 PANDOC=3.2
+	$(MAKE) build-tester PYTHON=3.12 PANDOC=3.3
+	$(MAKE) build-tester PYTHON=3.12 PANDOC=3.4
+	$(MAKE) build-tester PYTHON=3.12 PANDOC=3.5
+	$(MAKE) build-tester PYTHON=3.12 PANDOC=3.6
+
+	$(MAKE) build-tester PYTHON=3.13 PANDOC=3.2
+	$(MAKE) build-tester PYTHON=3.13 PANDOC=3.3
+	$(MAKE) build-tester PYTHON=3.13 PANDOC=3.4
+	$(MAKE) build-tester PYTHON=3.13 PANDOC=3.5
+	$(MAKE) build-tester PYTHON=3.13 PANDOC=3.6
+
 release-latex:
 	@DOCKER_BUILDKIT=1 \
 		docker build . \
