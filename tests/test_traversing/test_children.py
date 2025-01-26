@@ -1,36 +1,34 @@
 from unittest import main
+from unittest.mock import Mock
 
-from abstracttests.projectdirtestcase import ProjectDirTestCase
-from sobiraka.models import DirPage, IndexPage, Page
+from abstracttests.projecttestcase import ProjectTestCase
+from sobiraka.models import DirPage, FileSystem, IndexPage, Page, Project, Volume
 from sobiraka.utils import RelativePath
 
 
-class TestChildren(ProjectDirTestCase):
-    async def asyncSetUp(self):
-        await super().asyncSetUp()
-        self.index_root = self.project.pages_by_path[RelativePath('src')]
-        self.document1 = self.project.pages_by_path[RelativePath('src') / 'document1.rst']
-        self.index_sub = self.project.pages_by_path[RelativePath('src') / 'sub' / '0-index.rst']
-        self.document2 = self.project.pages_by_path[RelativePath('src') / 'sub' / 'document2.rst']
-        self.index_subsub = self.project.pages_by_path[RelativePath('src') / 'sub' / 'subsub']
-        self.document3 = self.project.pages_by_path[RelativePath('src') / 'sub' / 'subsub' / 'document3.rst']
-        self.document4 = self.project.pages_by_path[RelativePath('src') / 'sub' / 'subsub' / 'document4.rst']
-        self.document5 = self.project.pages_by_path[RelativePath('src') / 'sub' / 'subsub' / 'document5.rst']
+class TestChildren(ProjectTestCase):
+    def _init_project(self) -> Project:
+        self.index_root = DirPage()
+        self.document1 = Page('# Document 1')
+        self.index_sub = IndexPage('# Sub')
+        self.document2 = Page('# Document 2')
+        self.index_subsub = Page()
+        self.document3 = Page('# Document 3')
+        self.document4 = Page('# Document 4')
+        self.document5 = Page('# Document 5')
 
-    def test_types(self):
-        data: dict[Page, type[Page]] = {
-            self.index_root: DirPage,
-            self.document1: Page,
-            self.index_sub: IndexPage,
-            self.document2: Page,
-            self.index_subsub: DirPage,
-            self.document3: Page,
-            self.document4: Page,
-            self.document5: Page,
-        }
-        for page, expected in data.items():
-            with self.subTest(page):
-                self.assertEqual(expected, type(page))
+        return Project(Mock(FileSystem), {
+            RelativePath('src'): Volume({
+                RelativePath(): self.index_root,
+                RelativePath() / 'document1.md': self.document1,
+                RelativePath() / 'sub' / '0-index.md': self.index_sub,
+                RelativePath() / 'sub' / 'document2.md': self.document2,
+                RelativePath() / 'sub' / 'subsub': self.index_subsub,
+                RelativePath() / 'sub' / 'subsub' / 'document3.md': self.document3,
+                RelativePath() / 'sub' / 'subsub' / 'document4.md': self.document4,
+                RelativePath() / 'sub' / 'subsub' / 'document5.md': self.document5,
+            })
+        })
 
     def test_breadcrumbs(self):
         data: tuple[tuple[Page, ...], ...] = (
@@ -79,7 +77,7 @@ class TestChildren(ProjectDirTestCase):
                 self.assertEqual(expected, page.children)
 
 
-del ProjectDirTestCase
+del ProjectTestCase
 
 if __name__ == '__main__':
     main()
