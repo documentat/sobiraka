@@ -56,6 +56,9 @@ class Processor(Dispatcher, Generic[B], metaclass=ABCMeta):
             if 'unnumbered' in header.classes:
                 RT[page].skip_numeration = True
 
+            # We don't need identifiers for H1
+            header.identifier = ''
+
         else:
             # Generate anchor identifier if not provided
             identifier = header.identifier
