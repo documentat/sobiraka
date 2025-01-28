@@ -1,16 +1,22 @@
-from textwrap import dedent
 from unittest import main
 
+from abstracttests.singlepageprojecttest import SinglePageProjectTest
 from abstracttests.weasyprintprojecttestcase import WeasyPrintProjectTestCase
 from helpers import FakeFileSystem
-from sobiraka.models import Page, Project, Volume
+from sobiraka.models import FileSystem
 from sobiraka.models.config import Config, Config_PDF
 from sobiraka.utils import RelativePath
 
 
-class TestWeasyPrint_CustomStyles(WeasyPrintProjectTestCase):
-    def _init_project(self) -> Project:
-        fs = FakeFileSystem({
+class TestWeasyPrint_CustomStyles(SinglePageProjectTest, WeasyPrintProjectTestCase):
+    SOURCE = '''
+        # Hello, world!
+        The title above should be green.
+        This text should be red.
+    '''
+
+    def _init_filesystem(self) -> FileSystem:
+        return FakeFileSystem({
             RelativePath('theme/style1.css'): b'''
                 h1 { color: lightgreen; }
             ''',
@@ -20,25 +26,16 @@ class TestWeasyPrint_CustomStyles(WeasyPrintProjectTestCase):
             ''',
         })
 
-        config = Config(
+    def _init_config(self) -> Config:
+        return Config(
             pdf=Config_PDF(
                 custom_styles=(
                     RelativePath('theme/style1.css'),
                     RelativePath('theme/style2.scss'),
                 )))
 
-        return Project(fs, {
-            RelativePath(): Volume(config, {
-                RelativePath(): Page(dedent('''
-                    # Hello, world!
-                    The title above should be green.
-                    This text should be red.
-                ''')),
-            })
-        })
 
-
-del WeasyPrintProjectTestCase
+del SinglePageProjectTest, WeasyPrintProjectTestCase
 
 if __name__ == '__main__':
     main()

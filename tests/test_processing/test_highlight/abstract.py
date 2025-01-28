@@ -1,41 +1,43 @@
+from abc import ABCMeta
 from tempfile import TemporaryDirectory
 
-from abstracttests.projecttestcase import ProjectTestCase
+from typing_extensions import override
+
+from abstracttests.singlepageprojecttest import SinglePageProjectTest
 from helpers import FakeFileSystem
-from sobiraka.models import Page, Project, Volume
+from sobiraka.models import FileSystem
 from sobiraka.models.config import Config, Config_Web
 from sobiraka.models.load import _load_web_highlight
 from sobiraka.processing.web import Head, WebBuilder
 from sobiraka.utils import AbsolutePath, RelativePath
 
 
-class AbstractHighlightTest(ProjectTestCase[WebBuilder]):
+class AbstractHighlightTest(SinglePageProjectTest[WebBuilder], metaclass=ABCMeta):
     """
     Load a highlighter configuration, create a project, render a page.
     Check that the necessary HeadTag were added and the expected HTML code was rendered.
     """
+    SOURCE = '```shell\necho 1\n```'
+
     CONFIG: str | dict[str, dict]
     FILES: tuple[str, ...] = ()
-    CONTENT: str = '```shell\necho 1\n```'
     EXPECTED_HEAD: Head
     EXPECTED_RENDER: str
 
-    def _init_project(self) -> Project:
+    @override
+    def _init_filesystem(self) -> FileSystem:
         fs = FakeFileSystem()
         for file in self.FILES:
             fs.pseudofiles[RelativePath(file)] = ''
+        return fs
 
-        config = Config(
+    @override
+    def _init_config(self) -> Config:
+        return Config(
             web=Config_Web(
                 highlight=_load_web_highlight(self.CONFIG),
             )
         )
-
-        return Project(fs, {
-            RelativePath(): Volume(config, {
-                RelativePath(): Page(self.CONTENT),
-            })
-        })
 
     def _init_builder(self):
         output = self.enterContext(TemporaryDirectory(prefix='sobiraka-test-'))

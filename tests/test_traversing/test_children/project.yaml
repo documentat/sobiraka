@@ -1,3 +1,0 @@
-paths:
-  root: src
-  include: ['**/*.rst']

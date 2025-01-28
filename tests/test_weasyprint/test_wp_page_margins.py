@@ -1,9 +1,10 @@
 from importlib.resources import files
 from unittest import main
 
+from abstracttests.singlepageprojecttest import SinglePageProjectTest
 from abstracttests.weasyprintprojecttestcase import WeasyPrintProjectTestCase
 from helpers import FakeFileSystem
-from sobiraka.models import Page, Project, Volume
+from sobiraka.models import FileSystem, Page, Project, Volume
 from sobiraka.models.config import Config, Config_PDF
 from sobiraka.utils import AbsolutePath, RelativePath
 
@@ -42,27 +43,26 @@ div.toc {
 '''
 
 
-class TestWeasyPrint_PageMargins(WeasyPrintProjectTestCase):
-    def _init_project(self) -> Project:
-        fs = FakeFileSystem({
+class TestWeasyPrint_PageMargins(SinglePageProjectTest, WeasyPrintProjectTestCase):
+    SOURCE = '''
+        # Look at these beautiful page margins!
+    '''
+
+    def _init_filesystem(self) -> FileSystem:
+        return FakeFileSystem({
             RelativePath('theme/style.css'): CSS,
         })
 
-        config = Config(
+    def _init_config(self) -> Config:
+        return Config(
             pdf=Config_PDF(
                 theme=AbsolutePath(files('sobiraka')) / 'files' / 'themes' / 'raw',
                 custom_styles=(
                     RelativePath('theme/style.css'),
                 )))
 
-        return Project(fs, {
-            RelativePath(): Volume(config, {
-                RelativePath(): Page('# Look at these beautiful page margins!')
-            })
-        })
 
-
-del WeasyPrintProjectTestCase
+del SinglePageProjectTest, WeasyPrintProjectTestCase
 
 if __name__ == '__main__':
     main()

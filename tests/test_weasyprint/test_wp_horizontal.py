@@ -1,6 +1,7 @@
 from unittest import main
 from unittest.mock import Mock
 
+from abstracttests.singlepageprojecttest import SinglePageProjectTest
 from abstracttests.weasyprintprojecttestcase import WeasyPrintProjectTestCase
 from sobiraka.models import FileSystem, Page, Project, Volume
 from sobiraka.utils import RelativePath
@@ -34,16 +35,11 @@ Sed commodo efficitur pharetra. Sed et nibh vitae lectus facilisis volutpat a vi
 '''
 
 
-class TestWeasyPrint_Horizontal(WeasyPrintProjectTestCase):
-    def _init_project(self) -> Project:
-        return Project(Mock(FileSystem), {
-            RelativePath(): Volume({
-                RelativePath(): Page(SOURCE)
-            })
-        })
+class TestWeasyPrint_Horizontal(SinglePageProjectTest, WeasyPrintProjectTestCase):
+    SOURCE = SOURCE
 
 
-del WeasyPrintProjectTestCase
+del SinglePageProjectTest, WeasyPrintProjectTestCase
 
 if __name__ == '__main__':
     main()

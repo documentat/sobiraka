@@ -9,11 +9,11 @@ from sobiraka.processing.txt import TextModel
 from sobiraka.prover import Prover
 from sobiraka.runtime import RT
 from sobiraka.utils import Apostrophe, QuotationMark, RelativePath
-from .projectdirtestcase import ProjectDirTestCase
 from .projecttestcase import FailingProjectTestCase
+from .singlepageprojecttest import SinglePageProjectTest
 
 
-class AbstractProverTest(ProjectDirTestCase[Prover]):
+class AbstractProverTest(SinglePageProjectTest[Prover]):
     maxDiff = None
     REQUIRE = PageStatus.PROCESS1
 
@@ -107,6 +107,3 @@ class AbstractQuotationMarkTest(AbstractFailingProverTest):
         [QuotationMark.STRAIGHT_SINGLE],
     )
     test_phrases = None
-
-
-del ProjectDirTestCase
