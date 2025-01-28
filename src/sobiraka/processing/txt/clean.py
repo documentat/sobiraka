@@ -1,6 +1,13 @@
 from typing import Iterable, Sequence
 
-from .textmodel import Fragment
+from .fragment import Fragment
+
+
+def clean_lines(lines: Sequence[str], exceptions: Sequence[Sequence[Fragment]]) -> Iterable[str]:
+    for lineno, line in enumerate(lines):
+        for exc in exceptions[lineno]:
+            line = line[:exc.start.char] + ' ' * len(exc.text) + line[exc.end.char:]
+        yield line
 
 
 def clean_phrases(phrases: Sequence[Fragment], exceptions: Sequence[Sequence[Fragment]]) -> Iterable[str]:

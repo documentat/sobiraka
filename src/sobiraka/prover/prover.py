@@ -9,11 +9,12 @@ from typing_extensions import override
 from sobiraka.models import Page, PageHref, PageStatus, Volume
 from sobiraka.models.issues import MisspelledWords
 from sobiraka.processing.abstract import VolumeBuilder
-from sobiraka.processing.txt import PlainTextDispatcher, TextModel, clean_phrases
+from sobiraka.processing.txt import PlainTextDispatcher, TextModel, clean_lines, clean_phrases
 from sobiraka.runtime import RT
 from sobiraka.utils import super_gather
 from .checks import phrases_must_begin_with_capitals
 from .hunspell import run_hunspell
+from .quotationsanalyzer import QuotationsAnalyzer
 
 
 class ProverProcessor(PlainTextDispatcher):
@@ -110,3 +111,10 @@ class Prover(VolumeBuilder[ProverProcessor]):
 
         if config.phrases_must_begin_with_capitals:
             RT[page].issues += phrases_must_begin_with_capitals(tm, phrases)
+
+        if config.allowed_quotation_marks:
+            lines = tuple(clean_lines(tm.lines, tm.exceptions()))
+            quotation_analyzer = QuotationsAnalyzer(lines,
+                                                    config.allowed_quotation_marks,
+                                                    config.allowed_apostrophes)
+            RT[page].issues += quotation_analyzer.issues

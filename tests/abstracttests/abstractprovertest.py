@@ -1,4 +1,5 @@
 from textwrap import dedent
+from typing import Sequence
 
 from helpers import FakeFileSystem, assertNoDiff
 from sobiraka.models import Page, PageStatus, Project, Syntax, Volume
@@ -7,7 +8,7 @@ from sobiraka.models.exceptions import IssuesOccurred
 from sobiraka.processing.txt import TextModel
 from sobiraka.prover import Prover
 from sobiraka.runtime import RT
-from sobiraka.utils import RelativePath
+from sobiraka.utils import Apostrophe, QuotationMark, RelativePath
 from .projecttestcase import FailingProjectTestCase
 from .singlepageprojecttest import SinglePageProjectTest
 
@@ -17,7 +18,10 @@ class AbstractProverTest(SinglePageProjectTest[Prover]):
     REQUIRE = PageStatus.PROCESS1
 
     PHRASES_MUST_BEGIN_WITH_CAPITALS = False
+    ALLOWED_QUOTATION_MARKS: Sequence[Sequence[QuotationMark]] = ()
+    ALLOWED_APOSTROPHES: Sequence[Apostrophe] = ()
 
+    LANGUAGE: str | None = 'english'
     DICTIONARY_AFF: str = None
     DICTIONARY_DIC: str = ''
 
@@ -31,10 +35,12 @@ class AbstractProverTest(SinglePageProjectTest[Prover]):
 
     def _init_project(self) -> Project:
         fs = FakeFileSystem()
-        hunspell_dictionaries = ['english']
+        hunspell_dictionaries = []
         plaintext_dictionaries = []
         regexp_dictionaries = []
 
+        if self.LANGUAGE:
+            hunspell_dictionaries.append('english')
         if self.DICTIONARY_DIC:
             hunspell_dictionaries.append(RelativePath('mydic.dic'))
             fs.pseudofiles[RelativePath('mydic.dic')] = dedent(self.DICTIONARY_DIC).strip()
@@ -54,6 +60,8 @@ class AbstractProverTest(SinglePageProjectTest[Prover]):
                 regexp_dictionaries=tuple(regexp_dictionaries),
             ),
             phrases_must_begin_with_capitals=self.PHRASES_MUST_BEGIN_WITH_CAPITALS,
+            allowed_quotation_marks=tuple(map(tuple, self.ALLOWED_QUOTATION_MARKS)),
+            allowed_apostrophes=tuple(self.ALLOWED_APOSTROPHES),
         ))
 
         page_filename = f'page.{self.SYNTAX.value}'
@@ -71,7 +79,7 @@ class AbstractProverTest(SinglePageProjectTest[Prover]):
     def tm(self, page: Page) -> TextModel:
         return self.builder.processor.tm[page]
 
-    async def test_phrases(self):
+    def test_phrases(self):
         tm = self.tm(self.page)
         phrases = tuple(x.text for x in tm.phrases())
         assertNoDiff(self.EXPECTED_PHRASES, phrases)
@@ -83,5 +91,19 @@ class AbstractFailingProverTest(AbstractProverTest, FailingProjectTestCase):
     EXPECTED_ISSUES: tuple[str] = ()
 
     def test_issues(self):
-        actual = tuple(map(str, RT[self.page].issues))
-        self.assertEqual(self.EXPECTED_ISSUES, actual)
+        expected = '\n'.join(self.EXPECTED_ISSUES) + '\n'
+        actual = '\n'.join(map(str, RT[self.page].issues)) + '\n'
+        self.assertEqual(expected, actual)
+
+
+class AbstractQuotationMarkTest(AbstractFailingProverTest):
+    LANGUAGE = None
+    ALLOWED_QUOTATION_MARKS = (
+        [QuotationMark.ANGLED],
+        [QuotationMark.CURVED_DOUBLE],
+        [QuotationMark.CURVED_SINGLE],
+        [QuotationMark.GERMAN],
+        [QuotationMark.STRAIGHT_DOUBLE],
+        [QuotationMark.STRAIGHT_SINGLE],
+    )
+    test_phrases = None

@@ -3,7 +3,7 @@ from typing import Iterable, Self
 
 from panflute import Element
 
-from sobiraka.utils import RelativePath
+from sobiraka.utils import Apostrophe, QuotationMark, RelativePath
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -58,3 +58,7 @@ class Config_Prover:
     - the phrase is inside a code span or a code block,
     - the phrase is an item's first phrase in a list that is preceded by a colon.
     """
+
+    allowed_quotation_marks: tuple[tuple[QuotationMark, ...], ...] = ()
+
+    allowed_apostrophes: tuple[Apostrophe, ...] = ()

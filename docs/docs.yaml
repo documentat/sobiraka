@@ -38,3 +38,8 @@ prover:
   skip_elements:
     - Code
     - CodeBlock
+  allowed_quotation_marks:
+    - [Angled, CurvedDouble]
+    - [CurvedDouble]
+  allowed_apostrophes:
+    - Straight
