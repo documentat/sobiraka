@@ -1,0 +1,51 @@
+on:
+  workflow_call:
+    outputs:
+      must-publish-latest:
+        value: ${{ jobs.must-publish-latest.outputs.must-publish-latest }}
+
+jobs:
+  build-image:
+    strategy:
+      fail-fast: false
+      matrix:
+        variant:
+          - { target: release, image: sobiraka }
+          - { target: release-latex, image: sobiraka-latex }
+
+    name: ${{ matrix.variant.image }}
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build image
+        run: make ${{ matrix.variant.target }} IMAGE=ghcr.io/documentat/${{ matrix.variant.image }}:${{ github.sha }}
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push image for this commit
+        run: >
+          docker push
+          ghcr.io/documentat/${{ matrix.variant.image }}:${{ github.sha }}
+
+      - name: Push image for this branch
+        run: >
+          docker tag
+          ghcr.io/documentat/${{ matrix.variant.image }}:${{ github.sha }}
+          ghcr.io/documentat/${{ matrix.variant.image }}:${{ github.ref_name }}
+          &&
+          docker push
+          ghcr.io/documentat/${{ matrix.variant.image }}:${{ github.ref_name }}
+
+      - name: Decide if we will need to publish this image as 'latest'
+        id: must-publish-latest
+        if: github.ref == 'refs/heads/master'
+        run: |
+          LATEST_COMMIT=$(git ls-remote origin refs/heads/master)
+          if [ $GITHUB_SHA == $LATEST_COMMIT ]; then
+            echo must-publish-latest=1 >> $GITHUB_OUTPUT
+          fi

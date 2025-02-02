@@ -1,5 +1,5 @@
-ARG PANDOC
-ARG PYTHON
+ARG PANDOC=3.6
+ARG PYTHON=3.13
 
 ARG NODE=20.17
 ARG PYTHON_FOR_BUILDING=3.13
@@ -43,22 +43,22 @@ RUN tlmgr install koma-script
 RUN apt update
 COPY --from=get-conda /tmp/miniconda.sh /tmp/miniconda.sh
 RUN /tmp/miniconda.sh -b -m -p /opt/conda && rm /tmp/miniconda.sh
-ENV PATH /opt/conda/bin:$PATH
+ENV PATH=/opt/conda/bin:$PATH
 ARG NODE
 ARG PYTHON
 RUN conda create -y --name myenv python=$PYTHON nodejs=$NODE
-ENV PATH /opt/conda/envs/myenv/bin:$PATH
+ENV PATH=/opt/conda/envs/myenv/bin:$PATH
 
 FROM pandoc/core:$PANDOC-ubuntu AS python-nodejs
 WORKDIR /W
 RUN apt update
 COPY --from=get-conda /tmp/miniconda.sh /tmp/miniconda.sh
 RUN /tmp/miniconda.sh -b -m -p /opt/conda && rm /tmp/miniconda.sh
-ENV PATH /opt/conda/bin:$PATH
+ENV PATH=/opt/conda/bin:$PATH
 ARG NODE
 ARG PYTHON
 RUN conda create -y --name myenv python=$PYTHON nodejs=$NODE
-ENV PATH /opt/conda/envs/myenv/bin:$PATH
+ENV PATH=/opt/conda/envs/myenv/bin:$PATH
 
 
 ################################################################################
@@ -69,7 +69,7 @@ COPY --from=build-package /sobiraka.egg-info/requires.txt .
 RUN pip install --prefix /prefix --requirement requires.txt
 
 FROM python-nodejs AS install-pip-dependencies-for-tester
-RUN pip install --prefix /prefix coverage~=7.0.0
+RUN pip install --prefix /prefix packaging
 
 FROM install-pip-dependencies AS install-package
 COPY --from=build-package /dist/*.tar.gz .
@@ -102,23 +102,30 @@ RUN apt install --yes git poppler-utils
 COPY --from=get-tester-dependencies /var/cache/apt /var/cache/apt
 COPY --from=install-pip-dependencies-for-tester /prefix /opt/conda/envs/myenv
 COPY --from=install-pip-dependencies /prefix /opt/conda/envs/myenv
-COPY --from=install-package /prefix /opt/conda/envs/myenv
-ARG UID=1000
-ARG GID=1000
-RUN addgroup --gid $GID myuser || true
-RUN adduser --uid $UID --gid $GID myuser || true
-USER 1000
-COPY tests .
-ENV COVERAGE_FILE /tmp/coverage
-CMD python -m coverage run --source=sobiraka -m unittest discover --start-directory=. --verbose \
-	&& python -m coverage report --precision=1 --skip-empty --skip-covered --show-missing
+RUN mkdir /EGGS
+RUN mkdir /DIST
+ENV PYTHONDONTWRITEBYTECODE=1
+SHELL ["/bin/bash", "-c"]
+ENTRYPOINT \
+	echo ::group::Building Sobiraka package... \
+	&& python setup.py egg_info --egg-base ../EGGS --quiet sdist --dist-dir /DIST --quiet \
+	&& echo ::endgroup:: \
+	\
+	&& echo ::group::Installing Sobiraka package... \
+	&& pip install /DIST/sobiraka-*.tar.gz \
+	&& rm -rf /EGGS /DIST \
+	&& echo ::endgroup:: \
+	\
+	&& echo ::group::Running tests... \
+	&& python -m unittest discover --start-directory=tests --verbose \
+	&& echo ::endgroup::
 
 FROM common-latex AS release-latex
 COPY --from=install-pip-dependencies /prefix /opt/conda/envs/myenv
 COPY --from=install-package /prefix /opt/conda/envs/myenv
-CMD sobiraka
+CMD ["sobiraka"]
 
 FROM common AS release
 COPY --from=install-pip-dependencies /prefix /opt/conda/envs/myenv
 COPY --from=install-package /prefix /opt/conda/envs/myenv
-CMD sobiraka
+CMD ["sobiraka"]

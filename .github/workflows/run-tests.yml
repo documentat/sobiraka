@@ -1,0 +1,26 @@
+on:
+  workflow_call:
+
+jobs:
+  run-tests:
+    strategy:
+      fail-fast: false
+      matrix:
+        python: [3.11, 3.12, 3.13]
+        pandoc: [3.2, 3.3, 3.4, 3.5, 3.6]
+
+    name: Python ${{ matrix.python }}, Pandoc ${{ matrix.pandoc }}
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build tester image
+        run: >
+          docker build .
+          --target tester
+          --build-arg PYTHON=${{ matrix.python }}
+          --build-arg PANDOC=${{ matrix.pandoc }}
+          --tag sobiraka:test-with-python${{ matrix.python }}-pandoc${{ matrix.pandoc }}
+
+      - name: Run tests
+        run: make test-nobuild PYTHON=${{ matrix.python }} PANDOC=${{ matrix.pandoc }}

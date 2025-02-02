@@ -45,34 +45,40 @@ prebuild-all:
 	$(MAKE) build-tester PYTHON=3.13 PANDOC=3.6
 
 release-latex:
-	@DOCKER_BUILDKIT=1 \
-		docker build . \
+	$(eval IMAGE:=sobiraka:release)
+	@docker build . \
 		--target release-latex \
 		--build-arg PYTHON=$(PYTHON) \
 		--build-arg PANDOC=$(PANDOC) \
-		--tag sobiraka:release-latex
+		--tag $(IMAGE)
 
 release:
-	@DOCKER_BUILDKIT=1 \
-		docker build . \
+	$(eval IMAGE:=sobiraka:release-latex)
+	@docker build . \
 		--target release \
 		--build-arg PYTHON=$(PYTHON) \
 		--build-arg PANDOC=$(PANDOC) \
-		--tag sobiraka:release
+		--tag $(IMAGE)
 
 build-tester:
-	@DOCKER_BUILDKIT=1 \
-		docker build . \
+	$(eval IMAGE:=sobiraka:test-with-python$(PYTHON)-pandoc$(PANDOC))
+	@docker build . \
 		--target tester \
 		--build-arg UID=$$(id -u) \
 		--build-arg GID=$$(id -g) \
 		--build-arg PYTHON=$(PYTHON) \
 		--build-arg PANDOC=$(PANDOC) \
-		--tag sobiraka:test-with-python$(PYTHON)-pandoc$(PANDOC)
+		--tag $(IMAGE)
 
-test: build-tester
+test: build-tester test-nobuild
+
+test-nobuild:
+	$(eval IMAGE:=sobiraka:test-with-python$(PYTHON)-pandoc$(PANDOC))
 	@$(DOCKER_RUN) \
-		sobiraka:test-with-python$(PYTHON)-pandoc$(PANDOC)
+		-v $(PWD)/setup.py:/W/setup.py:ro \
+		-v $(PWD)/src:/W/src:ro \
+		-v $(PWD)/tests:/W/tests:rw \
+		$(IMAGE)
 
 prover: release
 	@$(DOCKER_RUN) \

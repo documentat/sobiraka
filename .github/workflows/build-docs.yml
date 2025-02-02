@@ -1,0 +1,91 @@
+on:
+  workflow_call:
+
+jobs:
+  find-dictionaries:
+    name: Find dictionaries
+    outputs:
+      dic_files: ${{ steps.ls.outputs.dic_files }}
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: docs/dictionaries/hunspell
+
+      - id: ls
+        shell: bash
+        run: >
+          echo dic_files=$(
+          cd docs/dictionaries/hunspell
+          && find * -name '*.dic'
+          | jq --raw-input --compact-output --slurp 'split("\n")[:-1]'
+          ) >> $GITHUB_OUTPUT
+
+  validate-dictionaries:
+    strategy:
+      fail-fast: false
+      matrix:
+        dic_file: ${{ fromJSON(needs.find-dictionaries.outputs.dic_files) }}
+
+    name: Validate ${{ matrix.dic_file }}
+    needs: [find-dictionaries]
+    runs-on: self-hosted
+    container: ghcr.io/documentat/sobiraka:${{ github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: docs/dictionaries/hunspell/${{ matrix.dic_file }}
+
+      - run: sobiraka validate_dictionary docs/dictionaries/hunspell/${{ matrix.dic_file }}
+
+      - run: rm -rf * .* || true
+
+  prover:
+    name: Check documentation
+    runs-on: self-hosted
+    container: ghcr.io/documentat/sobiraka:${{ github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: docs
+
+      - run: sobiraka prover docs/docs.yaml
+
+      - run: rm -rf * .* || true
+
+  build-docs-pdf:
+    name: Build PDF
+    runs-on: self-hosted
+    container: ghcr.io/documentat/sobiraka:${{ github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: docs
+
+      - run: sobiraka pdf docs/docs.yaml --output docs/build
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Documentation (PDF)
+          path: docs/build
+
+      - run: rm -rf * .* || true
+
+  build-docs-web:
+    name: Build HTML
+    runs-on: self-hosted
+    container: ghcr.io/documentat/sobiraka:${{ github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: docs
+
+      - run: sobiraka web docs/docs.yaml --output docs/build --hide-index-html
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Documentation (web)
+          path: docs/build
+          compression-level: 9
+
+      - run: rm -rf * .* || true
