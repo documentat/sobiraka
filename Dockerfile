@@ -71,6 +71,9 @@ RUN pip install --prefix /prefix --requirement requires.txt
 FROM python-nodejs AS install-pip-dependencies-for-tester
 RUN pip install --prefix /prefix packaging
 
+FROM python-nodejs AS install-pip-dependencies-for-linter
+RUN pip install --prefix /prefix pylint
+
 FROM install-pip-dependencies AS install-package
 COPY --from=build-package /dist/*.tar.gz .
 RUN pip install --prefix /prefix *.tar.gz
@@ -118,6 +121,29 @@ ENTRYPOINT \
 	\
 	&& echo ::group::Running tests... \
 	&& python -m unittest discover --start-directory=tests --verbose \
+	&& echo ::endgroup::
+
+FROM common AS linter
+COPY --from=install-pip-dependencies-for-tester /prefix /opt/conda/envs/myenv
+COPY --from=install-pip-dependencies-for-linter /prefix /opt/conda/envs/myenv
+COPY --from=install-pip-dependencies /prefix /opt/conda/envs/myenv
+RUN mkdir /EGGS
+RUN mkdir /DIST
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONPATH=src
+SHELL ["/bin/bash", "-c"]
+ENTRYPOINT \
+	echo ::group::Building Sobiraka package... \
+	&& python setup.py egg_info --egg-base ../EGGS --quiet sdist --dist-dir /DIST --quiet \
+	&& echo ::endgroup:: \
+	\
+	&& echo ::group::Installing Sobiraka package... \
+	&& pip install /DIST/sobiraka-*.tar.gz \
+	&& rm -rf /EGGS /DIST \
+	&& echo ::endgroup:: \
+	\
+	&& echo ::group::Running pylint... \
+	&& python -m pylint sobiraka src/sobiraka/files/themes/*/extension.py \
 	&& echo ::endgroup::
 
 FROM common-latex AS release-latex

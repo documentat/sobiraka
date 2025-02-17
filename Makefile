@@ -70,6 +70,12 @@ build-tester:
 		--build-arg PANDOC=$(PANDOC) \
 		--tag $(IMAGE)
 
+build-linter:
+	$(eval IMAGE:=sobiraka:linter)
+	@docker build . \
+		--target linter \
+		--tag $(IMAGE)
+
 test: build-tester test-nobuild
 
 test-nobuild:
@@ -79,6 +85,13 @@ test-nobuild:
 		-v $(PWD)/src:/W/src:ro \
 		-v $(PWD)/tests:/W/tests:rw \
 		$(IMAGE)
+
+lint: build-linter
+	@$(DOCKER_RUN) \
+		-v $(PWD)/.pylintrc:/W/.pylintrc:ro \
+		-v $(PWD)/setup.py:/W/setup.py:ro \
+		-v $(PWD)/src/sobiraka:/W/src/sobiraka:ro \
+		sobiraka:linter
 
 prover: release
 	@$(DOCKER_RUN) \
