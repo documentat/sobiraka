@@ -3,6 +3,28 @@ name: Test & Publish
 on: [push]
 
 jobs:
+  run-tests:
+    name: Run tests
+    uses: ./.github/workflows/run-tests.yml
+
+  lint:
+    name: Check code
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        with:
+          key: pylint
+          path: ~/.cache/pip
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.13
+      - run: pip install -e .
+      - run: pip install pylint
+      - run: pylint sobiraka src/sobiraka/files/themes/*/extension.py
+        env:
+          PYTHONPATH: src
+
   build-pip:
     name: Build Python package
     runs-on: self-hosted
@@ -36,10 +58,6 @@ jobs:
   build-images:
     name: Build Docker images
     uses: ./.github/workflows/build-images.yml
-
-  run-tests:
-    name: Run tests
-    uses: ./.github/workflows/run-tests.yml
 
   build-docs:
     name: Check & build documentation
@@ -90,5 +108,5 @@ jobs:
   publish-latest:
     name: Publish 'latest' images
     if: needs.build-images.outputs.must-publish-latest
-    needs: [build-pip, build-images, run-tests, build-docs, publish-docs]  # "All I'm asking for is total perfection"
+    needs: [run-tests, build-images, build-pip, build-docs, publish-docs]  # "All I'm asking for is total perfection"
     uses: ./.github/workflows/build-images.yml
