@@ -109,10 +109,9 @@ class Processor(Dispatcher, Generic[B], metaclass=ABCMeta):
     async def process_link(self, link: Link, page: Page):
         if re.match(r'^\w+:', link.url):
             RT[page].links.add(UrlHref(link.url))
+        elif page.syntax == Syntax.RST:
+            page.issues.append(BadLink(link.url))
         else:
-            if page.syntax == Syntax.RST:
-                page.issues.append(BadLink(link.url))
-                return
             await self.process_internal_link(link, link.url, page)
 
     @override
