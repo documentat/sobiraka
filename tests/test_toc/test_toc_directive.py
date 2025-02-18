@@ -1,18 +1,18 @@
 import unittest
 
-from abstracttests.projecttestcase import ProjectTestCase
+from panflute import Block, BulletList, Div, Element, Header, Link, ListItem, Plain, Space, Str
+
+from abstracttests.singlepageprojecttest import SinglePageProjectTest
 from helpers import FakeBuilder
 from helpers.fakeproject import FakeProject, FakeVolume
-from panflute import Block, BulletList, Div, Element, Header, Link, ListItem, Plain, Space, Str
 from sobiraka.models import Project, Status
 from sobiraka.runtime import RT
 
 
-class AbstractTestTocDirective(ProjectTestCase[FakeBuilder]):
+class AbstractTestTocDirective(SinglePageProjectTest[FakeBuilder]):
     REQUIRE = Status.NUMERATE
 
-    SOURCE: str
-    EXPECTED: tuple[Element, ...]
+    EXPECTED: tuple[Element, ...] = None
 
     def _init_project(self) -> Project:
         return FakeProject({
@@ -39,7 +39,7 @@ class AbstractTestTocDirective(ProjectTestCase[FakeBuilder]):
             }),
         })
 
-    async def test_toc_directive(self):
+    async def test_doc(self):
         volume = self.project.get_volume()
         actual = tuple(RT[volume.root_page].doc.content)
         self.assertEqual(self.EXPECTED, actual)
@@ -49,7 +49,10 @@ def toc_div(*args: Block) -> Div:
     return Div(*args, classes=['toc'])
 
 
-class TestTocDirective_Default(AbstractTestTocDirective):
+# ------------------------------------------------------------------------------
+
+
+class TestTocDirective(AbstractTestTocDirective):
     SOURCE = '@toc'
     EXPECTED = toc_div(BulletList(
         ListItem(Plain(Link(Str('Section 1'), url='section1/')), BulletList(
@@ -60,6 +63,15 @@ class TestTocDirective_Default(AbstractTestTocDirective):
             ListItem(Plain(Link(Str('Page 2.1'), url='section2/page1.md'))),
             ListItem(Plain(Link(Str('Page 2.2'), url='section2/page2.md'))),
         )),
+        ListItem(Plain(Link(Str('Section 3'), url='section3/'))),
+    )),
+
+
+class TestTocDirective_Depth(AbstractTestTocDirective):
+    SOURCE = '@toc --depth=1'
+    EXPECTED = toc_div(BulletList(
+        ListItem(Plain(Link(Str('Section 1'), url='section1/'))),
+        ListItem(Plain(Link(Str('Section 2'), url='section2/'))),
         ListItem(Plain(Link(Str('Section 3'), url='section3/'))),
     )),
 
@@ -135,38 +147,57 @@ class TestTocDirective_Local_Partial(AbstractTestTocDirective):
 
 
 class TestTocDirective_Combined(AbstractTestTocDirective):
-    SOURCE = '@toc --combined'
-    EXPECTED = toc_div(BulletList(
-        ListItem(Plain(Link(Str('Section 1'), url='section1/')), BulletList(
-            ListItem(Plain(Link(Str('Page 1.1'), url='section1/page1.md')), BulletList(
-                ListItem(Plain(Link(Str('Paragraph'), url='section1/page1.md#paragraph'))),
+    SOURCE = '''
+        # Introduction
+        
+        @toc --combined
+        
+        ## Intro 1
+        ### Intro 1.1
+        ### Intro 1.2
+        ## Intro 2
+        ### Intro 2.1
+        ### Intro 2.2
+    '''
+    EXPECTED = (
+        Header(Str('Introduction'), level=1),
+        toc_div(BulletList(
+            ListItem(Plain(Link(Str('Intro 1'), url='#intro-1')), BulletList(
+                ListItem(Plain(Link(Str('Intro 1.1'), url='#intro-1.1'))),
+                ListItem(Plain(Link(Str('Intro 1.2'), url='#intro-1.2'))),
             )),
-            ListItem(Plain(Link(Str('Page 1.2'), url='section1/page2.md')), BulletList(
-                ListItem(Plain(Link(Str('Paragraph'), url='section1/page2.md#paragraph'))),
+            ListItem(Plain(Link(Str('Intro 2'), url='#intro-2')), BulletList(
+                ListItem(Plain(Link(Str('Intro 2.1'), url='#intro-2.1'))),
+                ListItem(Plain(Link(Str('Intro 2.2'), url='#intro-2.2'))),
             )),
+            ListItem(Plain(Link(Str('Section 1'), url='section1/')), BulletList(
+                ListItem(Plain(Link(Str('Page 1.1'), url='section1/page1.md')), BulletList(
+                    ListItem(Plain(Link(Str('Paragraph'), url='section1/page1.md#paragraph'))),
+                )),
+                ListItem(Plain(Link(Str('Page 1.2'), url='section1/page2.md')), BulletList(
+                    ListItem(Plain(Link(Str('Paragraph'), url='section1/page2.md#paragraph'))),
+                )),
+            )),
+            ListItem(Plain(Link(Str('Section 2'), url='section2/')), BulletList(
+                ListItem(Plain(Link(Str('Page 2.1'), url='section2/page1.md')), BulletList(
+                    ListItem(Plain(Link(Str('Paragraph'), url='section2/page1.md#paragraph'))),
+                )),
+                ListItem(Plain(Link(Str('Page 2.2'), url='section2/page2.md')), BulletList(
+                    ListItem(Plain(Link(Str('Paragraph'), url='section2/page2.md#paragraph'))),
+                )),
+            )),
+            ListItem(Plain(Link(Str('Section 3'), url='section3/'))),
         )),
-        ListItem(Plain(Link(Str('Section 2'), url='section2/')), BulletList(
-            ListItem(Plain(Link(Str('Page 2.1'), url='section2/page1.md')), BulletList(
-                ListItem(Plain(Link(Str('Paragraph'), url='section2/page1.md#paragraph'))),
-            )),
-            ListItem(Plain(Link(Str('Page 2.2'), url='section2/page2.md')), BulletList(
-                ListItem(Plain(Link(Str('Paragraph'), url='section2/page2.md#paragraph'))),
-            )),
-        )),
-        ListItem(Plain(Link(Str('Section 3'), url='section3/'))),
-    )),
+        Header(Str('Intro'), Space(), Str('1'), level=2, identifier='intro-1'),
+        Header(Str('Intro'), Space(), Str('1.1'), level=3, identifier='intro-1.1'),
+        Header(Str('Intro'), Space(), Str('1.2'), level=3, identifier='intro-1.2'),
+        Header(Str('Intro'), Space(), Str('2'), level=2, identifier='intro-2'),
+        Header(Str('Intro'), Space(), Str('2.1'), level=3, identifier='intro-2.1'),
+        Header(Str('Intro'), Space(), Str('2.2'), level=3, identifier='intro-2.2'),
+    )
 
 
-class TestTocDirective_Depth(AbstractTestTocDirective):
-    SOURCE = '@toc --depth=1'
-    EXPECTED = toc_div(BulletList(
-        ListItem(Plain(Link(Str('Section 1'), url='section1/'))),
-        ListItem(Plain(Link(Str('Section 2'), url='section2/'))),
-        ListItem(Plain(Link(Str('Section 3'), url='section3/'))),
-    )),
-
-
-del ProjectTestCase, AbstractTestTocDirective
+del SinglePageProjectTest, AbstractTestTocDirective
 
 if __name__ == '__main__':
     unittest.main()
