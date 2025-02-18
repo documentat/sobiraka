@@ -197,6 +197,28 @@ class TestTocDirective_Combined(AbstractTestTocDirective):
     )
 
 
+class TestTocDirective_Combined_Subheader(AbstractTestTocDirective):
+    SOURCE = '''
+        # Introduction
+        
+        ## Intro 1
+        
+        @toc --combined
+        
+        ### Intro 1.1
+        ### Intro 1.2
+        ## Intro 2
+        ### Intro 2.1
+        ### Intro 2.2
+    '''
+
+    EXPECTED_ISSUES = (
+        "Cannot use '@toc --combined' under a sub-header.",
+    )
+
+    test_doc = None
+
+
 del SinglePageProjectTest, AbstractTestTocDirective
 
 if __name__ == '__main__':

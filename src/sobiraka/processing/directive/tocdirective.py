@@ -1,4 +1,5 @@
 from argparse import ArgumentParser
+from dataclasses import dataclass
 from math import inf
 from typing import Iterable
 
@@ -6,6 +7,7 @@ from panflute import BulletList, Div, Element, Header, Link, ListItem, Plain, St
 from typing_extensions import override
 
 from sobiraka.models.config import CombinedToc
+from sobiraka.models.issues import Issue
 from sobiraka.processing.toc import Toc, local_toc, toc
 from .directive import Directive
 
@@ -45,6 +47,11 @@ class TocDirective(Directive):
                 toc_items = parent_item.children
 
         else:
+            if self.combined:
+                header = self.previous_header()
+                if header is not None and header.level != 1:
+                    self.page.issues.append(CombinedTocUnderSubheader())
+
             toc_items = toc(self.page,
                             builder=self.builder,
                             current_page=self.page,
@@ -76,3 +83,9 @@ class TocDirective(Directive):
             if len(item.children) > 0:
                 li.content.append(BulletList(*self.make_items(item.children)))
             yield li
+
+
+@dataclass(order=True, frozen=True)
+class CombinedTocUnderSubheader(Issue):
+    def __str__(self):
+        return "Cannot use '@toc --combined' under a sub-header."
