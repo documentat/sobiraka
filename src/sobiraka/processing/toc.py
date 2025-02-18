@@ -42,7 +42,9 @@ class TocItem:
     number: TocNumber = field(kw_only=True, default=Unnumbered())
     """The item's number. If `None`, then the number must not be displayed."""
 
-    origin: Page | Anchor = field(compare=False, default=None)
+    href: PageHref = field(kw_only=True, compare=False, default=None)
+
+    origin: Page | Anchor = field(kw_only=True, compare=False, default=None)
     """The source from which the item was generated."""
 
     is_current: bool = field(kw_only=True, default=False)
@@ -148,8 +150,8 @@ def toc(
         base: Page,
         *,
         builder: Builder,
-        toc_depth: int | float,
-        combined_toc: CombinedToc,
+        toc_depth: int | float = inf,
+        combined_toc: CombinedToc = CombinedToc.NEVER,
         current_page: Page | None = None,
 ) -> Toc:
     """
@@ -189,11 +191,10 @@ def toc(
                      or page.location.name \
                      or page.volume.codename \
                      or ''
-        item = TocItem(title=item_title,
-                       url=builder.make_internal_url(PageHref(page), page=current_page),
-                       number=RT[page].number,
-                       origin=page,
-                       is_current=page is current_page)
+        href = PageHref(page)
+        url = builder.make_internal_url(href, page=current_page)
+        item = TocItem(title=item_title, url=url, origin=page,
+                       number=RT[page].number, is_current=page is current_page)
 
         if current_page is not None:
             if page in current_page.breadcrumbs:
@@ -234,8 +235,9 @@ def local_toc(
         if anchor.level > toc_depth + 1:
             continue
 
-        url = builder.make_internal_url(PageHref(page, anchor.identifier), page=current_page)
-        item = TocItem(title=anchor.label, url=url, number=RT[anchor].number, origin=anchor)
+        href = PageHref(page, anchor.identifier)
+        url = builder.make_internal_url(href, page=current_page)
+        item = TocItem(anchor.label, url, href=href, origin=anchor, number=RT[anchor].number)
 
         if anchor.level == current_level:
             breadcrumbs[-2].append(item)
