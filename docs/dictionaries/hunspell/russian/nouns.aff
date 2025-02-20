@@ -96,3 +96,12 @@ SFX T ль лей .
 SFX T ль лям .
 SFX T ль лями .
 SFX T ль лях .
+
+# корм
+SFX K N 6
+SFX K 0 а .
+SFX K 0 у .
+SFX K 0 е .
+SFX K 0 ах .
+SFX K 0 ам .
+SFX K 0 ами .
