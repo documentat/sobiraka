@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import re
 from abc import ABCMeta, abstractmethod
 from asyncio import Task, TaskGroup, create_subprocess_exec, create_task, to_thread
 from collections import defaultdict
@@ -88,17 +87,6 @@ class AbstractHtmlBuilder(Builder, metaclass=ABCMeta):
         assert pandoc.returncode == 0
 
         return html
-
-    @classmethod
-    def expand_path_vars(cls, text: str, volume: Volume) -> str:
-        def _substitution(m: re.Match) -> str:
-            return {
-                '$LANG': volume.lang or '',
-                '$VOLUME': volume.codename or 'all',
-                '$AUTOPREFIX': volume.autoprefix,
-            }[m.group()]
-
-        return re.sub(r'\$\w+', _substitution, text)
 
     @abstractmethod
     def get_root_prefix(self, page: Page) -> str:

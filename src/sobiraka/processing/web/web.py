@@ -17,7 +17,7 @@ from typing_extensions import override
 from sobiraka.models import DirPage, FileSystem, IndexPage, Page, PageHref, PageStatus, Project, Volume
 from sobiraka.models.config import Config, Config_HighlightJS, Config_Prism, Config_Pygments, SearchIndexerName
 from sobiraka.runtime import RT
-from sobiraka.utils import AbsolutePath, RelativePath, configured_jinja, convert_or_none
+from sobiraka.utils import AbsolutePath, RelativePath, configured_jinja, convert_or_none, expand_vars
 from .abstracthtml import AbstractHtmlBuilder, AbstractHtmlProcessor
 from .head import HeadCssFile, HeadJsFile
 from .highlight import HighlightJs, Highlighter, Prism, Pygments
@@ -174,7 +174,7 @@ class WebBuilder(ThemeableProjectBuilder['WebProcessor', 'WebTheme'], AbstractHt
                 raise TypeError(page.__class__.__name__)
 
         prefix = config.web.prefix or '$AUTOPREFIX'
-        prefix = self.expand_path_vars(prefix, volume)
+        prefix = expand_vars(prefix, lang=volume.lang, codename=volume.codename)
         prefix = os.path.join(*prefix.split('/'))
 
         target_path = RelativePath(prefix) / target_path
@@ -266,7 +266,7 @@ class WebBuilder(ThemeableProjectBuilder['WebProcessor', 'WebTheme'], AbstractHt
         # Select the index file path
         index_relative_path = None
         if config.web.search.index_path is not None:
-            index_relative_path = self.expand_path_vars(config.web.search.index_path, volume)
+            index_relative_path = expand_vars(config.web.search.index_path, lang=volume.lang, codename=volume.codename)
 
         # Initialize the indexer
         indexer = indexer_class(self, volume, index_relative_path)
