@@ -16,7 +16,7 @@ class FakeFileSystem(FileSystem):
         self.pseudofiles = dict(sorted((*self.pseudofiles.items(), (RelativePath(key), value))))
 
     def exists(self, path: RelativePath) -> bool:
-        return path in self.pseudofiles
+        return path in self.pseudofiles or self.is_dir(path)
 
     def is_dir(self, path: RelativePath) -> bool:
         if path in self.pseudofiles:
@@ -25,6 +25,9 @@ class FakeFileSystem(FileSystem):
             if result.parts[:len(path.parts)] == path.parts:
                 return True
         return False
+
+    def resolve(self, path: RelativePath | None) -> AbsolutePath:
+        return AbsolutePath('/FAKE') / path
 
     @contextmanager
     def open_bytes(self, path: RelativePath) -> AbstractContextManager[BinaryIO]:
