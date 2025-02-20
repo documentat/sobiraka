@@ -1,0 +1,19 @@
+name: Publish master
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    types: [closed]
+    branches: [master]
+
+jobs:
+  build-images:
+    name: Build Docker images
+    uses: ./.github/workflows/build-images.yml
+
+  build-docs:
+    name: Build documentation
+    needs: [build-images]
+    uses: ./.github/workflows/build-docs.yml
+    secrets: inherit

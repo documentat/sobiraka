@@ -1,8 +1,9 @@
 on:
   workflow_call:
-    outputs:
-      must-publish-latest:
-        value: ${{ jobs.must-publish-latest.outputs.must-publish-latest }}
+    inputs:
+      image_tag:
+        type: string
+        default: ${{ github.sha }}
 
 jobs:
   build-image:
@@ -19,7 +20,9 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Build image
-        run: make ${{ matrix.variant.target }} IMAGE=ghcr.io/documentat/${{ matrix.variant.image }}:${{ github.sha }}
+        run: >
+          make ${{ matrix.variant.target }}
+          IMAGE=ghcr.io/documentat/${{ matrix.variant.image }}:${{ inputs.image_tag }}
 
       - uses: docker/login-action@v3
         with:
@@ -30,22 +33,14 @@ jobs:
       - name: Push image for this commit
         run: >
           docker push
-          ghcr.io/documentat/${{ matrix.variant.image }}:${{ github.sha }}
+          ghcr.io/documentat/${{ matrix.variant.image }}:${{ inputs.image_tag }}
 
       - name: Push image for this branch
+        if: github.ref != 'refs/heads/master'
         run: >
           docker tag
-          ghcr.io/documentat/${{ matrix.variant.image }}:${{ github.sha }}
+          ghcr.io/documentat/${{ matrix.variant.image }}:${{ inputs.image_tag }}
           ghcr.io/documentat/${{ matrix.variant.image }}:${{ github.ref_name }}
           &&
           docker push
           ghcr.io/documentat/${{ matrix.variant.image }}:${{ github.ref_name }}
-
-      - name: Decide if we will need to publish this image as 'latest'
-        id: must-publish-latest
-        if: github.ref == 'refs/heads/master'
-        run: |
-          LATEST_COMMIT=$(git ls-remote origin refs/heads/master)
-          if [ $GITHUB_SHA == $LATEST_COMMIT ]; then
-            echo must-publish-latest=1 >> $GITHUB_OUTPUT
-          fi

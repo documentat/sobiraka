@@ -48,54 +48,13 @@ jobs:
     name: Build Docker images
     uses: ./.github/workflows/build-images.yml
 
+  check-docs:
+    name: Check documentation
+    needs: [build-images]
+    uses: ./.github/workflows/check-docs.yml
+
   build-docs:
-    name: Check & build documentation
+    name: Build documentation
     needs: [build-images]
     uses: ./.github/workflows/build-docs.yml
-
-  publish-docs:
-    name: Publish documentation
-    needs: [run-tests, build-docs]
-    runs-on: self-hosted
-
-    steps:
-      - uses: actions/cache@v4
-        with:
-          key: rsync
-          path: rsync
-
-      - uses: actions/download-artifact@v4
-        with:
-          name: Documentation (web)
-          path: docs/build
-
-      - name: Setup Rsync
-        if: ${{ hashFiles('rsync') == '' }}
-        run: >
-          wget -qO- https://download.samba.org/pub/rsync/binaries/ubuntu-22.04-x86_64/rsync-3.2.7.tar.gz
-          | tar -xz usr/local/bin/rsync --strip-components=3
-
-      - name: Setup SSH
-        run: |
-          echo "${{ vars.KNOWN_HOSTS }}" >> ./gha_known_hosts
-          echo "${{ secrets.SSH_KEY }}" > ./gha_identity
-          chmod 600 ./gha_identity
-
-      - name: Upload documentation
-        run: >
-          ./rsync docs/build/ demo@demo.documentat.io:~/sobiraka/~${{ github.ref_name }}
-          --verbose
-          --rsh 'ssh -i gha_identity -o UserKnownHostsFile=gha_known_hosts'
-          --human-readable
-          --recursive
-          --delete
-          --exclude .htaccess
-          --exclude .htpasswd
-          &&
-          echo ::notice title=Documentation published on the demo server::http://sobiraka.demo.documentat.io/~${{ github.ref_name }}/
-
-  publish-latest:
-    name: Publish 'latest' images
-    if: needs.build-images.outputs.must-publish-latest
-    needs: [run-tests, build-images, build-pip, build-docs, publish-docs]  # "All I'm asking for is total perfection"
-    uses: ./.github/workflows/build-images.yml
+    secrets: inherit
