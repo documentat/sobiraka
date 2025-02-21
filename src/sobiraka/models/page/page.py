@@ -140,7 +140,7 @@ class Page:
     # Reading the source file
 
     def _process_raw(self, raw_text: str):
-        if m := re.fullmatch(r'--- \n (.+\n)? --- (?: \n+ (.+) )?', raw_text, re.DOTALL | re.VERBOSE):
+        if m := re.fullmatch(r'--- \n (.+?\n)? --- (?: \n+ (.+) )?', raw_text, re.DOTALL | re.VERBOSE):
             if meta_str := m.group(1):
                 meta = yaml.safe_load(meta_str)
             else:
@@ -276,6 +276,7 @@ def _hash(data: str | bytes) -> str:
 
 @dataclass(kw_only=True)
 class PageMeta:
+    title: str = None
     version: Version = None
 
     def __post_init__(self):

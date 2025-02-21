@@ -5,7 +5,7 @@ from panflute import BulletList, Div, Element, Link, ListItem, Plain, Str
 
 from abstracttests.projecttestcase import ProjectTestCase
 from helpers import FakeBuilder
-from sobiraka.models import FileSystem, Page, PageStatus, Project, Volume
+from sobiraka.models import FileSystem, Page, PageMeta, PageStatus, Project, Volume
 from sobiraka.runtime import RT
 from sobiraka.utils import RelativePath
 
@@ -26,6 +26,7 @@ class AbstractTestTocDirective(ProjectTestCase[FakeBuilder]):
                 RelativePath('section2'): Page('# Section 2'),
                 RelativePath('section2/page1.md'): Page('# Page 2.1\n## Paragraph'),
                 RelativePath('section2/page2.md'): Page('# Page 2.2\n## Paragraph'),
+                RelativePath('section3'): Page(PageMeta(title='Section 3'), '# This is the actual title of Section 3'),
             }),
         })
 
@@ -46,6 +47,7 @@ class TestTocDirective_Default(AbstractTestTocDirective):
             ListItem(Plain(Link(Str('Page 2.1'), url='section2/page1.md'))),
             ListItem(Plain(Link(Str('Page 2.2'), url='section2/page2.md'))),
         )),
+        ListItem(Plain(Link(Str('Section 3'), url='section3'))),
     ), classes=['toc'])
 
 
@@ -68,6 +70,7 @@ class TestTocDirective_Combine(AbstractTestTocDirective):
                 ListItem(Plain(Link(Str('Paragraph'), url='section2/page2.md#paragraph'))),
             )),
         )),
+        ListItem(Plain(Link(Str('Section 3'), url='section3'))),
     ), classes=['toc'])
 
 
@@ -76,6 +79,7 @@ class TestTocDirective_Depth(AbstractTestTocDirective):
     expected = Div(BulletList(
         ListItem(Plain(Link(Str('Section 1'), url='section1'))),
         ListItem(Plain(Link(Str('Section 2'), url='section2'))),
+        ListItem(Plain(Link(Str('Section 3'), url='section3'))),
     ), classes=['toc'])
 
 
