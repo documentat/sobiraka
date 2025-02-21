@@ -1,77 +1,20 @@
 import re
 from importlib.resources import files
 from math import inf
-from textwrap import dedent
-from typing import Iterable
 
 import panflute
-import yaml
-from jsonschema.validators import Draft202012Validator
 from utilspie.collectionsutils import frozendict
 
-from sobiraka.models.config import Config_Prover_Dictionaries
+from sobiraka.models import FileSystem, NamingScheme, Volume
+from sobiraka.models.config import CombinedToc, Config, Config_Content, Config_HighlightJS, Config_Latex, \
+    Config_Latex_Headers, Config_PDF, Config_Pagefind_Translations, Config_Paths, Config_Pdf_Highlight, Config_Prism, \
+    Config_Prover, Config_Prover_Dictionaries, Config_Pygments, Config_Search_LinkTarget, Config_Web, \
+    Config_Web_Highlight, Config_Web_Search, SearchIndexerName
 from sobiraka.utils import AbsolutePath, Apostrophe, QuotationMark, RelativePath, convert_or_none, expand_vars, \
-    get_default, merge_dicts
-from .config import CombinedToc, Config, Config_Content, Config_HighlightJS, Config_Latex, Config_Latex_Headers, \
-    Config_PDF, Config_Pagefind_Translations, Config_Paths, Config_Pdf_Highlight, Config_Prism, Config_Prover, \
-    Config_Pygments, Config_Search_LinkTarget, Config_Web, Config_Web_Highlight, Config_Web_Search, SearchIndexerName
-from .filesystem import FileSystem, RealFileSystem
-from .namingscheme import NamingScheme
-from .project import Project
-from .volume import Volume
-
-MANIFEST_SCHEMA = yaml.safe_load((files('sobiraka') / 'files' / 'sobiraka-project.yaml').read_text())
+    get_default
 
 
-def load_project(manifest_path: AbsolutePath) -> Project:
-    """
-    Load a :obj:`.Project` from the YAML file at `manifest_path`.
-
-    The file must be formatted using the schema defined at ``files/sobiraka-project.yaml`` in the sources.
-    """
-    with manifest_path.open(encoding='utf-8') as manifest_file:
-        manifest: dict = yaml.safe_load(manifest_file) or {}
-    fs = RealFileSystem(manifest_path.parent)
-    project = load_project_from_dict(manifest, fs=fs)
-    project.manifest_path = manifest_path
-    return project
-
-
-def load_project_from_str(manifest_yaml: str, *, fs: FileSystem) -> Project:
-    manifest_yaml = dedent(manifest_yaml)
-    manifest: dict = yaml.safe_load(manifest_yaml) or {}
-    return load_project_from_dict(manifest, fs=fs)
-
-
-def load_project_from_dict(manifest: dict, *, fs: FileSystem) -> Project:
-    if manifest:
-        Draft202012Validator(manifest).validate(MANIFEST_SCHEMA)
-
-    volumes: list[Volume] = []
-    for lang, language_data in _normalized_and_merged(manifest, 'languages'):
-        for codename, volume_data in _normalized_and_merged(language_data, 'volumes'):
-            volumes.append(_load_volume(lang, codename, volume_data, fs))
-
-    project = Project(fs, tuple(volumes))
-    project.primary_language = manifest.get('primary_language') or volumes[0].lang
-    return project
-
-
-def _normalized_and_merged(data: dict, key: str) -> Iterable[tuple[str, dict]]:
-    if key not in data:
-        yield None, data
-    elif list(data[key]) == ['DEFAULT']:
-        yield None, data[key]['DEFAULT']
-    elif 'DEFAULT' in data[key]:
-        defaults = data[key].pop('DEFAULT')
-        for k, v in data[key].items():
-            v = merge_dicts(defaults, v)
-            yield k, v
-    else:
-        yield from data[key].items()
-
-
-def _load_volume(lang: str | None, codename: str, volume_data: dict, fs: FileSystem) -> Volume:
+def load_volume(lang: str | None, codename: str, volume_data: dict, fs: FileSystem) -> Volume:
     def _(_keys, _default=None):
         try:
             _result = volume_data

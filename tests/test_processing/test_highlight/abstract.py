@@ -7,7 +7,7 @@ from abstracttests.singlepageprojecttest import SinglePageProjectTest
 from helpers import FakeFileSystem
 from sobiraka.models import FileSystem
 from sobiraka.models.config import Config, Config_Web
-from sobiraka.models.load import _load_web_highlight
+from sobiraka.models.load.load_volume import _load_web_highlight
 from sobiraka.processing.web import Head, WebBuilder
 from sobiraka.utils import AbsolutePath, RelativePath
 

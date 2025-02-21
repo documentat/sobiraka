@@ -6,7 +6,7 @@ from unittest.mock import Mock
 
 from sobiraka.models import FileNameData, FileSystem, NamingScheme, Project, Volume
 from sobiraka.models.config import Config, Config_Paths
-from sobiraka.models.load import _load_volume
+from sobiraka.models.load import load_volume
 from sobiraka.utils import RelativePath
 
 
@@ -41,7 +41,7 @@ class AbstractNamingSchemeTest(TestCase):
 
 class TestDefaultNamingScheme(AbstractNamingSchemeTest):
     def setUp(self):
-        volume = _load_volume('en', 'vol', {}, Mock(FileSystem))
+        volume = load_volume('en', 'vol', {}, Mock(FileSystem))
         self.naming_scheme = volume.config.paths.naming_scheme
 
     parsing_results = {
