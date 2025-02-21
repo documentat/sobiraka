@@ -4,7 +4,7 @@ from os.path import splitext
 from unittest import TestCase, main
 from unittest.mock import Mock
 
-from sobiraka.models import FileNameData, FileSystem, NamingScheme, Project, Volume
+from sobiraka.models import FileNameData, FileSystem, NamingScheme, Page, Project, Volume
 from sobiraka.models.config import Config, Config_Paths
 from sobiraka.models.load import load_volume
 from sobiraka.utils import RelativePath
@@ -23,19 +23,21 @@ class AbstractNamingSchemeTest(TestCase):
                 self.assertEqual(expected, actual)
 
     def test_ordering(self):
-        project = Project(
-            Mock(FileSystem),
-            {
-                RelativePath('.'): Volume(
-                    Config(
-                        paths=Config_Paths(
-                            root=RelativePath('.'),
-                            naming_scheme=self.naming_scheme,
-                        )),
-                    self.ordering_original),
-            })
-        volume = project.volumes[0]
-        ordering_actual = tuple(volume.pages_by_path.keys())
+        config = Config(
+            paths=Config_Paths(
+                root=RelativePath('.'),
+                naming_scheme=self.naming_scheme,
+            ))
+
+        pages = {p: Page() for p in self.ordering_original}
+        volume = Volume(config, pages)
+
+        fs = Mock(FileSystem)
+        project = Project(fs, {
+            RelativePath('.'): volume,
+        })
+
+        ordering_actual = tuple(project.pages_by_path.keys())
         self.assertSequenceEqual(self.ordering_expected, ordering_actual)
 
 

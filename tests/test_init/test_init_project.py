@@ -8,15 +8,24 @@ from sobiraka.utils import RelativePath
 class TestInitProject(TestCase):
 
     def test_with_fs_tuple(self):
+        vol1 = Volume({
+            RelativePath('page1.md'): Page(),
+            RelativePath('page2.md'): Page(),
+            RelativePath('page3.md'): Page(),
+        })
+        vol2 = Volume({
+            RelativePath('page1.md'): Page(),
+            RelativePath('page2.md'): Page(),
+            RelativePath('page3.md'): Page(),
+        })
+        vol3 = Volume({
+            RelativePath('page1.md'): Page(),
+            RelativePath('page2.md'): Page(),
+            RelativePath('page3.md'): Page(),
+        })
+
         fs = Mock(FileSystem)
-        vol1 = Volume((RelativePath('page1.md'), RelativePath('page2.md'), RelativePath('page3.md')))
-        vol2 = Volume((RelativePath('page1.md'), RelativePath('page2.md'), RelativePath('page3.md')))
-        vol3 = Volume((RelativePath('page1.md'), RelativePath('page2.md'), RelativePath('page3.md')))
-        project = Project(fs, (
-            vol1,
-            vol2,
-            vol3,
-        ))
+        project = Project(fs, (vol1, vol2, vol3))
 
         with self.subTest('fs'):
             self.assertIs(fs, project.fs)
@@ -29,10 +38,23 @@ class TestInitProject(TestCase):
             self.assertIs(None, project.primary_language)
 
     def test_with_fs_dict(self):
+        vol1 = Volume({
+            RelativePath('page1.md'): Page(),
+            RelativePath('page2.md'): Page(),
+            RelativePath('page3.md'): Page(),
+        })
+        vol2 = Volume({
+            RelativePath('page1.md'): Page(),
+            RelativePath('page2.md'): Page(),
+            RelativePath('page3.md'): Page(),
+        })
+        vol3 = Volume({
+            RelativePath('page1.md'): Page(),
+            RelativePath('page2.md'): Page(),
+            RelativePath('page3.md'): Page(),
+        })
+
         fs = Mock(FileSystem)
-        vol1 = Volume((RelativePath('page1.md'), RelativePath('page2.md'), RelativePath('page3.md')))
-        vol2 = Volume((RelativePath('page1.md'), RelativePath('page2.md'), RelativePath('page3.md')))
-        vol3 = Volume((RelativePath('page1.md'), RelativePath('page2.md'), RelativePath('page3.md')))
         project = Project(fs, {
             RelativePath('src1'): vol1,
             RelativePath('src2'): vol2,
