@@ -55,9 +55,19 @@ class Waiter(metaclass=ABCMeta):
         about which tasks are created and which are not,
         no matter how many timed the higher-level `require()` function is called.
         """
-        key = page.volume if status is PageStatus.PROCESS3 else page
+        # Waiting for the whole volume on the PROCESS3 stage
+        if status is PageStatus.PROCESS3:
+            try:
+                return self.tasks[page.volume][status]
+            except KeyError:
+                coro = self.process3(page.volume)
+                task = create_task(coro, name=f'{status.name} {page.volume.autoprefix}')
+                self.tasks[page.volume][status] = task
+                return task
+
+        # Waiting for the single page
         try:
-            task = self.tasks[key][status]
+            return self.tasks[page][status]
         except KeyError as exc:
             match status:
                 case PageStatus.PREPARE:
@@ -66,14 +76,13 @@ class Waiter(metaclass=ABCMeta):
                     coro = self.process1(page)
                 case PageStatus.PROCESS2:
                     coro = self.process2(page)
-                case PageStatus.PROCESS3:
-                    coro = self.process3(page.volume)
                 case PageStatus.PROCESS4:
                     coro = self.process4(page)
                 case _:
                     raise ValueError(status) from exc
-            task = self.tasks[key][status] = create_task(coro, name=f'{status.name} {page.path_in_project}')
-        return task
+            task = create_task(coro, name=f'{status.name} {page.path_in_project}')
+            self.tasks[page][status] = task
+            return task
 
     # endregion
 
