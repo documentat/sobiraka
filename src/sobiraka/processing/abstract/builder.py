@@ -11,7 +11,6 @@ import jinja2
 import panflute
 from jinja2 import StrictUndefined
 from panflute import Cite, Doc, Para, Space, Str, stringify
-from typing_extensions import override
 
 from sobiraka.models import FileSystem, Page, PageHref, Project, Volume
 from sobiraka.models.config import Config
@@ -19,16 +18,18 @@ from sobiraka.runtime import RT
 from sobiraka.utils import super_gather
 from .processor import Processor
 from .theme import Theme
-from .waiter import Waiter
 from ..numerate import numerate
 
 T = TypeVar('T', bound=Theme)
 P = TypeVar('P', bound=Processor)
 
 
-class Builder(Waiter, metaclass=ABCMeta):
+class Builder(metaclass=ABCMeta):
     def __init__(self):
         super().__init__()
+
+        from .waiter import Waiter
+        self.waiter: Waiter = Waiter(self)
 
         self.jinja: dict[Volume, jinja2.Environment] = {}
         self.process2_tasks: dict[Page, list[Task]] = defaultdict(list)
@@ -60,7 +61,6 @@ class Builder(Waiter, metaclass=ABCMeta):
     def additional_variables(self) -> dict:
         ...
 
-    @override
     async def prepare(self, page: Page):
         """
         Parse syntax tree with Pandoc and save its syntax tree into :obj:`.Page.doc`.
@@ -112,7 +112,6 @@ class Builder(Waiter, metaclass=ABCMeta):
         RT[page].title = page.stem
         RT[page].doc = panflute.load(BytesIO(json_bytes))
 
-    @override
     async def process1(self, page: Page) -> Page:
         """
         Run first pass of page processing.
@@ -152,11 +151,9 @@ class Builder(Waiter, metaclass=ABCMeta):
                 from ..directive import TocDirective
                 return TocDirective(self, page, argv)
 
-    @override
     async def process2(self, page: Page):
         await super_gather(self.process2_tasks[page], f'Additional tasks failed for {page.path_in_project}')
 
-    @override
     async def process3(self, volume: Volume):
         if volume.config.content.numeration:
             numerate(volume)
@@ -166,7 +163,6 @@ class Builder(Waiter, metaclass=ABCMeta):
             for toc_placeholder in processor.directives[page]:
                 toc_placeholder.postprocess()
 
-    @override
     async def process4(self, page: Page):
         pass
 

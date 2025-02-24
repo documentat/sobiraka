@@ -60,7 +60,7 @@ class WeasyPrintBuilder(ThemeableVolumeBuilder['WeasyPrintProcessor', 'WeasyPrin
         # Launch page processing tasks
         processing: dict[Page, Task] = {}
         for page in volume.pages:
-            processing[page] = create_task(self.require(page, PageStatus.PROCESS4),
+            processing[page] = create_task(self.waiter.wait(page, PageStatus.PROCESS4),
                                            name=f'generate html for {page.path_in_project}')
 
         # Launch non-page processing tasks
@@ -256,7 +256,7 @@ class WeasyPrintProcessor(AbstractHtmlProcessor[WeasyPrintBuilder]):
         return header,
 
     async def numerate_header(self, header: Header, page: Page):
-        await self.builder.require(page, PageStatus.PROCESS3)
+        await self.builder.waiter.wait(page, PageStatus.PROCESS3)
 
         if header.level == 1:
             header.attributes['data-number'] = str(RT[page].number)

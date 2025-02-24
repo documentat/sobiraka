@@ -172,7 +172,7 @@ class Processor(Dispatcher, Generic[B], metaclass=ABCMeta):
             RT[page].issues.append(BadLink(target_text))
 
     async def process2_internal_link(self, elem: Link, href: PageHref, target_text: str, page: Page):
-        await self.builder.require(href.target, PageStatus.PROCESS1)
+        await self.builder.waiter.wait(href.target, PageStatus.PROCESS1)
 
         if href.anchor:
             try:

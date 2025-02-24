@@ -1,7 +1,8 @@
-from abc import ABCMeta, abstractmethod
+from __future__ import annotations
+
 from asyncio import Task, create_task
 from collections import defaultdict
-from typing import final
+from typing import TYPE_CHECKING, final
 
 from sobiraka.models import Page, PageStatus, Volume
 from sobiraka.models.exceptions import DependencyFailed, IssuesOccurred, VolumeFailed
@@ -9,35 +10,16 @@ from sobiraka.report import update_progressbar
 from sobiraka.runtime import RT
 from sobiraka.utils import super_gather
 
+if TYPE_CHECKING:
+    from .builder import Builder
 
-class Waiter(metaclass=ABCMeta):
-    def __init__(self):
+
+class Waiter:
+    def __init__(self, builder: Builder):
+        self.builder: Builder = builder
+
         self._page_tasks: dict[Page, dict[PageStatus, Task]] = defaultdict(dict)
         self._volume_tasks: dict[Volume, Task] = {}
-
-    # region Abstract methods
-
-    @abstractmethod
-    async def prepare(self, page: Page):
-        ...
-
-    @abstractmethod
-    async def process1(self, page: Page):
-        ...
-
-    @abstractmethod
-    async def process2(self, page: Page):
-        ...
-
-    @abstractmethod
-    async def process3(self, volume: Volume):
-        ...
-
-    @abstractmethod
-    async def process4(self, page: Page):
-        ...
-
-    # endregion
 
     # region Creating tasks
 
@@ -54,7 +36,7 @@ class Waiter(metaclass=ABCMeta):
 
         This function is synchronous, so that there is never any confusion
         about which tasks are created and which are not,
-        no matter how many timed the higher-level `require()` function is called.
+        no matter how many timed the higher-level `wait()` function is called.
         """
         if status is PageStatus.PROCESS3:
             return self.create_volume_task(page.volume)
@@ -64,13 +46,13 @@ class Waiter(metaclass=ABCMeta):
         except KeyError as exc:
             match status:
                 case PageStatus.PREPARE:
-                    coro = self.prepare(page)
+                    coro = self.builder.prepare(page)
                 case PageStatus.PROCESS1:
-                    coro = self.process1(page)
+                    coro = self.builder.process1(page)
                 case PageStatus.PROCESS2:
-                    coro = self.process2(page)
+                    coro = self.builder.process2(page)
                 case PageStatus.PROCESS4:
-                    coro = self.process4(page)
+                    coro = self.builder.process4(page)
                 case _:
                     raise ValueError(status) from exc
             task = create_task(coro, name=f'{status.name} {page.path_in_project}')
@@ -82,7 +64,7 @@ class Waiter(metaclass=ABCMeta):
         try:
             return self._volume_tasks[volume]
         except KeyError:
-            coro = self.process3(volume)
+            coro = self.builder.process3(volume)
             task = create_task(coro, name=f'PROCESS3 {volume.autoprefix}')
             self._volume_tasks[volume] = task
             return task
@@ -92,7 +74,7 @@ class Waiter(metaclass=ABCMeta):
     # region Awaiting specified statuses
 
     @final
-    async def require(self, page: Page, target_status: PageStatus):
+    async def wait(self, page: Page, target_status: PageStatus):
         """
         Perform all yet unperformed operations until the `page` will reach the `target_status`.
         Do nothing if it has that status already.
@@ -121,7 +103,7 @@ class Waiter(metaclass=ABCMeta):
         if PageStatus.PROCESS3 in roadmap:
             for other_page in page.volume.pages:
                 if other_page is not page:
-                    before_process3.append(create_task(self.require(other_page, PageStatus.PROCESS2),
+                    before_process3.append(create_task(self.wait(other_page, PageStatus.PROCESS2),
                                                        name=f'require {other_page.path_in_project}'))
 
         # Iterate from the current status to the required status
@@ -140,14 +122,14 @@ class Waiter(metaclass=ABCMeta):
                     raise VolumeFailed(page.volume) from excs
 
             # Start running the appropriate function.
-            # In the (completely normal) case when multiple copies of `require()` are running simultaneously
+            # In the (completely normal) case when multiple copies of `wait()` are running simultaneously
             # for the same page and target status, they all will be awaiting the same Task here.
-            # And any future copies of `require()` will go through this line instantaneously,
+            # And any future copies of `wait()` will go through this line instantaneously,
             # because the Task will already be finished.
             try:
                 await self.create_page_task(page, status)
 
-            # The only place that raises IssuesOccurred is `require()` itself, see a few lines below.
+            # The only place that raises IssuesOccurred is `wait()` itself, see a few lines below.
             # If we catch it, it means that the step required some other page, but processing that page failed.
             # It is an IssuesOccurred for that page, but a DependencyFailed for the current one.
             # The same logic applies to another page's VolumeFailed.
