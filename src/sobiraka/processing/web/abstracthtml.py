@@ -3,12 +3,10 @@ from __future__ import annotations
 from abc import ABCMeta, abstractmethod
 from asyncio import Task, TaskGroup, create_subprocess_exec, create_task, to_thread
 from collections import defaultdict
-from copy import deepcopy
 from subprocess import PIPE, run
 from typing import Awaitable, Coroutine, Generic, TypeVar, final
 
-from panflute import CodeBlock, Element
-from panflute import Image
+from panflute import CodeBlock, Element, Image
 from typing_extensions import override
 
 from sobiraka.models import Page, Volume
@@ -72,9 +70,6 @@ class AbstractHtmlBuilder(Builder, metaclass=ABCMeta):
 
     @final
     async def render_html(self, page: Page) -> bytes:
-        evil_copy = deepcopy(RT[page].doc)
-        evil_copy.content.clear()
-
         pandoc = await create_subprocess_exec(
             'pandoc',
             '--from', 'json',
