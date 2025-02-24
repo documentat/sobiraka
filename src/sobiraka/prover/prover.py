@@ -84,7 +84,8 @@ class Prover(VolumeBuilder[ProverProcessor]):
     async def run(self):
         tasks: list[Task] = []
         for page in self.volume.pages:
-            tasks.append(create_task(self.require(page, PageStatus.PROCESS1), name=f'checking {page.path_in_project}'))
+            tasks.append(create_task(self.await_page(page, PageStatus.PROCESS1),
+                                     name=f'checking {page.path_in_project}'))
         await super_gather(tasks)
 
     @override

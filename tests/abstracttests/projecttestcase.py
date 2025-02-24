@@ -39,7 +39,7 @@ class ProjectTestCase(AbstractTestWithRtPages, Generic[T], metaclass=ABCMeta):
     async def _process(self):
         tasks = []
         for page in self.project.pages:
-            tasks.append(create_task(self.builder.require(page, self.REQUIRE)))
+            tasks.append(create_task(self.builder.await_page(page, self.REQUIRE)))
         await super_gather(tasks)
 
     def subTest(self, msg: Any = ..., **params: Any):

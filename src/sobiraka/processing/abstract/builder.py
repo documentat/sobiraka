@@ -96,7 +96,7 @@ class Builder(metaclass=ABCMeta):
         return task
 
     @final
-    async def require(self, page: Page, target_status: PageStatus):
+    async def await_page(self, page: Page, target_status: PageStatus):
         """
         Perform all yet unperformed operations until the `page` will reach the `target_status`.
         Do nothing if it has that status already.
@@ -125,7 +125,7 @@ class Builder(metaclass=ABCMeta):
         if PageStatus.PROCESS3 in roadmap:
             for other_page in page.volume.pages:
                 if other_page is not page:
-                    before_process3.append(create_task(self.require(other_page, PageStatus.PROCESS2),
+                    before_process3.append(create_task(self.await_page(other_page, PageStatus.PROCESS2),
                                                        name=f'require {other_page.path_in_project}'))
 
         # Iterate from the current status to the required status
