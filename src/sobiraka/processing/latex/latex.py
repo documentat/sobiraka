@@ -151,6 +151,7 @@ class LatexBuilder(ThemeableVolumeBuilder['LatexProcessor', 'LatexTheme']):
                 with suppress(Exception):
                     await task
 
+    @override
     async def process4(self, page: Page):
         if len(RT[page].doc.content) == 0:
             RT[page].bytes = b''

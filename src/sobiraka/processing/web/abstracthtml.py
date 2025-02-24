@@ -56,6 +56,7 @@ class AbstractHtmlBuilder(Builder, metaclass=ABCMeta):
             process = run(['sass', '--style=compressed', '--stdin'], input=source, stdout=PIPE, check=True)
         return process.stdout
 
+    @override
     async def process4(self, page: Page):
         self.apply_postponed_image_changes(page)
         html = await self.render_html(page)

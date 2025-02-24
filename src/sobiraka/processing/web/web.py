@@ -97,6 +97,7 @@ class WebBuilder(ThemeableProjectBuilder['WebProcessor', 'WebTheme'], AbstractHt
         for directory in dirs_to_delete:
             rmtree(directory, ignore_errors=True)
 
+    @override
     async def process4(self, page: Page):
         if indexer := self._indexers.get(page.volume):
             await indexer.add_page(page)
