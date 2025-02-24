@@ -12,7 +12,8 @@ from sobiraka.utils import super_gather
 
 class Waiter(metaclass=ABCMeta):
     def __init__(self):
-        self.tasks: dict[Page | Volume, dict[PageStatus, Task]] = defaultdict(dict)
+        self._page_tasks: dict[Page, dict[PageStatus, Task]] = defaultdict(dict)
+        self._volume_tasks: dict[Volume, Task] = {}
 
     # region Abstract methods
 
@@ -55,19 +56,11 @@ class Waiter(metaclass=ABCMeta):
         about which tasks are created and which are not,
         no matter how many timed the higher-level `require()` function is called.
         """
-        # Waiting for the whole volume on the PROCESS3 stage
         if status is PageStatus.PROCESS3:
-            try:
-                return self.tasks[page.volume][status]
-            except KeyError:
-                coro = self.process3(page.volume)
-                task = create_task(coro, name=f'{status.name} {page.volume.autoprefix}')
-                self.tasks[page.volume][status] = task
-                return task
+            return self.create_volume_task(page.volume)
 
-        # Waiting for the single page
         try:
-            return self.tasks[page][status]
+            return self._page_tasks[page][status]
         except KeyError as exc:
             match status:
                 case PageStatus.PREPARE:
@@ -81,7 +74,17 @@ class Waiter(metaclass=ABCMeta):
                 case _:
                     raise ValueError(status) from exc
             task = create_task(coro, name=f'{status.name} {page.path_in_project}')
-            self.tasks[page][status] = task
+            self._page_tasks[page][status] = task
+            return task
+
+    @final
+    def create_volume_task(self, volume: Volume) -> Task:
+        try:
+            return self._volume_tasks[volume]
+        except KeyError:
+            coro = self.process3(volume)
+            task = create_task(coro, name=f'PROCESS3 {volume.autoprefix}')
+            self._volume_tasks[volume] = task
             return task
 
     # endregion
