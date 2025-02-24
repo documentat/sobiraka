@@ -57,7 +57,7 @@ class BookThemeProcessor(WebProcessor):
                 RawBlock('</blockquote>'))
 
     async def numerate_header(self, header: Header, page: Page):
-        await self.builder.await_page(page, PageStatus.PROCESS3)
+        await self.builder.require(page, PageStatus.PROCESS3)
 
         if header.level == 1:
             header.content = Str(RT[page].number.format('{}. ')), *header.content

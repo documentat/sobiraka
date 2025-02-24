@@ -62,7 +62,7 @@ class WebBuilder(ThemeableProjectBuilder['WebProcessor', 'WebTheme'], AbstractHt
 
             # Launch page processing tasks
             for page in volume.pages:
-                self.add_html_task(self.await_page(page, PageStatus.PROCESS4))
+                self.add_html_task(self.require(page, PageStatus.PROCESS4))
 
             # Launch non-page processing tasks
             self.add_html_task(self.add_directory_from_location(theme.static_dir, RelativePath('_static')))

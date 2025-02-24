@@ -89,7 +89,7 @@ class LatexBuilder(ThemeableVolumeBuilder['LatexProcessor', 'LatexTheme']):
 
         processing: dict[Page, Task] = {}
         for page in volume.pages:
-            processing[page] = create_task(self.await_page(page, PageStatus.PROCESS4),
+            processing[page] = create_task(self.require(page, PageStatus.PROCESS4),
                                            name=f'generate latex for {page.path_in_project}')
 
         try:

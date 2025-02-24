@@ -54,7 +54,7 @@ class Waiter(metaclass=ABCMeta):
 
         This function is synchronous, so that there is never any confusion
         about which tasks are created and which are not,
-        no matter how many timed the higher-level `await_page()` function is called.
+        no matter how many timed the higher-level `require()` function is called.
         """
         if status is PageStatus.PROCESS3:
             return self.create_volume_task(page.volume)
@@ -92,7 +92,7 @@ class Waiter(metaclass=ABCMeta):
     # region Awaiting specified statuses
 
     @final
-    async def await_page(self, page: Page, target_status: PageStatus):
+    async def require(self, page: Page, target_status: PageStatus):
         """
         Perform all yet unperformed operations until the `page` will reach the `target_status`.
         Do nothing if it has that status already.
@@ -121,8 +121,8 @@ class Waiter(metaclass=ABCMeta):
         if PageStatus.PROCESS3 in roadmap:
             for other_page in page.volume.pages:
                 if other_page is not page:
-                    before_process3.append(create_task(self.await_page(other_page, PageStatus.PROCESS2),
-                                                       name=f'await_page {other_page.path_in_project}'))
+                    before_process3.append(create_task(self.require(other_page, PageStatus.PROCESS2),
+                                                       name=f'require {other_page.path_in_project}'))
 
         # Iterate from the current status to the required status
         for status in PageStatus.range(RT[page].status, target_status):
@@ -140,9 +140,9 @@ class Waiter(metaclass=ABCMeta):
                     raise VolumeFailed(page.volume) from excs
 
             # Start running the appropriate function.
-            # In the (completely normal) case when multiple copies of `await_page()` are running simultaneously
+            # In the (completely normal) case when multiple copies of `require()` are running simultaneously
             # for the same page and target status, they all will be awaiting the same Task here.
-            # And any future copies of `await_page()` will go through this line instantaneously,
+            # And any future copies of `require()` will go through this line instantaneously,
             # because the Task will already be finished.
             try:
                 await self.create_page_task(page, status)
