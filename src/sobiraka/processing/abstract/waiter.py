@@ -18,8 +18,8 @@ class Waiter:
     def __init__(self, builder: Builder):
         self.builder: Builder = builder
 
-        self._page_tasks: dict[Page, dict[PageStatus, Task]] = defaultdict(dict)
-        self._volume_tasks: dict[Volume, Task] = {}
+        self.page_tasks: dict[Page, dict[PageStatus, Task]] = defaultdict(dict)
+        self.volume_tasks: dict[Volume, Task] = {}
 
     # region Creating tasks
 
@@ -42,7 +42,7 @@ class Waiter:
             return self.create_volume_task(page.volume)
 
         try:
-            return self._page_tasks[page][status]
+            return self.page_tasks[page][status]
         except KeyError as exc:
             match status:
                 case PageStatus.PREPARE:
@@ -56,17 +56,17 @@ class Waiter:
                 case _:
                     raise ValueError(status) from exc
             task = create_task(coro, name=f'{status.name} {page.path_in_project}')
-            self._page_tasks[page][status] = task
+            self.page_tasks[page][status] = task
             return task
 
     @final
     def create_volume_task(self, volume: Volume) -> Task:
         try:
-            return self._volume_tasks[volume]
+            return self.volume_tasks[volume]
         except KeyError:
             coro = self.builder.process3(volume)
             task = create_task(coro, name=f'PROCESS3 {volume.autoprefix}')
-            self._volume_tasks[volume] = task
+            self.volume_tasks[volume] = task
             return task
 
     # endregion
