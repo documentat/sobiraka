@@ -165,7 +165,6 @@ class Processor(Dispatcher, Generic[B], metaclass=ABCMeta):
 
             href = PageHref(target, target_anchor)
             RT[page].links.append(href)
-            RT[page].dependencies.add(href.target)
             self.builder.schedule_for_stage2(page, self.process2_internal_link(elem, href, target_text, page))
 
         except (KeyError, ValueError, PathGoesOutsideStartDirectory):

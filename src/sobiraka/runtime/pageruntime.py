@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 
 from panflute import Doc, Image, Link
 
-from sobiraka.models import Anchors, Href, Page, PageStatus
+from sobiraka.models import Anchors, Href, PageStatus
 from sobiraka.models.issues import Issue
 from sobiraka.utils import TocNumber, UniqueList, Unnumbered
 
@@ -45,8 +45,6 @@ class PageRuntime:
     anchors: Anchors = field(default_factory=Anchors)
 
     issues: UniqueList[Issue] = field(default_factory=UniqueList)
-
-    dependencies: set[Page] = field(default_factory=set)
 
     bytes: bytes = None
 
