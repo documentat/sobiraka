@@ -15,17 +15,12 @@ from sobiraka.processing.toc import CollapsedToc, Toc, TocItem, toc
 from sobiraka.processing.web import WebBuilder
 from sobiraka.utils import AbsolutePath, RelativePath
 
-"""
-Test that:
-- `config.web.toc_depth` affects which items are included in the TOC,
-- items with skipped children have the `is_collapsed` property set to True.
-"""
-
 
 class AbstractTestTocDepth(ProjectTestCase[WebBuilder]):
     toc_depth: int | float
 
     async def asyncSetUp(self):
+        # pylint: disable=consider-using-with
         self.output = AbsolutePath(self.enterContext(TemporaryDirectory(prefix='sobiraka-test-')))
         await super().asyncSetUp()
 
@@ -44,8 +39,8 @@ class AbstractTestTocDepth(ProjectTestCase[WebBuilder]):
             RelativePath('0-index.md'): expected_paths_from_root(self.toc_depth),
             RelativePath('part1/0-index.md'): expected_paths_from_p1(self.toc_depth),
             RelativePath('part1/chapter1/0-index.md'): expected_paths_from_p1c1(self.toc_depth),
-            RelativePath('part1/chapter1/section1/0-index.md'): expected_paths_from_p1c1s1(self.toc_depth),
-            RelativePath('part1/chapter1/section1/article1.md'): expected_paths_from_p1c1s1a1(self.toc_depth),
+            RelativePath('part1/chapter1/section1/0-index.md'): expected_paths_from_p1c1s1(),
+            RelativePath('part1/chapter1/section1/article1.md'): expected_paths_from_p1c1s1a1(),
         }
         for path, expected in data.items():
             page = self.project.get_volume().pages_by_path[path]
@@ -107,37 +102,37 @@ del ProjectTestCase, AbstractTestTocDepth
 
 def dataset_paths() -> dict[RelativePath, Page]:
     return {
-        RelativePath() / f'0-index.md': IndexPage('# root'),
-        RelativePath() / 'part1' / f'0-index.md': IndexPage('# part1'),
-        RelativePath() / 'part1' / 'chapter1' / f'0-index.md': IndexPage('# chapter1'),
-        RelativePath() / 'part1' / 'chapter1' / 'section1' / f'0-index.md': IndexPage('# section1'),
-        RelativePath() / 'part1' / 'chapter1' / 'section1' / f'article1.md': Page('# article1'),
-        RelativePath() / 'part1' / 'chapter1' / 'section1' / f'article2.md': Page('# article2'),
-        RelativePath() / 'part1' / 'chapter1' / 'section2' / f'0-index.md': IndexPage('# section2'),
-        RelativePath() / 'part1' / 'chapter1' / 'section2' / f'article1.md': Page('# article1'),
-        RelativePath() / 'part1' / 'chapter1' / 'section2' / f'article2.md': Page('# article2'),
-        RelativePath() / 'part1' / 'chapter2' / f'0-index.md': IndexPage('# chapter2'),
-        RelativePath() / 'part1' / 'chapter2' / 'section1' / f'0-index.md': IndexPage('# section1'),
-        RelativePath() / 'part1' / 'chapter2' / 'section1' / f'article1.md': Page('# article1'),
-        RelativePath() / 'part1' / 'chapter2' / 'section1' / f'article2.md': Page('# article2'),
-        RelativePath() / 'part1' / 'chapter2' / 'section2' / f'0-index.md': IndexPage('# section2'),
-        RelativePath() / 'part1' / 'chapter2' / 'section2' / f'article1.md': Page('# article1'),
-        RelativePath() / 'part1' / 'chapter2' / 'section2' / f'article2.md': Page('# article2'),
-        RelativePath() / 'part2' / f'0-index.md': IndexPage('# part2'),
-        RelativePath() / 'part2' / 'chapter1' / f'0-index.md': IndexPage('# chapter1'),
-        RelativePath() / 'part2' / 'chapter1' / 'section1' / f'0-index.md': IndexPage('# section1'),
-        RelativePath() / 'part2' / 'chapter1' / 'section1' / f'article1.md': Page('# article1'),
-        RelativePath() / 'part2' / 'chapter1' / 'section1' / f'article2.md': Page('# article2'),
-        RelativePath() / 'part2' / 'chapter1' / 'section2' / f'0-index.md': IndexPage('# section2'),
-        RelativePath() / 'part2' / 'chapter1' / 'section2' / f'article1.md': Page('# article1'),
-        RelativePath() / 'part2' / 'chapter1' / 'section2' / f'article2.md': Page('# article2'),
-        RelativePath() / 'part2' / 'chapter2' / f'0-index.md': IndexPage('# chapter2'),
-        RelativePath() / 'part2' / 'chapter2' / 'section1' / f'0-index.md': IndexPage('# section1'),
-        RelativePath() / 'part2' / 'chapter2' / 'section1' / f'article1.md': Page('# article1'),
-        RelativePath() / 'part2' / 'chapter2' / 'section1' / f'article2.md': Page('# article2'),
-        RelativePath() / 'part2' / 'chapter2' / 'section2' / f'0-index.md': IndexPage('# section2'),
-        RelativePath() / 'part2' / 'chapter2' / 'section2' / f'article1.md': Page('# article1'),
-        RelativePath() / 'part2' / 'chapter2' / 'section2' / f'article2.md': Page('# article2'),
+        RelativePath() / '0-index.md': IndexPage('# root'),
+        RelativePath() / 'part1' / '0-index.md': IndexPage('# part1'),
+        RelativePath() / 'part1' / 'chapter1' / '0-index.md': IndexPage('# chapter1'),
+        RelativePath() / 'part1' / 'chapter1' / 'section1' / '0-index.md': IndexPage('# section1'),
+        RelativePath() / 'part1' / 'chapter1' / 'section1' / 'article1.md': Page('# article1'),
+        RelativePath() / 'part1' / 'chapter1' / 'section1' / 'article2.md': Page('# article2'),
+        RelativePath() / 'part1' / 'chapter1' / 'section2' / '0-index.md': IndexPage('# section2'),
+        RelativePath() / 'part1' / 'chapter1' / 'section2' / 'article1.md': Page('# article1'),
+        RelativePath() / 'part1' / 'chapter1' / 'section2' / 'article2.md': Page('# article2'),
+        RelativePath() / 'part1' / 'chapter2' / '0-index.md': IndexPage('# chapter2'),
+        RelativePath() / 'part1' / 'chapter2' / 'section1' / '0-index.md': IndexPage('# section1'),
+        RelativePath() / 'part1' / 'chapter2' / 'section1' / 'article1.md': Page('# article1'),
+        RelativePath() / 'part1' / 'chapter2' / 'section1' / 'article2.md': Page('# article2'),
+        RelativePath() / 'part1' / 'chapter2' / 'section2' / '0-index.md': IndexPage('# section2'),
+        RelativePath() / 'part1' / 'chapter2' / 'section2' / 'article1.md': Page('# article1'),
+        RelativePath() / 'part1' / 'chapter2' / 'section2' / 'article2.md': Page('# article2'),
+        RelativePath() / 'part2' / '0-index.md': IndexPage('# part2'),
+        RelativePath() / 'part2' / 'chapter1' / '0-index.md': IndexPage('# chapter1'),
+        RelativePath() / 'part2' / 'chapter1' / 'section1' / '0-index.md': IndexPage('# section1'),
+        RelativePath() / 'part2' / 'chapter1' / 'section1' / 'article1.md': Page('# article1'),
+        RelativePath() / 'part2' / 'chapter1' / 'section1' / 'article2.md': Page('# article2'),
+        RelativePath() / 'part2' / 'chapter1' / 'section2' / '0-index.md': IndexPage('# section2'),
+        RelativePath() / 'part2' / 'chapter1' / 'section2' / 'article1.md': Page('# article1'),
+        RelativePath() / 'part2' / 'chapter1' / 'section2' / 'article2.md': Page('# article2'),
+        RelativePath() / 'part2' / 'chapter2' / '0-index.md': IndexPage('# chapter2'),
+        RelativePath() / 'part2' / 'chapter2' / 'section1' / '0-index.md': IndexPage('# section1'),
+        RelativePath() / 'part2' / 'chapter2' / 'section1' / 'article1.md': Page('# article1'),
+        RelativePath() / 'part2' / 'chapter2' / 'section1' / 'article2.md': Page('# article2'),
+        RelativePath() / 'part2' / 'chapter2' / 'section2' / '0-index.md': IndexPage('# section2'),
+        RelativePath() / 'part2' / 'chapter2' / 'section2' / 'article1.md': Page('# article1'),
+        RelativePath() / 'part2' / 'chapter2' / 'section2' / 'article2.md': Page('# article2'),
     }
 
 
@@ -228,14 +223,14 @@ def expected_paths_from_p1c1(toc_depth: int | float) -> Toc:
     )
 
 
-def expected_paths_from_p1c1s1(toc_depth: int | float) -> Toc:
+def expected_paths_from_p1c1s1() -> Toc:
     return Toc(
         TocItem('article1', 'article1.html'),
         TocItem('article2', 'article2.html'),
     )
 
 
-def expected_paths_from_p1c1s1a1(toc_depth: int | float) -> Toc:
+def expected_paths_from_p1c1s1a1() -> Toc:
     return Toc()
 
 

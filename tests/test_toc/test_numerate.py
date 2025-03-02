@@ -9,12 +9,11 @@ from sobiraka.models.config import CombinedToc, Config, Config_Content
 from sobiraka.processing.toc import Toc, TocItem, toc
 from sobiraka.utils import RelativePath, TocNumber, Unnumbered
 
-"""
-Test that:
-- `config.content.numeration` affects whether `toc()` adds numbers to items,
-- numeration works correctly in a combined TOC with multiple levels of anchors,
-- `{-}` skips numeration for the given item and its children.
-"""
+
+# Test that:
+# - `config.content.numeration` affects whether `toc()` adds numbers to items,
+# - numeration works correctly in a combined TOC with multiple levels of anchors,
+# - `{-}` skips numeration for the given item and its children.
 
 
 class TestNumerate(ProjectTestCase[FakeBuilder]):
@@ -82,8 +81,7 @@ def expected_data(numeration_enabled: bool) -> Toc:
     def num(*numbers: int) -> TocNumber:
         if numeration_enabled:
             return TocNumber(*numbers)
-        else:
-            return Unnumbered()
+        return Unnumbered()
 
     return Toc(
         TocItem('preface', '1-preface.md'),

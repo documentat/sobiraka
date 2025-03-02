@@ -30,6 +30,7 @@ class TestHtmlImages(ProjectTestCase[WebBuilder]):
         return load_project_from_str(manifest, fs=fs)
 
     def _init_builder(self) -> WebBuilder:
+        # pylint: disable=consider-using-with
         output = self.enterContext(TemporaryDirectory(prefix='sobiraka-test-'))
         return WebBuilder(self.project, AbsolutePath(output))
 

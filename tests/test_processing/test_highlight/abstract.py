@@ -40,6 +40,7 @@ class AbstractHighlightTest(SinglePageProjectTest[WebBuilder], metaclass=ABCMeta
         )
 
     def _init_builder(self):
+        # pylint: disable=consider-using-with
         output = self.enterContext(TemporaryDirectory(prefix='sobiraka-test-'))
         return WebBuilder(self.project, AbsolutePath(output))
 

@@ -4,7 +4,7 @@ from unittest import main
 from abstracttests.singlepageprojecttest import SinglePageProjectTest
 from abstracttests.weasyprintprojecttestcase import WeasyPrintProjectTestCase
 from helpers import FakeFileSystem
-from sobiraka.models import FileSystem, Page, Project, Volume
+from sobiraka.models import FileSystem
 from sobiraka.models.config import Config, Config_PDF
 from sobiraka.utils import AbsolutePath, RelativePath
 

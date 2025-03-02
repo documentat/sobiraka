@@ -9,10 +9,7 @@ jobs:
 
   lint:
     name: Check code
-    runs-on: self-hosted
-    steps:
-      - uses: actions/checkout@v4
-      - run: make lint
+    uses: ./.github/workflows/check-code.yml
 
   build-pip:
     name: Build Python package

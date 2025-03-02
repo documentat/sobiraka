@@ -1,10 +1,7 @@
 from unittest import main
-from unittest.mock import Mock
 
 from abstracttests.singlepageprojecttest import SinglePageProjectTest
 from abstracttests.weasyprintprojecttestcase import WeasyPrintProjectTestCase
-from sobiraka.models import FileSystem, Page, Project, Volume
-from sobiraka.utils import RelativePath
 
 SOURCE = '''
 # Hello, world!

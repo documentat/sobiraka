@@ -14,6 +14,7 @@ class TestChangelog(TestCase):
     maxDiff = None
 
     def setUp(self):
+        # pylint: disable=consider-using-with
         self.repo_dir = AbsolutePath(self.enterContext(TemporaryDirectory(prefix='sobiraka-test-')))
 
     def _git(self, command: str, *args: str):

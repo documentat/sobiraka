@@ -28,6 +28,7 @@ class TestLinks2(ProjectTestCase):
         })
 
     async def test_links(self):
+        # pylint: disable=line-too-long
         page = self.project.pages_by_path[RelativePath('A/section1/subsection1/page.md')]
         data: dict[str, RelativePath] = {
             '/': RelativePath('A'),

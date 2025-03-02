@@ -101,8 +101,8 @@ ENTRYPOINT [""]
 # Final images
 
 FROM common-latex AS tester
-RUN apt install --yes git poppler-utils
 COPY --from=get-tester-dependencies /var/cache/apt /var/cache/apt
+RUN apt update && apt install --yes git poppler-utils
 COPY --from=install-pip-dependencies-for-tester /prefix /opt/conda/envs/myenv
 COPY --from=install-pip-dependencies /prefix /opt/conda/envs/myenv
 RUN mkdir /EGGS
@@ -123,28 +123,10 @@ ENTRYPOINT \
 	&& python -m unittest discover --start-directory=tests --verbose \
 	&& echo ::endgroup::
 
-FROM common AS linter
-COPY --from=install-pip-dependencies-for-tester /prefix /opt/conda/envs/myenv
+FROM tester AS linter
 COPY --from=install-pip-dependencies-for-linter /prefix /opt/conda/envs/myenv
-COPY --from=install-pip-dependencies /prefix /opt/conda/envs/myenv
-RUN mkdir /EGGS
-RUN mkdir /DIST
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONPATH=src
-SHELL ["/bin/bash", "-c"]
-ENTRYPOINT \
-	echo ::group::Building Sobiraka package... \
-	&& python setup.py egg_info --egg-base ../EGGS --quiet sdist --dist-dir /DIST --quiet \
-	&& echo ::endgroup:: \
-	\
-	&& echo ::group::Installing Sobiraka package... \
-	&& pip install /DIST/sobiraka-*.tar.gz \
-	&& rm -rf /EGGS /DIST \
-	&& echo ::endgroup:: \
-	\
-	&& echo ::group::Running pylint... \
-	&& python -m pylint sobiraka src/sobiraka/files/themes/*/extension.py \
-	&& echo ::endgroup::
+ENV PYTHONPATH=src:tests
+ENTRYPOINT [""]
 
 FROM common-latex AS release-latex
 COPY --from=install-pip-dependencies /prefix /opt/conda/envs/myenv

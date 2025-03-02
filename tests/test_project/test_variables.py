@@ -112,7 +112,8 @@ class TestVariables(TestCase):
 
     def test_prover(self):
         with self.subTest('dictionaries'):
-            self.assertEqual((RelativePath('dictionaries/en.dic'),), self.config.prover.dictionaries.hunspell_dictionaries)
+            self.assertEqual((RelativePath('dictionaries/en.dic'),),
+                             self.config.prover.dictionaries.hunspell_dictionaries)
 
     def test_variables(self):
         self.assertEqual(frozendict({'foo': 'bar-en'}), self.config.variables)

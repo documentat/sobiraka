@@ -41,6 +41,7 @@ class SinglePageProjectTest(ProjectTestCase, Generic[T], metaclass=ABCMeta):
     @final
     @override
     async def _process(self):
+        # pylint: disable=broad-exception-caught
         try:
             await super()._process()
         except* Exception as eg:

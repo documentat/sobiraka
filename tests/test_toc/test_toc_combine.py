@@ -9,10 +9,6 @@ from sobiraka.models.config import CombinedToc
 from sobiraka.processing.toc import Toc, TocItem, toc
 from sobiraka.utils import RelativePath
 
-"""
-Test that the `combined_toc` argument affects whether local TOCs are embedded into the global TOC.
-"""
-
 
 class AbstractTestTocCombine(ProjectTestCase[FakeBuilder]):
     combine: CombinedToc
@@ -23,7 +19,7 @@ class AbstractTestTocCombine(ProjectTestCase[FakeBuilder]):
         return Project(Mock(FileSystem), {
             RelativePath('src'): Volume({
                 RelativePath('section1'): Page('# Section 1\n## Paragraph 1'),
-                RelativePath('section1/page1.md'): Page('# Page 1.1\n## Paragraph 1\n### Subparagraph'),  # <- current page
+                RelativePath('section1/page1.md'): Page('# Page 1.1\n## Paragraph 1\n### Subparagraph'),  # <- current
                 RelativePath('section1/page2.md'): Page('# Page 1.2\n## Paragraph 1'),
                 RelativePath('section2'): Page('# Section 2\n## Paragraph 1'),
                 RelativePath('section2/page1.md'): Page('# Page 2.1\n## Paragraph 1'),

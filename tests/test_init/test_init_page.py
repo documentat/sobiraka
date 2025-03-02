@@ -37,7 +37,6 @@ class TestInitPage(TestCase):
     def test_with_volume_path_meta_text(self):
         with TemporaryDirectory(prefix='sobiraka-test-') as tmpdir:
             volume_root = AbsolutePath(tmpdir)
-            page_path = volume_root / 'page.md'
 
             volume = Mock(Volume, root=volume_root)
             meta = PageMeta()
@@ -55,7 +54,6 @@ class TestInitPage(TestCase):
     def test_with_volume_path_text(self):
         with TemporaryDirectory(prefix='sobiraka-test-') as tmpdir:
             volume_root = AbsolutePath(tmpdir)
-            page_path = volume_root / 'page.md'
 
             volume = Mock(Volume, root=volume_root)
             page = Page(volume, RelativePath('page.md'), dedent('''

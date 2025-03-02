@@ -10,6 +10,7 @@ class TestIncludePatterns(IsolatedAsyncioTestCase):
     maxDiff = None
 
     def prepare_dirs(self):
+        # pylint: disable=consider-using-with
         temp_dir: str = self.enterContext(TemporaryDirectory(prefix='sobiraka-test-'))
         self.fs = RealFileSystem(AbsolutePath(temp_dir))
         self.root = AbsolutePath(temp_dir)

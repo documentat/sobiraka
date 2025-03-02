@@ -1,8 +1,8 @@
-from .abstracttestwithrt import AbstractTestWithRtTmp
-from .projectdirtestcase import ProjectDirTestCase
 from helpers import assertNoDiff
 from sobiraka.processing.web import WebBuilder
 from sobiraka.runtime import RT
+from .abstracttestwithrt import AbstractTestWithRtTmp
+from .projectdirtestcase import ProjectDirTestCase
 
 
 class WebProjectTestCase(ProjectDirTestCase[WebBuilder], AbstractTestWithRtTmp):

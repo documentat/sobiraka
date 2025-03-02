@@ -14,7 +14,7 @@ class FakeBuilder(ThemeableProjectBuilder):
     def additional_variables(self) -> dict:
         return {}
 
-    def run(self):
+    async def run(self):
         raise NotImplementedError
 
     def make_internal_url(self, href: PageHref, *, page: Page = None) -> str:

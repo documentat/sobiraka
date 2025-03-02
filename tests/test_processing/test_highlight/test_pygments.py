@@ -4,15 +4,16 @@ from unittest import main
 from unittest.mock import Mock
 
 from abstracttests.weasyprintprojecttestcase import WeasyPrintProjectTestCase
+from test_processing.test_highlight.abstract import AbstractHighlightTest
 from sobiraka.models import FileSystem, Page, Project, Volume
 from sobiraka.models.config import Config, Config_PDF, Config_Pygments
 from sobiraka.processing.web import Head, HeadCssFile
 from sobiraka.utils import RelativePath
-from test_processing.test_highlight.abstract import AbstractHighlightTest
 
 
 class AbstractHighlightTest_Pygments(AbstractHighlightTest, metaclass=ABCMeta):
-    EXPECTED_RENDER = '<pre><code class="pygments"><span class="nb">echo</span><span class="w"> </span><span class="m">1</span></code></pre>'
+    EXPECTED_RENDER = '<pre><code class="pygments"><span class="nb">echo</span><span class="w">' \
+                      ' </span><span class="m">1</span></code></pre>'
 
 
 class TestPygments(AbstractHighlightTest_Pygments):
@@ -38,7 +39,8 @@ class TestPygments_CustomClasses(AbstractHighlightTest_Pygments):
     EXPECTED_HEAD = Head((
         HeadCssFile(RelativePath('_static/css/pygments-xcode.css')),
     ))
-    EXPECTED_RENDER = '<pre class="mypre"><code class="mycode"><span class="nb">echo</span><span class="w"> </span><span class="m">1</span></code></pre>'
+    EXPECTED_RENDER = '<pre class="mypre"><code class="mycode"><span class="nb">echo</span><span class="w">' \
+                      ' </span><span class="m">1</span></code></pre>'
 
 
 class TestPygments_WeasyPrint_PHP(WeasyPrintProjectTestCase):

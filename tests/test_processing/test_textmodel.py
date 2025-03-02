@@ -51,7 +51,6 @@ class AbstractTestTextModel(ProjectTestCase):
         self.assertEqual(expected, actual)
 
     def test_exceptions(self):
-        expected = self.EXPECTED_EXCEPTIONS
         actual = tuple(tuple(p.text for p in line) for line in self.tm.exceptions())
         actual = tuple(more_itertools.rstrip(actual, lambda x: x == ()))
         self.assertEqual(self.EXPECTED_EXCEPTIONS, actual)

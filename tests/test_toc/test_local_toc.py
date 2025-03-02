@@ -6,11 +6,6 @@ from sobiraka.models import PageStatus
 from sobiraka.processing.toc import Toc, TocItem, local_toc
 from sobiraka.utils import RelativePath
 
-"""
-Test that `local_toc()` builds the hierarchy correctly.
-This tests do not use a full project, instead calling `local_toc()` for a single `Page`.
-"""
-
 
 class AbstractTestLocalToc(SinglePageProjectTest):
     REQUIRE = PageStatus.PROCESS1

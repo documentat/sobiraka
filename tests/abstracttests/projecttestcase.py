@@ -45,10 +45,9 @@ class ProjectTestCase(AbstractTestWithRtPages, Generic[T], metaclass=ABCMeta):
     def subTest(self, msg: Any = ..., **params: Any):
         if isinstance(msg, Page):
             return super().subTest(msg.path_in_project.with_suffix(''), **params)
-        elif msg is ...:
+        if msg is ...:
             return super().subTest(**params)
-        else:
-            return super().subTest(msg, **params)
+        return super().subTest(msg, **params)
 
     def for_each_expected(self, suffix: str, *, subdir: str = '') -> Iterable[tuple[Page, AbsolutePath]]:
         test_dir = AbsolutePath(inspect.getfile(self.__class__)).parent
@@ -70,6 +69,7 @@ class FailingProjectTestCase(ProjectTestCase, metaclass=ABCMeta):
 
     @override
     async def _process(self):
+        # pylint: disable=broad-exception-caught
         self.exceptions = ExceptionGroup('', [NoExceptionsWereRaisesDuringTheTest()])
         try:
             await super()._process()

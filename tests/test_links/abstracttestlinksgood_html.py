@@ -3,7 +3,6 @@ from tempfile import TemporaryDirectory
 from textwrap import dedent
 from unittest.mock import Mock
 
-from abstracttests.projectdirtestcase import ProjectDirTestCase
 from abstracttests.projecttestcase import ProjectTestCase
 from sobiraka.models import FileSystem, Href, Page, PageHref, Project, UrlHref, Volume
 from sobiraka.processing.web import WebBuilder
@@ -15,6 +14,7 @@ class AbstractTestLinksGoodHtml(ProjectTestCase, metaclass=ABCMeta):
     SOURCES: dict[str, str]
 
     def _init_builder(self):
+        # pylint: disable=consider-using-with
         output = self.enterContext(TemporaryDirectory(prefix='sobiraka-test-'))
         return WebBuilder(self.project, AbsolutePath(output))
 

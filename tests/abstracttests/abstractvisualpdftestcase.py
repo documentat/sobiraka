@@ -1,6 +1,7 @@
 import hashlib
 import inspect
 import shutil
+from abc import ABCMeta
 from asyncio import create_subprocess_exec
 from typing import Generic, TypeVar
 
@@ -15,7 +16,7 @@ from .projecttestcase import ProjectTestCase
 T = TypeVar('T', bound=Builder)
 
 
-class AbstractVisualPdfTestCase(ProjectTestCase, AbstractTestWithRtTmp, Generic[T]):
+class AbstractVisualPdfTestCase(ProjectTestCase, AbstractTestWithRtTmp, Generic[T], metaclass=ABCMeta):
     REQUIRE = PageStatus.PROCESS4
 
     PAGE_LIMIT: int = None
@@ -74,7 +75,7 @@ class AbstractVisualPdfTestCase(ProjectTestCase, AbstractTestWithRtTmp, Generic[
                 self.fail('Page count is wrong!')
 
             # Compare each actual screenshot with its expected counterpart by their hash sums
-            for p, (expected, actual) in enumerate(zip(expected_screenshots, actual_screenshots)):
+            for expected, actual in zip(expected_screenshots, actual_screenshots):
                 with self.subTest(expected.stem):
                     with expected.open('rb') as file:
                         expected_sha = hashlib.file_digest(file, 'sha1')

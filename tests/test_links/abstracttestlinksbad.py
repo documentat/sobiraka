@@ -12,7 +12,7 @@ from sobiraka.utils import RelativePath
 
 
 class AbstractTestLinksBad(ProjectTestCase, metaclass=ABCMeta):
-    SOURCE: dict[str, str]
+    SOURCES: dict[str, str]
     EXT: str
 
     def _init_project(self) -> Project:

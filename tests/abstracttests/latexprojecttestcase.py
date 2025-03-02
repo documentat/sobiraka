@@ -1,3 +1,5 @@
+from abc import ABCMeta
+
 from helpers import assertNoDiff
 from sobiraka.models import PageStatus
 from sobiraka.processing.latex import LatexBuilder
@@ -5,7 +7,7 @@ from sobiraka.runtime import RT
 from .abstractvisualpdftestcase import AbstractVisualPdfTestCase
 
 
-class LatexProjectTestCase(AbstractVisualPdfTestCase[LatexBuilder]):
+class LatexProjectTestCase(AbstractVisualPdfTestCase[LatexBuilder], metaclass=ABCMeta):
     REQUIRE = PageStatus.PROCESS4
 
     def _init_builder(self):

@@ -10,9 +10,9 @@ class TestInitVolume(TestCase):
 
     def test_with_pages(self):
         volume = Volume({
-            RelativePath('page1.md'): (page1 := Page()),
-            RelativePath('page2.md'): (page2 := Page()),
-            RelativePath('page3.md'): (page3 := Page()),
+            RelativePath('page1.md'): (Page()),
+            RelativePath('page2.md'): (Page()),
+            RelativePath('page3.md'): (Page()),
         })
         volume.project = Mock(Project, base=AbsolutePath('/project'))
 
@@ -48,9 +48,9 @@ class TestInitVolume(TestCase):
     def test_with_config_pages(self):
         config = Config(paths=Mock(Config_Paths, naming_scheme=NamingScheme()))
         volume = Volume(config, {
-            RelativePath('page1.md'): (page1 := Page()),
-            RelativePath('page2.md'): (page2 := Page()),
-            RelativePath('page3.md'): (page3 := Page()),
+            RelativePath('page1.md'): (Page()),
+            RelativePath('page2.md'): (Page()),
+            RelativePath('page3.md'): (Page()),
         })
         volume.project = Mock(Project, base=AbsolutePath('/project'))
 
@@ -85,9 +85,9 @@ class TestInitVolume(TestCase):
 
     def test_with_lang_codename_pages(self):
         volume = Volume('en', 'example', {
-            RelativePath('page1.md'): (page1 := Page()),
-            RelativePath('page2.md'): (page2 := Page()),
-            RelativePath('page3.md'): (page3 := Page()),
+            RelativePath('page1.md'): (Page()),
+            RelativePath('page2.md'): (Page()),
+            RelativePath('page3.md'): (Page()),
         })
         volume.project = Mock(Project, base=AbsolutePath('/project'))
 

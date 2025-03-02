@@ -7,6 +7,8 @@ from sobiraka.utils import RelativePath
 
 
 class TestChildren(ProjectTestCase):
+    # pylint: disable=too-many-instance-attributes
+
     def _init_project(self) -> Project:
         self.index_root = DirPage()
         self.document1 = Page('# Document 1')
