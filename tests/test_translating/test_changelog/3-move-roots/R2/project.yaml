@@ -1,8 +1,0 @@
-languages:
-  en:
-    paths:
-      root: src/en
-
-  ru:
-    paths:
-      root: src/ru

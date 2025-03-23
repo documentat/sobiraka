@@ -12,7 +12,6 @@ setup(
         'clint~=0.5.1',
         'colorama~=0.4.6',
         'diskcache~=5.6.1',
-        'gitpython~=3.1.30',
         'jinja2~=3.1.2',
         'jsonschema~=4.17.3',
         'more-itertools~=9.0.0',

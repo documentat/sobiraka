@@ -9,7 +9,7 @@ from sobiraka.processing.web import WebBuilder
 from sobiraka.prover import Prover
 from sobiraka.report import run_with_progressbar
 from sobiraka.runtime import RT
-from sobiraka.translating import changelog, check_translations
+from sobiraka.translating import check_translations
 from sobiraka.utils import AbsolutePath, DictionaryValidator, absolute_or_relative, parse_vars
 
 
@@ -52,12 +52,6 @@ async def async_main():
                                                  help='Display translation status of the project.')
     cmd_check_translations.add_argument('config', metavar='CONFIG', type=AbsolutePath)
     cmd_check_translations.add_argument('--strict', action='store_true')
-
-    cmd_changelog = commands.add_parser('changelog',
-                                        help='Display changes in translation versions between two git commits.')
-    cmd_changelog.add_argument('config', metavar='CONFIG', type=AbsolutePath)
-    cmd_changelog.add_argument('commit1')
-    cmd_changelog.add_argument('commit2', default='HEAD')
 
     args = parser.parse_args()
     RT.TMP = args.tmpdir
@@ -135,9 +129,6 @@ async def async_main():
         elif cmd is cmd_check_translations:
             project = load_project(args.config)
             exit_code = check_translations(project, strict=args.strict)
-
-        elif cmd is cmd_changelog:
-            exit_code = changelog(args.config, args.commit1, args.commit2)
 
         else:
             raise NotImplementedError(args.command)

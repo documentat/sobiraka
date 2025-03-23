@@ -1,5 +1,5 @@
 from .anchor import Anchor, Anchors
-from .filesystem import FileSystem, GitFileSystem, RealFileSystem
+from .filesystem import FileSystem, RealFileSystem
 from .href import Href, PageHref, UrlHref
 from .namingscheme import FileNameData, NamingScheme
 from .page import DirPage, IndexPage, Page, PageMeta
