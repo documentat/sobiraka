@@ -31,7 +31,7 @@ class AbstractProverTest(SinglePageProjectTest[Prover]):
     SYNTAX = Syntax.MD
     SOURCE: str
 
-    EXPECTED_PHRASES: tuple[str]
+    EXPECTED_PHRASES: Sequence[str]
 
     def _init_project(self) -> Project:
         fs = FakeFileSystem()
@@ -88,7 +88,7 @@ class AbstractProverTest(SinglePageProjectTest[Prover]):
 class AbstractFailingProverTest(AbstractProverTest, FailingProjectTestCase):
     EXPECTED_EXCEPTION_TYPES = {IssuesOccurred}
 
-    EXPECTED_ISSUES: tuple[str] = ()
+    EXPECTED_ISSUES: Sequence[str] = ()
 
     def test_issues(self):
         expected = '\n'.join(self.EXPECTED_ISSUES) + '\n'
