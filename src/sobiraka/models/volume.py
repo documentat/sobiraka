@@ -1,15 +1,13 @@
 from __future__ import annotations
 
 from functools import cached_property
-from typing import Iterable, overload
 
-from more_itertools import unique_justseen
-
-from sobiraka.utils import RelativePath
+from sobiraka.utils import Location, RelativePath
 from .config import Config
 from .namingscheme import NamingScheme
-from .page import DirPage, IndexPage, Page
+from .page import Page
 from .project import Project
+from .source import Source, SourceDirectory
 
 
 class Volume:
@@ -17,85 +15,12 @@ class Volume:
     A part of a :obj:`.Project`, identified uniquely by :data:`lang` and :data:`codename`.
     """
 
-    @overload
-    def __init__(self):
-        ...
+    def __init__(self, lang: str | None, codename: str | None, config: Config):
+        self.lang: str | None = lang
+        self.codename: str | None = codename
+        self.config: Config = config
 
-    @overload
-    def __init__(self, pages_by_path: dict[RelativePath, Page]):
-        ...
-
-    @overload
-    def __init__(self, config: Config, pages_by_path: dict[RelativePath, Page]):
-        ...
-
-    @overload
-    def __init__(self, lang: str | None, codename: str, pages_by_path: dict[RelativePath, Page]):
-        ...
-
-    @overload
-    def __init__(self, lang: str | None, codename: str, config: Config):
-        ...
-
-    @overload
-    def __init__(self, project: Project, lang: str, codename: str, config: Config):
-        ...
-
-    @overload
-    def __init__(self, root: RelativePath):
-        ...
-
-    def __init__(self, *args):
-        self.project: Project | None = None
-        self.lang: str | None = None
-        self.codename: str | None = None
-        self.config: Config = Config()
-        self.relative_root: RelativePath | None = None
-
-        self.__initial_pages: Iterable[Page]
-
-        match args:
-            case ():
-                pass
-
-            case dict() as pages_by_path,:
-                for path, page in pages_by_path.items():
-                    page.volume = self
-                    page.path_in_volume = path
-                self.__initial_pages = pages_by_path.values()
-
-            case Config() as config, dict() as pages_by_path,:
-                for path, page in pages_by_path.items():
-                    page.volume = self
-                    page.path_in_volume = path
-                self.config = config
-                self.__initial_pages = pages_by_path.values()
-
-            case str() | None as lang, str() | None as codename, dict() as pages_by_path:
-                self.lang = lang
-                self.codename = codename
-                for path, page in pages_by_path.items():
-                    page.volume = self
-                    page.path_in_volume = path
-                self.__initial_pages = pages_by_path.values()
-
-            case str() | None as lang, str() | None as codename, Config() as config:
-                self.lang = lang
-                self.codename = codename
-                self.config = config
-                self.relative_root = config.paths.root
-                self.__initial_pages = self._generate_pages(self._find_files())
-
-            case Project() as project, str() | None as lang, str() | None as codename, Config() as config:
-                self.project = project
-                self.lang = lang
-                self.codename = codename
-                self.config = config
-                self.relative_root = config.paths.root
-                self.__initial_pages = self._generate_pages(self._find_files())
-
-            case _:
-                raise TypeError(*args)
+        self.project: Project = None
 
     def __hash__(self):
         return hash(id(self))
@@ -125,51 +50,20 @@ class Volume:
     # ------------------------------------------------------------------------------------------------------------------
     # Pages and paths
 
-    def _find_files(self) -> Iterable[RelativePath]:
-        paths: set[RelativePath] = set()
-        for pattern in self.config.paths.include:
-            paths |= set(self.project.fs.glob(self.relative_root, pattern))
-        for pattern in self.config.paths.exclude:
-            paths -= set(self.project.fs.glob(self.relative_root, pattern))
-        yield from paths
-
-    def _generate_pages(self, paths: Iterable[RelativePath]) -> Iterable[Page]:
-        for path_in_volume in paths:
-            if self.naming_scheme.parse(path_in_volume).is_main:
-                yield IndexPage(self, path_in_volume)
-            else:
-                yield Page(self, path_in_volume)
+    @property
+    def root_path(self) -> RelativePath:
+        return self.config.paths.root
 
     @cached_property
-    def pages_by_path(self) -> dict[RelativePath, Page]:
-        assert self.project is not None, 'You must bind the volume to a project before working with pages.'
-
-        from ..utils import sorted_dict
-
-        pages_by_path: dict[RelativePath, Page] = {}
-        expected_paths: set[RelativePath] = set()
-        for page in self.__initial_pages:
-            pages_by_path[page.path_in_volume] = page
-            if isinstance(page, IndexPage):
-                pages_by_path[page.path_in_volume.parent] = page
-
-            for parent in page.path_in_volume.parents:
-                expected_paths.add(parent)
-
-        for expected_path in expected_paths:
-            if expected_path not in pages_by_path:
-                page = DirPage(self, expected_path)
-                pages_by_path[expected_path] = page
-
-        pages_by_path = sorted_dict(pages_by_path, key=self.naming_scheme.path_sorting_key)
-        return pages_by_path
-
-    @property
-    def pages(self) -> tuple[Page, ...]:
-        pages = sorted(self.pages_by_path.values(), key=lambda p: p.path_in_volume)
-        pages = list(unique_justseen(pages))
-        return tuple(pages)
+    def root(self) -> Source:
+        return SourceDirectory(self, self.config.paths.root, parent=None)
 
     @property
     def root_page(self) -> Page:
-        return self.pages_by_path[RelativePath('.')]
+        return self.get_page_by_location('/')
+
+    def get_page_by_location(self, location: Location | str) -> Page:
+        for page in self.root.all_pages():
+            if str(page.location) == str(location):
+                return page
+        raise KeyError(location)

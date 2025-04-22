@@ -1,11 +1,12 @@
 from importlib.resources import files
 from unittest import main
 
+from typing_extensions import override
+
 from abstracttests.singlepageprojecttest import SinglePageProjectTest
 from abstracttests.weasyprintprojecttestcase import WeasyPrintProjectTestCase
-from helpers import FakeFileSystem
-from sobiraka.models import FileSystem
-from sobiraka.models.config import Config, Config_PDF
+from helpers.fakefilesystem import PseudoFiles
+from sobiraka.models.config import Config, Config_PDF, Config_Paths
 from sobiraka.utils import AbsolutePath, RelativePath
 
 CSS = b'''
@@ -48,13 +49,17 @@ class TestWeasyPrint_PageMargins(SinglePageProjectTest, WeasyPrintProjectTestCas
         # Look at these beautiful page margins!
     '''
 
-    def _init_filesystem(self) -> FileSystem:
-        return FakeFileSystem({
-            RelativePath('theme/style.css'): CSS,
-        })
+    @override
+    def additional_files(self) -> PseudoFiles:
+        return {
+            'theme/style.css': CSS,
+        }
 
     def _init_config(self) -> Config:
         return Config(
+            paths=Config_Paths(
+                root=RelativePath('src'),
+            ),
             pdf=Config_PDF(
                 theme=AbsolutePath(files('sobiraka')) / 'files' / 'themes' / 'raw',
                 custom_styles=(

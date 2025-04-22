@@ -1,42 +1,46 @@
+from importlib.resources import files
 from tempfile import TemporaryDirectory
-from textwrap import dedent
 from unittest import main
 
 from abstracttests.projecttestcase import ProjectTestCase
-from helpers import FakeFileSystem
-from sobiraka.models import Project
-from sobiraka.models.load import load_project_from_str
+from helpers.fakeproject import FakeProject, FakeVolume
+from sobiraka.models import Project, Status
+from sobiraka.models.config import Config, Config_Paths, Config_Web
 from sobiraka.processing.web import WebBuilder
-from sobiraka.utils import AbsolutePath
+from sobiraka.utils import AbsolutePath, RelativePath
 
 
 class TestHtmlImages(ProjectTestCase[WebBuilder]):
-    def _init_project(self) -> Project:
-        manifest = dedent("""
-        paths:
-            root: src
-            resources: img_src
-        web:
-            theme: raw
-            resources_prefix: img_dst
-        """)
-
-        fs = FakeFileSystem()
-        fs['img_src/absolute.png'] = b'absolute'
-        fs['img_src/relative.png'] = b'relative'
-        fs['src/absolute.md'] = '![](/absolute.png)'
-        fs['src/relative.md'] = '![](../img_src/relative.png)'
-
-        return load_project_from_str(manifest, fs=fs)
+    REQUIRE = Status.FINALIZE
 
     def _init_builder(self) -> WebBuilder:
         # pylint: disable=consider-using-with
         output = self.enterContext(TemporaryDirectory(prefix='sobiraka-test-'))
         return WebBuilder(self.project, AbsolutePath(output))
 
-    async def asyncSetUp(self):
-        await super().asyncSetUp()
-        await self.builder.run()
+    def _init_project(self) -> Project:
+        config = Config(
+            paths=Config_Paths(
+                root=RelativePath('src'),
+                resources=RelativePath('img_src'),
+            ),
+            web=Config_Web(
+                theme=AbsolutePath(files('sobiraka')) / 'files' / 'themes' / 'raw',
+                resources_prefix='img_dst',
+            )
+        )
+
+        project = FakeProject({
+            'src': FakeVolume(config, {
+                'absolute.md': '![](/absolute.png)',
+                'relative.md': '![](../img_src/relative.png)',
+            })
+        })
+        project.fs.add_files({
+            'img_src/absolute.png': 'absolute',
+            'img_src/relative.png': 'relative',
+        })
+        return project
 
     def test_images(self):
         for name in ('absolute', 'relative'):
@@ -47,8 +51,8 @@ class TestHtmlImages(ProjectTestCase[WebBuilder]):
     def test_html(self):
         for name in ('absolute', 'relative'):
             with self.subTest(name):
-                expected = f'<img src="img_dst/{name}.png" />'
-                actual = (self.builder.output / f'{name}.html').read_text()
+                expected = f'<img src="../img_dst/{name}.png" />'
+                actual = (self.builder.output / 'src' / f'{name}.html').read_text()
                 self.assertIn(expected, actual)
 
 

@@ -57,6 +57,12 @@ class RealFileSystem(FileSystem):
         copyfile(source, target)
 
     @override
+    def iterdir(self, path: RelativePath) -> Iterable[RelativePath]:
+        path = self.resolve(path)
+        for subpath in path.iterdir():
+            yield subpath.relative_to(self.base)
+
+    @override
     def glob(self, path: RelativePath, pattern: str) -> Iterable[RelativePath]:
         path = self.resolve(path)
         return map(RelativePath, glob(pattern, root_dir=path, **GLOB_KWARGS))

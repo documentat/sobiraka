@@ -1,10 +1,11 @@
 from unittest import main
 
+from typing_extensions import override
+
 from abstracttests.singlepageprojecttest import SinglePageProjectTest
 from abstracttests.weasyprintprojecttestcase import WeasyPrintProjectTestCase
-from helpers import FakeFileSystem
-from sobiraka.models import FileSystem
-from sobiraka.models.config import Config, Config_PDF
+from helpers.fakefilesystem import PseudoFiles
+from sobiraka.models.config import Config, Config_PDF, Config_Paths
 from sobiraka.utils import RelativePath
 
 
@@ -15,19 +16,24 @@ class TestWeasyPrint_CustomStyles(SinglePageProjectTest, WeasyPrintProjectTestCa
         This text should be red.
     '''
 
-    def _init_filesystem(self) -> FileSystem:
-        return FakeFileSystem({
-            RelativePath('theme/style1.css'): b'''
+    @override
+    def additional_files(self) -> PseudoFiles:
+        return {
+            'theme/style1.css': b'''
                 h1 { color: lightgreen; }
             ''',
-            RelativePath('theme/style2.scss'): b'''
+            'theme/style2.scss': b'''
                 @mixin red_text { color: indianred; }
                 p { @include red_text; }
             ''',
-        })
+        }
 
+    @override
     def _init_config(self) -> Config:
         return Config(
+            paths=Config_Paths(
+                root=RelativePath('src'),
+            ),
             pdf=Config_PDF(
                 custom_styles=(
                     RelativePath('theme/style1.css'),

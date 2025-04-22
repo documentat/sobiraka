@@ -1,25 +1,27 @@
 from math import inf
 
 from abstracttests.projecttestcase import ProjectTestCase
-from helpers import FakeBuilder, FakeFileSystem
-from sobiraka.models import Page, PageStatus, Project, Volume
-from sobiraka.models.config import CombinedToc, Config, Config_Content
+from helpers import FakeBuilder
+from helpers.fakeproject import FakeProject, FakeVolume
+from sobiraka.models import Project, Status
+from sobiraka.models.config import CombinedToc, Config, Config_Content, Config_Paths
 from sobiraka.processing.toc import Toc, TocItem, toc
 from sobiraka.utils import RelativePath, TocNumber
 
 
 class TestNumerateRoot(ProjectTestCase[FakeBuilder]):
-    REQUIRE = PageStatus.PROCESS3
+    REQUIRE = Status.NUMERATE
 
     def _init_project(self) -> Project:
         config = Config(
+            paths=Config_Paths(root=RelativePath('src')),
             content=Config_Content(numeration=True),
         )
-        return Project(FakeFileSystem(), {
-            RelativePath('src'): Volume(config, {
-                RelativePath(): Page('# Root \n## Section 1\n## Section 2'),
-                RelativePath('section-3.md'): Page('# Section 3'),
-                RelativePath('section-4.md'): Page('# Section 4'),
+        return FakeProject({
+            'src': FakeVolume(config, {
+                'index.md': '# Root \n## Section 1\n## Section 2',
+                'section-3.md': '# Section 3',
+                'section-4.md': '# Section 4',
             }),
         })
 

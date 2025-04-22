@@ -1,38 +1,44 @@
+from __future__ import annotations
+
 import shlex
 from abc import ABCMeta, abstractmethod
-from asyncio import Task, create_subprocess_exec, create_task
+from asyncio import Task, create_subprocess_exec, wait
 from collections import defaultdict
 from functools import partial
 from io import BytesIO
 from subprocess import PIPE
-from typing import Awaitable, TypeVar, final
+from typing import Generic, TYPE_CHECKING, TypeVar, final
 
 import jinja2
 import panflute
 from jinja2 import StrictUndefined
 from panflute import Cite, Doc, Para, Space, Str, stringify
 
-from sobiraka.models import FileSystem, Page, PageHref, Project, Volume
+from sobiraka.models import FileSystem, Page, PageHref, Project, Source, Status, Volume
 from sobiraka.models.config import Config
 from sobiraka.runtime import RT
-from sobiraka.utils import super_gather
-from .processor import Processor
-from .theme import Theme
 from ..numerate import numerate
 
-T = TypeVar('T', bound=Theme)
-P = TypeVar('P', bound=Processor)
+if TYPE_CHECKING:
+    # noinspection PyUnresolvedReferences
+    from .processor import Processor
+    from .waiter import Waiter
+
+P = TypeVar('P', bound='Processor')
 
 
-class Builder(metaclass=ABCMeta):
+class Builder(Generic[P], metaclass=ABCMeta):
     def __init__(self):
-        super().__init__()
-
-        from .waiter import Waiter
-        self.waiter: Waiter = Waiter(self)
-
+        self.waiter: Waiter | None = None
         self.jinja: dict[Volume, jinja2.Environment] = {}
-        self.process2_tasks: dict[Page, list[Task]] = defaultdict(list)
+        self.referencing_tasks: dict[Page, list[Task]] = defaultdict(list)
+
+    def init_waiter(self, target_status: Status) -> Waiter:
+        from .waiter import Waiter
+
+        roots = tuple(v.root for v in self.get_volumes())
+        self.waiter = Waiter(self, roots, target_status)
+        return self.waiter
 
     def __repr__(self):
         return f'<{self.__class__.__name__} at {hex(id(self))}>'
@@ -49,6 +55,10 @@ class Builder(metaclass=ABCMeta):
     def get_volumes(self) -> tuple[Volume, ...]:
         ...
 
+    @final
+    def get_roots(self) -> tuple[Source, ...]:
+        return tuple(v.root for v in self.get_volumes())
+
     @abstractmethod
     def get_pages(self) -> tuple[Page, ...]:
         ...
@@ -63,9 +73,7 @@ class Builder(metaclass=ABCMeta):
 
     async def prepare(self, page: Page):
         """
-        Parse syntax tree with Pandoc and save its syntax tree into :obj:`.Page.doc`.
-
-        This method is called by :obj:`.Page.loaded`.
+        Parse the syntax tree with Pandoc and save its syntax tree into `RT[page].doc`.
         """
         volume: Volume = page.volume
         config: Config = page.volume.config
@@ -109,12 +117,11 @@ class Builder(metaclass=ABCMeta):
         json_bytes, _ = await pandoc.communicate(page_text.encode('utf-8'))
         assert pandoc.returncode == 0
 
-        RT[page].title = page.stem
         RT[page].doc = panflute.load(BytesIO(json_bytes))
 
-    async def process1(self, page: Page) -> Page:
+    async def do_process(self, page: Page) -> Page:
         """
-        Run first pass of page processing.
+        The first stage of page processing.
 
         Internally, this function runs :func:`process_element()` on the :obj:`.Page.doc` root.
 
@@ -151,24 +158,30 @@ class Builder(metaclass=ABCMeta):
                 from ..directive import TocDirective
                 return TocDirective(self, page, argv)
 
-    async def process2(self, page: Page):
-        await super_gather(self.process2_tasks[page], f'Additional tasks failed for {page.path_in_project}')
+    async def do_reference(self, page: Page):
+        """
+        The second stage of the processing.
+        """
+        if self.referencing_tasks[page]:
+            await wait(self.referencing_tasks[page])
 
-    async def process3(self, volume: Volume):
+    async def do_numerate(self, volume: Volume):
+        """
+        The third stage of the processing.
+        Unlike other stages, this deals with the Volume as a whole.
+        """
         if volume.config.content.numeration:
             numerate(volume)
 
-        for page in volume.pages:
+        for page in volume.root.all_pages():
             processor = self.get_processor_for_page(page)
             for toc_placeholder in processor.directives[page]:
                 toc_placeholder.postprocess()
 
-    async def process4(self, page: Page):
-        pass
-
-    @final
-    def schedule_for_stage2(self, page: Page, awaitable: Awaitable[None]):
-        self.process2_tasks[page].append(create_task(awaitable))
+    async def do_finalize(self, page: Page):
+        """
+        The fourth stage of the processing.
+        """
 
     @abstractmethod
     def make_internal_url(self, href: PageHref, *, page: Page = None) -> str:

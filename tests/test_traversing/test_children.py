@@ -1,36 +1,41 @@
 from unittest import main
-from unittest.mock import Mock
 
 from abstracttests.projecttestcase import ProjectTestCase
-from sobiraka.models import DirPage, FileSystem, IndexPage, Page, Project, Volume
-from sobiraka.utils import RelativePath
+from helpers.fakeproject import FakeProject, FakeVolume
+from sobiraka.models import Page, Project
 
 
 class TestChildren(ProjectTestCase):
     # pylint: disable=too-many-instance-attributes
 
     def _init_project(self) -> Project:
-        self.index_root = DirPage()
-        self.document1 = Page('# Document 1')
-        self.index_sub = IndexPage('# Sub')
-        self.document2 = Page('# Document 2')
-        self.index_subsub = Page()
-        self.document3 = Page('# Document 3')
-        self.document4 = Page('# Document 4')
-        self.document5 = Page('# Document 5')
-
-        return Project(Mock(FileSystem), {
-            RelativePath('src'): Volume({
-                RelativePath(): self.index_root,
-                RelativePath() / 'document1.md': self.document1,
-                RelativePath() / 'sub' / '0-index.md': self.index_sub,
-                RelativePath() / 'sub' / 'document2.md': self.document2,
-                RelativePath() / 'sub' / 'subsub': self.index_subsub,
-                RelativePath() / 'sub' / 'subsub' / 'document3.md': self.document3,
-                RelativePath() / 'sub' / 'subsub' / 'document4.md': self.document4,
-                RelativePath() / 'sub' / 'subsub' / 'document5.md': self.document5,
+        return FakeProject({
+            'src': FakeVolume({
+                'document1.md': '# Document 1',
+                'sub': {
+                    '0-index.md': '# Sub',
+                    'document2.md': '# Document 2',
+                    'subsub': {
+                        'document3.md': '# Document 3',
+                        'document4.md': '# Document 4',
+                        'document5.md': '# Document 5',
+                    },
+                },
             })
         })
+
+    async def _process(self):
+        await super()._process()
+        volume = self.project.get_volume()
+
+        self.index_root = volume.root_page
+        self.document1 = volume.get_page_by_location('/document1')
+        self.index_sub = volume.get_page_by_location('/sub/')
+        self.document2 = volume.get_page_by_location('/sub/document2')
+        self.index_subsub = volume.get_page_by_location('/sub/subsub/')
+        self.document3 = volume.get_page_by_location('/sub/subsub/document3')
+        self.document4 = volume.get_page_by_location('/sub/subsub/document4')
+        self.document5 = volume.get_page_by_location('/sub/subsub/document5')
 
     def test_breadcrumbs(self):
         data: tuple[tuple[Page, ...], ...] = (
@@ -64,15 +69,15 @@ class TestChildren(ProjectTestCase):
                 self.assertEqual(expected, page.parent)
 
     def test_children(self):
-        data: dict[Page, tuple[Page, ...]] = {
-            self.index_root: (self.document1, self.index_sub),
-            self.document1: (),
-            self.index_sub: (self.document2, self.index_subsub),
-            self.document2: (),
-            self.index_subsub: (self.document3, self.document4, self.document5),
-            self.document3: (),
-            self.document4: (),
-            self.document5: (),
+        data = {
+            self.index_root: [self.document1, self.index_sub],
+            self.document1: [],
+            self.index_sub: [self.document2, self.index_subsub],
+            self.document2: [],
+            self.index_subsub: [self.document3, self.document4, self.document5],
+            self.document3: [],
+            self.document4: [],
+            self.document5: [],
         }
         for page, expected in data.items():
             with self.subTest(page):

@@ -9,6 +9,9 @@ disable=
     missing-module-docstring,
     too-few-public-methods,
     too-many-ancestors,
+    too-many-arguments,
+    too-many-instance-attributes,
+    too-many-positional-arguments,
     trailing-comma-tuple,
     use-dict-literal,
 

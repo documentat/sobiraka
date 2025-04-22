@@ -36,9 +36,9 @@ def load_project_from_dict(manifest: dict, *, fs: FileSystem) -> Project:
         for codename, volume_data in _normalized_and_merged(language_data, 'volumes'):
             volumes.append(load_volume(lang, codename, volume_data, fs))
 
-    project = Project(fs, tuple(volumes))
-    project.primary_language = manifest.get('primary_language') or volumes[0].lang
-    return project
+    primary_language = manifest.get('primary_language') or volumes[0].lang
+
+    return Project(fs, tuple(volumes), primary_language)
 
 
 def _normalized_and_merged(data: dict, key: str) -> Iterable[tuple[str | None, dict]]:

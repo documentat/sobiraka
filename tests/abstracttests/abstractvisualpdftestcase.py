@@ -5,7 +5,7 @@ from abc import ABCMeta
 from asyncio import create_subprocess_exec
 from typing import Generic, TypeVar
 
-from sobiraka.models import PageStatus
+from sobiraka.models import Status
 from sobiraka.processing.abstract import Builder
 from sobiraka.runtime import RT
 from sobiraka.utils import AbsolutePath
@@ -17,7 +17,7 @@ T = TypeVar('T', bound=Builder)
 
 
 class AbstractVisualPdfTestCase(ProjectTestCase, AbstractTestWithRtTmp, Generic[T], metaclass=ABCMeta):
-    REQUIRE = PageStatus.PROCESS4
+    REQUIRE = Status.FINALIZE
 
     PAGE_LIMIT: int = None
     """

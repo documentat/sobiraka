@@ -1,52 +1,50 @@
 import re
+from abc import ABCMeta
 from math import inf
 from os.path import splitext
-from unittest import TestCase, main
-from unittest.mock import Mock
+from typing import Sequence, final
+from unittest import main
 
-from sobiraka.models import FileNameData, FileSystem, NamingScheme, Page, Project, Volume
+from typing_extensions import override
+
+from abstracttests.projecttestcase import ProjectTestCase
+from helpers.fakeproject import FakeProject, FakeVolume
+from sobiraka.models import FileNameData, NamingScheme, Project, Status
 from sobiraka.models.config import Config, Config_Paths
-from sobiraka.models.load import load_volume
 from sobiraka.utils import RelativePath
 
 
-class AbstractNamingSchemeTest(TestCase):
+class TestNamingScheme(ProjectTestCase, metaclass=ABCMeta):
+    REQUIRE = Status.LOAD
+
     naming_scheme: NamingScheme
-    parsing_results: dict[str, FileNameData]
-    ordering_original: tuple[RelativePath, ...]
-    ordering_expected: tuple[RelativePath, ...]
+    parsing_examples: dict[str, FileNameData]
+    expected_ordering: Sequence[str]
+
+    @final
+    def _init_config(self):
+        return Config(
+            paths=Config_Paths(
+                root=RelativePath('src'),
+                naming_scheme=self.naming_scheme,
+            )
+        )
 
     def test_parse(self):
-        for filename, expected in self.parsing_results.items():
+        for filename, expected in self.parsing_examples.items():
             with self.subTest(splitext(filename)[0]):
                 actual = self.naming_scheme.parse(filename)
                 self.assertEqual(expected, actual)
 
     def test_ordering(self):
-        config = Config(
-            paths=Config_Paths(
-                root=RelativePath('.'),
-                naming_scheme=self.naming_scheme,
-            ))
-
-        pages = {p: Page() for p in self.ordering_original}
-        volume = Volume(config, pages)
-
-        fs = Mock(FileSystem)
-        project = Project(fs, {
-            RelativePath('.'): volume,
-        })
-
-        ordering_actual = tuple(project.pages_by_path.keys())
-        self.assertSequenceEqual(self.ordering_expected, ordering_actual)
+        actual_ordering = tuple(str(p.location) for p in self.project.get_volume().root.all_pages())
+        self.assertSequenceEqual(self.expected_ordering, actual_ordering)
 
 
-class TestDefaultNamingScheme(AbstractNamingSchemeTest):
-    def setUp(self):
-        volume = load_volume('en', 'vol', {}, Mock(FileSystem))
-        self.naming_scheme = volume.config.paths.naming_scheme
+class TestDefaultNamingScheme(TestNamingScheme):
+    naming_scheme = NamingScheme()
 
-    parsing_results = {
+    parsing_examples = {
         '16-example.md': FileNameData(16, 'example'),
         '1.md': FileNameData(1, '1'),
         'example.md': FileNameData(inf, 'example'),
@@ -55,76 +53,84 @@ class TestDefaultNamingScheme(AbstractNamingSchemeTest):
         'index.md': FileNameData(inf, 'index', True),
     }
 
-    ordering_original = (
-        RelativePath('2-aaa/3-ddd'),
-        RelativePath('2-kkk.md'),
-        RelativePath('1-ppp.md'),
-        RelativePath('2-aaa/9-sss/5-eee.md'),
-        RelativePath('2-aaa/3-ddd/5-nnn.md'),
-        RelativePath('2-aaa/5-nnn.md'),
-        RelativePath('2-aaa/2-kkk.md'),
-        RelativePath('2-aaa/9-sss/3-www.md'),
-        RelativePath('2-aaa/index.md'),
-        RelativePath('2-aaa/unnumbered.md'),
-    )
-    ordering_expected = (
-        RelativePath('.'),
-        RelativePath('1-ppp.md'),
-        RelativePath('2-aaa'),
-        RelativePath('2-aaa/index.md'),
-        RelativePath('2-aaa/2-kkk.md'),
-        RelativePath('2-aaa/3-ddd'),
-        RelativePath('2-aaa/3-ddd/5-nnn.md'),
-        RelativePath('2-aaa/5-nnn.md'),
-        RelativePath('2-aaa/9-sss'),
-        RelativePath('2-aaa/9-sss/3-www.md'),
-        RelativePath('2-aaa/9-sss/5-eee.md'),
-        RelativePath('2-aaa/unnumbered.md'),
-        RelativePath('2-kkk.md'),
+    @override
+    def _init_project(self) -> Project:
+        return FakeProject({
+            'src': FakeVolume(self._init_config(), {
+                '2-aaa/3-ddd/index.md': '',
+                '2-kkk.md': '',
+                '1-ppp.md': '',
+                '2-aaa/9-sss/5-eee.md': '',
+                '2-aaa/3-ddd/5-nnn.md': '',
+                '2-aaa/5-nnn.md': '',
+                '2-aaa/2-kkk.md': '',
+                '2-aaa/9-sss/3-www.md': '',
+                '2-aaa/unnumbered.md': '',
+            })
+        })
+
+    expected_ordering = (
+        '/',
+        '/ppp',
+        '/aaa/',
+        '/aaa/kkk',
+        '/aaa/ddd/',
+        '/aaa/ddd/nnn',
+        '/aaa/nnn',
+        '/aaa/sss/',
+        '/aaa/sss/www',
+        '/aaa/sss/eee',
+        '/aaa/unnumbered',
+        '/kkk',
     )
 
 
-class TestInvertedNamingScheme(AbstractNamingSchemeTest):
+class TestInvertedNamingScheme(TestNamingScheme):
     """
     Test a weird naming scheme that puts the number at the end.
     """
     naming_scheme = NamingScheme((
+        re.compile(r'(?P<is_main>index)           ', re.VERBOSE),
         re.compile(r'(?P<stem>[a-z]+) (?P<pos>\d+)', re.VERBOSE),
     ))
 
-    parsing_results = {
+    parsing_examples = {
         'a1.md': FileNameData(1, 'a'),
         'b2.md': FileNameData(2, 'b'),
         'c3.md': FileNameData(3, 'c'),
     }
 
-    ordering_original = (
-        RelativePath('a2/d3'),
-        RelativePath('k2.md'),
-        RelativePath('p1.md'),
-        RelativePath('a2/s9/e5.md'),
-        RelativePath('a2/d3/n5.md'),
-        RelativePath('a2/n5.md'),
-        RelativePath('a2/k2.md'),
-        RelativePath('a2/s9/w3.md'),
+    @override
+    def _init_project(self) -> Project:
+        return FakeProject({
+            'src': FakeVolume(self._init_config(), {
+                'a2/d3/index.md': '',
+                'k2.md': '',
+                'p1.md': '',
+                'a2/s9/e5.md': '',
+                'a2/d3/n5.md': '',
+                'a2/n5.md': '',
+                'a2/k2.md': '',
+                'a2/s9/w3.md': '',
+            })
+        })
+
+    expected_ordering = (
+        '/',
+        '/p',
+        '/a/',
+        '/a/k',
+        '/a/d/',
+        '/a/d/n',
+        '/a/n',
+        '/a/s/',
+        '/a/s/w',
+        '/a/s/e',
+        '/k',
     )
 
-    ordering_expected = (
-        RelativePath('.'),
-        RelativePath('p1.md'),
-        RelativePath('a2'),
-        RelativePath('a2/k2.md'),
-        RelativePath('a2/d3'),
-        RelativePath('a2/d3/n5.md'),
-        RelativePath('a2/n5.md'),
-        RelativePath('a2/s9'),
-        RelativePath('a2/s9/w3.md'),
-        RelativePath('a2/s9/e5.md'),
-        RelativePath('k2.md'),
-    )
 
-
-del AbstractNamingSchemeTest
+del ProjectTestCase, TestNamingScheme
 
 if __name__ == '__main__':
     main()

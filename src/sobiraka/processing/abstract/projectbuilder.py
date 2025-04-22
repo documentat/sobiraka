@@ -16,8 +16,8 @@ class ProjectBuilder(Builder, Generic[P], metaclass=ABCMeta):
     Each volume can still have its own `Processor`, though.
     """
 
-    def __init__(self, project: Project):
-        Builder.__init__(self)
+    def __init__(self, project: Project, **kwargs):
+        Builder.__init__(self, **kwargs)
 
         self.project: Project = project
         self.processors: dict[Volume, P] = {}

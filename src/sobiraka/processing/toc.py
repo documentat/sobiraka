@@ -154,7 +154,7 @@ def toc(
 ) -> Toc:
     """
     Generate a Table Of Contents.
-    This function must be called after the `process3()` has been done for the volume,
+    This function must be called after the `do_numerate()` has been done for the volume,
     otherwise the TOC may end up missing anchors, numeration, etc.
 
     The TOC will contain items based on the given `base`.
@@ -184,7 +184,12 @@ def toc(
                           current_page=current_page)
 
     for page in base.children:
-        item = TocItem(title=page.meta.title or RT[page].title,
+        item_title = page.meta.title \
+                     or RT[page].title \
+                     or page.location.name \
+                     or page.volume.codename \
+                     or ''
+        item = TocItem(title=item_title,
                        url=builder.make_internal_url(PageHref(page), page=current_page),
                        number=RT[page].number,
                        origin=page,

@@ -2,15 +2,14 @@ from math import inf
 from unittest import main
 
 from abstracttests.singlepageprojecttest import SinglePageProjectTest
-from sobiraka.models import PageStatus
+from sobiraka.models import Status
 from sobiraka.processing.toc import Toc, TocItem, local_toc
-from sobiraka.utils import RelativePath
 
 
 class AbstractTestLocalToc(SinglePageProjectTest):
-    REQUIRE = PageStatus.PROCESS1
+    REQUIRE = Status.FINALIZE
 
-    PATH = RelativePath('page.md')
+    PATH = 'page.md'
 
     TOC_DEPTH: int | float = inf
     EXPECTED: Toc

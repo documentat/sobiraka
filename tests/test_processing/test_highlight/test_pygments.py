@@ -1,14 +1,14 @@
 from abc import ABCMeta
 from textwrap import dedent
 from unittest import main
-from unittest.mock import Mock
 
 from abstracttests.weasyprintprojecttestcase import WeasyPrintProjectTestCase
-from test_processing.test_highlight.abstract import AbstractHighlightTest
-from sobiraka.models import FileSystem, Page, Project, Volume
-from sobiraka.models.config import Config, Config_PDF, Config_Pygments
+from helpers.fakeproject import FakeProject, FakeVolume
+from sobiraka.models import Project
+from sobiraka.models.config import Config, Config_PDF, Config_Paths, Config_Pygments
 from sobiraka.processing.web import Head, HeadCssFile
 from sobiraka.utils import RelativePath
+from .abstract import AbstractHighlightTest
 
 
 class AbstractHighlightTest_Pygments(AbstractHighlightTest, metaclass=ABCMeta):
@@ -65,15 +65,12 @@ class TestPygments_WeasyPrint_PHP(WeasyPrintProjectTestCase):
 
     def _init_project(self) -> Project:
         config = Config(
-            pdf=Config_PDF(
-                highlight=Config_Pygments(
-                    style='vs',
-                )
-            )
+            paths=Config_Paths(root=RelativePath('src')),
+            pdf=Config_PDF(highlight=Config_Pygments(style='vs'))
         )
-        return Project(Mock(FileSystem), {
-            RelativePath(): Volume(config, {
-                RelativePath(): Page(self.CONTENT),
+        return FakeProject({
+            'src': FakeVolume(config, {
+                'index.md': self.CONTENT,
             })
         })
 

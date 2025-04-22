@@ -7,7 +7,7 @@ from sobiraka.processing.latex import LatexBuilder
 from sobiraka.processing.weasyprint import WeasyPrintBuilder
 from sobiraka.processing.web import WebBuilder
 from sobiraka.prover import Prover
-from sobiraka.report import run_with_progressbar
+from sobiraka.report import run_beautifully
 from sobiraka.runtime import RT
 from sobiraka.translating import check_translations
 from sobiraka.utils import AbsolutePath, DictionaryValidator, absolute_or_relative, parse_vars
@@ -66,7 +66,8 @@ async def async_main():
         if cmd is cmd_web:
             project = load_project(args.config)
             builder = WebBuilder(project, args.output, hide_index_html=args.hide_index_html)
-            exit_code = await RT.run_isolated(run_with_progressbar(builder))
+            with run_beautifully():
+                exit_code = await RT.run_isolated(builder.run())
 
         elif cmd is cmd_latex:
             project = load_project(args.config)
@@ -78,7 +79,8 @@ async def async_main():
                     output /= f'{volume.config.title}.pdf'
                 print(f'Building {output.name!r}...', file=sys.stderr)
                 builder = LatexBuilder(volume, output)
-                exit_code = await RT.run_isolated(run_with_progressbar(builder))
+                with run_beautifully():
+                    exit_code = await RT.run_isolated(builder.run())
 
             else:
                 assert output.suffix.lower() != '.pdf'
@@ -87,9 +89,10 @@ async def async_main():
                     output_file = output / f'{volume.config.title}.pdf'
                     print(f'Building {output_file.name!r}...', file=sys.stderr)
                     builder = LatexBuilder(volume, output_file)
-                    exit_code = await RT.run_isolated(run_with_progressbar(builder))
-                    if exit_code != 0:
-                        break
+                    with run_beautifully():
+                        exit_code = await RT.run_isolated(builder.run())
+                        if exit_code != 0:
+                            break
 
         elif cmd is cmd_pdf:
             project = load_project(args.config)
@@ -101,7 +104,8 @@ async def async_main():
                     output /= f'{volume.config.title}.pdf'
                 print(f'Building {output.name!r}...', file=sys.stderr)
                 builder = WeasyPrintBuilder(volume, output)
-                exit_code = await RT.run_isolated(run_with_progressbar(builder))
+                with run_beautifully():
+                    exit_code = await RT.run_isolated(builder.run())
 
             else:
                 assert output.suffix.lower() != '.pdf'
@@ -110,15 +114,17 @@ async def async_main():
                     output_file = output / f'{volume.config.title}.pdf'
                     print(f'Building {output_file.name!r}...', file=sys.stderr)
                     builder = WeasyPrintBuilder(volume, output_file)
-                    exit_code = await RT.run_isolated(run_with_progressbar(builder))
-                    if exit_code != 0:
-                        break
+                    with run_beautifully():
+                        exit_code = await RT.run_isolated(builder.run())
+                        if exit_code != 0:
+                            break
 
         elif cmd is cmd_prover:
             project = load_project(args.config)
             volume = project.get_volume(args.volume)
             prover = Prover(volume, parse_vars(args.var or ()))
-            exit_code = await RT.run_isolated(run_with_progressbar(prover))
+            with run_beautifully():
+                exit_code = await RT.run_isolated(prover.run())
 
         elif cmd is cmd_validate_dictionary:
             dic_path = args.dic

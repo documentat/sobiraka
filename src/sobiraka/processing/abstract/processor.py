@@ -1,24 +1,23 @@
 import re
 from abc import ABCMeta
+from asyncio import create_task
 from collections import defaultdict
 from contextlib import suppress
 from os.path import normpath
-from typing import Generic, TYPE_CHECKING, TypeVar
+from typing import Generic, TypeVar
 
 from panflute import Code, Element, Header, Image, Link, Para, Space, Str, Table, stringify
 from typing_extensions import override
 
-from sobiraka.models import Anchor, DirPage, FileSystem, Page, PageHref, PageStatus, UrlHref, Volume
+from sobiraka.models import Anchor, DirPage, FileSystem, Page, Source, Status, Syntax, UrlHref, Volume
 from sobiraka.models.config import Config
-from sobiraka.models.exceptions import DisableLink
 from sobiraka.models.issues import BadImage, BadLink
+from sobiraka.models.source.sourcefile import IdentifierResolutionError
+from sobiraka.processing.directive import Directive
 from sobiraka.runtime import RT
 from sobiraka.utils import AbsolutePath, PathGoesOutsideStartDirectory, RelativePath, absolute_or_relative
 from .dispatcher import Dispatcher
-from ..directive import Directive
-
-if TYPE_CHECKING:
-    pass
+from .waiter import NoSourceCreatedForPath
 
 B = TypeVar('B', bound='Builder')
 
@@ -91,14 +90,14 @@ class Processor(Dispatcher, Generic[B], metaclass=ABCMeta):
         if isinstance(path, AbsolutePath):
             path = path.relative_to('/')
         else:
-            path = page.path_in_project.parent / path
+            path = page.source.path_in_project.parent / path
             path = RelativePath(normpath(path))
             path = path.relative_to(volume.config.paths.resources)
 
         if fs.exists(config.paths.resources / path):
             image.url = str(path)
         else:
-            RT[page].issues.append(BadImage(image.url))
+            page.issues.append(BadImage(image.url))
             image.url = None
 
         return (image,)
@@ -106,10 +105,10 @@ class Processor(Dispatcher, Generic[B], metaclass=ABCMeta):
     @override
     async def process_link(self, link: Link, page: Page):
         if re.match(r'^\w+:', link.url):
-            RT[page].links.append(UrlHref(link.url))
+            RT[page].links.add(UrlHref(link.url))
         else:
-            if page.path_in_volume.suffix == '.rst':
-                RT[page].issues.append(BadLink(link.url))
+            if page.syntax == Syntax.RST:
+                page.issues.append(BadLink(link.url))
                 return
             await self.process_internal_link(link, link.url, page)
 
@@ -141,12 +140,20 @@ class Processor(Dispatcher, Generic[B], metaclass=ABCMeta):
     # region Process links
 
     async def process_internal_link(self, elem: Link, target_text: str, page: Page):
+        """
+        Given a Link that refers to some place in the documentation,
+        splits it into fragments and passes to process_internal_link_2
+        (which is scheduled for the next stage of processing).
+
+        And yes, this function has a variable with the type `Source` and the name `target`.
+        Yes, both these names make some kind of sense (separately).
+        """
         try:
             m = re.fullmatch(r'(?: \$ ([A-z0-9\-_]+)? )? (/)? ([^#]+)? (?: [#] (.+) )?$', target_text, re.VERBOSE)
-            volume_name, is_absolute, target_path_str, target_anchor = m.groups()
+            volume_name, is_absolute, target_path_str, identifier = m.groups()
 
             if (volume_name, is_absolute, target_path_str) == (None, None, None):
-                target = page
+                target = page.source
 
             else:
                 volume = page.volume
@@ -159,38 +166,44 @@ class Processor(Dispatcher, Generic[B], metaclass=ABCMeta):
                     if isinstance(page, DirPage):
                         target_path = (page.path_in_volume / target_path).resolve()
                     else:
-                        target_path = RelativePath(normpath(page.path_in_volume.parent / target_path))
+                        path_in_volume = page.source.path_in_project.relative_to(volume.root_path)
+                        target_path = RelativePath(normpath(path_in_volume.parent / target_path))
+                target_path = volume.config.paths.root / target_path
 
-                target = volume.pages_by_path[target_path]
+                target = await self.builder.waiter.wait(target_path, Status.LOAD)
 
-            href = PageHref(target, target_anchor)
-            RT[page].links.append(href)
-            self.builder.schedule_for_stage2(page, self.process2_internal_link(elem, href, target_text, page))
+            self.builder.referencing_tasks[page].append(create_task(
+                self.process_internal_link_2(elem, target, identifier, target_text, page)))
 
-        except (KeyError, ValueError, PathGoesOutsideStartDirectory):
-            RT[page].issues.append(BadLink(target_text))
+        except (KeyError, ValueError, PathGoesOutsideStartDirectory, NoSourceCreatedForPath):
+            page.issues.append(BadLink(target_text))
 
-    async def process2_internal_link(self, elem: Link, href: PageHref, target_text: str, page: Page):
-        await self.builder.waiter.wait(href.target, PageStatus.PROCESS1)
-
-        if href.anchor:
-            try:
-                anchor = RT[href.target].anchors.by_identifier(href.anchor)
-                if not elem.content:
-                    elem.content = Str(anchor.label),
-
-            except (KeyError, AssertionError):
-                RT[page].issues.append(BadLink(target_text))
-                return
-
+    async def process_internal_link_2(self, elem: Link, target: Source, identifier: str | None,
+                                      target_text: str, page: Page):
         try:
+            await self.builder.waiter.wait(target, Status.PROCESS)
+
+            href = target.href(identifier)
             elem.url = self.builder.make_internal_url(href, page=page)
-            if not elem.content:
-                elem.content = Str(RT[href.target].title),
+            if not elem.content and href.default_label:
+                elem.content = Str(href.default_label),
+
+            RT[page].links.add(href)
 
         except DisableLink:
             i = elem.parent.content.index(elem)
             elem.parent.content[i:i + 1] = elem.content
             return
 
+        except (KeyError, AssertionError, NoSourceCreatedForPath, IdentifierResolutionError):
+            page.issues.append(BadLink(target_text))
+            return
+
+        except Exception as exc:
+            raise exc
+
     # endregion
+
+
+class DisableLink(Exception):
+    pass

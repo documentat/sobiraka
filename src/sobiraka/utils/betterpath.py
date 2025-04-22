@@ -5,6 +5,7 @@ import sys
 from os import PathLike
 from pathlib import Path
 from typing import Iterable
+from typing_extensions import override
 
 
 class AbsolutePath(Path):
@@ -23,6 +24,7 @@ class AbsolutePath(Path):
             path = path.absolute()
             return path
 
+    @override
     def relative_to(self, start, *_) -> RelativePath:
         # pylint: disable=arguments-differ
         start = AbsolutePath(start)
@@ -69,6 +71,13 @@ class RelativePath(Path):
 
         return RelativePath(*result)
 
+    @override
+    @property
+    def parent(self) -> RelativePath:
+        assert self != RelativePath()
+        return super().parent
+
+    @override
     def relative_to(self, start, *_):
         # pylint: disable=arguments-differ
         start = RelativePath(start)

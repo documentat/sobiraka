@@ -15,8 +15,8 @@ class VolumeBuilder(Builder, Generic[P], metaclass=ABCMeta):
     A builder that works with an individual volume.
     """
 
-    def __init__(self, volume: Volume):
-        Builder.__init__(self)
+    def __init__(self, volume: Volume, **kwargs):
+        Builder.__init__(self, **kwargs)
         self.volume: Volume = volume
         self.processor: P = self.init_processor()
 

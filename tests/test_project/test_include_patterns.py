@@ -1,177 +1,160 @@
-from tempfile import TemporaryDirectory
-from unittest import IsolatedAsyncioTestCase, main
+from typing import Sequence
+from unittest import main
 
-from sobiraka.models import Project, RealFileSystem
-from sobiraka.models.load import load_project_from_dict
-from sobiraka.utils import AbsolutePath, RelativePath
+from abstracttests.projecttestcase import ProjectTestCase
+from helpers.fakeproject import FakeProject, FakeVolume
+from sobiraka.models import Project, Status
+from sobiraka.models.config import Config, Config_Paths
+from sobiraka.utils import RelativePath
 
 
-class TestIncludePatterns(IsolatedAsyncioTestCase):
-    maxDiff = None
+class TestIncludePatterns(ProjectTestCase):
+    REQUIRE = Status.LOAD
 
-    def prepare_dirs(self):
-        # pylint: disable=consider-using-with
-        temp_dir: str = self.enterContext(TemporaryDirectory(prefix='sobiraka-test-'))
-        self.fs = RealFileSystem(AbsolutePath(temp_dir))
-        self.root = AbsolutePath(temp_dir)
+    ROOT = ''
+    INCLUDE = []
+    EXCLUDE = []
+    EXPECTED_LOCATIONS: Sequence[str]
 
-    async def asyncSetUp(self):
-        self.root: AbsolutePath
-        self.manifest_path: AbsolutePath
-        self.path_to_root: str | None = None
-
-        self.prepare_dirs()
-        self.paths: tuple[AbsolutePath, ...] = (
-            self.root / 'intro.md',
-            self.root / 'part1' / 'chapter1.md',
-            self.root / 'part1' / 'chapter2.md',
-            self.root / 'part1' / 'chapter3.md',
-            self.root / 'part2' / 'chapter1.md',
-            self.root / 'part2' / 'chapter2.md',
-            self.root / 'part2' / 'chapter3.md',
-            self.root / 'part3' / 'subdir' / 'chapter1.md',
-            self.root / 'part3' / 'subdir' / 'chapter2.md',
-            self.root / 'part3' / 'subdir' / 'chapter3.md',
+    def _init_project(self) -> Project:
+        config = Config(
+            paths=Config_Paths(
+                root=RelativePath(self.ROOT),
+                include=self.INCLUDE,
+                exclude=self.EXCLUDE,
+            ),
         )
-        for path in self.paths:
-            path.parent.mkdir(parents=True, exist_ok=True)
-            path.touch()
-
-    def prepare_project(self, manifest: dict) -> Project:
-        if self.path_to_root:
-            manifest['paths']['root'] = self.path_to_root
-        return load_project_from_dict(manifest, fs=self.fs)
-
-    def assertPagePaths(self, project: Project, expected_paths: tuple[RelativePath, ...]):
-        actual_paths = tuple(p.path_in_volume for p in project.pages)
-        self.assertSequenceEqual(expected_paths, actual_paths)
-
-    ################################################################################
-
-    async def test_empty(self):
-        project = self.prepare_project({
-            'paths': {
-                'include': [],
-            }
+        return FakeProject({
+            self.ROOT: FakeVolume(config, {
+                'intro.md': '',
+                'part1': {
+                    'chapter1.md': '',
+                    'chapter2.md': '',
+                    'chapter3.md': '',
+                },
+                'part2': {
+                    'chapter1.md': '',
+                    'chapter2.md': '',
+                    'chapter3.md': '',
+                },
+                'part3': {
+                    'subdir': {
+                        'chapter1.md': '',
+                        'chapter2.md': '',
+                        'chapter3.md': '',
+                    },
+                },
+            })
         })
-        self.assertPagePaths(project, ())
 
-    async def test_include_all(self):
-        project = self.prepare_project({
-            'paths': {
-                'include': ['**/*.md'],
-            }
-        })
-        self.assertPagePaths(project, (
-            RelativePath(),
-            RelativePath() / 'intro.md',
-            RelativePath() / 'part1',
-            RelativePath() / 'part1' / 'chapter1.md',
-            RelativePath() / 'part1' / 'chapter2.md',
-            RelativePath() / 'part1' / 'chapter3.md',
-            RelativePath() / 'part2',
-            RelativePath() / 'part2' / 'chapter1.md',
-            RelativePath() / 'part2' / 'chapter2.md',
-            RelativePath() / 'part2' / 'chapter3.md',
-            RelativePath() / 'part3',
-            RelativePath() / 'part3' / 'subdir',
-            RelativePath() / 'part3' / 'subdir' / 'chapter1.md',
-            RelativePath() / 'part3' / 'subdir' / 'chapter2.md',
-            RelativePath() / 'part3' / 'subdir' / 'chapter3.md',
-        ))
-
-    async def test_include_only_top_level(self):
-        project = self.prepare_project({
-            'paths': {
-                'include': ['*.md'],
-            }
-        })
-        self.assertPagePaths(project, (
-            RelativePath(),
-            RelativePath() / 'intro.md',
-        ))
-
-    async def test_include_only_part2(self):
-        project = self.prepare_project({
-            'paths': {
-                'include': ['part2/*.md'],
-            }
-        })
-        self.assertPagePaths(project, (
-            RelativePath(),
-            RelativePath() / 'part2',
-            RelativePath() / 'part2' / 'chapter1.md',
-            RelativePath() / 'part2' / 'chapter2.md',
-            RelativePath() / 'part2' / 'chapter3.md',
-        ))
-
-    async def test_include_only_chapters3(self):
-        project = self.prepare_project({
-            'paths': {
-                'include': ['**/chapter3.md'],
-            }
-        })
-        self.assertPagePaths(project, (
-            RelativePath(),
-            RelativePath() / 'part1',
-            RelativePath() / 'part1' / 'chapter3.md',
-            RelativePath() / 'part2',
-            RelativePath() / 'part2' / 'chapter3.md',
-            RelativePath() / 'part3',
-            RelativePath() / 'part3' / 'subdir',
-            RelativePath() / 'part3' / 'subdir' / 'chapter3.md',
-        ))
-
-    async def test_include_all_except_part2(self):
-        project = self.prepare_project({
-            'paths': {
-                'include': ['**/*.md'],
-                'exclude': ['**/part2/*.md'],
-            }
-        })
-        self.assertPagePaths(project, (
-            RelativePath(),
-            RelativePath() / 'intro.md',
-            RelativePath() / 'part1',
-            RelativePath() / 'part1' / 'chapter1.md',
-            RelativePath() / 'part1' / 'chapter2.md',
-            RelativePath() / 'part1' / 'chapter3.md',
-            RelativePath() / 'part3',
-            RelativePath() / 'part3' / 'subdir',
-            RelativePath() / 'part3' / 'subdir' / 'chapter1.md',
-            RelativePath() / 'part3' / 'subdir' / 'chapter2.md',
-            RelativePath() / 'part3' / 'subdir' / 'chapter3.md',
-        ))
-
-    async def test_include_all_except_chapters3(self):
-        project = self.prepare_project({
-            'paths': {
-                'include': ['**/*.md'],
-                'exclude': ['**/chapter3.md'],
-            }
-        })
-        self.assertPagePaths(project, (
-            RelativePath(),
-            RelativePath() / 'intro.md',
-            RelativePath() / 'part1',
-            RelativePath() / 'part1' / 'chapter1.md',
-            RelativePath() / 'part1' / 'chapter2.md',
-            RelativePath() / 'part2',
-            RelativePath() / 'part2' / 'chapter1.md',
-            RelativePath() / 'part2' / 'chapter2.md',
-            RelativePath() / 'part3',
-            RelativePath() / 'part3' / 'subdir',
-            RelativePath() / 'part3' / 'subdir' / 'chapter1.md',
-            RelativePath() / 'part3' / 'subdir' / 'chapter2.md',
-        ))
+    def test_included_paths(self):
+        actual_paths = tuple(str(p.location) for p in self.project.get_volume().root.all_pages())
+        self.assertSequenceEqual(self.EXPECTED_LOCATIONS, actual_paths)
 
 
-class TestIncludePatterns_CustomRoot(TestIncludePatterns):
-    def prepare_dirs(self):
-        super().prepare_dirs()
-        self.root /= 'src'
-        self.path_to_root = 'src'
+class TestIncludePatterns_Empty(TestIncludePatterns):
+    EXPECTED_LOCATIONS = []
 
+
+class TestIncludePatterns_All(TestIncludePatterns):
+    INCLUDE = ['**/*.md']
+    EXPECTED_LOCATIONS = (
+        '/',
+        '/intro',
+        '/part1/',
+        '/part1/chapter1',
+        '/part1/chapter2',
+        '/part1/chapter3',
+        '/part2/',
+        '/part2/chapter1',
+        '/part2/chapter2',
+        '/part2/chapter3',
+        '/part3/',
+        '/part3/subdir/',
+        '/part3/subdir/chapter1',
+        '/part3/subdir/chapter2',
+        '/part3/subdir/chapter3',
+    )
+
+
+class TestIncludePatterns_OnlyTopLevel(TestIncludePatterns):
+    INCLUDE = ['*.md']
+    EXPECTED_LOCATIONS = (
+        '/',
+        '/intro',
+    )
+
+
+class TestIncludePatterns_OnlyPart2(TestIncludePatterns):
+    INCLUDE = ['part2/*.md']
+    EXPECTED_LOCATIONS = (
+        '/',
+        '/part2/',
+        '/part2/chapter1',
+        '/part2/chapter2',
+        '/part2/chapter3',
+    )
+
+
+class TestIncludePatterns_OnlyChapter3(TestIncludePatterns):
+    INCLUDE = ['**/chapter3.md']
+    EXPECTED_LOCATIONS = (
+        '/',
+        '/part1/',
+        '/part1/chapter3',
+        '/part2/',
+        '/part2/chapter3',
+        '/part3/',
+        '/part3/subdir/',
+        '/part3/subdir/chapter3',
+    )
+
+
+class TestIncludePatterns_AllExceptPart2(TestIncludePatterns):
+    INCLUDE = ['**/*.md']
+    EXCLUDE = ['**/part2/chapter1.md', '**/part2/chapter2.md', '**/part2/chapter3.md']
+    EXPECTED_LOCATIONS = (
+        '/',
+        '/intro',
+        '/part1/',
+        '/part1/chapter1',
+        '/part1/chapter2',
+        '/part1/chapter3',
+        '/part3/',
+        '/part3/subdir/',
+        '/part3/subdir/chapter1',
+        '/part3/subdir/chapter2',
+        '/part3/subdir/chapter3',
+    )
+
+
+class TestIncludePatterns_AllExceptChapter3(TestIncludePatterns):
+    INCLUDE = ['**/*.md']
+    EXCLUDE = ['**/chapter3.md']
+    EXPECTED_LOCATIONS = (
+        '/',
+        '/intro',
+        '/part1/',
+        '/part1/chapter1',
+        '/part1/chapter2',
+        '/part2/',
+        '/part2/chapter1',
+        '/part2/chapter2',
+        '/part3/',
+        '/part3/subdir/',
+        '/part3/subdir/chapter1',
+        '/part3/subdir/chapter2',
+    )
+
+
+for klass_name, klass in tuple(globals().items()):
+    if isinstance(klass, type) and issubclass(klass, TestIncludePatterns) and klass is not TestIncludePatterns:
+        klass_name = klass_name.replace('TestIncludePatterns_', 'TestIncludePatternsWithCustomRoot_')
+        klass_bases = klass.__bases__
+        klass_dict = klass.__dict__ | dict(ROOT='src')
+        globals()[klass_name] = type(klass_name, klass.__bases__, klass_dict)
+
+del ProjectTestCase, TestIncludePatterns
 
 if __name__ == '__main__':
     main()

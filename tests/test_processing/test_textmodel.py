@@ -1,16 +1,16 @@
 import re
 from textwrap import dedent
 from unittest import main
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 import more_itertools
 from panflute import stringify
 
 from abstracttests.projecttestcase import ProjectTestCase
-from sobiraka.models import FileSystem, Page, Project, Volume
+from helpers.fakeproject import FakeProject, FakeVolume
+from sobiraka.models import Project
 from sobiraka.processing.txt import PlainTextDispatcher, TextModel, clean_phrases
 from sobiraka.runtime import RT
-from sobiraka.utils import RelativePath
 
 
 class AbstractTestTextModel(ProjectTestCase):
@@ -29,15 +29,15 @@ class AbstractTestTextModel(ProjectTestCase):
     EXPECTED_SECTIONS_UP_TO_LEVEL: dict[int, dict[str, str]] = {}
 
     def _init_project(self) -> Project:
-        return Project(Mock(FileSystem), {
-            RelativePath(): Volume({
-                RelativePath(): Page(dedent(self.SOURCE).strip()),
+        return FakeProject({
+            'src': FakeVolume({
+                'index.md': dedent(self.SOURCE).strip(),
             }),
         })
 
     async def _process(self):
         await super()._process()
-        page, = self.project.pages
+        page = self.project.get_volume().root_page
 
         with patch.object(PlainTextDispatcher, '_new_text_model',
                           return_value=TextModel(exceptions_regexp=self.REGEXP)):

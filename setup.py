@@ -19,6 +19,7 @@ setup(
         'pygments~=2.16.1',
         'python-iso639~=2023.6.15',
         'pyyaml~=6.0',
+        'rich~=14.0.0',
         'typing-extensions~=4.12.2',
         'utilspie~=0.1.0',
         'wcmatch~=8.4.1',
@@ -26,7 +27,7 @@ setup(
         'yattag~=1.15.1',
     ],
     packages=find_packages('src'),
-    package_dir={'sobiraka': 'src/sobiraka'},
+    package_dir={'': 'src'},
     package_data={'sobiraka': ['files/**']},
     entry_points={
         'console_scripts': ['sobiraka=sobiraka.__main__:main'],

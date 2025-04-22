@@ -1,20 +1,29 @@
-from colorama import Back, Fore
+from rich.style import Style
+from rich.text import Text
 
-from sobiraka.models import PageStatus
+from sobiraka.models import Status
 
-ICONS = {
-    PageStatus.INITIALIZE: f'{Fore.LIGHTMAGENTA_EX}┄',
-    PageStatus.PREPARE: f'{Fore.LIGHTMAGENTA_EX}┄',
-    PageStatus.PROCESS1: f'{Fore.LIGHTGREEN_EX}─',
-    PageStatus.PROCESS2: f'{Fore.LIGHTGREEN_EX}━',
-    PageStatus.PROCESS3: f'{Fore.LIGHTCYAN_EX}━',
-    PageStatus.PROCESS4: f'{Fore.GREEN}━',
+ICONS_AND_STYLES: dict[Status, tuple[str, Style]] = {
+    Status.DISCOVER: (' ', Style(color='grey39')),
+    Status.LOAD: ('>', Style(color='grey39')),
+    Status.PARSE: ('▏', Style(color='grey66')),
+    Status.PROCESS: ('P', Style(color='deep_sky_blue2')),
+    Status.REFERENCE: ('R', Style(color='sky_blue1')),
+    Status.NUMERATE: ('N', Style(color='chartreuse4')),
+    Status.FINALIZE: ('V', Style(color='sea_green3', bold=True)),
 
-    PageStatus.FAILURE: f'{Back.LIGHTRED_EX}{Fore.WHITE}X',
-    PageStatus.DEP_FAILURE: f'{Back.LIGHTYELLOW_EX}{Fore.BLACK}!',
-    PageStatus.VOL_FAILURE: f'{Fore.LIGHTGREEN_EX}━',  # identical to PROCESS2
+    Status.SOURCE_FAILURE: ('X', Style(color='red1', bold=True)),
+    Status.PAGE_FAILURE: ('X', Style(color='red1', bold=True)),
+    Status.DEP_FAILURE: ('X', Style(color='orange4')),
+    Status.VOL_FAILURE: ('X', Style(color='orange4')),
 }
-COLORS = {
-    PageStatus.FAILURE: Fore.RED,
-    PageStatus.DEP_FAILURE: Fore.LIGHTYELLOW_EX,
-}
+
+
+def make_report_icon(status: Status) -> Text:
+    icon, style = ICONS_AND_STYLES[status]
+    return Text(icon, style, end=' ')
+
+
+def make_report_text(status: Status, text: str, end: str = '\n') -> Text:
+    _, style = ICONS_AND_STYLES[status]
+    return Text(text, style, end=end)

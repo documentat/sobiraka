@@ -50,7 +50,7 @@ class PagefindIndexer(SearchIndexer, PlainTextDispatcher):
                 content: {content!r},
                 language: {self.volume.lang or 'en'!r},
                 meta: {{
-                    title: {title!r},
+                    title: {repr(title) if title else "''"},
                 }},
             }});
         ''')

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import ABCMeta, abstractmethod
-from asyncio import Task, TaskGroup, create_subprocess_exec, create_task, to_thread
+from asyncio import ALL_COMPLETED, Task, TaskGroup, create_subprocess_exec, create_task, to_thread, wait
 from collections import defaultdict
 from subprocess import PIPE, run
 from typing import Awaitable, Coroutine, Generic, TypeVar, final
@@ -12,7 +12,7 @@ from typing_extensions import override
 from sobiraka.models import Page, Volume
 from sobiraka.models.config import Config
 from sobiraka.runtime import RT
-from sobiraka.utils import AbsolutePath, RelativePath, panflute_to_bytes, super_gather
+from sobiraka.utils import AbsolutePath, RelativePath, panflute_to_bytes
 from .head import Head, HeadCssFile
 from .highlight import Highlighter
 from ..abstract import Builder, Processor, Theme
@@ -20,8 +20,8 @@ from ..abstract import Builder, Processor, Theme
 
 class AbstractHtmlBuilder(Builder, metaclass=ABCMeta):
 
-    def __init__(self):
-        Builder.__init__(self)
+    def __init__(self, **kwargs):
+        Builder.__init__(self, **kwargs)
 
         self._html_builder_tasks: list[Task] = []
         self._results: set[AbsolutePath] = set()
@@ -31,7 +31,7 @@ class AbstractHtmlBuilder(Builder, metaclass=ABCMeta):
         self._html_builder_tasks.append(create_task(coro))
 
     def await_all_html_tasks(self) -> Awaitable:
-        return super_gather(self._html_builder_tasks, 'Some tasks failed when building HTML')
+        return wait(self._html_builder_tasks, return_when=ALL_COMPLETED)
 
     @final
     async def compile_theme_sass(self, theme: Theme, volume: Volume):
@@ -57,7 +57,7 @@ class AbstractHtmlBuilder(Builder, metaclass=ABCMeta):
         return process.stdout
 
     @override
-    async def process4(self, page: Page):
+    async def do_finalize(self, page: Page):
         self.apply_postponed_image_changes(page)
         html = await self.render_html(page)
         RT[page].bytes = html

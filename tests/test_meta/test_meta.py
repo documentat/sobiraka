@@ -1,33 +1,45 @@
-from unittest import TestCase, main
+from unittest import main
 
-from sobiraka.models import Page, Version
-
-
-class TestMeta(TestCase):
-    def test_no_meta(self):
-        page = Page('Hello, world!')
-        self.assertIsNone(page.meta.version)
-
-    def test_empty_meta(self):
-        page = Page('---\n---\nHello, world!')
-        self.assertIsNone(page.meta.version)
+from abstracttests.singlepageprojecttest import SinglePageProjectTest
+from sobiraka.models import Version
 
 
-class TestMeta_Version(TestCase):
-    def test_version_12_0(self):
-        page = Page('---\nversion: 12\n---\nHello, world!')
-        self.assertEqual(Version(12, 0), page.meta.version)
+class TestMeta_No(SinglePageProjectTest):
+    SOURCE = 'Hello, world!'
 
-    def test_version_12_3(self):
-        page = Page('---\nversion: 12.3\n---\nHello, world!')
-        self.assertEqual(Version(12, 3), page.meta.version)
+    def test_meta(self):
+        self.assertIsNone(self.page.meta.version)
 
 
-class TestMeta_Title(TestCase):
-    def test_title(self):
-        page = Page('---\ntitle: Hello\n---\nHello, world!')
-        self.assertEqual('Hello', page.meta.title)
+class TestMeta_Empty(SinglePageProjectTest):
+    SOURCE = '---\n---\nHello, world!'
 
+    def test_meta(self):
+        self.assertIsNone(self.page.meta.version)
+
+
+class TestMeta_Version_12_0(SinglePageProjectTest):
+    SOURCE = '---\nversion: 12\n---\nHello, world!'
+
+    def test_meta(self):
+        self.assertEqual(Version(12, 0), self.page.meta.version)
+
+
+class TestMeta_Version_12_3(SinglePageProjectTest):
+    SOURCE = '---\nversion: 12.3\n---\nHello, world!'
+
+    def test_meta(self):
+        self.assertEqual(Version(12, 3), self.page.meta.version)
+
+
+class TestMeta_Version_Title(SinglePageProjectTest):
+    SOURCE = '---\ntitle: Hello\n---\nHello, world!'
+
+    def test_meta(self):
+        self.assertEqual('Hello', self.page.meta.title)
+
+
+del SinglePageProjectTest
 
 if __name__ == '__main__':
     main()
