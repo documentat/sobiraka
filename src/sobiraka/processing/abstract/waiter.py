@@ -239,7 +239,7 @@ class Waiter:
 
             # Wait until all the pages get the required status
             if source.pages:
-                await wait(self.tasks[p][status] for p in source.pages)
+                await wait([self.tasks[p][status] for p in source.pages])
 
         finally:
             self.maybe_done()
