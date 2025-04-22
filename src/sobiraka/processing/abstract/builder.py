@@ -14,30 +14,24 @@ import panflute
 from jinja2 import StrictUndefined
 from panflute import Cite, Doc, Para, Space, Str, stringify
 
-from sobiraka.models import FileSystem, Page, PageHref, Project, Source, Status, Volume
+from sobiraka.models import FileSystem, Page, PageHref, Project, Source, Volume
 from sobiraka.models.config import Config
 from sobiraka.runtime import RT
+from .waiter import Waiter
 from ..numerate import numerate
 
 if TYPE_CHECKING:
     # noinspection PyUnresolvedReferences
     from .processor import Processor
-    from .waiter import Waiter
 
 P = TypeVar('P', bound='Processor')
 
 
 class Builder(Generic[P], metaclass=ABCMeta):
     def __init__(self):
-        self.waiter: Waiter | None = None
+        self.waiter = Waiter(self)
         self.jinja: dict[Volume, jinja2.Environment] = {}
         self.referencing_tasks: dict[Page, list[Task]] = defaultdict(list)
-
-    def init_waiter(self, target_status: Status) -> Waiter:
-        from .waiter import Waiter
-
-        self.waiter = Waiter(self, target_status)
-        return self.waiter
 
     def __repr__(self):
         return f'<{self.__class__.__name__} at {hex(id(self))}>'

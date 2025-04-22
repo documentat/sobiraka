@@ -1,5 +1,4 @@
 import re
-from asyncio import TaskGroup
 from functools import cached_property
 
 from more_itertools import unique_everseen
@@ -8,7 +7,7 @@ from typing_extensions import override
 
 from sobiraka.models import Page, PageHref, Status, Volume
 from sobiraka.models.issues import MisspelledWords
-from sobiraka.processing.abstract import VolumeBuilder
+from sobiraka.processing.abstract import VolumeBuilder, Waiter
 from sobiraka.processing.txt import PlainTextDispatcher, TextModel, clean_lines, clean_phrases
 from .checks import phrases_must_begin_with_capitals
 from .hunspell import run_hunspell
@@ -55,8 +54,9 @@ class ProverProcessor(PlainTextDispatcher):
 
 
 class Prover(VolumeBuilder[ProverProcessor]):
-    def __init__(self, volume: Volume, variables: dict = None, **kwargs):
-        super().__init__(volume, **kwargs)
+    def __init__(self, volume: Volume, variables: dict = None):
+        super().__init__(volume)
+        self.waiter.target_status = Status.PROCESS
         self._variables: dict = variables or {}
 
     @override
@@ -80,9 +80,7 @@ class Prover(VolumeBuilder[ProverProcessor]):
 
     @override
     async def run(self):
-        async with TaskGroup() as tg:
-            for page in self.volume.root.all_pages():
-                tg.create_task(self.waiter.wait(page, Status.PROCESS), name=f'checking {page.location}')
+        await self.waiter.wait_all()
 
     @override
     async def do_process(self, page: Page):

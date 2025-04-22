@@ -9,7 +9,7 @@ from typing_extensions import override
 from abstracttests.abstracttestwithrt import AbstractTestWithRtPages
 from helpers import FakeBuilder, unfold_exception_types
 from sobiraka.models import Page, Project, Status
-from sobiraka.processing.abstract import Builder
+from sobiraka.processing.abstract import Builder, Waiter
 from sobiraka.utils import AbsolutePath
 
 T = TypeVar('T', bound=Builder)
@@ -25,6 +25,7 @@ class ProjectTestCase(AbstractTestWithRtPages, Generic[T], metaclass=ABCMeta):
 
         self.project = self._init_project()
         self.builder: T = self._init_builder()
+        self.builder.waiter.target_status = self.REQUIRE
 
         await self._process()
 
@@ -36,7 +37,7 @@ class ProjectTestCase(AbstractTestWithRtPages, Generic[T], metaclass=ABCMeta):
         return FakeBuilder(self.project)
 
     async def _process(self):
-        await self.builder.init_waiter(self.REQUIRE).wait_all()
+        await self.builder.waiter.wait_all()
 
     def subTest(self, msg: Any = ..., **params: Any):
         if isinstance(msg, Page):

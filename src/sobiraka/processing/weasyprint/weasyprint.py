@@ -16,7 +16,7 @@ from typing_extensions import override
 from sobiraka.models import FileSystem, Page, PageHref, RealFileSystem, Status, Volume
 from sobiraka.models.config import CombinedToc, Config, Config_Pygments
 from sobiraka.processing import load_processor
-from sobiraka.processing.abstract import Theme, ThemeableVolumeBuilder
+from sobiraka.processing.abstract import Theme, ThemeableVolumeBuilder, Waiter
 from sobiraka.processing.abstract.processor import DisableLink
 from sobiraka.processing.web import AbstractHtmlBuilder, AbstractHtmlProcessor, HeadCssFile, Highlighter, Pygments
 from sobiraka.runtime import RT
@@ -63,13 +63,12 @@ class WeasyPrintBuilder(ThemeableVolumeBuilder['WeasyPrintProcessor', 'WeasyPrin
         self.add_html_task(self.add_custom_files())
         self.add_html_task(self.compile_theme_sass(self.theme, volume))
 
+        await self.await_all_html_tasks()
+
         # Combine rendered pages into a single page
         content: list[tuple[Page, TocNumber, str, str]] = []
         for page in volume.root.all_pages():
-            await self.waiter.wait(page, Status.FINALIZE)
             content.append((page, RT[page].number, RT[page].title, RT[page].bytes.decode('utf-8')))
-
-        await self.await_all_html_tasks()
 
         head = self.heads[volume].render('')
 

@@ -18,7 +18,7 @@ from sobiraka.models import FileSystem, Page, PageHref, Status, Volume
 from sobiraka.models.config import Config, Config_Latex_Headers
 from sobiraka.runtime import RT
 from sobiraka.utils import AbsolutePath, LatexInline, convert_or_none, panflute_to_bytes
-from ..abstract import Processor, Theme, ThemeableVolumeBuilder
+from ..abstract import Processor, Theme, ThemeableVolumeBuilder, Waiter
 from ..abstract.processor import DisableLink
 from ..load_processor import load_processor
 from ..replacement import HeaderReplPara
@@ -48,9 +48,10 @@ class LatexBuilder(ThemeableVolumeBuilder['LatexProcessor', 'LatexTheme']):
         return dict(PDF=True, LATEX=True)
 
     async def run(self):
+        self.waiter.start()
+
         xelatex_workdir = RT.TMP / 'tex'
         xelatex_workdir.mkdir(parents=True, exist_ok=True)
-
         with open(xelatex_workdir / 'build.tex', 'wb') as latex_output:
             await self.generate_latex(latex_output)
 

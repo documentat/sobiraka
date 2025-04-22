@@ -15,8 +15,8 @@ class VolumeBuilder(Builder, Generic[P], metaclass=ABCMeta):
     A builder that works with an individual volume.
     """
 
-    def __init__(self, volume: Volume, **kwargs):
-        Builder.__init__(self, **kwargs)
+    def __init__(self, volume: Volume):
+        super().__init__()
         self.volume: Volume = volume
         self.processor: P = self.init_processor()
 
@@ -41,8 +41,8 @@ class VolumeBuilder(Builder, Generic[P], metaclass=ABCMeta):
 
 
 class ThemeableVolumeBuilder(VolumeBuilder[P], Generic[P, T], metaclass=ABCMeta):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, volume: Volume):
+        super().__init__(volume)
         self.theme: T = self.init_theme()
 
     @abstractmethod

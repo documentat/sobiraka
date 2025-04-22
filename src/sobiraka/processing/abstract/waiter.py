@@ -19,11 +19,12 @@ class Waiter:
     When initialized, a Waiter is given the status which all pages are expected to get eventually.
 
     As far as any other code is concerned, there are just two methods here:
-      - `wait_all()` for waiting until all pages get the target status,
-      - `wait()` for waiting until a certain page gets a certain status.
+      - `start()` for launching the tasks,
+      - `wait()` for waiting until a certain page gets a certain status,
+      - `wait_all()` for waiting until all pages get the target status.
     """
 
-    def __init__(self, builder: 'Builder', target_status: Status):
+    def __init__(self, builder: 'Builder', target_status: Status = Status.FINALIZE):
         self.builder: Builder = builder
         self.target_status: Status = target_status
 
@@ -33,22 +34,21 @@ class Waiter:
         self.aggregating: dict[Source, AggregatingEvent] = KeyDefaultDict(AggregatingEvent)
         self.path_events: dict[RelativePath, ProductiveEvent[Source]] = defaultdict(ProductiveEvent)
         self.page_events: dict[Source, PreventableEvent] = defaultdict(PreventableEvent)
-        self.done = PreventableEvent()
 
-        # We launch tasks as soon as possible,
-        # even though technically no one has called wait_all() just yet
-        for root in self.builder.get_roots():
-            Reporter.register_volume(root.volume)
-            self.schedule_tasks(root, target_status)
+        self.done = PreventableEvent()
 
     # ------------------------------------------------------------------------------------------------------------------
     # region Public interface
 
+    def start(self):
+        for root in self.builder.get_roots():
+            Reporter.register_volume(root.volume)
+            self.schedule_tasks(root, self.target_status)
+        assert self.tasks
+
     async def wait_all(self):
-        """
-        The public entrypoint to the Waiter.
-        It just waits until all pages will reach the target_status.
-        """
+        if not self.tasks:
+            self.start()
         await self.done.wait()
 
     @overload

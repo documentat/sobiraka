@@ -13,7 +13,7 @@ class FakeBuilder(ThemeableProjectBuilder):
         return {}
 
     async def run(self):
-        raise NotImplementedError
+        await self.waiter.wait_all()
 
     def make_internal_url(self, href: PageHref, *, page: Page = None) -> str:
         result = href.target.location.as_relative_path_str(

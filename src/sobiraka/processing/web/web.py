@@ -27,8 +27,8 @@ from ..load_processor import load_processor
 @final
 class WebBuilder(ThemeableProjectBuilder['WebProcessor', 'WebTheme'], AbstractHtmlBuilder):
 
-    def __init__(self, project: Project, output: AbsolutePath, *, hide_index_html: bool = False, **kwargs):
-        ThemeableProjectBuilder.__init__(self, project, **kwargs)
+    def __init__(self, project: Project, output: AbsolutePath, *, hide_index_html: bool = False):
+        ThemeableProjectBuilder.__init__(self, project)
         AbstractHtmlBuilder.__init__(self)
 
         self.output: AbsolutePath = output
@@ -55,7 +55,6 @@ class WebBuilder(ThemeableProjectBuilder['WebProcessor', 'WebTheme'], AbstractHt
     async def run(self):
         self.output.mkdir(parents=True, exist_ok=True)
 
-        self.waiter = Waiter(self, Status.FINALIZE)
         self.add_html_task(self.waiter.wait_all())
 
         for volume in self.get_volumes():

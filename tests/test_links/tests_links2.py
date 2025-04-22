@@ -6,6 +6,7 @@ from helpers import FakeBuilder
 from helpers.fakeproject import FakeProject, FakeVolume
 from sobiraka.models import PageHref, Status
 from sobiraka.models.config import Config, Config_Paths
+from sobiraka.processing.abstract import Waiter
 from sobiraka.runtime import RT
 from sobiraka.utils import RelativePath
 
@@ -70,7 +71,7 @@ class TestLinks2(AbstractTestWithRtPages):
                 project.fs.pseudofiles[RelativePath('A/section1/subsection1/page.md')] = f'[Link]({target_text})'
 
                 builder = FakeBuilder(project)
-                builder.init_waiter(Status.REFERENCE)
+                builder.waiter.target_status = Status.REFERENCE
                 await builder.waiter.wait_all()
 
                 page = project.volumes[0].get_page_by_location('/section1/subsection1/page')
