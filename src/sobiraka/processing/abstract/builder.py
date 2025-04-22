@@ -36,8 +36,7 @@ class Builder(Generic[P], metaclass=ABCMeta):
     def init_waiter(self, target_status: Status) -> Waiter:
         from .waiter import Waiter
 
-        roots = tuple(v.root for v in self.get_volumes())
-        self.waiter = Waiter(self, roots, target_status)
+        self.waiter = Waiter(self, target_status)
         return self.waiter
 
     def __repr__(self):

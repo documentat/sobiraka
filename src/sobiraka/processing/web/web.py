@@ -55,7 +55,7 @@ class WebBuilder(ThemeableProjectBuilder['WebProcessor', 'WebTheme'], AbstractHt
     async def run(self):
         self.output.mkdir(parents=True, exist_ok=True)
 
-        self.waiter = Waiter(self, self.get_roots(), Status.FINALIZE)
+        self.waiter = Waiter(self, Status.FINALIZE)
         self.add_html_task(self.waiter.wait_all())
 
         for volume in self.get_volumes():

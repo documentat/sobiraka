@@ -23,9 +23,8 @@ class Waiter:
       - `wait()` for waiting until a certain page gets a certain status.
     """
 
-    def __init__(self, builder: 'Builder', roots: Source | Sequence[Source], target_status: Status):
+    def __init__(self, builder: 'Builder', target_status: Status):
         self.builder: Builder = builder
-        self.roots: Sequence[Source] = (roots,) if isinstance(roots, Source) else tuple(roots)
         self.target_status: Status = target_status
 
         self.tasks: dict[Source | Page, dict[Status, Task]] = defaultdict(dict)
@@ -38,7 +37,7 @@ class Waiter:
 
         # We launch tasks as soon as possible,
         # even though technically no one has called wait_all() just yet
-        for root in self.roots:
+        for root in self.builder.get_roots():
             Reporter.register_volume(root.volume)
             self.schedule_tasks(root, target_status)
 
@@ -349,7 +348,7 @@ class Waiter:
 
         # We start by iterating over just the roots,
         # but we will be adding all children to the queue as we go
-        queue: list[Source] = list(self.roots)
+        queue: list[Source] = list(self.builder.get_roots())
         while queue:
             source = queue.pop(0)
             if source.child_sources is not MISSING:
