@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 setup(
     name='sobiraka',
-    version='0.2a1',
+    version='0.3',
     author='Max Alibaev',
     python_requires='~=3.11',
     install_requires=[
