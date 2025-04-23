@@ -7,7 +7,7 @@ from typing_extensions import override
 
 from sobiraka.models import Page, PageHref, Status, Volume
 from sobiraka.models.issues import MisspelledWords
-from sobiraka.processing.abstract import VolumeBuilder, Waiter
+from sobiraka.processing.abstract import VolumeBuilder
 from sobiraka.processing.txt import PlainTextDispatcher, TextModel, clean_lines, clean_phrases
 from .checks import phrases_must_begin_with_capitals
 from .hunspell import run_hunspell

@@ -6,7 +6,6 @@ from helpers import FakeBuilder
 from helpers.fakeproject import FakeProject, FakeVolume
 from sobiraka.models import PageHref, Status
 from sobiraka.models.config import Config, Config_Paths
-from sobiraka.processing.abstract import Waiter
 from sobiraka.runtime import RT
 from sobiraka.utils import RelativePath
 

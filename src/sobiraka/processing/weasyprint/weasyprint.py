@@ -16,7 +16,7 @@ from typing_extensions import override
 from sobiraka.models import FileSystem, Page, PageHref, RealFileSystem, Status, Volume
 from sobiraka.models.config import CombinedToc, Config, Config_Pygments
 from sobiraka.processing import load_processor
-from sobiraka.processing.abstract import Theme, ThemeableVolumeBuilder, Waiter
+from sobiraka.processing.abstract import Theme, ThemeableVolumeBuilder
 from sobiraka.processing.abstract.processor import DisableLink
 from sobiraka.processing.web import AbstractHtmlBuilder, AbstractHtmlProcessor, HeadCssFile, Highlighter, Pygments
 from sobiraka.runtime import RT

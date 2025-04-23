@@ -18,7 +18,7 @@ from sobiraka.models import FileSystem, Page, PageHref, Status, Volume
 from sobiraka.models.config import Config, Config_Latex_Headers
 from sobiraka.runtime import RT
 from sobiraka.utils import AbsolutePath, LatexInline, convert_or_none, panflute_to_bytes
-from ..abstract import Processor, Theme, ThemeableVolumeBuilder, Waiter
+from ..abstract import Processor, Theme, ThemeableVolumeBuilder
 from ..abstract.processor import DisableLink
 from ..load_processor import load_processor
 from ..replacement import HeaderReplPara

@@ -9,7 +9,7 @@ from typing_extensions import override
 from abstracttests.abstracttestwithrt import AbstractTestWithRtPages
 from helpers import FakeBuilder, unfold_exception_types
 from sobiraka.models import Page, Project, Status
-from sobiraka.processing.abstract import Builder, Waiter
+from sobiraka.processing.abstract import Builder
 from sobiraka.utils import AbsolutePath
 
 T = TypeVar('T', bound=Builder)
