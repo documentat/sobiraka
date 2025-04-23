@@ -1,32 +1,30 @@
 from argparse import ArgumentParser
 from math import inf
-from typing import Iterable, TYPE_CHECKING
+from typing import Iterable
 
 from panflute import BulletList, Div, Element, Header, Link, ListItem, Plain, Str
+from typing_extensions import override
 
-from sobiraka.models import Page
 from sobiraka.models.config import CombinedToc, Config
+from sobiraka.processing.toc import Toc, local_toc, toc
 from .directive import Directive
-from ..toc import Toc, local_toc, toc
-
-if TYPE_CHECKING:
-    from ..abstract import Builder
 
 
 class TocDirective(Directive):
-    def __init__(self, builder: 'Builder', page: Page, argv: list[str]):
-        super().__init__(builder, page)
+    DIRECTIVE_NAME = '@toc'
 
-        parser = ArgumentParser(add_help=False)
+    depth: int
+    combined: bool
+    format: str
+
+    @classmethod
+    @override
+    def set_up_arguments(cls, parser: ArgumentParser):
         parser.add_argument('--depth', type=int, default=inf)
         parser.add_argument('--combined', action='store_true')
         parser.add_argument('--format', type=str, default='{}.')
 
-        args = parser.parse_args(argv)
-        self.depth: int = args.depth
-        self.combined: bool = args.combined
-        self.format: str = args.format
-
+    @override
     def postprocess(self):
         """
         Replace the directive with a bullet list, based on a `toc()` call.
@@ -45,16 +43,16 @@ class TocDirective(Directive):
 
 
 class LocalTocDirective(Directive):
-    def __init__(self, builder: 'Builder', page: Page, argv: list[str]):
-        super().__init__(builder, page)
+    DIRECTIVE_NAME = '@local-toc'
 
-        parser = ArgumentParser(add_help=False)
+    depth: int
+    format: str
+
+    @classmethod
+    @override
+    def set_up_arguments(cls, parser: ArgumentParser):
         parser.add_argument('--depth', type=int, default=inf)
         parser.add_argument('--format', type=str, default='{}.')
-
-        args = parser.parse_args(argv)
-        self.depth: int = args.depth
-        self.format: str = args.format
 
     def previous_header(self) -> Header | None:
         elem: Element | None = self
@@ -72,6 +70,7 @@ class LocalTocDirective(Directive):
             if isinstance(elem, Header):
                 return elem
 
+    @override
     def postprocess(self):
         """
         Replace the directive with a bullet list, based on a `local_toc()` call.

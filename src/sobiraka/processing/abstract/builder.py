@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import shlex
 from abc import ABCMeta, abstractmethod
 from asyncio import Task, create_subprocess_exec, wait
 from collections import defaultdict
@@ -12,10 +11,9 @@ from typing import Generic, TYPE_CHECKING, TypeVar, final
 import jinja2
 import panflute
 from jinja2 import StrictUndefined
-from panflute import Cite, Doc, Para, Space, Str, stringify
-
 from sobiraka.models import FileSystem, Page, PageHref, Project, Source, Volume
 from sobiraka.models.config import Config
+from sobiraka.processing.directive import para_to_directive
 from sobiraka.runtime import RT
 from sobiraka.utils import replace_element
 
@@ -122,37 +120,10 @@ class Builder(Generic[P], metaclass=ABCMeta):
 
         This method is called by :obj:`.Page.processed1`.
         """
-        RT[page].doc.walk(partial(self.preprocess, page=page))
+        RT[page].doc.walk(partial(para_to_directive, builder=self, page=page))
         processor = self.get_processor_for_page(page)
         await processor.process_doc(RT[page].doc, page)
         return page
-
-    def preprocess(self, para: Para, _: Doc, *, page: Page):
-        try:
-            assert isinstance(para, Para)
-            assert isinstance(para.content[0], Cite)
-        except AssertionError:
-            return None
-
-        line = ''
-        for item in para.content[1:]:
-            match item:
-                case Str():
-                    line += item.text
-                case Space():
-                    line += ' '
-                case _:
-                    raise TypeError(item)
-        argv = shlex.split(line)
-
-        from ..directive import ClassDirective, LocalTocDirective, TocDirective
-        match stringify(para.content[0]):
-            case '@class':
-                return ClassDirective(self, page, argv)
-            case '@local-toc':
-                return LocalTocDirective(self, page, argv)
-            case '@toc':
-                return TocDirective(self, page, argv)
 
     async def do_reference(self, page: Page):
         """

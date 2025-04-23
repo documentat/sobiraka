@@ -1,3 +1,4 @@
+from .all_subclasses import all_subclasses
 from .autoprefix import autoprefix
 from .betterpath import AbsolutePath, IncompatiblePathTypes, PathGoesOutsideStartDirectory, RelativePath, \
     WrongPathType, absolute_or_relative

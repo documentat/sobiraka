@@ -9,8 +9,8 @@ from sobiraka.models.config import CombinedToc
 from sobiraka.processing.toc import Toc, TocItem, toc
 
 
-class AbstractTestTocCombine(ProjectTestCase[FakeBuilder]):
-    combine: CombinedToc
+class AbstractTestTocCombined(ProjectTestCase[FakeBuilder]):
+    combined: CombinedToc
     toc_depth: int | float = inf
     expected: Toc
 
@@ -30,20 +30,20 @@ class AbstractTestTocCombine(ProjectTestCase[FakeBuilder]):
             })
         })
 
-    def test_toc_combine(self):
+    def test_toc_combined(self):
         self.maxDiff = None
 
         volume = self.project.get_volume()
         actual = toc(volume.root_page,
                      builder=self.builder,
                      toc_depth=self.toc_depth,
-                     combined_toc=self.combine,
+                     combined_toc=self.combined,
                      current_page=volume.get_page_by_location('/section1/page1'))
         self.assertEqual(str(self.expected), str(actual))
 
 
-class TestTocCombine_Never(AbstractTestTocCombine):
-    combine = CombinedToc.NEVER
+class TestTocCombine_Never(AbstractTestTocCombined):
+    combined = CombinedToc.NEVER
     expected = Toc(
         TocItem('Section 1', './', is_breadcrumb=True, children=Toc(
             TocItem('Page 1.1', '', is_current=True, is_breadcrumb=True),
@@ -56,8 +56,8 @@ class TestTocCombine_Never(AbstractTestTocCombine):
     )
 
 
-class TestTocCombine_Always(AbstractTestTocCombine):
-    combine = CombinedToc.ALWAYS
+class TestTocCombine_Always(AbstractTestTocCombined):
+    combined = CombinedToc.ALWAYS
     expected = Toc(
         TocItem('Section 1', './', is_breadcrumb=True, children=Toc(
             TocItem('Paragraph 1', './#paragraph-1'),
@@ -82,8 +82,8 @@ class TestTocCombine_Always(AbstractTestTocCombine):
     )
 
 
-class TestTocCombine_Current(AbstractTestTocCombine):
-    combine = CombinedToc.CURRENT
+class TestTocCombine_Current(AbstractTestTocCombined):
+    combined = CombinedToc.CURRENT
     expected = Toc(
         TocItem('Section 1', './', is_breadcrumb=True, children=Toc(
             TocItem('Page 1.1', '', is_current=True, is_breadcrumb=True, children=Toc(
@@ -145,7 +145,7 @@ class TestTocCombine_Current_LimitDepth_1(TestTocCombine_Current):
     )
 
 
-del ProjectTestCase, AbstractTestTocCombine
+del ProjectTestCase, AbstractTestTocCombined
 
 if __name__ == '__main__':
     main()

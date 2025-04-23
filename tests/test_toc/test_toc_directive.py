@@ -61,8 +61,8 @@ class TestTocDirective_Default(AbstractTestTocDirective):
     ), classes=['toc'])
 
 
-class TestTocDirective_Combine(AbstractTestTocDirective):
-    directive = '@toc --combine'
+class TestTocDirective_Combined(AbstractTestTocDirective):
+    directive = '@toc --combined'
     expected = Div(BulletList(
         ListItem(Plain(Link(Str('Section 1'), url='section1/')), BulletList(
             ListItem(Plain(Link(Str('Page 1.1'), url='section1/page1.md')), BulletList(
