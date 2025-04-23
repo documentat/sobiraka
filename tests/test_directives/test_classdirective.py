@@ -6,12 +6,12 @@ from sobiraka.runtime import RT
 
 
 class TestClassDirective(SinglePageProjectTest):
-    REQUIRE = Status.PROCESS
+    REQUIRE = Status.NUMERATE
     SOURCE = '# Test\n\n@class MyClass\n\nThis is a paragraph.'
 
     def test_paragraph_class(self):
         doc = RT[self.page].doc
-        header, directive, para = doc.content  # pylint: disable=unused-variable
+        header, para = doc.content  # pylint: disable=unused-variable
         self.assertEqual('MyClass', RT.CLASSES[id(para)])
 
 

@@ -17,6 +17,8 @@ from panflute import Cite, Doc, Para, Space, Str, stringify
 from sobiraka.models import FileSystem, Page, PageHref, Project, Source, Volume
 from sobiraka.models.config import Config
 from sobiraka.runtime import RT
+from sobiraka.utils import replace_element
+
 from .waiter import Waiter
 from ..numerate import numerate
 
@@ -170,7 +172,7 @@ class Builder(Generic[P], metaclass=ABCMeta):
         for page in volume.root.all_pages():
             processor = self.get_processor_for_page(page)
             for toc_placeholder in processor.directives[page]:
-                toc_placeholder.postprocess()
+                replace_element(toc_placeholder, toc_placeholder.postprocess())
 
     async def do_finalize(self, page: Page):
         """
