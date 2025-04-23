@@ -1,31 +1,27 @@
 import unittest
 
-from abstracttests.projecttestcase import FailingProjectTestCase
-from helpers.fakeproject import FakeProject, FakeVolume
-from sobiraka.models import Project, Status
+from abstracttests.singlepageprojecttest import SinglePageProjectTest
+from sobiraka.models import Status
 from sobiraka.processing.abstract.waiter import IssuesOccurred
-from sobiraka.processing.directive import InvalidDirectiveArguments, UnknownDirective
 
 
-class TestInvalidDirective(FailingProjectTestCase):
+class TestInvalidDirective(SinglePageProjectTest):
     REQUIRE = Status.NUMERATE
     EXPECTED_EXCEPTION_TYPES = {IssuesOccurred}
 
-    def _init_project(self) -> Project:
-        return FakeProject({
-            'src': FakeVolume({
-                'index.md': '@haha --lol\n\n@toc --haha --lol',
-            }),
-        })
+    SOURCE = '''
+        @haha --lol
+        
+        @toc --haha --lol
+    '''
 
-    def test_issues(self):
-        page = self.project.get_volume().root_page
-
-        expected = [UnknownDirective('@haha'), InvalidDirectiveArguments('@toc')]
-        self.assertEqual(expected, page.issues)
+    EXPECTED_ISSUES = (
+        'Unknown directive @haha',
+        'Invalid arguments for @toc',
+    )
 
 
-del FailingProjectTestCase
+del SinglePageProjectTest
 
 if __name__ == '__main__':
     unittest.main()
