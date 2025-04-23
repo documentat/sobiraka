@@ -1,53 +1,44 @@
 from abc import ABCMeta
+from dataclasses import replace
 from textwrap import dedent
-from unittest.mock import Mock
 
 from abstracttests.projecttestcase import ProjectTestCase
-from sobiraka.models import FileSystem, Href, Page, PageHref, Project, UrlHref, Volume
+from helpers.fakeproject import FakeProject, FakeVolume
+from sobiraka.models import PageHref, Project, UrlHref
 from sobiraka.runtime import RT
-from sobiraka.utils import RelativePath
 
 
 class AbstractTestLinksGood(ProjectTestCase, metaclass=ABCMeta):
     SOURCES: dict[str, str]
 
     def _init_project(self) -> Project:
-        return Project(Mock(FileSystem), {
-            RelativePath('src'): Volume({
-                RelativePath(k): Page(dedent(v).strip())
+        return FakeProject({
+            'src': FakeVolume({
+                k: dedent(v).strip()
                 for k, v in self.SOURCES.items()
             }),
         })
 
     async def asyncSetUp(self):
         await super().asyncSetUp()
-        _, self.document0, _, self.document1, _, self.document2, self.document3, _, self.document4 = self.project.pages
+        volume = self.project.get_volume()
 
-    def test_ids(self):
-        expected_ids = (
-            'r',
-            'r--document0',
-            'r--sub',
-            'r--sub--document1',
-            'r--sub--subsub',
-            'r--sub--subsub--document2',
-            'r--sub--subsub--document3',
-            'r--sub--subsub--subsubsub',
-            'r--sub--subsub--subsubsub--document4',
-        )
-        actual_ids = tuple(page.id for page in self.project.pages)
-        self.assertSequenceEqual(expected_ids, actual_ids)
+        self.document0 = volume.get_page_by_location('/document0')
+        self.document1 = volume.get_page_by_location('/sub/document1')
+        self.document2 = volume.get_page_by_location('/sub/subsub/document2')
+        self.document3 = volume.get_page_by_location('/sub/subsub/document3')
+        self.document4 = volume.get_page_by_location('/sub/subsub/subsubsub/document4')
 
     def test_links(self):
-        data: dict[Page, tuple[Href, ...]] = {
+        data = {
             self.document0: (
+                UrlHref('https://example.com/'),
                 PageHref(self.document1),
                 PageHref(self.document2),
                 PageHref(self.document3),
                 PageHref(self.document3, 'sect1'),
                 PageHref(self.document3, 'section-2'),
                 PageHref(self.document4),
-                UrlHref('https://example.com/'),
             ),
             self.document1: (
                 PageHref(self.document0),
@@ -65,9 +56,9 @@ class AbstractTestLinksGood(ProjectTestCase, metaclass=ABCMeta):
                 PageHref(self.document0),
                 PageHref(self.document1),
                 PageHref(self.document2),
-                PageHref(self.document4),
-                PageHref(self.document3, 'section-2'),
                 PageHref(self.document3, 'sect1'),
+                PageHref(self.document3, 'section-2'),
+                PageHref(self.document4),
             ),
             self.document4: (
                 PageHref(self.document0),
@@ -76,6 +67,10 @@ class AbstractTestLinksGood(ProjectTestCase, metaclass=ABCMeta):
                 PageHref(self.document3),
             ),
         }
-        for page, expected_links in data.items():
+        for page, expected in data.items():
             with self.subTest(page):
-                self.assertSequenceEqual(expected_links, tuple(RT[page].links))
+                actual = tuple(replace(link, default_label=None)
+                                     if isinstance(link, PageHref)
+                                     else link
+                                     for link in sorted(RT[page].links))
+                self.assertSequenceEqual(expected, actual)

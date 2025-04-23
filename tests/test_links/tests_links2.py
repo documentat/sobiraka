@@ -1,34 +1,36 @@
 from unittest import main
-from unittest.mock import Mock
 
-from panflute import Link
-
+from abstracttests.abstracttestwithrt import AbstractTestWithRtPages
 from abstracttests.projecttestcase import ProjectTestCase
-from sobiraka.models import FileSystem, Page, PageHref, Project, Volume
+from helpers import FakeBuilder
+from helpers.fakeproject import FakeProject, FakeVolume
+from sobiraka.models import PageHref, Status
+from sobiraka.models.config import Config, Config_Paths
 from sobiraka.runtime import RT
 from sobiraka.utils import RelativePath
 
 
-class TestLinks2(ProjectTestCase):
-    def _init_project(self) -> Project:
-        fs = Mock(FileSystem)
-        return Project(fs, {
-            RelativePath('A'): Volume(None, 'A', {
-                RelativePath() / 'page.md': Page(),
-                RelativePath() / 'section1' / 'page.md': Page(),
-                RelativePath() / 'section1' / 'subsection1' / 'page.md': Page(),  # <-- we will start here
-                RelativePath() / 'section1' / 'subsection1' / 'sibling.md': Page(),
-                RelativePath() / 'section1' / 'subsection1' / 'subsubsection1' / 'page.md': Page(),
-                RelativePath() / 'section1' / 'subsection2' / 'page.md': Page(),
-                RelativePath() / 'section2' / 'page.md': Page(),
+class TestLinks2(AbstractTestWithRtPages):
+    def make_project(self) -> FakeProject:
+        config_a = Config(paths=Config_Paths(root=RelativePath('A')))
+        config_b = Config(paths=Config_Paths(root=RelativePath('B')))
+        return FakeProject({
+            'A': FakeVolume(config_a, {
+                'page.md': '',
+                'section1/page.md': '',
+                'section1/subsection1/page.md': '',  # <-- we will start here
+                'section1/subsection1/sibling.md': '',
+                'section1/subsection1/subsubsection1/page.md': '',
+                'section1/subsection2/page.md': '',
+                'section2/page.md': '',
             }),
-            RelativePath('B'): Volume(None, 'B', {
-                RelativePath() / 'page.md': Page(),
+            'B': FakeVolume(config_b, {
+                'page.md': '',
             })
         })
 
     async def test_links(self):
-        page = self.project.pages_by_path[RelativePath('A/section1/subsection1/page.md')]
+        # pylint: disable=line-too-long
         data: dict[str, RelativePath] = {
             '/': RelativePath('A'),
             '/page.md': RelativePath('A/page.md'),
@@ -62,15 +64,20 @@ class TestLinks2(ProjectTestCase):
         }
         for target_text, expected_path in data.items():
             with self.subTest(target=target_text):
-                previous_links_count = len(RT[page].links)
+                RT.init_context_vars()
 
-                processor = self.builder.get_processor_for_page(page)
-                await processor.process_internal_link(Link(), target_text, page)
-                self.assertEqual(previous_links_count + 1, len(RT[page].links))
+                project = self.make_project()
+                project.fs.pseudofiles[RelativePath('A/section1/subsection1/page.md')] = f'[Link]({target_text})'
 
-                href = RT[page].links[-1]
+                builder = FakeBuilder(project)
+                builder.waiter.target_status = Status.REFERENCE
+                await builder.waiter.wait_all()
+
+                page = project.volumes[0].get_page_by_location('/section1/subsection1/page')
+                href, = RT[page].links
+
                 self.assertIsInstance(href, PageHref)
-                self.assertEqual(expected_path, href.target.path_in_project)
+                self.assertEqual(expected_path, href.target.source.path_in_project)
                 self.assertEqual(None, href.anchor)
 
 

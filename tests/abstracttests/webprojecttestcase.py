@@ -1,8 +1,8 @@
-from .abstracttestwithrt import AbstractTestWithRtTmp
-from .projectdirtestcase import ProjectDirTestCase
 from helpers import assertNoDiff
 from sobiraka.processing.web import WebBuilder
 from sobiraka.runtime import RT
+from .abstracttestwithrt import AbstractTestWithRtTmp
+from .projectdirtestcase import ProjectDirTestCase
 
 
 class WebProjectTestCase(ProjectDirTestCase[WebBuilder], AbstractTestWithRtTmp):
@@ -15,8 +15,9 @@ class WebProjectTestCase(ProjectDirTestCase[WebBuilder], AbstractTestWithRtTmp):
 
         for page, expected in self.for_each_expected('.html'):
             with self.subTest(page):
+                html_path = self.builder.output / self.builder.get_target_path(page)
                 expected = tuple(expected.read_text().splitlines())
-                actual = self.builder.get_target_path(page).read_text().splitlines()
+                actual = html_path.read_text().splitlines()
                 assertNoDiff(expected, actual)
 
 

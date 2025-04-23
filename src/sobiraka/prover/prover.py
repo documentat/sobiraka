@@ -1,17 +1,14 @@
 import re
-from asyncio import Task, create_task
 from functools import cached_property
 
 from more_itertools import unique_everseen
 from panflute import Element
 from typing_extensions import override
 
-from sobiraka.models import Page, PageHref, PageStatus, Volume
+from sobiraka.models import Page, PageHref, Status, Volume
 from sobiraka.models.issues import MisspelledWords
 from sobiraka.processing.abstract import VolumeBuilder
 from sobiraka.processing.txt import PlainTextDispatcher, TextModel, clean_lines, clean_phrases
-from sobiraka.runtime import RT
-from sobiraka.utils import super_gather
 from .checks import phrases_must_begin_with_capitals
 from .hunspell import run_hunspell
 from .quotationsanalyzer import QuotationsAnalyzer
@@ -59,6 +56,7 @@ class ProverProcessor(PlainTextDispatcher):
 class Prover(VolumeBuilder[ProverProcessor]):
     def __init__(self, volume: Volume, variables: dict = None):
         super().__init__(volume)
+        self.waiter.target_status = Status.PROCESS
         self._variables: dict = variables or {}
 
     @override
@@ -82,14 +80,11 @@ class Prover(VolumeBuilder[ProverProcessor]):
 
     @override
     async def run(self):
-        tasks: list[Task] = []
-        for page in self.volume.pages:
-            tasks.append(create_task(self.require(page, PageStatus.PROCESS1), name=f'checking {page.path_in_project}'))
-        await super_gather(tasks)
+        await self.waiter.wait_all()
 
     @override
-    async def process1(self, page: Page):
-        await super().process1(page)
+    async def do_process(self, page: Page):
+        await super().do_process(page)
         tm = self.processor.tm[page]
 
         phrases = tm.phrases()
@@ -107,14 +102,14 @@ class Prover(VolumeBuilder[ProverProcessor]):
                 if word not in misspelled_words:
                     misspelled_words.append(word)
             if misspelled_words:
-                RT[page].issues.append(MisspelledWords(page.path_in_project, tuple(misspelled_words)))
+                page.issues.append(MisspelledWords(page.source.path_in_project, tuple(misspelled_words)))
 
         if config.phrases_must_begin_with_capitals:
-            RT[page].issues += phrases_must_begin_with_capitals(tm, phrases)
+            page.issues += phrases_must_begin_with_capitals(tm, phrases)
 
         if config.allowed_quotation_marks:
             lines = tuple(clean_lines(tm.lines, tm.exceptions()))
             quotation_analyzer = QuotationsAnalyzer(lines,
                                                     config.allowed_quotation_marks,
                                                     config.allowed_apostrophes)
-            RT[page].issues += quotation_analyzer.issues
+            page.issues += quotation_analyzer.issues

@@ -2,9 +2,9 @@ from abc import ABCMeta
 from unittest import main
 
 from abstracttests.projecttestcase import FailingProjectTestCase
+from test_processing.test_highlight.abstract import AbstractHighlightTest
 from sobiraka.processing.web import Head, HeadCssFile, HeadCssUrl, HeadJsFile, HeadJsUrl
 from sobiraka.utils import RelativePath
-from test_processing.test_highlight.abstract import AbstractHighlightTest
 
 
 class AbstractHighlightTest_Prism(AbstractHighlightTest, metaclass=ABCMeta):

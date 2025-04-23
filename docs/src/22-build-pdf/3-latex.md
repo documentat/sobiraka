@@ -1,4 +1,8 @@
-# Сборка через LaTeX
+---
+title: Сборка через LaTeX
+---
+
+# Сборка PDF через LaTeX
 
 ```
 sobiraka [--tmpdir TMPDIR] latex CONFIG [VOLUME] [--output OUTPUT]

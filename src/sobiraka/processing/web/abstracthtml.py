@@ -1,21 +1,18 @@
 from __future__ import annotations
 
-import re
 from abc import ABCMeta, abstractmethod
-from asyncio import Task, TaskGroup, create_subprocess_exec, create_task, to_thread
+from asyncio import ALL_COMPLETED, Task, TaskGroup, create_subprocess_exec, create_task, to_thread, wait
 from collections import defaultdict
-from copy import deepcopy
 from subprocess import PIPE, run
 from typing import Awaitable, Coroutine, Generic, TypeVar, final
 
-from panflute import CodeBlock, Element
-from panflute import Image
+from panflute import CodeBlock, Element, Image
 from typing_extensions import override
 
 from sobiraka.models import Page, Volume
 from sobiraka.models.config import Config
 from sobiraka.runtime import RT
-from sobiraka.utils import AbsolutePath, RelativePath, panflute_to_bytes, super_gather
+from sobiraka.utils import AbsolutePath, RelativePath, panflute_to_bytes
 from .head import Head, HeadCssFile
 from .highlight import Highlighter
 from ..abstract import Builder, Processor, Theme
@@ -23,8 +20,8 @@ from ..abstract import Builder, Processor, Theme
 
 class AbstractHtmlBuilder(Builder, metaclass=ABCMeta):
 
-    def __init__(self):
-        Builder.__init__(self)
+    def __init__(self, **kwargs):
+        Builder.__init__(self, **kwargs)
 
         self._html_builder_tasks: list[Task] = []
         self._results: set[AbsolutePath] = set()
@@ -34,7 +31,7 @@ class AbstractHtmlBuilder(Builder, metaclass=ABCMeta):
         self._html_builder_tasks.append(create_task(coro))
 
     def await_all_html_tasks(self) -> Awaitable:
-        return super_gather(self._html_builder_tasks, 'Some tasks failed when building HTML')
+        return wait(self._html_builder_tasks, return_when=ALL_COMPLETED)
 
     @final
     async def compile_theme_sass(self, theme: Theme, volume: Volume):
@@ -59,7 +56,8 @@ class AbstractHtmlBuilder(Builder, metaclass=ABCMeta):
             process = run(['sass', '--style=compressed', '--stdin'], input=source, stdout=PIPE, check=True)
         return process.stdout
 
-    async def process4(self, page: Page):
+    @override
+    async def do_finalize(self, page: Page):
         self.apply_postponed_image_changes(page)
         html = await self.render_html(page)
         RT[page].bytes = html
@@ -73,9 +71,6 @@ class AbstractHtmlBuilder(Builder, metaclass=ABCMeta):
 
     @final
     async def render_html(self, page: Page) -> bytes:
-        evil_copy = deepcopy(RT[page].doc)
-        evil_copy.content.clear()
-
         pandoc = await create_subprocess_exec(
             'pandoc',
             '--from', 'json',
@@ -88,17 +83,6 @@ class AbstractHtmlBuilder(Builder, metaclass=ABCMeta):
         assert pandoc.returncode == 0
 
         return html
-
-    @classmethod
-    def expand_path_vars(cls, text: str, volume: Volume) -> str:
-        def _substitution(m: re.Match) -> str:
-            return {
-                '$LANG': volume.lang or '',
-                '$VOLUME': volume.codename or 'all',
-                '$AUTOPREFIX': volume.autoprefix,
-            }[m.group()]
-
-        return re.sub(r'\$\w+', _substitution, text)
 
     @abstractmethod
     def get_root_prefix(self, page: Page) -> str:

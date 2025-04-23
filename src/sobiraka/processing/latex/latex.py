@@ -5,7 +5,7 @@ import re
 import sys
 import urllib.parse
 from abc import ABCMeta
-from asyncio import Task, create_subprocess_exec, create_task
+from asyncio import create_subprocess_exec
 from contextlib import suppress
 from shutil import copyfile
 from subprocess import DEVNULL, PIPE
@@ -14,21 +14,20 @@ from typing import BinaryIO, final
 from panflute import Element, Header, Str, stringify
 from typing_extensions import override
 
-from sobiraka.models import FileSystem, Page, PageHref, PageStatus, Volume
+from sobiraka.models import FileSystem, Page, PageHref, Status, Volume
 from sobiraka.models.config import Config, Config_Latex_Headers
-from sobiraka.models.exceptions import DisableLink
-from sobiraka.report import update_progressbar
 from sobiraka.runtime import RT
 from sobiraka.utils import AbsolutePath, LatexInline, convert_or_none, panflute_to_bytes
 from ..abstract import Processor, Theme, ThemeableVolumeBuilder
+from ..abstract.processor import DisableLink
 from ..load_processor import load_processor
 from ..replacement import HeaderReplPara
 
 
 @final
 class LatexBuilder(ThemeableVolumeBuilder['LatexProcessor', 'LatexTheme']):
-    def __init__(self, volume: Volume, output: AbsolutePath):
-        super().__init__(volume)
+    def __init__(self, volume: Volume, output: AbsolutePath, **kwargs):
+        super().__init__(volume, **kwargs)
 
         self.output: AbsolutePath = output
 
@@ -49,16 +48,16 @@ class LatexBuilder(ThemeableVolumeBuilder['LatexProcessor', 'LatexTheme']):
         return dict(PDF=True, LATEX=True)
 
     async def run(self):
+        self.waiter.start()
+
         xelatex_workdir = RT.TMP / 'tex'
         xelatex_workdir.mkdir(parents=True, exist_ok=True)
-
         with open(xelatex_workdir / 'build.tex', 'wb') as latex_output:
             await self.generate_latex(latex_output)
 
         resources_dir = self.volume.project.fs.resolve(self.volume.config.paths.resources)
         total_runs = 3
-        for n in range(1, total_runs + 1):
-            update_progressbar(f'Rendering PDF ({n}/{total_runs})...')
+        for _ in range(1, total_runs + 1):
             xelatex = await create_subprocess_exec(
                 'xelatex',
                 '-shell-escape',
@@ -85,73 +84,60 @@ class LatexBuilder(ThemeableVolumeBuilder['LatexProcessor', 'LatexTheme']):
         project = self.volume.project
         config = self.volume.config
 
-        update_progressbar('Generating LaTeX...')
-
-        processing: dict[Page, Task] = {}
-        for page in volume.pages:
-            processing[page] = create_task(self.require(page, PageStatus.PROCESS4),
-                                           name=f'generate latex for {page.path_in_project}')
-
-        try:
-            if config.latex.paths:
-                latex_output.write(b'\n\n' + (80 * b'%'))
-                latex_output.write(b'\n\n%%% Paths\n\n')
-                for key, value in config.latex.paths.items():
-                    value = self.volume.project.fs.resolve(value)
-                    latex_output.write(fr'\newcommand{{\{key}}}{{{value}/}}'.encode('utf-8') + b'\n')
-
-            variables = {
-                'TITLE': config.title,
-                'LANG': volume.lang,
-            }
-            for key, value in config.variables.items():
-                if re.fullmatch(r'[A-Za-z_]+', key):
-                    variables[key] = value
+        if config.latex.paths:
             latex_output.write(b'\n\n' + (80 * b'%'))
-            latex_output.write(b'\n\n%%% Variables\n\n')
-            for key, value in variables.items():
-                key = key.replace('_', '')
-                latex_output.write(fr'\newcommand{{\{key}}}{{{value}}}'.encode('utf-8') + b'\n')
+            latex_output.write(b'\n\n%%% Paths\n\n')
+            for key, value in config.latex.paths.items():
+                value = self.volume.project.fs.resolve(value)
+                latex_output.write(fr'\newcommand{{\{key}}}{{{value}/}}'.encode('utf-8') + b'\n')
 
-            if self.theme.style is not None:
-                latex_output.write(b'\n\n' + (80 * b'%'))
-                latex_output.write(b'\n\n%%% ' + self.theme.__class__.__name__.encode('utf-8') + b'\n\n')
-                latex_output.write(self.theme.style.read_bytes())
+        variables = {
+            'TITLE': config.title,
+            'LANG': volume.lang,
+        }
+        for key, value in config.variables.items():
+            if re.fullmatch(r'[A-Za-z_]+', key):
+                variables[key] = value
+        latex_output.write(b'\n\n' + (80 * b'%'))
+        latex_output.write(b'\n\n%%% Variables\n\n')
+        for key, value in variables.items():
+            key = key.replace('_', '')
+            latex_output.write(fr'\newcommand{{\{key}}}{{{value}}}'.encode('utf-8') + b'\n')
 
-            if config.latex.header:
-                latex_output.write(b'\n\n')
-                latex_output.write(b'\n\n%%% Project\'s custom header \n\n')
-                latex_output.write(project.fs.read_bytes(config.latex.header))
-
+        if self.theme.style is not None:
             latex_output.write(b'\n\n' + (80 * b'%'))
-            latex_output.write(b'\n\n\\begin{document}\n\\begin{sloppypar}')
+            latex_output.write(b'\n\n%%% ' + self.theme.__class__.__name__.encode('utf-8') + b'\n\n')
+            latex_output.write(self.theme.style.read_bytes())
 
-            if self.theme.cover is not None:
-                latex_output.write(b'\n\n' + (80 * b'%'))
-                latex_output.write(b'\n\n%%% Cover\n\n')
-                latex_output.write(self.theme.cover.read_bytes())
+        if config.latex.header:
+            latex_output.write(b'\n\n')
+            latex_output.write(b'\n\n%%% Project\'s custom header \n\n')
+            latex_output.write(project.fs.read_bytes(config.latex.header))
 
-            if config.latex.toc and self.theme.toc is not None:
-                latex_output.write(b'\n\n' + (80 * b'%'))
-                latex_output.write(b'\n\n%%% Table of contents\n\n')
-                latex_output.write(self.theme.toc.read_bytes())
+        latex_output.write(b'\n\n' + (80 * b'%'))
+        latex_output.write(b'\n\n\\begin{document}\n\\begin{sloppypar}')
 
-            for page in volume.pages:
-                await processing[page]
-                latex_output.write(b'\n\n' + (80 * b'%'))
-                latex_output.write(b'\n\n%%% ' + bytes(page.path_in_project) + b'\n\n')
-                latex_output.write(RT[page].bytes)
-
+        if self.theme.cover is not None:
             latex_output.write(b'\n\n' + (80 * b'%'))
-            latex_output.write(b'\n\n\\end{sloppypar}\n\\end{document}')
+            latex_output.write(b'\n\n%%% Cover\n\n')
+            latex_output.write(self.theme.cover.read_bytes())
 
-        finally:
-            for task in processing.values():
-                task.cancel()
-                with suppress(Exception):
-                    await task
+        if config.latex.toc and self.theme.toc is not None:
+            latex_output.write(b'\n\n' + (80 * b'%'))
+            latex_output.write(b'\n\n%%% Table of contents\n\n')
+            latex_output.write(self.theme.toc.read_bytes())
 
-    async def process4(self, page: Page):
+        for page in volume.root.all_pages():
+            await self.waiter.wait(page, Status.FINALIZE)
+            latex_output.write(b'\n\n' + (80 * b'%'))
+            latex_output.write(b'\n\n%%% ' + bytes(page.source.path_in_project) + b'\n\n')
+            latex_output.write(RT[page].bytes)
+
+        latex_output.write(b'\n\n' + (80 * b'%'))
+        latex_output.write(b'\n\n\\end{sloppypar}\n\\end{document}')
+
+    @override
+    async def do_finalize(self, page: Page):
         if len(RT[page].doc.content) == 0:
             RT[page].bytes = b''
 
@@ -202,7 +188,7 @@ class LatexBuilder(ThemeableVolumeBuilder['LatexProcessor', 'LatexTheme']):
         """
         if href.target.volume is not page.volume:
             raise DisableLink
-        result = href.target.id
+        result = '--'.join(('r', *str(href.target.location).strip('/').split('/'))).rstrip('-')
         if href.anchor:
             result += '--' + href.anchor
         result = urllib.parse.quote(result).replace('%', '')
@@ -239,7 +225,7 @@ class LatexProcessor(Processor[LatexBuilder]):
 
         # Generate our hypertargets and bookmarks manually, to avoid any weird behavior with TOCs
         if 'notoc' not in header.classes:
-            level = page.level + header.level - 1
+            level = page.location.level + header.level - 1
             label = stringify(header).replace('%', r'\%')
             if page.volume.config.content.numeration:
                 label = '%NUMBER%' + label
@@ -278,7 +264,7 @@ class LatexProcessor(Processor[LatexBuilder]):
                 return config_headers.by_class[klass]
 
         with suppress(KeyError):
-            return config_headers.by_global_level[page.level + header.level - 1]
+            return config_headers.by_global_level[page.location.level + header.level - 1]
 
         if header.level == 1:
             with suppress(KeyError):

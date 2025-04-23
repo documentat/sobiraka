@@ -7,7 +7,7 @@
 <body>
 
 {% for page, number, title, body in content %}
-    <!-- {{ page.path_in_volume }} -->
+    <!-- {{ page.source.path_in_project }} -->
     {{ body }}
 {% endfor %}
 

@@ -19,6 +19,7 @@ class AbstractDictionaryValidatorTest(TestCase):
 
     @classmethod
     def setUpClass(cls):
+        # pylint: disable=consider-using-with
         cls.dir = AbsolutePath(cls.enterClassContext(TemporaryDirectory(prefix='dictionary-')))
 
         cls.aff_path = cls.dir / 'dictionary.aff'

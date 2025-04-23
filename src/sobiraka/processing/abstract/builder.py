@@ -1,41 +1,37 @@
+from __future__ import annotations
+
 import shlex
 from abc import ABCMeta, abstractmethod
-from asyncio import Task, create_subprocess_exec, create_task
+from asyncio import Task, create_subprocess_exec, wait
 from collections import defaultdict
 from functools import partial
 from io import BytesIO
 from subprocess import PIPE
-from typing import Awaitable, TypeVar, final
+from typing import Generic, TYPE_CHECKING, TypeVar, final
 
 import jinja2
 import panflute
 from jinja2 import StrictUndefined
 from panflute import Cite, Doc, Para, Space, Str, stringify
 
-from sobiraka.models import FileSystem, Page, PageHref, PageStatus, Project, Volume
+from sobiraka.models import FileSystem, Page, PageHref, Project, Source, Volume
 from sobiraka.models.config import Config
-from sobiraka.models.exceptions import DependencyFailed, IssuesOccurred, VolumeFailed
-from sobiraka.report import update_progressbar
 from sobiraka.runtime import RT
-from sobiraka.utils import super_gather
-from .processor import Processor
-from .theme import Theme
+from .waiter import Waiter
 from ..numerate import numerate
 
-T = TypeVar('T', bound=Theme)
-P = TypeVar('P', bound=Processor)
+if TYPE_CHECKING:
+    # noinspection PyUnresolvedReferences
+    from .processor import Processor
+
+P = TypeVar('P', bound='Processor')
 
 
-class Builder(metaclass=ABCMeta):
+class Builder(Generic[P], metaclass=ABCMeta):
     def __init__(self):
-        self.tasks: dict[Page | Volume, dict[PageStatus, Task]] = defaultdict(dict)
-        """
-        Dictionary of all tasks that the building has started. Managed by `create_page_task()`.
-        """
-
+        self.waiter = Waiter(self)
         self.jinja: dict[Volume, jinja2.Environment] = {}
-
-        self.process2_tasks: dict[Page, list[Task]] = defaultdict(list)
+        self.referencing_tasks: dict[Page, list[Task]] = defaultdict(list)
 
     def __repr__(self):
         return f'<{self.__class__.__name__} at {hex(id(self))}>'
@@ -52,6 +48,10 @@ class Builder(metaclass=ABCMeta):
     def get_volumes(self) -> tuple[Volume, ...]:
         ...
 
+    @final
+    def get_roots(self) -> tuple[Source, ...]:
+        return tuple(v.root for v in self.get_volumes())
+
     @abstractmethod
     def get_pages(self) -> tuple[Page, ...]:
         ...
@@ -60,132 +60,13 @@ class Builder(metaclass=ABCMeta):
     def get_processor_for_page(self, page: Page) -> P:
         ...
 
-    @final
-    def create_page_task(self, page: Page, status: PageStatus) -> Task:
-        """
-        Creates (if not created) a Task that runs a function corresponding to the given PageStatus.
-
-        - For any status other than `PROCESS3`, the task is created as `self.tasks[page][status]`.
-
-        - For `PROCESS3`, the task is created as `self.tasks[volume][status]`.
-          For other pages from the same Volume, the same Task will be returned,
-          and no new calls of `process3()` will be made.
-
-        This function is synchronous, so that there is never any confusion
-        about which tasks are created and which are not,
-        no matter how many timed the higher-level `require()` function is called.
-        """
-        key = page.volume if status is PageStatus.PROCESS3 else page
-        try:
-            task = self.tasks[key][status]
-        except KeyError as exc:
-            match status:
-                case PageStatus.PREPARE:
-                    coro = self.prepare(page)
-                case PageStatus.PROCESS1:
-                    coro = self.process1(page)
-                case PageStatus.PROCESS2:
-                    coro = self.process2(page)
-                case PageStatus.PROCESS3:
-                    coro = self.process3(page.volume)
-                case PageStatus.PROCESS4:
-                    coro = self.process4(page)
-                case _:
-                    raise ValueError(status) from exc
-            task = self.tasks[key][status] = create_task(coro, name=f'{status.name} {page.path_in_project}')
-        return task
-
-    @final
-    async def require(self, page: Page, target_status: PageStatus):
-        """
-        Perform all yet unperformed operations until the `page` will reach the `target_status`.
-        Do nothing if it has that status already.
-        """
-        # pylint: disable=too-many-branches
-
-        # If the page already got the target status, do nothing
-        if RT[page].status is target_status:
-            return
-
-        # If the page already failed, raise the corresponding exception
-        if RT[page].status is PageStatus.FAILURE:
-            raise IssuesOccurred(page, RT[page].issues)
-        if RT[page].status is PageStatus.DEP_FAILURE:
-            raise DependencyFailed(page)
-        if RT[page].status is PageStatus.VOL_FAILURE:
-            raise VolumeFailed(page.volume)
-
-        # Decide which statuses we will have to go through to get to the the target
-        roadmap: list[PageStatus] = list(filter(lambda s: RT[page].status < s <= target_status, PageStatus))
-
-        # If the roadmap includes or ends with PROCESS3 (the volume-wide step),
-        # immediately launch tasks for other pages of the same volume.
-        # Later, we will wait for them to finish before we call `process3()` for the volume.
-        before_process3: list[Task] = []
-        if PageStatus.PROCESS3 in roadmap:
-            for other_page in page.volume.pages:
-                if other_page is not page:
-                    before_process3.append(create_task(self.require(other_page, PageStatus.PROCESS2),
-                                                       name=f'require {other_page.path_in_project}'))
-
-        # Iterate from the current status to the required status
-        for status in PageStatus.range(RT[page].status, target_status):
-
-            # Special treatment for the volume-wide step: make sure that all pages of the volume are ready.
-            # If not, raise VolumeFailed. Note that this type of exception is Ignorable,
-            # i.e., it is not really the current page's fault, and thus it is not interesting for the user.
-            # Basically, we cannot proceed but we won't explain why: someone else will have explained it already.
-            if status is PageStatus.PROCESS3:
-                try:
-                    await super_gather(before_process3, f'Some other pages failed in {page.volume.codename!r}')
-                except* Exception as excs:
-                    RT[page].status = PageStatus.VOL_FAILURE
-                    update_progressbar()
-                    raise VolumeFailed(page.volume) from excs
-
-            # Start running the appropriate function.
-            # In the (completely normal) case when multiple copies of `require()` are running simultaneously
-            # for the same page and target status, they all will be awaiting the same Task here.
-            # And any future copies of `require()` will go through this line instantaneously,
-            # because the Task will already be finished.
-            try:
-                await self.create_page_task(page, status)
-
-            # The only place that raises IssuesOccurred is `require()` itself, see a few lines below.
-            # If we catch it, it means that the step required some other page, but processing that page failed.
-            # It is an IssuesOccurred for that page, but a DependencyFailed for the current one.
-            # The same logic applies to another page's VolumeFailed.
-            except* (IssuesOccurred, VolumeFailed) as excs:
-                RT[page].status = PageStatus.DEP_FAILURE
-                update_progressbar()
-                raise DependencyFailed(page) from excs
-
-            # Any other type of exception is unexpected. May even be a Sobiraka bug.
-            # We consider it the current page's failure and set the status accordingly.
-            except* Exception:
-                RT[page].status = PageStatus.FAILURE
-                update_progressbar()
-                raise
-
-            # If we are still here, update the status
-            RT[page].status = status
-            update_progressbar()
-
-            # If any number of issues was found for the page, we consider it a failure and raise IssuesOccurred.
-            if len(RT[page].issues) != 0:
-                RT[page].status = PageStatus.FAILURE
-                update_progressbar()
-                raise IssuesOccurred(page, RT[page].issues)
-
     @abstractmethod
     def additional_variables(self) -> dict:
         ...
 
     async def prepare(self, page: Page):
         """
-        Parse syntax tree with Pandoc and save its syntax tree into :obj:`.Page.doc`.
-
-        This method is called by :obj:`.Page.loaded`.
+        Parse the syntax tree with Pandoc and save its syntax tree into `RT[page].doc`.
         """
         volume: Volume = page.volume
         config: Config = page.volume.config
@@ -229,12 +110,11 @@ class Builder(metaclass=ABCMeta):
         json_bytes, _ = await pandoc.communicate(page_text.encode('utf-8'))
         assert pandoc.returncode == 0
 
-        RT[page].title = page.stem
         RT[page].doc = panflute.load(BytesIO(json_bytes))
 
-    async def process1(self, page: Page) -> Page:
+    async def do_process(self, page: Page) -> Page:
         """
-        Run first pass of page processing.
+        The first stage of page processing.
 
         Internally, this function runs :func:`process_element()` on the :obj:`.Page.doc` root.
 
@@ -271,24 +151,30 @@ class Builder(metaclass=ABCMeta):
                 from ..directive import TocDirective
                 return TocDirective(self, page, argv)
 
-    async def process2(self, page: Page):
-        await super_gather(self.process2_tasks[page], f'Additional tasks failed for {page.path_in_project}')
+    async def do_reference(self, page: Page):
+        """
+        The second stage of the processing.
+        """
+        if self.referencing_tasks[page]:
+            await wait(self.referencing_tasks[page])
 
-    async def process3(self, volume: Volume):
+    async def do_numerate(self, volume: Volume):
+        """
+        The third stage of the processing.
+        Unlike other stages, this deals with the Volume as a whole.
+        """
         if volume.config.content.numeration:
             numerate(volume)
 
-        for page in volume.pages:
+        for page in volume.root.all_pages():
             processor = self.get_processor_for_page(page)
             for toc_placeholder in processor.directives[page]:
                 toc_placeholder.postprocess()
 
-    async def process4(self, page: Page):
-        pass
-
-    @final
-    def schedule_for_stage2(self, page: Page, awaitable: Awaitable[None]):
-        self.process2_tasks[page].append(create_task(awaitable))
+    async def do_finalize(self, page: Page):
+        """
+        The fourth stage of the processing.
+        """
 
     @abstractmethod
     def make_internal_url(self, href: PageHref, *, page: Page = None) -> str:

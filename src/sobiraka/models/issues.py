@@ -1,10 +1,11 @@
+from abc import ABCMeta
 from dataclasses import dataclass
 from textwrap import shorten
 
 from sobiraka.utils import Apostrophe, QuotationMark, RelativePath
 
 
-class Issue:
+class Issue(metaclass=ABCMeta):
     pass
 
 
@@ -23,14 +24,8 @@ class BadLink(Issue):
     def __str__(self):
         return f'Bad link: {self.target}'
 
-
-@dataclass(order=True, frozen=True)
-class AmbiguosLink(Issue):
-    target: str
-    anchor: str
-
-    def __str__(self):
-        return f'Ambiguos link: {self.target}#{self.anchor}'
+    def __repr__(self):
+        return f'{self.__class__.__name__}({self.target!r})'
 
 
 @dataclass(order=True, frozen=True)

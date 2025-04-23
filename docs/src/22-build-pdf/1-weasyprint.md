@@ -1,4 +1,8 @@
-# Сборка через WeasyPrint
+---
+title: Сборка через WeasyPrint
+---
+
+# Сборка PDF через WeasyPrint
 
 ```
 sobiraka pdf CONFIG [VOLUME] [--output OUTPUT]

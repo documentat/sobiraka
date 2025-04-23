@@ -4,7 +4,7 @@ import re
 from dataclasses import dataclass
 from math import inf
 
-from sobiraka.utils import RelativePath
+from sobiraka.utils import Location, RelativePath
 
 DEFAULT_PATTERNS = (
     re.compile(r'(?P<is_main> ^$                                 )  # (empty name)   ', re.VERBOSE),
@@ -44,6 +44,16 @@ class NamingScheme:
 
     def path_sorting_key(self, path: RelativePath) -> tuple[FileNameData, ...]:
         return tuple(map(self.parse, path.parts))
+
+    def make_location(self, path: RelativePath, *, as_dir: bool = False) -> Location:
+        """
+        Parse every component of the path and use the stems to construct a Location.
+        """
+        location = '/'.join(self.parse(p).stem for p in path.parts)
+        location = '/' + location
+        if as_dir and location != '/':
+            location += '/'
+        return Location(location)
 
 
 @dataclass(frozen=True, slots=True)

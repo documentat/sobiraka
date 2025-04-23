@@ -65,6 +65,7 @@ class TestWikipediaExampleCom(AbstractProverTest):
         From Wikipedia, the free encyclopedia
     '''
 
+    # pylint: disable=line-too-long
     EXPECTED_PHRASES = (
         'Example.com',
         'The domain names example.com, example.net, example.org, and example.edu are second-level domain names in the Domain Name System of the Internet.',

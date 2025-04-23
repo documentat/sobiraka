@@ -1,21 +1,20 @@
 from abc import ABCMeta
-from textwrap import dedent
 from unittest import main
-from unittest.mock import MagicMock, Mock, call, patch
+from unittest.mock import MagicMock, call, patch
 
 from abstracttests.abstracttestwithrt import AbstractTestWithRtTmp
 from abstracttests.projecttestcase import ProjectTestCase
-from sobiraka.models import FileSystem, Page, PageStatus, Project, Volume
+from helpers.fakeproject import FakeProject, FakeVolume
+from sobiraka.models import Project, Status
 from sobiraka.models.config import Config_Search_LinkTarget, Config_Web_Search
 from sobiraka.processing.web import WebBuilder
 from sobiraka.processing.web.search import PagefindIndexer
 from sobiraka.runtime import RT
-from sobiraka.utils import RelativePath
 
 
 @patch(f'{PagefindIndexer.__module__}.{PagefindIndexer.__qualname__}._add_record')
 class AbstractTestPagefindIndexer(ProjectTestCase[WebBuilder], AbstractTestWithRtTmp, metaclass=ABCMeta):
-    REQUIRE = PageStatus.PROCESS4
+    REQUIRE = Status.FINALIZE
 
     LINK_TARGET = Config_Search_LinkTarget.H1
     EXPECTED: tuple[call, ...]
@@ -27,7 +26,7 @@ class AbstractTestPagefindIndexer(ProjectTestCase[WebBuilder], AbstractTestWithR
         indexer = PagefindIndexer(self.builder, self.project.get_volume(), RT.TMP / 'build' / 'pagefind')
         indexer.search_config = Config_Web_Search(link_target=self.LINK_TARGET)
         await indexer.initialize()
-        for page in self.project.pages:
+        for page in self.project.get_volume().root.all_pages():
             await indexer.add_page(page)
         await indexer.finalize()
 
@@ -40,27 +39,29 @@ class AbstractTestPagefindIndexer(ProjectTestCase[WebBuilder], AbstractTestWithR
 
 class TestPagefindIndexer_Basic(AbstractTestPagefindIndexer):
     def _init_project(self) -> Project:
-        return Project(Mock(FileSystem), {
-            RelativePath('src'): Volume({
-
-                RelativePath('formatting.md'): Page(dedent('''
+        return FakeProject({
+            'src': FakeVolume({
+                'index.md': '''
+                    # Test Pagefind
+                    @toc
+                ''',
+                'formatting.md': '''
                     # Page with formatting
                     Normal, _italic_, **bold**, _**bold italic**_!
-                ''')),
-
-                RelativePath('links.md'): Page(dedent('''
+                ''',
+                'links.md': '''
                     # Page with links
                     Internal link 1: [formatting](formatting.md).
                     Internal link 2: [](formatting.md).
                     External link: [visit my website](https://example.com/).
-                ''')),
+                ''',
             }),
         })
 
     EXPECTED = (
         call(
             url='index.html',
-            title='',
+            title='Test Pagefind',
             content='Page with formatting\nPage with links\n'),
         call(
             url='formatting.html',
@@ -77,9 +78,9 @@ class TestPagefindIndexer_Basic(AbstractTestPagefindIndexer):
 
 class AbstractTestPagefindIndexer_UpToLevel(AbstractTestPagefindIndexer, metaclass=ABCMeta):
     def _init_project(self) -> Project:
-        return Project(Mock(FileSystem), {
-            RelativePath('src'): Volume({
-                RelativePath(): Page(dedent('''
+        return FakeProject({
+            'src': FakeVolume({
+                'index.md': '''
                     # H1
                     text1
                     
@@ -97,7 +98,7 @@ class AbstractTestPagefindIndexer_UpToLevel(AbstractTestPagefindIndexer, metacla
                     
                     ###### H6
                     text6
-                ''')),
+                ''',
             }),
         })
 

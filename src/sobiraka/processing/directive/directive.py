@@ -33,7 +33,7 @@ class Directive(Block, metaclass=ABCMeta):
         self.page: Page = page
 
     def __repr__(self):
-        return f'<{self.__class__.__name__} on {str(self.page.path_in_project)!r}>'
+        return f'<{self.__class__.__name__} on {str(self.page.location)!r}>'
 
     def process(self):
         pass

@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import os.path
-import re
 from asyncio import to_thread
 from datetime import datetime
 from functools import lru_cache
@@ -14,10 +12,10 @@ import iso639
 from panflute import Image
 from typing_extensions import override
 
-from sobiraka.models import DirPage, FileSystem, IndexPage, Page, PageHref, PageStatus, Project, Volume
+from sobiraka.models import FileSystem, Page, PageHref, Project, Volume
 from sobiraka.models.config import Config, Config_HighlightJS, Config_Prism, Config_Pygments, SearchIndexerName
 from sobiraka.runtime import RT
-from sobiraka.utils import AbsolutePath, RelativePath, configured_jinja, convert_or_none
+from sobiraka.utils import AbsolutePath, RelativePath, configured_jinja, convert_or_none, expand_vars
 from .abstracthtml import AbstractHtmlBuilder, AbstractHtmlProcessor
 from .head import HeadCssFile, HeadJsFile
 from .highlight import HighlightJs, Highlighter, Prism, Pygments
@@ -57,12 +55,10 @@ class WebBuilder(ThemeableProjectBuilder['WebProcessor', 'WebTheme'], AbstractHt
     async def run(self):
         self.output.mkdir(parents=True, exist_ok=True)
 
-        for volume in self.project.volumes:
-            theme = self.themes[volume]
+        self.add_html_task(self.waiter.wait_all())
 
-            # Launch page processing tasks
-            for page in volume.pages:
-                self.add_html_task(self.require(page, PageStatus.PROCESS4))
+        for volume in self.get_volumes():
+            theme = self.themes[volume]
 
             # Launch non-page processing tasks
             self.add_html_task(self.add_directory_from_location(theme.static_dir, RelativePath('_static')))
@@ -97,11 +93,12 @@ class WebBuilder(ThemeableProjectBuilder['WebProcessor', 'WebTheme'], AbstractHt
         for directory in dirs_to_delete:
             rmtree(directory, ignore_errors=True)
 
-    async def process4(self, page: Page):
+    @override
+    async def do_finalize(self, page: Page):
         if indexer := self._indexers.get(page.volume):
             await indexer.add_page(page)
 
-        await super().process4(page)
+        await super().do_finalize(page)
         await self.decorate_html(page)
 
         target_file = self.output / self.get_target_path(page)
@@ -156,28 +153,15 @@ class WebBuilder(ThemeableProjectBuilder['WebProcessor', 'WebTheme'], AbstractHt
         volume: Volume = page.volume
         config: Config = page.volume.config
 
-        target_path = RelativePath()
-        for part in page.path_in_volume.parts:
-            target_path /= re.sub(r'^(\d+-)?', '', part)
-
-        match page:
-            case IndexPage():
-                target_path = target_path.with_name('index.html')
-            case DirPage():
-                target_path /= 'index.html'
-            case Page():
-                if page.path_in_volume == RelativePath():
-                    target_path = target_path.parent / 'index.html'
-                else:
-                    target_path = target_path.with_suffix('.html')
-            case _:
-                raise TypeError(page.__class__.__name__)
-
         prefix = config.web.prefix or '$AUTOPREFIX'
-        prefix = self.expand_path_vars(prefix, volume)
-        prefix = os.path.join(*prefix.split('/'))
+        prefix = expand_vars(prefix, lang=volume.lang, codename=volume.codename)
 
-        target_path = RelativePath(prefix) / target_path
+        target_path = RelativePath() / prefix / page.location.as_path()
+        if page.location.is_dir:
+            target_path /= 'index.html'
+        else:
+            target_path = target_path.with_name(target_path.name + '.html')
+
         return target_path
 
     def get_relative_image_url(self, image: Image, page: Page) -> str:
@@ -187,25 +171,13 @@ class WebBuilder(ThemeableProjectBuilder['WebProcessor', 'WebTheme'], AbstractHt
         return relpath(image_path, start=start_path)
 
     def make_internal_url(self, href: PageHref, *, page: Page = None) -> str:
-        if href.target is page:
-            result = ''
-
-        else:
-            source_path = self.get_target_path(page) if page is not None else RelativePath()
-            target_path = self.get_target_path(href.target)
-            add_slash = False
-
-            if self.hide_index_html and target_path.name == 'index.html':
-                target_path = target_path.parent
-                add_slash = True
-
-            result = relpath(target_path, start=source_path.parent)
-            if add_slash:
-                result += '/'
-
+        result = href.target.location.as_relative_path_str(
+            start=page and page.location,
+            suffix='.html',
+            index_file_name='index.html',
+        )
         if href.anchor:
             result += '#' + href.anchor
-
         return result
 
     def get_root_prefix(self, page: Page) -> str:
@@ -266,7 +238,7 @@ class WebBuilder(ThemeableProjectBuilder['WebProcessor', 'WebTheme'], AbstractHt
         # Select the index file path
         index_relative_path = None
         if config.web.search.index_path is not None:
-            index_relative_path = self.expand_path_vars(config.web.search.index_path, volume)
+            index_relative_path = expand_vars(config.web.search.index_path, lang=volume.lang, codename=volume.codename)
 
         # Initialize the indexer
         indexer = indexer_class(self, volume, index_relative_path)

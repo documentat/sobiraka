@@ -86,12 +86,21 @@ test-nobuild:
 		-v $(PWD)/tests:/W/tests:rw \
 		$(IMAGE)
 
-lint: build-linter
+lint-production: build-linter
 	@$(DOCKER_RUN) \
 		-v $(PWD)/.pylintrc:/W/.pylintrc:ro \
 		-v $(PWD)/setup.py:/W/setup.py:ro \
 		-v $(PWD)/src/sobiraka:/W/src/sobiraka:ro \
-		sobiraka:linter
+		sobiraka:linter \
+		python -m pylint sobiraka src/sobiraka/files/themes/*/extension.py
+
+lint-tests: build-linter
+	@$(DOCKER_RUN) \
+		-v $(PWD)/.pylintrc:/W/.pylintrc:ro \
+		-v $(PWD)/src/sobiraka:/W/src/sobiraka:ro \
+		-v $(PWD)/tests:/W/tests:ro \
+		sobiraka:linter \
+		python -m pylint tests
 
 prover: release
 	@$(DOCKER_RUN) \

@@ -1,255 +1,85 @@
 from __future__ import annotations
 
-import re
 from dataclasses import dataclass
-from functools import cached_property
-from hashlib import sha256
-from typing import TYPE_CHECKING, overload
+from typing import Sequence, TYPE_CHECKING
 
-import yaml
-
-from sobiraka.utils import RelativePath
-from ..namingscheme import NamingScheme
+from sobiraka.utils import Location, MISSING
+from ..issues import Issue
+from ..status import ObjectWithStatus
 from ..syntax import Syntax
 from ..version import TranslationStatus, Version
 
 if TYPE_CHECKING:
-    from sobiraka.models.volume import Volume
-
-_META_PATTERN = re.compile(r'^---\n(.+\n)?---\n', re.DOTALL)
+    from sobiraka.models import Project, Source, Volume
 
 
-class Page:
+class Page(ObjectWithStatus):
     """
-    Representation of a single source file in the documentation.
+    A page is a unit of addressing used in the navigation.
+    It represents a piece of output documentation (not necessarily the full Source).
+    For example, in the HTML output format, a page is literally a single HTML page.
+
+    Each page is located at a unique Location (basically, a URI) within its Volume.
+    Its relation to other pages in the hierarchy is stored in the `parent` and `children` fields.
+    Note that the Location does not necessarily reflect the real hierarchy.
     """
 
-    @overload
-    def __init__(self, volume: Volume, path_in_volume: RelativePath, /):
-        ...
+    def __init__(self, source: Source, location: Location, syntax: Syntax, meta: PageMeta, text: str):
+        self.source: Source = source
+        self.location: Location = location
+        self.syntax: Syntax = syntax
+        self.meta: PageMeta = meta
+        self.text: str = text
 
-    @overload
-    def __init__(self, volume: Volume, path_in_volume: RelativePath, meta: PageMeta, text: str, /):
-        ...
+        # Fields for traversing the hierarchy
+        self.parent: Page = None if location.is_root else MISSING
+        self.children: list[Page] = MISSING
 
-    @overload
-    def __init__(self, volume: Volume, path_in_volume: RelativePath, raw_text: str, /):
-        ...
+        # Fields for collecting bad results
+        self.issues: list[Issue] = []
+        self.exception: Exception | None = None
 
-    @overload
-    def __init__(self, path_in_volume: RelativePath, /):
-        ...
+    @property
+    def volume(self) -> Volume:
+        return self.source.volume
 
-    @overload
-    def __init__(self, path_in_volume: RelativePath, meta: PageMeta, text: str, /):
-        ...
-
-    @overload
-    def __init__(self, path_in_volume: RelativePath, raw_text: str, /):
-        ...
-
-    @overload
-    def __init__(self, meta: PageMeta, text: str, /):
-        ...
-
-    @overload
-    def __init__(self, raw_text: str = '', /):
-        ...
-
-    def __init__(self, *args):
-        from sobiraka.models.volume import Volume
-
-        self.volume: Volume | None = None
-        self.path_in_volume: RelativePath | None = None
-
-        self.__meta: PageMeta | None = None
-        self.__text: str | None = None
-
-        match args:
-            case Volume() as volume, RelativePath() as path_in_volume:
-                self.volume = volume
-                self.path_in_volume = path_in_volume
-
-            case Volume() as volume, RelativePath() as path_in_volume, PageMeta() as meta, str() as text:
-                self.volume = volume
-                self.path_in_volume = path_in_volume
-                self.__meta = meta
-                self.__text = text
-
-            case Volume() as volume, RelativePath() as path_in_volume, str() as raw_text:
-                self.volume = volume
-                self.path_in_volume = path_in_volume
-                self._process_raw(raw_text)
-
-            case RelativePath() as path_in_volume,:
-                self.path_in_volume = path_in_volume
-
-            case RelativePath() as path_in_volume, PageMeta() as meta, str() as text:
-                self.path_in_volume = path_in_volume
-                self.__meta = meta
-                self.__text = text
-
-            case RelativePath() as path_in_volume, str() as raw_text:
-                self.path_in_volume = path_in_volume
-                self._process_raw(raw_text)
-
-            case str() as raw_text,:
-                self._process_raw(raw_text)
-
-            case PageMeta() as meta, str() as text:
-                self.__meta = meta
-                self.__text = text
-
-            case ():
-                self.__meta = PageMeta()
-                self.__text = ''
-
-            case _:
-                raise TypeError(*args)
-
-    def __eq__(self, other: Page):
-        try:
-            assert self.__class__ is other.__class__
-            assert self.volume is other.volume
-            assert self.path_in_volume == other.path_in_volume
-            return True
-        except AssertionError:
-            return False
-
-    def __hash__(self):
-        return hash(id(self))
+    @property
+    def project(self) -> Project:
+        return self.source.volume.project
 
     def __repr__(self):
-        path = '/'.join(self.path_in_volume.parts)
-        match path:
-            case self.volume.autoprefix:
-                return f'<{self.__class__.__name__}: [{self.volume.autoprefix}]/{path}>'
-            case RelativePath('.'):
-                return f'<{self.__class__.__name__}: />'
-            case _:
-                return f'<{self.__class__.__name__}: /{path}>'
+        return f'<{self.__class__.__name__}: {str(self.location)!r}>'
 
     def __lt__(self, other):
         assert isinstance(other, Page), TypeError
         assert self.volume.project == other.volume.project
-        self_breadcrumbs_as_indexes = tuple(x.pos for x in self.breadcrumbs)
-        other_breadcrumbs_as_indexes = tuple(x.pos for x in other.breadcrumbs)
-        return (self.volume, self_breadcrumbs_as_indexes) < (other.volume, other_breadcrumbs_as_indexes)
 
-    # ------------------------------------------------------------------------------------------------------------------
-    # Reading the source file
+        if self.volume is not other.volume:
+            return self.volume < other.volume
 
-    def _process_raw(self, raw_text: str):
-        if m := re.fullmatch(r'--- \n (.+\n)? --- (?: \n+ (.+) )?', raw_text, re.DOTALL | re.VERBOSE):
-            if meta_str := m.group(1):
-                meta = yaml.safe_load(meta_str)
-            else:
-                meta = {}
-            self.__meta = PageMeta(**meta)
-            self.__text = m.group(2)
-        else:
-            self.__meta = PageMeta()
-            self.__text = raw_text
+        self_breadcrumbs_as_indexes = []
+        for crumb in self.breadcrumbs[1:]:
+            self_breadcrumbs_as_indexes.append(crumb.parent.children.index(crumb))
+
+        other_breadcrumbs_as_indexes = []
+        for crumb in other.breadcrumbs[1:]:
+            other_breadcrumbs_as_indexes.append(crumb.parent.children.index(crumb))
+
+        return self_breadcrumbs_as_indexes < other_breadcrumbs_as_indexes
 
     @property
-    def meta(self) -> PageMeta:
-        if self.__meta is None:
-            raw_text = self.volume.project.fs.read_text(self.path_in_project)
-            self._process_raw(raw_text)
-        return self.__meta
-
-    @property
-    def text(self) -> str:
-        if self.__text is None:
-            raw_text = self.volume.project.fs.read_text(self.path_in_project)
-            self._process_raw(raw_text)
-        return self.__text
-
-    @property
-    def syntax(self) -> Syntax:
-        try:
-            return Syntax(self.path_in_volume.suffix[1:])
-        except ValueError:
-            return Syntax.MD
-
-    # ------------------------------------------------------------------------------------------------------------------
-    # Paths and the position in the tree
-
-    @cached_property
-    def path_in_project(self) -> RelativePath:
-        return self.volume.relative_root / self.path_in_volume
-
-    def is_root(self) -> bool:
-        return self.path_in_volume == RelativePath('.')
-
-    @cached_property
-    def breadcrumbs(self) -> tuple[Page, ...]:
+    def breadcrumbs(self) -> Sequence[Page]:
+        """
+        A sequence that includes the current page after all its parents, including the root page.
+        This may or may not look similar to the corresponding `Source.breadcrumbs`.
+        """
         breadcrumbs: list[Page] = [self]
-        while breadcrumbs[0].parent is not None:
+        while breadcrumbs[0].parent not in (None, MISSING):
             breadcrumbs.insert(0, breadcrumbs[0].parent)
         return tuple(breadcrumbs)
 
-    @cached_property
-    def parent(self) -> Page | None:
-        if self.is_root():
-            return None
-        return self.volume.pages_by_path[self.path_in_volume.parent]
-
-    @cached_property
-    def children(self) -> tuple[Page, ...]:
-        children: list[Page] = []
-        for page in self.volume.pages:
-            if page.parent is self:
-                children.append(page)
-        return tuple(children)
-
-    def id_segment(self) -> str:
-        if self.is_root():
-            return 'r'
-        return self.stem
-
-    @property
-    def pos(self) -> int | float:
-        return self.volume.config.paths.naming_scheme.parse(self.path_in_project).pos
-
-    @property
-    def stem(self) -> str:
-        if self.path_in_volume == RelativePath():
-            return self.volume.codename or ''
-        return self.volume.config.paths.naming_scheme.parse(self.path_in_project).stem
-
-    @cached_property
-    def id(self) -> str:
-        """
-        Textual representation of :data:`breadcrumbs`, unique within the :class:`.Volume`.
-
-        :examples:
-            ``0-main.md`` → ``r`` \n
-            ``2-company/5-about/0-index.md`` → ``r--company--about`` \n
-            ``2-company/5-about/1-contacts.md`` → ``r--company--about--contacts``
-        """
-        parts: list[str] = []
-        for page in self.breadcrumbs:
-            parts.append(page.id_segment())
-        return '--'.join(parts)
-
-    @cached_property
-    def level(self) -> int:
-        """
-        The depth of the page's location within its :class:`.Volume`.
-
-        Equals to number of parts in the :data:`path_in_volume` plus 1.
-        """
-        level = len(self.path_in_volume.parts) + 1
-
-        naming_scheme: NamingScheme = self.volume.config.paths.naming_scheme
-        if naming_scheme.parse(self.path_in_volume).is_main:
-            level -= 1
-
-        return level
-
     # ------------------------------------------------------------------------------------------------------------------
-    # Translation-related properties
+    # region Translation-related properties
 
     @property
     def original(self) -> Page:
@@ -267,15 +97,12 @@ class Page:
             return TranslationStatus.MODIFIED
         return TranslationStatus.OUTDATED
 
-
-def _hash(data: str | bytes) -> str:
-    if isinstance(data, str):
-        data = data.encode('utf-8')
-    return sha256(data).hexdigest()
+    # endregion
 
 
 @dataclass(kw_only=True)
 class PageMeta:
+    title: str = None
     version: Version = None
 
     def __post_init__(self):

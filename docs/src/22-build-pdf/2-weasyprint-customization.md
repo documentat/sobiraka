@@ -1,4 +1,8 @@
-# Кастомизация WeasyPrint
+---
+title: Кастомизация WeasyPrint
+---
+
+# Кастомизация сборки PDF через WeasyPrint
 
 [WeasyPrint](https://weasyprint.org/) использует собственный движок отрисовки HTML. Движок поддерживает большинство возможностей языка стилей CSS, но не поддерживает скрипты JavaScript. Полный список особенностей движка приведён в разделе [Supported Features](https://doc.courtbouillon.org/weasyprint/stable/api_reference.html#supported-features) документации WeasyPrint.
 

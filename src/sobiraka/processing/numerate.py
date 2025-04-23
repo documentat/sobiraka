@@ -25,7 +25,7 @@ def _numerate_page(page: Page, counter: TocNumber) -> TocNumber:
 
     # Numerate the page itself
     # Skip this for a root page
-    if not page.is_root():
+    if page.parent is not None:
         counter = RT[page].number = counter.increased()
 
     # Numerate the page's anchors and children

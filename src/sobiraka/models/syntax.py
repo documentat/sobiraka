@@ -2,7 +2,6 @@ from enum import Enum
 
 
 class Syntax(Enum):
-    HTML = 'html'
     MD = 'md'
     RST = 'rst'
 
@@ -15,3 +14,5 @@ class Syntax(Enum):
                 return 'markdown-smart-raw_html-raw_tex-implicit_figures+mark'
             case self.RST:
                 return 'rst-auto_identifiers'
+            case _:
+                raise ValueError(self)

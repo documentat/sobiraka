@@ -2,16 +2,13 @@ from dataclasses import dataclass, field
 
 from panflute import Doc, Image, Link
 
-from sobiraka.models import Anchors, Href, Page, PageStatus
-from sobiraka.models.issues import Issue
-from sobiraka.utils import TocNumber, UniqueList, Unnumbered
+from sobiraka.models import Anchors, Href
+from sobiraka.utils import TocNumber, Unnumbered
 
 
 @dataclass
 class PageRuntime:
     # pylint: disable=too-many-instance-attributes
-
-    status: PageStatus = PageStatus.INITIALIZE
 
     doc: Doc = None
     """
@@ -24,7 +21,7 @@ class PageRuntime:
     title: str = None
     """Page title.
     
-    Do not rely on the value for page here until `process1()` is awaited for that page.
+    Do not rely on the value for page here until `do_process()` is awaited for that page.
     """
 
     number: TocNumber = Unnumbered()
@@ -37,16 +34,12 @@ class PageRuntime:
     If true, `numerate()` will not set numbers for this page, and its anchors and child pages.
     """
 
-    links: list[Href] = field(default_factory=list)
+    links: set[Href] = field(default_factory=set)
     """All links present on the page, both internal and external.
     
-    Do not rely on the value for page here until `process1()` is awaited for that page."""
+    Do not rely on the value for page here until `do_process()` is awaited for that page."""
 
     anchors: Anchors = field(default_factory=Anchors)
-
-    issues: UniqueList[Issue] = field(default_factory=UniqueList)
-
-    dependencies: set[Page] = field(default_factory=set)
 
     bytes: bytes = None
 
