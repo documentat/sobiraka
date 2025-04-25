@@ -1,15 +1,18 @@
 import shlex
 from abc import ABCMeta
 from argparse import ArgumentError, ArgumentParser
+from contextlib import suppress
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, final
+from typing import Generic, TYPE_CHECKING, TypeVar, final, get_args
 
 from panflute import Block, Cite, Doc, Element, Null, Para, Space, Str, stringify
+from typing_extensions import get_original_bases, override
+
 from sobiraka.models import Issue, Page
 from sobiraka.utils import all_subclasses
 
 if TYPE_CHECKING:
-    from ..abstract import Builder
+    from ..abstract import Builder, Processor
 
 
 class Directive(Block, metaclass=ABCMeta):
@@ -36,9 +39,9 @@ class Directive(Block, metaclass=ABCMeta):
     def set_up_arguments(cls, parser: ArgumentParser):
         pass
 
-    @final
     def __init__(self, builder: 'Builder', page: Page, _: list[str] = None):
         self.builder: 'Builder' = builder
+        self.processor: 'Processor' = builder.get_processor_for_page(page)
         self.page: Page = page
 
     def __repr__(self):
@@ -49,6 +52,30 @@ class Directive(Block, metaclass=ABCMeta):
 
     def postprocess(self) -> Block | None:
         return None
+
+
+class OpeningDirective(Directive, metaclass=ABCMeta):
+    @final
+    @override
+    def process(self):
+        self.processor.current_directives[self.page].append(self)
+
+
+O = TypeVar('O', bound=OpeningDirective)
+
+
+class ClosingDirective(Directive, Generic[O], metaclass=ABCMeta):
+    opening_directive: O
+
+    @final
+    @override
+    def process(self):
+        opening_directive_type: type[OpeningDirective] = get_args(get_original_bases(self.__class__)[0])[0]
+        for directive in self.processor.current_directives[self.page]:
+            if isinstance(directive, opening_directive_type):
+                self.opening_directive = directive
+                self.processor.current_directives[self.page].remove(directive)
+                return
 
 
 def para_to_directive(elem: Element, _: Doc, *, builder: 'Builder', page: Page) -> Element:
@@ -67,8 +94,9 @@ def para_to_directive(elem: Element, _: Doc, *, builder: 'Builder', page: Page) 
 
     # Choose the Directive subclass based on the first word
     for directive_class in all_subclasses(Directive):
-        if directive_class.DIRECTIVE_NAME == directive_name:
-            break
+        with suppress(AttributeError):
+            if directive_class.DIRECTIVE_NAME == directive_name:
+                break
     else:
         page.issues.append(UnknownDirective(directive_name))
         return Null()

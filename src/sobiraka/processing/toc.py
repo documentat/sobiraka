@@ -193,7 +193,7 @@ def toc(
                      or ''
         href = PageHref(page)
         url = builder.make_internal_url(href, page=current_page)
-        item = TocItem(title=item_title, url=url, origin=page,
+        item = TocItem(title=item_title, url=url, href=href, origin=page,
                        number=RT[page].number, is_current=page is current_page)
 
         if current_page is not None:

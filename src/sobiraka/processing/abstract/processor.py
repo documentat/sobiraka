@@ -3,21 +3,22 @@ from abc import ABCMeta
 from asyncio import create_task
 from collections import defaultdict
 from contextlib import suppress
+from functools import partial
 from os.path import normpath
-from typing import Generic, TypeVar
+from typing import Callable, Generic, TypeVar
 
 from panflute import Code, Element, Header, Image, Link, Para, Space, Str, stringify
 from typing_extensions import override
 
-from sobiraka.models import Anchor, DirPage, FileSystem, Page, Source, Status, Syntax, UrlHref, Volume
+from sobiraka.models import Anchor, DirPage, FileSystem, Page, PageHref, Status, Syntax, UrlHref, Volume
 from sobiraka.models.config import Config
 from sobiraka.models.issues import BadImage, BadLink
 from sobiraka.models.source.sourcefile import IdentifierResolutionError
-from sobiraka.processing.directive import Directive
 from sobiraka.runtime import RT
-from sobiraka.utils import AbsolutePath, PathGoesOutsideStartDirectory, RelativePath, absolute_or_relative
+from sobiraka.utils import AbsolutePath, MISSING, PathGoesOutsideStartDirectory, RelativePath, absolute_or_relative
 from .dispatcher import Dispatcher
 from .waiter import NoSourceCreatedForPath
+from ..directive import Directive, ManualTocDirective, OpeningDirective
 
 B = TypeVar('B', bound='Builder')
 
@@ -28,6 +29,7 @@ class Processor(Dispatcher, Generic[B], metaclass=ABCMeta):
         super().__init__()
         self.builder: B = builder
         self.directives: dict[Page, list[Directive]] = defaultdict(list)
+        self.current_directives: dict[Page, list[OpeningDirective]] = defaultdict(list)
 
     async def process_role_doc(self, code: Code, page: Page):
         if m := re.fullmatch(r'(.+) < (.+) >', code.text, flags=re.X):
@@ -134,21 +136,36 @@ class Processor(Dispatcher, Generic[B], metaclass=ABCMeta):
     # region Process links
 
     async def process_internal_link(self, elem: Link, target_text: str, page: Page):
-        """
-        Given a Link that refers to some place in the documentation,
-        splits it into fragments and passes to process_internal_link_2
-        (which is scheduled for the next stage of processing).
+        # If we are inside a @manual-toc directive, prepare to report any generated links to it.
+        # Note that the actual link processing will be called asynchronously in an arbitrary order,
+        # and yet we will have to report the generated PageHrefs in the order of their appearance on the Page.
+        # The solution is to reserve the position now, while we are inside the consequtive tree processing,
+        # and create a callback that will replace the value at this position with a PageHref later.
+        callback = None
+        for directive in self.current_directives[page]:
+            if isinstance(directive, ManualTocDirective):
+                manual_toc = directive
+                manual_toc.hrefs.append(MISSING)
+                pos = len(manual_toc.hrefs) - 1
+                callback = partial(manual_toc.hrefs.__setitem__, pos)
+                break
 
-        And yes, this function has a variable with the type `Source` and the name `target`.
-        Yes, both these names make some kind of sense (separately).
-        """
+        # Schedule the actual link processing for the next stage
+        self.builder.referencing_tasks[page].append(create_task(
+            self.process_internal_link_2(elem, target_text, page, callback)))
+
+    async def process_internal_link_2(self, elem: Link, target_text: str, page: Page,
+                                      callback: Callable[[PageHref], None] = None):
+        # pylint: disable=too-many-locals
         try:
             m = re.fullmatch(r'(?: \$ ([A-z0-9\-_]+)? )? (/)? ([^#]+)? (?: [#] (.+) )?$', target_text, re.VERBOSE)
             volume_name, is_absolute, target_path_str, identifier = m.groups()
 
+            # If the link is empty or starts with a #, it leads to the current Source
             if (volume_name, is_absolute, target_path_str) == (None, None, None):
                 target = page.source
 
+            # For any other link, find the Source by the relative or absolute path
             else:
                 volume = page.volume
                 if volume_name is not None:
@@ -164,34 +181,27 @@ class Processor(Dispatcher, Generic[B], metaclass=ABCMeta):
                         target_path = RelativePath(normpath(path_in_volume.parent / target_path))
                 target_path = volume.config.paths.root / target_path
 
-                target = await self.builder.waiter.wait(target_path, Status.LOAD)
+                # Wait until the Waiter finds the Source by the path and loads its pages and anchors
+                target = await self.builder.waiter.wait(target_path, Status.PROCESS)
 
-            self.builder.referencing_tasks[page].append(create_task(
-                self.process_internal_link_2(elem, target, identifier, target_text, page)))
-
-        except (KeyError, ValueError, PathGoesOutsideStartDirectory, NoSourceCreatedForPath):
-            page.issues.append(BadLink(target_text))
-
-    async def process_internal_link_2(self, elem: Link, target: Source, identifier: str | None,
-                                      target_text: str, page: Page):
-        try:
-            await self.builder.waiter.wait(target, Status.PROCESS)
-
+            # Resolve the link and update the elem accordingly
             href = target.href(identifier)
             elem.url = self.builder.make_internal_url(href, page=page)
             if not elem.content and href.default_label:
                 elem.content = Str(href.default_label),
 
+            # Add the link to the list of the page's links
             RT[page].links.add(href)
+            if callback is not None:
+                callback(href)
 
         except DisableLink:
             i = elem.parent.content.index(elem)
             elem.parent.content[i:i + 1] = elem.content
-            return
 
-        except (KeyError, AssertionError, NoSourceCreatedForPath, IdentifierResolutionError):
+        except (KeyError, AssertionError, PathGoesOutsideStartDirectory, NoSourceCreatedForPath,
+                IdentifierResolutionError):
             page.issues.append(BadLink(target_text))
-            return
 
         except Exception as exc:
             raise exc
