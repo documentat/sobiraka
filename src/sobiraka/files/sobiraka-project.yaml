@@ -198,6 +198,8 @@ $defs:
               - type: integer
               - enum: [infinity]
           combined_toc: { type: boolean }
+          headers_policy:
+            enum: [local, global]
           highlight:
             oneOf:
               - enum: [pygments]

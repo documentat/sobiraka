@@ -78,6 +78,7 @@ def load_volume(lang: str | None, codename: str, volume_data: dict, fs: FileSyst
             custom_styles=tuple(map(RelativePath, _expand(_('pdf.custom_styles', ())))),
             toc_depth=int(re.sub(r'^infinity$', '0', str(_('pdf.toc_depth', 'infinity')))) or inf,
             combined_toc=_('pdf.combined_toc', False),
+            headers_policy=_('pdf.headers_policy', 'local'),
             highlight=convert_or_none(_load_pdf_highlight, _('pdf.highlight')),
         ),
         prover=Config_Prover(

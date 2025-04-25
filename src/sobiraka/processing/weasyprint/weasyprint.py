@@ -240,6 +240,7 @@ class WeasyPrintProcessor(AbstractHtmlProcessor[WeasyPrintBuilder]):
         header, = await super().process_header(header, page)
         assert isinstance(header, Header)
 
+        # Generate a unique identifier across the whole document
         if header.level == 1:
             href = PageHref(page)
             header.identifier = self.builder.make_internal_url(href)[1:]
@@ -248,11 +249,24 @@ class WeasyPrintProcessor(AbstractHtmlProcessor[WeasyPrintBuilder]):
             href = PageHref(page, anchor.identifier)
             header.identifier = self.builder.make_internal_url(href)[1:]
 
+        # Show or hide the bookmark for the PDF navigation
         if page.location.is_root:
             header.attributes['style'] = 'bookmark-level: none'
         else:
             header.attributes['style'] = f'bookmark-level: {page.location.level + header.level - 1}'
 
+        # Remember both the local and the global levels in attributes
+        header.attributes['data-local-level'] = str(header.level)
+        header.attributes['data-global-level'] = str(page.location.level + header.level - 1)
+
+        # For the 'global' header policy, change the actual level of the header
+        # Also, hide the very top header
+        if page.volume.config.pdf.headers_policy == 'global':
+            if page.location.level == 1 and header.level == 1:
+                return ()
+            header.level = int(header.attributes['data-global-level']) - 1
+
+        # Don't forget to numrate the header later
         self.builder.waiter.add_task(self.numerate_header(header, page))
 
         return header,
@@ -260,7 +274,7 @@ class WeasyPrintProcessor(AbstractHtmlProcessor[WeasyPrintBuilder]):
     async def numerate_header(self, header: Header, page: Page):
         await self.builder.waiter.wait(page, Status.NUMERATE)
 
-        if header.level == 1:
+        if header.attributes['data-local-level'] == '1':
             header.attributes['data-number'] = str(RT[page].number)
         else:
             anchor = RT[page].anchors.by_header(header)
