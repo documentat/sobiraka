@@ -14,7 +14,10 @@ class TestWeasyPrint_Numeration(WeasyPrintProjectTestCase):
     def _init_project(self) -> Project:
         config = Config(
             paths=Config_Paths(root=RelativePath('src')),
-            content=Config_Content(numeration=True))
+            content=Config_Content(numeration=True),
+            variables=dict(NOCOVER=True),
+        )
+
         return FakeProject({
             'src': FakeVolume(config, {
                 'index.md': 'Here is some introduction.',
@@ -69,6 +72,7 @@ class TestWeasyPrint_Numeration_SinglePage(SinglePageProjectTest, WeasyPrintProj
             paths=Config_Paths(root=RelativePath('src')),
             content=Config_Content(numeration=True),
             pdf=Config_PDF(combined_toc=True),
+            variables=dict(NOCOVER=True),
         )
 
 

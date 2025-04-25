@@ -5,6 +5,7 @@ import re
 import sys
 from asyncio import to_thread
 from contextlib import suppress
+from datetime import datetime
 from functools import lru_cache
 from mimetypes import guess_type
 from typing import final
@@ -81,6 +82,7 @@ class WeasyPrintBuilder(ThemeableVolumeBuilder['WeasyPrintProcessor', 'WeasyPrin
             config=volume.config,
 
             head=head,
+            now=datetime.now(),
             toc=lambda **kwargs: toc(volume.root_page,
                                      builder=self,
                                      toc_depth=volume.config.pdf.toc_depth,
@@ -88,6 +90,8 @@ class WeasyPrintBuilder(ThemeableVolumeBuilder['WeasyPrintProcessor', 'WeasyPrin
                                      **kwargs),
 
             content=content,
+
+            **volume.config.variables,
         )
 
         self.render_pdf(html)

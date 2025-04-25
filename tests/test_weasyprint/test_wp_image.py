@@ -14,6 +14,7 @@ class TestWeasyPrint_Image(WeasyPrintProjectTestCase):
                 root=RelativePath('src'),
                 resources=RelativePath('images'),
             ),
+            variables=dict(NOCOVER=True),
         )
 
         project = FakeProject({

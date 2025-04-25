@@ -2,9 +2,8 @@ from abc import ABCMeta
 from textwrap import dedent
 from unittest import main
 
+from abstracttests.singlepageprojecttest import SinglePageProjectTest
 from abstracttests.weasyprintprojecttestcase import WeasyPrintProjectTestCase
-from helpers.fakeproject import FakeProject, FakeVolume
-from sobiraka.models import Project
 from sobiraka.models.config import Config, Config_PDF, Config_Paths, Config_Pygments
 from sobiraka.processing.web import Head, HeadCssFile
 from sobiraka.utils import RelativePath
@@ -43,8 +42,8 @@ class TestPygments_CustomClasses(AbstractHighlightTest_Pygments):
                       ' </span><span class="m">1</span></code></pre>'
 
 
-class TestPygments_WeasyPrint_PHP(WeasyPrintProjectTestCase):
-    CONTENT = dedent('''
+class TestPygments_WeasyPrint_PHP(SinglePageProjectTest, WeasyPrintProjectTestCase):
+    SOURCE = dedent('''
         # PHP highlighting examples
         
         Not highlighted:
@@ -63,19 +62,15 @@ class TestPygments_WeasyPrint_PHP(WeasyPrintProjectTestCase):
         ```
     ''')
 
-    def _init_project(self) -> Project:
-        config = Config(
+    def _init_config(self) -> Config:
+        return Config(
             paths=Config_Paths(root=RelativePath('src')),
-            pdf=Config_PDF(highlight=Config_Pygments(style='vs'))
+            pdf=Config_PDF(highlight=Config_Pygments(style='vs')),
+            variables=dict(NOCOVER=True),
         )
-        return FakeProject({
-            'src': FakeVolume(config, {
-                'index.md': self.CONTENT,
-            })
-        })
 
 
-del AbstractHighlightTest, AbstractHighlightTest_Pygments, WeasyPrintProjectTestCase
+del AbstractHighlightTest, AbstractHighlightTest_Pygments, SinglePageProjectTest, WeasyPrintProjectTestCase
 
 if __name__ == '__main__':
     main()

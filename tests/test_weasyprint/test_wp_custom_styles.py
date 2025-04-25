@@ -38,7 +38,10 @@ class TestWeasyPrint_CustomStyles(SinglePageProjectTest, WeasyPrintProjectTestCa
                 custom_styles=(
                     RelativePath('theme/style1.css'),
                     RelativePath('theme/style2.scss'),
-                )))
+                ),
+            ),
+            variables=dict(NOCOVER=True),
+        )
 
 
 del SinglePageProjectTest, WeasyPrintProjectTestCase
