@@ -211,6 +211,7 @@ class WeasyPrintBuilder(ThemeableVolumeBuilder['WeasyPrintProcessor', 'WeasyPrin
         return image.url
 
 
+@final
 class WeasyPrintProcessor(AbstractHtmlProcessor[WeasyPrintBuilder]):
 
     @override

@@ -2,6 +2,7 @@ from .autoprefix import autoprefix
 from .betterpath import AbsolutePath, IncompatiblePathTypes, PathGoesOutsideStartDirectory, RelativePath, \
     WrongPathType, absolute_or_relative
 from .convert_or_none import convert_or_none
+from .delete_extra_files import delete_extra_files
 from .expand_vars import expand_vars
 from .jinja import configured_jinja
 from .keydefaultdict import KeyDefaultDict

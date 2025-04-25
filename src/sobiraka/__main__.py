@@ -6,6 +6,7 @@ from typing import Iterable
 from sobiraka.models import Volume
 from sobiraka.models.load import load_project
 from sobiraka.processing.latex import LatexBuilder
+from sobiraka.processing.markdown import MarkdownBuilder
 from sobiraka.processing.weasyprint import WeasyPrintBuilder
 from sobiraka.processing.web import WebBuilder
 from sobiraka.prover import Prover
@@ -39,6 +40,11 @@ async def async_main():
     cmd_latex.add_argument('config', metavar='CONFIG', type=AbsolutePath)
     cmd_latex.add_argument('volume', nargs='?')
     cmd_latex.add_argument('--output', type=AbsolutePath, default=AbsolutePath('build/pdf'))
+
+    cmd_markdown = commands.add_parser('markdown', help='Build Markdown file.')
+    cmd_markdown.add_argument('config', metavar='CONFIG', type=AbsolutePath)
+    cmd_markdown.add_argument('volume', nargs='?')
+    cmd_markdown.add_argument('--output', type=AbsolutePath, default=AbsolutePath('build/markdown'))
 
     cmd_prover = commands.add_parser('prover', help='Check a volume for various issues.')
     cmd_prover.add_argument('config', metavar='CONFIG', type=AbsolutePath)
@@ -82,6 +88,14 @@ async def async_main():
         elif cmd is cmd_pdf:
             for volume, output in selected_volumes(args, autosuffix='.pdf'):
                 builder = WeasyPrintBuilder(volume, output)
+                with run_beautifully():
+                    exit_code = await RT.run_isolated(builder.run())
+                    if exit_code != 0:
+                        break
+
+        elif cmd is cmd_markdown:
+            for volume, output in selected_volumes(args):
+                builder = MarkdownBuilder(volume, output)
                 with run_beautifully():
                     exit_code = await RT.run_isolated(builder.run())
                     if exit_code != 0:
