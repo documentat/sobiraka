@@ -13,7 +13,7 @@ import weasyprint
 from panflute import Doc, Element, Header, Image, Str
 from typing_extensions import override
 
-from sobiraka.models import FileSystem, Page, PageHref, RealFileSystem, Status, Volume
+from sobiraka.models import DirPage, FileSystem, Page, PageHref, RealFileSystem, Status, Volume
 from sobiraka.models.config import CombinedToc, Config, Config_Pygments
 from sobiraka.processing import load_processor
 from sobiraka.processing.abstract import Theme, ThemeableVolumeBuilder
@@ -65,6 +65,8 @@ class WeasyPrintBuilder(ThemeableVolumeBuilder['WeasyPrintProcessor', 'WeasyPrin
         # Combine rendered pages into a single page
         content: list[tuple[Page, TocNumber, str, str]] = []
         for page in volume.root.all_pages():
+            if page.location.is_root and isinstance(page, DirPage):
+                continue
             content.append((page, RT[page].number, RT[page].title, RT[page].bytes.decode('utf-8')))
 
         head = self.heads[volume].render('')
