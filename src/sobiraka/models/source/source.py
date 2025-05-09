@@ -39,6 +39,7 @@ class Source(ObjectWithStatus, metaclass=ABCMeta):
         # Fields that are being filled while processing
         self.child_sources: Sequence[Source] = MISSING
         self.pages: Sequence[Page] = MISSING
+        self.index_page: Page | None = None
         self.subtree_has_pages: bool = False
 
         # Fields for collecting bad results
@@ -115,3 +116,25 @@ class Source(ObjectWithStatus, metaclass=ABCMeta):
         for child in self.child_sources:
             pages += child.all_pages()
         return tuple(unique_everseen(pages))
+
+    @final
+    def _set_index_page(self, index_page: Page):
+        """
+        Set the given page as this source's index page
+        and arrange the necessary parent-children relations
+        """
+        self.index_page = index_page
+        self.index_page.children = []
+
+        for child in self.child_sources:
+
+            # A subdirectory's index page becomes a child of the index page
+            if child.index_page is not None:
+                child.index_page.parent = index_page
+                index_page.children.append(child.index_page)
+
+            # A normal page becomes a child of the index page
+            for page in child.pages:
+                if page not in (index_page, *index_page.children):
+                    page.parent = index_page
+                    index_page.children.append(page)
