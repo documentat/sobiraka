@@ -5,7 +5,7 @@ from typing import Sequence, TYPE_CHECKING, overload
 
 from sobiraka.models import AggregationPolicy, Issue, Page, Source, Status, Volume
 from sobiraka.report import Reporter
-from sobiraka.utils import KeyDefaultDict, MISSING, RelativePath, sorted_dict
+from sobiraka.utils import KeyDefaultDict, MISSING, RelativePath, print_colorful_exc, sorted_dict
 from .events import AggregatingEvent, PreventableEvent, ProductiveEvent
 
 if TYPE_CHECKING:
@@ -218,6 +218,7 @@ class Waiter:
             raise
 
         except Exception as exc:
+            print_colorful_exc()
             source.status = Status.SOURCE_FAILURE
             source.exception = exc
             raise DependencyFailed(exc) from exc
@@ -290,6 +291,7 @@ class Waiter:
             raise
 
         except Exception as exc:
+            print_colorful_exc()
             page.status = Status.PAGE_FAILURE
             page.exception = exc
             raise DependencyFailed(exc) from exc
@@ -314,6 +316,7 @@ class Waiter:
             raise
 
         except Exception as exc:
+            print_colorful_exc()
             self.set_status_recursively(volume, Status.VOL_FAILURE)
             volume.root.exception = exc
             raise DependencyFailed(exc) from exc
