@@ -51,6 +51,10 @@ class TestDefaultNamingScheme(TestNamingScheme):
         '0.md': FileNameData(0, '0', True),
         '0-index.md': FileNameData(0, 'index', True),
         'index.md': FileNameData(inf, 'index', True),
+        '_index.md': FileNameData(inf, 'index', True),
+        '_0-index.md': FileNameData(0, 'index', True),
+        '_example.md': FileNameData(inf, 'example'),
+        '_10-example.md': FileNameData(10, 'example'),
     }
 
     @override
