@@ -7,7 +7,7 @@ from jsonschema import Draft202012Validator
 from more_itertools import one
 from typing_extensions import override
 
-from sobiraka.utils import RelativePath, convert_or_none
+from sobiraka.utils import RelativePath
 from .indexsourcefile import IndexSourceFile
 from .source import IdentifierResolutionError, Source
 from .sourcefile import SourceFile
@@ -15,7 +15,6 @@ from ..filesystem import FileSystem
 from ..href import PageHref
 from ..page import Page, PageMeta
 from ..syntax import Syntax
-from ..version import Version
 
 NAV_FILENAME = '_nav.yaml'
 SCHEMA = yaml.safe_load((files('sobiraka') / 'files' / 'sobiraka-nav.yaml').read_text())
@@ -64,7 +63,7 @@ class SourceNav(Source):
         title = self._data.get('title')
         meta = PageMeta(
             title=title,
-            version=convert_or_none(Version.parse, self._data.get('version')))
+        )
         index_page = Page(self, location, Syntax.MD, meta, f'# {title}\n@toc')
         self._set_index_page(index_page)
         self.pages = index_page,

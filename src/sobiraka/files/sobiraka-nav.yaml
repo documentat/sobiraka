@@ -3,9 +3,6 @@ $schema: https://json-schema.org/draft/2020-12/schema
 additionalProperties: false
 properties:
   title: { type: string }
-  version: { type: string }
-
-  index: { type: string }
 
   items:
     type: array
@@ -23,4 +20,4 @@ properties:
               type: object
               additionalProperties: false
               properties:
-                version: { type: string }
+                title: { type: string }
