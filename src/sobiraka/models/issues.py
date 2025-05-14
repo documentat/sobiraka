@@ -29,6 +29,24 @@ class BadLink(Issue):
 
 
 @dataclass(order=True, frozen=True)
+class NonExistentFileInNav(Issue):
+    relative_path: RelativePath
+
+    def __str__(self):
+        from sobiraka.models.source import NAV_FILENAME
+        return f'{NAV_FILENAME} references a non-existing file: {self.relative_path}'
+
+
+@dataclass(order=True, frozen=True)
+class IndexFileInNav(Issue):
+    relative_path: RelativePath
+
+    def __str__(self):
+        from sobiraka.models.source import NAV_FILENAME
+        return f'{NAV_FILENAME} references an index file: {self.relative_path}'
+
+
+@dataclass(order=True, frozen=True)
 class MisspelledWords(Issue):
     path_in_project: RelativePath
     words: tuple[str, ...]

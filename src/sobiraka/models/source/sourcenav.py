@@ -13,6 +13,7 @@ from .source import IdentifierResolutionError, Source
 from .sourcefile import SourceFile
 from ..filesystem import FileSystem
 from ..href import PageHref
+from ..issues import IndexFileInNav, NonExistentFileInNav
 from ..page import Page, PageMeta
 from ..syntax import Syntax
 
@@ -26,12 +27,22 @@ class SourceNav(Source):
     async def generate_child_sources(self):
         from . import make_source
         fs = self.volume.project.fs
+        naming_scheme = self.volume.config.paths.naming_scheme
 
         child_sources = []
 
         items = self._data.get('items', ())
         items = list(map(self._parse_item, items))
         for subpath, options in items:
+
+            if not fs.exists(self.path_in_project / subpath):
+                self.issues.append(NonExistentFileInNav(subpath))
+                continue
+
+            if naming_scheme.parse(subpath).is_main:
+                self.issues.append(IndexFileInNav(subpath))
+                continue
+
             child = make_source(self.volume, self.path_in_project / subpath, parent=self)
             if options:
                 assert isinstance(child, SourceFile), 'Custom metadata is only applicable to a SourceFile'
@@ -39,11 +50,11 @@ class SourceNav(Source):
 
             child_sources.append(child)
 
-        for syntax in Syntax:
-            index_path = self.path_in_project / f'_index.{syntax.value}'
-            if fs.exists(index_path):
-                child_sources.insert(0, IndexSourceFile(self.volume, index_path, parent=self))
-                break
+        for index_path in fs.iterdir(self.path_in_project):
+            if not fs.is_dir(index_path):
+                if naming_scheme.parse(index_path).is_main:
+                    child_sources.insert(0, IndexSourceFile(self.volume, index_path, parent=self))
+                    break
 
         self.child_sources = tuple(child_sources)
 

@@ -5,10 +5,13 @@ from textwrap import dedent
 
 from typing_extensions import override
 
-from abstracttests.projecttestcase import ProjectTestCase
+from abstracttests.projecttestcase import FailingProjectTestCase, ProjectTestCase
 from helpers import FakeFileSystem
 from helpers.fakeproject import FakeProject, FakeVolume
 from sobiraka.models import Page, Project, Status
+from sobiraka.models.issues import IndexFileInNav, NonExistentFileInNav
+from sobiraka.models.source import SourceNav
+from sobiraka.processing.abstract.waiter import IssuesOccurred
 from sobiraka.utils import RelativePath
 
 
@@ -16,6 +19,7 @@ class TestNav(ProjectTestCase, metaclass=ABCMeta):
     REQUIRE = Status.LOAD
 
     NAV_YAML: str
+    TEXT_INDEX = ''
     TEXT_A = ''
     TEXT_B = ''
     TEXT_C = ''
@@ -29,6 +33,7 @@ class TestNav(ProjectTestCase, metaclass=ABCMeta):
             'src': FakeVolume({
                 'chapter': {
                     '_nav.yaml': dedent(self.NAV_YAML).strip(),
+                    'index': self.TEXT_INDEX,
                     'a': self.TEXT_A,
                     'b': self.TEXT_B,
                     'c': self.TEXT_C,
@@ -40,8 +45,16 @@ class TestNav(ProjectTestCase, metaclass=ABCMeta):
     def _chapter(self) -> Page:
         return self.project.get_volume().get_page_by_location('/chapter/')
 
+    @cached_property
+    def _chapter_source(self) -> SourceNav:
+        return self.project.get_volume().root.child_sources[0]
+
     def _get_page(self, stem: str) -> Page:
         return self.project.get_volume().get_page_by_location(f'/chapter/{stem}')
+
+    def test_index(self):
+        actual = self._chapter.text
+        self.assertEqual(self.TEXT_INDEX, actual)
 
     def test_order(self):
         actual = tuple(p.location.name for p in self._chapter.children)
@@ -123,7 +136,43 @@ class TestNav_Root(TestNav):
         return self.project.get_volume().get_page_by_location(f'/{stem}')
 
 
-del TestNav
+class TestNav_IndexInNav(TestNav, FailingProjectTestCase):
+    NAV_YAML = '''
+    items:
+      - index
+      - a
+      - b
+      - c
+    '''
+
+    EXPECTED_EXCEPTION_TYPES = {IssuesOccurred}
+
+    def test_issue(self):
+        expected = [IndexFileInNav(RelativePath('index'))]
+        actual = self._chapter_source.issues
+        self.assertEqual(expected, actual)
+
+
+class TestNav_NonExistentFileInNav(TestNav, FailingProjectTestCase):
+    NAV_YAML = '''
+    items:
+      - a
+      - b
+      - c
+      - d
+      - e
+    '''
+
+    EXPECTED_EXCEPTION_TYPES = {IssuesOccurred}
+
+    def test_issue(self):
+        expected = [NonExistentFileInNav(RelativePath('d')),
+                    NonExistentFileInNav(RelativePath('e'))]
+        actual = self._chapter_source.issues
+        self.assertEqual(expected, actual)
+
+
+del TestNav, FailingProjectTestCase
 
 if __name__ == '__main__':
     unittest.main()

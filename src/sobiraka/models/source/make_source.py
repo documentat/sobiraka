@@ -16,9 +16,6 @@ def make_source(volume: Volume, path_in_project: RelativePath, *, parent: Source
 
     fs: FileSystem = volume.project.fs
 
-    if not fs.exists(path_in_project):
-        raise FileNotFoundError(path_in_project)
-
     if not fs.is_dir(path_in_project):
         return SourceFile(volume, path_in_project, parent=parent)
 
