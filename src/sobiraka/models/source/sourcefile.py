@@ -1,5 +1,6 @@
 import re
-from typing import Any
+from copy import deepcopy
+from dataclasses import asdict
 
 import yaml
 from typing_extensions import override
@@ -17,7 +18,7 @@ _META_PATTERN = re.compile(r'--- \n (.+?\n)? --- (?: \n+ (.+) )?', re.DOTALL | r
 class SourceFile(Source):
     PAGE_CLASS = Page
 
-    base_meta: dict[str, Any] = None
+    base_meta = PageMeta()
 
     @override
     async def generate_pages(self):
@@ -35,12 +36,12 @@ class SourceFile(Source):
         text = self.volume.project.fs.read_text(self.path_in_project)
 
         # Parse the front matter, if any
-        meta = self.base_meta.copy() if self.base_meta else {}
+        meta = deepcopy(self.base_meta)
         if m := _META_PATTERN.fullmatch(text):
             if meta_str := m.group(1):
-                meta = yaml.safe_load(meta_str)
+                meta = PageMeta(**(asdict(meta) | yaml.safe_load(meta_str)))
 
-        page = self.PAGE_CLASS(self, location, syntax, PageMeta(**meta), text)
+        page = self.PAGE_CLASS(self, location, syntax, meta, text)
         page.children = []
         self.pages = page,
 

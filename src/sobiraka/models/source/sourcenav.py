@@ -49,7 +49,7 @@ class SourceNav(Source):
             # Provide base options for the child, if specified in the item
             if options:
                 assert isinstance(child, SourceFile), 'Custom metadata is only applicable to a SourceFile'
-                child.base_meta = options
+                child.base_meta = PageMeta(**options)
 
         # Now look for the actual files in the directory:
         # if there is an index file there, use it
