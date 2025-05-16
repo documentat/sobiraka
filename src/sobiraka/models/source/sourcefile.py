@@ -55,7 +55,7 @@ class SourceFile(Source):
         from sobiraka.runtime import RT
 
         if identifier is None:
-            return PageHref(self.page, default_label=RT[self.page].title)
+            return PageHref(self.page, default_label=self.page.meta.title)
 
         try:
             anchor = RT[self.page].anchors.by_identifier(identifier)

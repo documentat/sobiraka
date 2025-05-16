@@ -1,5 +1,5 @@
 ---
-title: Кастомизация LaTeX
+toc_title: Кастомизация LaTeX
 ---
 
 # Кастомизация сборки PDF через LaTeX

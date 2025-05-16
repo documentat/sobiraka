@@ -1,5 +1,5 @@
 ---
-title: HTML
+toc_title: HTML
 ---
 
 # Поддержка HTML в Собираке

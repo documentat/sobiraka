@@ -1,5 +1,5 @@
 ---
-title: Сборка через WeasyPrint
+toc_title: Сборка через WeasyPrint
 ---
 
 # Сборка PDF через WeasyPrint

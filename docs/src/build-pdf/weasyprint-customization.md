@@ -1,5 +1,5 @@
 ---
-title: Кастомизация WeasyPrint
+toc_title: Кастомизация WeasyPrint
 ---
 
 # Кастомизация сборки PDF через WeasyPrint

@@ -85,13 +85,11 @@ class SourceNav(Source):
 
     @override
     def href(self, identifier: str = None) -> PageHref:
-        from sobiraka.runtime import RT
-
         if identifier is not None:
             raise IdentifierResolutionError
 
         assert self.index_page is not None
-        return PageHref(self.index_page, default_label=RT[self.index_page].title)
+        return PageHref(self.index_page, default_label=self.index_page.meta.title)
 
     # region Reading from YAML
 

@@ -70,7 +70,7 @@ class WeasyPrintBuilder(ThemeableVolumeBuilder['WeasyPrintProcessor', 'WeasyPrin
         for page in volume.root.all_pages():
             if page.location.is_root and isinstance(page, DirPage):
                 continue
-            content.append((page, RT[page].number, RT[page].title, RT[page].bytes.decode('utf-8')))
+            content.append((page, RT[page].number, page.meta.title, RT[page].bytes.decode('utf-8')))
 
         head = self.heads[volume].render('')
 

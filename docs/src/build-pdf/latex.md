@@ -1,5 +1,5 @@
 ---
-title: Сборка через LaTeX
+toc_title: Сборка через LaTeX
 ---
 
 # Сборка PDF через LaTeX

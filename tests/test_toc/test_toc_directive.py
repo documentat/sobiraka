@@ -29,12 +29,7 @@ class AbstractTestTocDirective(SinglePageProjectTest[FakeBuilder]):
                     'page2.md': '# Page 2.2\n## Paragraph',
                 },
                 'section3': {
-                    'index.md': '''
-                        ---
-                        title: Section 3
-                        ---
-                        # This is the actual title of Section 3
-                    ''',
+                    'index.md': '---\ntoc_title: Section 3\n---\n# This is the actual title of Section 3',
                 },
             }),
         })

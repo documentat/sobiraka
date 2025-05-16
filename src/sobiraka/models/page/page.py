@@ -104,6 +104,7 @@ class Page(ObjectWithStatus):
 class PageMeta:
     title: str = None
     version: Version = None
+    toc_title: str = None
 
     def __post_init__(self):
         if self.version is not None:

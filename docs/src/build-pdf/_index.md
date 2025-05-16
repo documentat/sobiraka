@@ -1,5 +1,5 @@
 ---
-title: PDF
+toc_title: PDF
 ---
 
 # Поддержка PDF в Собираке

@@ -107,7 +107,7 @@ class WebBuilder(ThemeableProjectBuilder['WebProcessor', 'WebTheme'], AbstractHt
             page=page,
 
             number=RT[page].number,
-            title=RT[page].title,
+            title=page.meta.title,
             body=RT[page].bytes.decode('utf-8').strip(),
 
             head=head,

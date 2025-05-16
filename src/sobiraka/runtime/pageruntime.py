@@ -18,12 +18,6 @@ class PageRuntime:
     Do not rely on the value for page here until `load()` is awaited for that page.
     """
 
-    title: str = None
-    """Page title.
-    
-    Do not rely on the value for page here until `do_process1()` is awaited for that page.
-    """
-
     number: TocNumber = Unnumbered()
     """
     Number of the page in the global TOC.

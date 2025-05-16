@@ -186,11 +186,7 @@ def toc(
                           current_page=current_page)
 
     for page in base.children:
-        item_title = page.meta.title \
-                     or RT[page].title \
-                     or page.location.name \
-                     or page.volume.codename \
-                     or ''
+        item_title = page.meta.toc_title or page.meta.title or page.location.name or page.volume.codename or ''
         href = PageHref(page)
         url = builder.make_internal_url(href, page=current_page)
         item = TocItem(title=item_title, url=url, href=href, origin=page,

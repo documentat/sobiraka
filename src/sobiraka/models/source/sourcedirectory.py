@@ -77,9 +77,7 @@ class SourceDirectory(Source):
 
     @override
     def href(self, identifier: str = None) -> PageHref:
-        from sobiraka.runtime import RT
-
         assert self.index_page is not None
         return PageHref(self.index_page,
                         anchor=identifier,
-                        default_label=RT[self.index_page].title)
+                        default_label=self.index_page.meta.title)
