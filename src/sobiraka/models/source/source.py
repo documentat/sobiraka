@@ -13,7 +13,7 @@ from ..issues import Issue
 from ..status import ObjectWithStatus
 
 if TYPE_CHECKING:
-    from sobiraka.models import Page, Volume
+    from sobiraka.models import Page, PageMeta, Volume
 
 
 class Source(ObjectWithStatus, metaclass=ABCMeta):
@@ -35,6 +35,8 @@ class Source(ObjectWithStatus, metaclass=ABCMeta):
         self.volume: Volume = volume
         self.path_in_project: RelativePath = path_in_project
         self.parent: Source | None = parent
+
+        self.base_meta: PageMeta | None = None
 
         # Fields that are being filled while processing
         self.child_sources: Sequence[Source] = MISSING
@@ -125,6 +127,10 @@ class Source(ObjectWithStatus, metaclass=ABCMeta):
         """
         self.index_page = index_page
         self.index_page.children = []
+
+        # Use the directory's base meta for the index page's meta
+        if self.base_meta:
+            index_page.meta = self.base_meta + index_page.meta
 
         for child in self.child_sources:
 

@@ -4,6 +4,7 @@ additionalProperties: false
 properties:
   title: { type: string }
   toc_title: { type: string }
+  toc_collapse: { type: boolean }
 
   items:
     type: array
@@ -23,3 +24,4 @@ properties:
               properties:
                 title: { type: string }
                 toc_title: { type: string }
+                toc_collapse: { type: boolean }

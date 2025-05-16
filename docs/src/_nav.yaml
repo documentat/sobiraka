@@ -1,6 +1,9 @@
 items:
   - overview
   - syntax
-  - build-html
-  - build-pdf
-  - reference
+  - build-html:
+      toc_collapse: true
+  - build-pdf:
+      toc_collapse: true
+  - reference:
+      toc_collapse: true

@@ -10,7 +10,6 @@ from typing_extensions import override
 from sobiraka.utils import RelativePath
 from .indexsourcefile import IndexSourceFile
 from .source import IdentifierResolutionError, Source
-from .sourcefile import SourceFile
 from ..filesystem import FileSystem
 from ..href import PageHref
 from ..issues import IndexFileInNav, NonExistentFileInNav
@@ -48,7 +47,6 @@ class SourceNav(Source):
 
             # Provide base options for the child, if specified in the item
             if options:
-                assert isinstance(child, SourceFile), 'Custom metadata is only applicable to a SourceFile'
                 child.base_meta = PageMeta(**options)
 
         # Now look for the actual files in the directory:
@@ -75,11 +73,8 @@ class SourceNav(Source):
                 return
 
         # Otherwise, proceed to generate a simple index page
-        title = self._data.get('title')
-        meta = PageMeta(
-            title=title,
-        )
-        index_page = Page(self, location, Syntax.MD, meta, f'# {title}\n@toc')
+        meta = PageMeta(**self._metadata)
+        index_page = Page(self, location, Syntax.MD, meta, f'# {meta.title}\n@toc')
         self._set_index_page(index_page)
         self.pages = index_page,
 
@@ -104,6 +99,12 @@ class SourceNav(Source):
         data.setdefault('items', [])
         data['items'] = list(map(self._parse_item, data['items']))
 
+        return data
+
+    @cached_property
+    def _metadata(self) -> dict:
+        data = self._data
+        del data['items']
         return data
 
     @staticmethod

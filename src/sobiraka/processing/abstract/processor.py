@@ -52,7 +52,8 @@ class Processor(Dispatcher, Generic[B], metaclass=ABCMeta):
     async def process_header(self, header: Header, page: Page) -> tuple[Element, ...]:
         if header.level == 1:
             # Use the top level header as the page title
-            page.meta.title = stringify(header)
+            if not page.meta.title:
+                page.meta.title = stringify(header)
 
             # Maybe skip numeration for the whole page
             if 'unnumbered' in header.classes:

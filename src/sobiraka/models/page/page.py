@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from typing import Sequence, TYPE_CHECKING
 
 from sobiraka.utils import Location, MISSING
@@ -105,8 +105,17 @@ class PageMeta:
     title: str = None
     version: Version = None
     toc_title: str = None
+    toc_collapse: bool = None
 
     def __post_init__(self):
         if self.version is not None:
             if not isinstance(self.version, Version):
                 self.version = Version.parse(str(self.version))
+
+    def __add__(self, other: PageMeta) -> PageMeta:
+        data = asdict(self)
+        if other is not None:
+            for key, value in other.__dict__.items():
+                if value is not None:
+                    data[key] = value
+        return PageMeta(**data)

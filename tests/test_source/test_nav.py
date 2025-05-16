@@ -16,7 +16,7 @@ from sobiraka.utils import RelativePath
 
 
 class TestNav(ProjectTestCase, metaclass=ABCMeta):
-    REQUIRE = Status.LOAD
+    REQUIRE = Status.PROCESS1
 
     NAV_YAML: str
     TEXT_INDEX = ''
@@ -85,18 +85,19 @@ class TestNav_Reorder(TestNav):
     EXPECTED_ORDER = 'b', 'c', 'a'
 
 
-class TestNav_Rename(TestNav):
+class TestNav_SetTitle(TestNav):
     NAV_YAML = '''
     items:
-      - a: Page A renamed in Nav
-      - b: Page B renamed in Nav but overridden in PageMeta
-      - c
+      - a: Page A name from Nav
+      - b: Page B name from Nav
+      - c: Page C name from PageMeta
     '''
-    TEXT_B = '---\ntitle: Page B renamed in PageMeta\n---'
+    TEXT_B = '# Page B name from content'
+    TEXT_C = '---\ntitle: Page C name from PageMeta\n---'
 
-    EXPECTED_TITLES = {'a': 'Page A renamed in Nav',
-                       'b': 'Page B renamed in PageMeta',
-                       'c': None}
+    EXPECTED_TITLES = {'a': 'Page A name from Nav',
+                       'b': 'Page B name from Nav',
+                       'c': 'Page C name from PageMeta'}
 
 
 class TestNav_SkipOne(TestNav):
