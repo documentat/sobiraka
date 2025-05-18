@@ -39,7 +39,7 @@ class SourceWidget(ConsoleRenderable):
 
         if self.page:
             yield Text(' → ', style='grey58', end='')
-            yield make_report_text(self.page.status, str(self.page.location))
+            yield make_report_text(self.page.status, str(self.page.meta.permalink or self.page.location))
 
         if self.obj.exception is not None:
             yield Text('    ', end='')

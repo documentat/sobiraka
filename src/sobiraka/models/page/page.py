@@ -102,12 +102,17 @@ class Page(ObjectWithStatus):
 
 @dataclass(kw_only=True)
 class PageMeta:
+    permalink: Location = None
     title: str = None
     version: Version = None
     toc_title: str = None
     toc_collapse: bool = None
 
     def __post_init__(self):
+        if self.permalink is not None:
+            if not isinstance(self.permalink, Location):
+                self.permalink = Location(self.permalink)
+
         if self.version is not None:
             if not isinstance(self.version, Version):
                 self.version = Version.parse(str(self.version))

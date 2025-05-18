@@ -1,5 +1,9 @@
 items:
-  - weasyprint.md
-  - weasyprint-customization.md
-  - latex.md
-  - latex-customization.md
+  - weasyprint.md:
+      permalink: /weasyprint/
+  - weasyprint-customization.md:
+      permalink: /weasyprint/customization
+  - latex.md:
+      permalink: /latex/
+  - latex-customization.md:
+      permalink: /latex/customization

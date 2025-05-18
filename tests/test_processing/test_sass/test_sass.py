@@ -15,7 +15,7 @@ from sobiraka.utils import AbsolutePath, RelativePath
 
 
 class TestSass(ProjectTestCase[WebBuilder], AbstractTestWithRtTmp, metaclass=ABCMeta):
-    REQUIRE = Status.FINALIZE
+    REQUIRE = Status.PROCESS4
 
     SPECIFY_FLAVOR = False
     SPECIFY_CUSTOM = False

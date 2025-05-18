@@ -2,6 +2,7 @@ $schema: https://json-schema.org/draft/2020-12/schema
 
 additionalProperties: false
 properties:
+  permalink: { type: string }
   title: { type: string }
   toc_title: { type: string }
   toc_collapse: { type: boolean }
@@ -22,6 +23,7 @@ properties:
               type: object
               additionalProperties: false
               properties:
+                permalink: { type: string }
                 title: { type: string }
                 toc_title: { type: string }
                 toc_collapse: { type: boolean }
