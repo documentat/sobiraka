@@ -1,7 +1,7 @@
 .PHONY: *
 
 PYTHON := 3.13
-PANDOC := 3.6
+PANDOC := 3.7
 
 DOCKER_RUN := docker run --rm -it
 ifdef CI
@@ -18,12 +18,14 @@ prepull-all:
 	docker pull pandoc/latex:3.4-ubuntu
 	docker pull pandoc/latex:3.5-ubuntu
 	docker pull pandoc/latex:3.6-ubuntu
+	docker pull pandoc/latex:3.7-ubuntu
 
 	docker pull pandoc/core:3.2-ubuntu
 	docker pull pandoc/core:3.3-ubuntu
 	docker pull pandoc/core:3.4-ubuntu
 	docker pull pandoc/core:3.5-ubuntu
 	docker pull pandoc/core:3.6-ubuntu
+	docker pull pandoc/core:3.7-ubuntu
 
 prebuild-all:
 	$(MAKE) build-tester PYTHON=3.11 PANDOC=3.2
@@ -31,18 +33,21 @@ prebuild-all:
 	$(MAKE) build-tester PYTHON=3.11 PANDOC=3.4
 	$(MAKE) build-tester PYTHON=3.11 PANDOC=3.5
 	$(MAKE) build-tester PYTHON=3.11 PANDOC=3.6
+	$(MAKE) build-tester PYTHON=3.11 PANDOC=3.7
 
 	$(MAKE) build-tester PYTHON=3.12 PANDOC=3.2
 	$(MAKE) build-tester PYTHON=3.12 PANDOC=3.3
 	$(MAKE) build-tester PYTHON=3.12 PANDOC=3.4
 	$(MAKE) build-tester PYTHON=3.12 PANDOC=3.5
 	$(MAKE) build-tester PYTHON=3.12 PANDOC=3.6
+	$(MAKE) build-tester PYTHON=3.12 PANDOC=3.7
 
 	$(MAKE) build-tester PYTHON=3.13 PANDOC=3.2
 	$(MAKE) build-tester PYTHON=3.13 PANDOC=3.3
 	$(MAKE) build-tester PYTHON=3.13 PANDOC=3.4
 	$(MAKE) build-tester PYTHON=3.13 PANDOC=3.5
 	$(MAKE) build-tester PYTHON=3.13 PANDOC=3.6
+	$(MAKE) build-tester PYTHON=3.13 PANDOC=3.7
 
 release-latex:
 	$(eval IMAGE:=sobiraka:release)
