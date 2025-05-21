@@ -20,7 +20,7 @@ class BookThemeProcessor(WebProcessor):
         if header.level >= 2:
             header.content += Space(), Link(Str('#'), url=f'#{header.identifier}', classes=['anchor'])
 
-        self.builder.add_html_task(self.numerate_header(header, page))
+        self.builder.waiter.add_task(self.numerate_header(header, page))
 
         return header,
 

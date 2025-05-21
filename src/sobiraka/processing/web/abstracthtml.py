@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 from abc import ABCMeta, abstractmethod
-from asyncio import ALL_COMPLETED, Task, TaskGroup, create_subprocess_exec, create_task, to_thread, wait
+from asyncio import Task, TaskGroup, create_subprocess_exec, to_thread
 from collections import defaultdict
 from subprocess import PIPE, run
-from typing import Awaitable, Coroutine, Generic, TypeVar, final
+from typing import Generic, TypeVar, final
 
 from panflute import CodeBlock, Element, Image
 from typing_extensions import override
@@ -26,12 +26,6 @@ class AbstractHtmlBuilder(Builder, metaclass=ABCMeta):
         self._html_builder_tasks: list[Task] = []
         self._results: set[AbsolutePath] = set()
         self.heads: dict[Volume, Head] = defaultdict(Head)
-
-    def add_html_task(self, coro: Coroutine):
-        self._html_builder_tasks.append(create_task(coro))
-
-    def await_all_html_tasks(self) -> Awaitable:
-        return wait(self._html_builder_tasks, return_when=ALL_COMPLETED)
 
     @final
     async def compile_theme_sass(self, theme: Theme, volume: Volume):
@@ -159,7 +153,7 @@ class AbstractHtmlProcessor(Processor[B], Generic[B], metaclass=ABCMeta):
         # Schedule copying the image file to the output directory
         source_path = config.paths.resources / image.url
         target_path = RelativePath(config.web.resources_prefix) / image.url
-        self.builder.add_html_task(self.builder.add_file_from_project(source_path, target_path))
+        self.builder.waiter.add_task(self.builder.add_file_from_project(source_path, target_path))
 
         # Use the path relative to the page path
         # (we postpone the actual change in the element to not confuse the WebTheme custom code later)

@@ -5,6 +5,8 @@ from abc import ABCMeta
 from asyncio import create_subprocess_exec
 from typing import Generic, TypeVar
 
+from typing_extensions import override
+
 from sobiraka.models import Status
 from sobiraka.processing.abstract import Builder
 from sobiraka.runtime import RT
@@ -48,13 +50,9 @@ class AbstractVisualPdfTestCase(ProjectTestCase, AbstractTestWithRtTmp, Generic[
         results_dir.mkdir(parents=True, exist_ok=True)
         return results_dir
 
-    async def test_pdf(self):
+    @override
+    async def _process(self):
         (RT.TMP / 'screenshots').mkdir()
-
-        # Scan the directory with the expected screenshots
-        expected_screenshots = self.expected_dir().iterdir()
-        expected_screenshots = list(f for f in expected_screenshots if f.name.endswith('.png'))
-        expected_screenshots.sort()
 
         # Generate PDF
         await self.builder.run()
@@ -65,6 +63,14 @@ class AbstractVisualPdfTestCase(ProjectTestCase, AbstractTestWithRtTmp, Generic[
             pdftoppm_command += ['-l', str(self.PAGE_LIMIT)]
         pdftoppm = await create_subprocess_exec(*pdftoppm_command, cwd=RT.TMP)
         await pdftoppm.wait()
+
+    async def test_pdf(self):
+        # Scan the directory with the expected screenshots
+        expected_screenshots = self.expected_dir().iterdir()
+        expected_screenshots = list(f for f in expected_screenshots if f.name.endswith('.png'))
+        expected_screenshots.sort()
+
+        # Scan the directory with the actual screenshots
         actual_screenshots: list[AbsolutePath] = list(sorted((RT.TMP / 'screenshots').iterdir()))
 
         potentially_outdated_test = False
