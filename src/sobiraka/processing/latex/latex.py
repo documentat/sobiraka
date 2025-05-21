@@ -41,7 +41,7 @@ class LatexBuilder(ThemeableVolumeBuilder['LatexProcessor', 'LatexTheme']):
         return processor_class(self)
 
     def init_theme(self) -> LatexTheme:
-        return LatexTheme(self.volume.config.web.theme)
+        return LatexTheme(self.volume.config.latex.theme)
 
     @override
     def additional_variables(self) -> dict:
