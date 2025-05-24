@@ -438,16 +438,22 @@ class Waiter:
         # Make sure child sources and pages are discovered
         await self.tasks[source][Status.LOAD]
 
-        aws = []
+        aws: list[Task] = []
 
         for child in source.child_sources:
-            aws.append(create_task(self.wait_recursively(child, target_status)))
+            aws.append(create_task(self.wait_recursively(child, target_status),
+                                   name=f'WAIT RECURSIVELY FOR {child.path_in_volume}'))
 
         for page in source.pages:
             aws.append(self.tasks[page][target_status])
 
-        if aws:
-            await wait(aws)
+        if not aws:
+            return
+
+        await wait(aws)
+
+        if any(a.exception() for a in aws):
+            raise DependencyFailed
 
     def set_status_recursively(self, volume: Volume, status: Status):
         """
@@ -482,7 +488,7 @@ class IssuesOccurred(Exception):
 
 
 class DependencyFailed(Exception):
-    def __init__(self, original_exc: Exception):
+    def __init__(self, original_exc: Exception = None):
         super().__init__()
         self.original_exc = original_exc
 
