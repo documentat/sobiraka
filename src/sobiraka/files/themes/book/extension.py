@@ -1,7 +1,7 @@
 from panflute import Div, Element, Header, Link, RawBlock, Space, Str
 from typing_extensions import override
 
-from sobiraka.models import Page, PageStatus
+from sobiraka.models import Page, Status
 from sobiraka.processing.web import WebProcessor
 from sobiraka.runtime import RT
 
@@ -20,7 +20,7 @@ class BookThemeProcessor(WebProcessor):
         if header.level >= 2:
             header.content += Space(), Link(Str('#'), url=f'#{header.identifier}', classes=['anchor'])
 
-        self.builder.add_html_task(self.numerate_header(header, page))
+        self.builder.waiter.add_task(self.numerate_header(header, page))
 
         return header,
 
@@ -57,7 +57,7 @@ class BookThemeProcessor(WebProcessor):
                 RawBlock('</blockquote>'))
 
     async def numerate_header(self, header: Header, page: Page):
-        await self.builder.require(page, PageStatus.PROCESS3)
+        await self.builder.waiter.wait(page, Status.NUMERATE)
 
         if header.level == 1:
             header.content = Str(RT[page].number.format('{}. ')), *header.content

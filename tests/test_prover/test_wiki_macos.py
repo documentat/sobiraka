@@ -32,6 +32,7 @@ class TestWikipediaMacOS(AbstractFailingProverTest):
         From Wikipedia, the free encyclopedia
     '''
 
+    # pylint: disable=line-too-long
     EXPECTED_PHRASES = (
         'macOS',
         'macOS (previously OS X and originally Mac OS X) is a Unix operating system developed and marketed by Apple Inc. since 2001.',

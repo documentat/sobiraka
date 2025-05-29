@@ -7,7 +7,6 @@ from typing import Coroutine, TYPE_CHECKING, overload
 
 from .anchorruntime import AnchorRuntime
 from .pageruntime import PageRuntime
-from .volumeruntime import VolumeRuntime
 from ..utils import AbsolutePath
 
 if TYPE_CHECKING:
@@ -15,9 +14,8 @@ if TYPE_CHECKING:
 
 
 class Runtime:
-    PAGES: ContextVar[dict[Page, PageRuntime]] = ContextVar('pages')
-    VOLUMES: ContextVar[dict[Volume, VolumeRuntime]] = ContextVar('volumes')
     ANCHORS: ContextVar[dict[Anchor, AnchorRuntime]] = ContextVar('anchors')
+    PAGES: ContextVar[dict[Page, PageRuntime]] = ContextVar('pages')
 
     def __init__(self):
         # pylint: disable=invalid-name
@@ -27,7 +25,6 @@ class Runtime:
 
     @classmethod
     def init_context_vars(cls):
-        RT.VOLUMES.set(defaultdict(VolumeRuntime))
         RT.PAGES.set(defaultdict(PageRuntime))
         RT.ANCHORS.set(defaultdict(AnchorRuntime))
 
@@ -41,26 +38,20 @@ class Runtime:
         return await ctx.run(wrapped_func)
 
     @overload
-    def __getitem__(self, volume: Volume) -> VolumeRuntime:
+    def __getitem__(self, page: Anchor) -> AnchorRuntime:
         ...
 
     @overload
     def __getitem__(self, page: Page) -> PageRuntime:
         ...
 
-    @overload
-    def __getitem__(self, page: Anchor) -> AnchorRuntime:
-        ...
-
     def __getitem__(self, key: Anchor | Page | Volume):
-        from sobiraka.models import Anchor, Page, Volume
+        from sobiraka.models import Anchor, Page
         match key:
             case Anchor() as anchor:
                 return self.ANCHORS.get()[anchor]
             case Page() as page:
                 return self.PAGES.get()[page]
-            case Volume() as volume:
-                return self.PAGES.get()[volume]
             case _:
                 raise KeyError(key)
 

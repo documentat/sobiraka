@@ -1,97 +1,116 @@
 from contextlib import redirect_stderr, redirect_stdout
 from io import StringIO
 from textwrap import dedent
-from unittest import TestCase, main
-from unittest.mock import Mock
+from unittest import main
 
-from sobiraka.models import FileSystem, IndexPage, Page, PageMeta, Project, TranslationStatus, Version, Volume
+from typing_extensions import override
+
+from abstracttests.projecttestcase import ProjectTestCase
+from helpers.fakeproject import FakeProject, FakeVolume
+from sobiraka.models import Project, Status, TranslationStatus, Version
+from sobiraka.models.config import Config, Config_Paths
 from sobiraka.translating import check_translations
 from sobiraka.utils import RelativePath
 
 
-class TestVersioning(TestCase):
-    def setUp(self):
-        super().setUp()
-        self.project = Project(Mock(FileSystem), {
-            RelativePath('src-en'): Volume('en', '', {
-                RelativePath('0-index.md'): IndexPage(PageMeta(version=Version(1, 0)), ''),
-                RelativePath('aaa.md'): Page(PageMeta(version=Version(3, 4)), ''),
-                RelativePath('bbb.md'): Page(PageMeta(version=Version(6, 2)), ''),
-            }),
-            RelativePath('src-ru'): Volume('ru', '', {
-                RelativePath('0-index.md'): IndexPage(PageMeta(version=Version(1, 0)), ''),
-                RelativePath('aaa.md'): Page(PageMeta(version=Version(3, 2)), ''),
-                RelativePath('bbb.md'): Page(PageMeta(version=Version(5, 2)), ''),
-            })
+class TestVersioning(ProjectTestCase):
+    REQUIRE = Status.PARSE
+
+    @override
+    def _init_project(self) -> Project:
+        project = FakeProject({
+            'src-en': FakeVolume(
+                Config(paths=Config_Paths(root=RelativePath('src-en'))),
+                {
+                    '0-index.md': '---\nversion: 1.0\n---',
+                    'aaa.md': '---\nversion: 3.4\n---',
+                    'bbb.md': '---\nversion: 6.2\n---',
+                }),
+            'src-ru': FakeVolume(
+                Config(paths=Config_Paths(root=RelativePath('src-ru'))),
+                {
+                    '0-index.md': '---\nversion: 1.0\n---',
+                    'aaa.md': '---\nversion: 3.2\n---',
+                    'bbb.md': '---\nversion: 5.2\n---',
+                })
         })
 
+        project.volumes[0].lang = 'en'
+        project.volumes[0].codename = None
+
+        project.volumes[1].lang = 'ru'
+        project.volumes[1].codename = None
+
+        project.primary_language = 'en'
+        return project
+
+    @override
+    async def _process(self):
+        await super()._process()
+        self.index_en, self.aaa_en, self.bbb_en = self.project.volumes[0].root.all_pages()
+        self.index_ru, self.aaa_ru, self.bbb_ru = self.project.volumes[1].root.all_pages()
+
     def test_get_translation(self):
-        data: dict[str, dict[RelativePath, RelativePath]] = {
+        data = {
             'ru': {
-                RelativePath('src-en/0-index.md'): RelativePath('src-ru/0-index.md'),
-                RelativePath('src-en/aaa.md'): RelativePath('src-ru/aaa.md'),
-                RelativePath('src-en/bbb.md'): RelativePath('src-ru/bbb.md'),
+                self.index_en: self.index_ru,
+                self.aaa_en: self.aaa_ru,
+                self.bbb_en: self.bbb_ru,
             },
             'en': {
-                RelativePath('src-ru/0-index.md'): RelativePath('src-en/0-index.md'),
-                RelativePath('src-ru/aaa.md'): RelativePath('src-en/aaa.md'),
-                RelativePath('src-ru/bbb.md'): RelativePath('src-en/bbb.md'),
+                self.index_ru: self.index_en,
+                self.aaa_ru: self.aaa_en,
+                self.bbb_ru: self.bbb_en,
             },
         }
         for lang, subdata in data.items():
             with self.subTest(lang):
-                for path, expected in subdata.items():
-                    page = self.project.pages_by_path[path]
+                for page, expected in subdata.items():
                     with self.subTest(page):
-                        page_tr = self.project.get_translation(page, lang)
-                        actual = page_tr.path_in_project
-                        self.assertEqual(expected, actual)
+                        actual = self.project.get_translation(page, lang)
+                        self.assertIs(expected, actual)
 
     def test_original(self):
-        data: dict[RelativePath, RelativePath] = {
-            RelativePath('src-en/0-index.md'): RelativePath('src-en/0-index.md'),
-            RelativePath('src-en/aaa.md'): RelativePath('src-en/aaa.md'),
-            RelativePath('src-en/bbb.md'): RelativePath('src-en/bbb.md'),
+        data = {
+            self.index_en: self.index_en,
+            self.aaa_en: self.aaa_en,
+            self.bbb_en: self.bbb_en,
 
-            RelativePath('src-ru/0-index.md'): RelativePath('src-en/0-index.md'),
-            RelativePath('src-ru/aaa.md'): RelativePath('src-en/aaa.md'),
-            RelativePath('src-ru/bbb.md'): RelativePath('src-en/bbb.md'),
+            self.index_ru: self.index_en,
+            self.aaa_ru: self.aaa_en,
+            self.bbb_ru: self.bbb_en,
         }
-        for path, expected_path in data.items():
-            page = self.project.pages_by_path[path]
-            expected = self.project.pages_by_path[expected_path]
+        for page, expected in data.items():
             with self.subTest(page):
                 actual = page.original
                 self.assertEqual(expected, actual)
 
     def test_version(self):
-        data: dict[RelativePath, Version] = {
-            RelativePath('src-en/0-index.md'): Version(1, 0),
-            RelativePath('src-en/aaa.md'): Version(3, 4),
-            RelativePath('src-en/bbb.md'): Version(6, 2),
+        data = {
+            self.index_en: Version(1, 0),
+            self.aaa_en: Version(3, 4),
+            self.bbb_en: Version(6, 2),
 
-            RelativePath('src-ru/0-index.md'): Version(1, 0),
-            RelativePath('src-ru/aaa.md'): Version(3, 2),
-            RelativePath('src-ru/bbb.md'): Version(5, 2),
+            self.index_ru: Version(1, 0),
+            self.aaa_ru: Version(3, 2),
+            self.bbb_ru: Version(5, 2),
         }
-        for path, expected in data.items():
-            page = self.project.pages_by_path[path]
+        for page, expected in data.items():
             with self.subTest(page):
                 actual = page.meta.version
                 self.assertEqual(expected, actual)
 
     def test_translation_status(self):
-        data: dict[RelativePath, TranslationStatus] = {
-            RelativePath('src-en/0-index.md'): TranslationStatus.UPTODATE,
-            RelativePath('src-en/aaa.md'): TranslationStatus.UPTODATE,
-            RelativePath('src-en/bbb.md'): TranslationStatus.UPTODATE,
+        data = {
+            self.index_en: TranslationStatus.UPTODATE,
+            self.aaa_en: TranslationStatus.UPTODATE,
+            self.bbb_en: TranslationStatus.UPTODATE,
 
-            RelativePath('src-ru/0-index.md'): TranslationStatus.UPTODATE,
-            RelativePath('src-ru/aaa.md'): TranslationStatus.MODIFIED,
-            RelativePath('src-ru/bbb.md'): TranslationStatus.OUTDATED,
+            self.index_ru: TranslationStatus.UPTODATE,
+            self.aaa_ru: TranslationStatus.MODIFIED,
+            self.bbb_ru: TranslationStatus.OUTDATED,
         }
-        for path, expected in data.items():
-            page = self.project.pages_by_path[path]
+        for page, expected in data.items():
             with self.subTest(page):
                 actual = page.translation_status
                 self.assertEqual(expected, actual)

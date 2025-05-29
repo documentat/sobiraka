@@ -168,17 +168,21 @@ $defs:
           headers:
             properties:
               by_class:
+                additionalProperties: false
                 patternProperties:
                   .+: { type: string }
               by_element:
+                additionalProperties: false
                 patternProperties:
-                  'h\d*': { type: string }
+                  '^h\d*$': { type: string }
               by_page_level:
+                additionalProperties: false
                 patternProperties:
-                  '[1-9]\d*': { type: string }
+                  '^[1-9]\d*$': { type: string }
               by_global_level:
+                additionalProperties: false
                 patternProperties:
-                  '[1-9]\d*': { type: string }
+                  '^[1-9]\d*$': { type: string }
 
       pdf:
         additionalProperties: false

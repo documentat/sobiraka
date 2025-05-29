@@ -46,8 +46,8 @@ class ProjectBuilder(Builder, Generic[P], metaclass=ABCMeta):
 
 
 class ThemeableProjectBuilder(ProjectBuilder[P], Generic[P, T], metaclass=ABCMeta):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, project: Project):
+        super().__init__(project)
 
         self.themes: dict[Volume, T] = {}
         for volume in self.project.volumes:

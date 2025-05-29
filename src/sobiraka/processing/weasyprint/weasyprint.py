@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 import re
 import sys
-from asyncio import Task, create_task, to_thread
+from asyncio import to_thread
 from contextlib import suppress
 from functools import lru_cache
 from mimetypes import guess_type
@@ -13,13 +13,12 @@ import weasyprint
 from panflute import Doc, Element, Header, Image, Str
 from typing_extensions import override
 
-from sobiraka.models import FileSystem, Page, PageHref, PageStatus, Volume, RealFileSystem
+from sobiraka.models import FileSystem, Page, PageHref, RealFileSystem, Status, Volume
 from sobiraka.models.config import CombinedToc, Config, Config_Pygments
-from sobiraka.models.exceptions import DisableLink
 from sobiraka.processing import load_processor
 from sobiraka.processing.abstract import Theme, ThemeableVolumeBuilder
+from sobiraka.processing.abstract.processor import DisableLink
 from sobiraka.processing.web import AbstractHtmlBuilder, AbstractHtmlProcessor, HeadCssFile, Highlighter, Pygments
-from sobiraka.report import update_progressbar
 from sobiraka.runtime import RT
 from sobiraka.utils import AbsolutePath, RelativePath, TocNumber, configured_jinja, convert_or_none
 
@@ -27,8 +26,8 @@ from sobiraka.utils import AbsolutePath, RelativePath, TocNumber, configured_jin
 @final
 class WeasyPrintBuilder(ThemeableVolumeBuilder['WeasyPrintProcessor', 'WeasyPrintTheme'], AbstractHtmlBuilder):
 
-    def __init__(self, volume: Volume, output: AbsolutePath):
-        ThemeableVolumeBuilder.__init__(self, volume)
+    def __init__(self, volume: Volume, output: AbsolutePath, **kwargs):
+        ThemeableVolumeBuilder.__init__(self, volume, **kwargs)
         AbstractHtmlBuilder.__init__(self)
 
         self.output: AbsolutePath = output
@@ -57,23 +56,16 @@ class WeasyPrintBuilder(ThemeableVolumeBuilder['WeasyPrintProcessor', 'WeasyPrin
 
         volume: Volume = self.volume
 
-        # Launch page processing tasks
-        processing: dict[Page, Task] = {}
-        for page in volume.pages:
-            processing[page] = create_task(self.require(page, PageStatus.PROCESS4),
-                                           name=f'generate html for {page.path_in_project}')
+        # Prepare non-page processing tasks
+        self.waiter.add_task(self.add_custom_files())
+        self.waiter.add_task(self.compile_theme_sass(self.theme, volume))
 
-        # Launch non-page processing tasks
-        self.add_html_task(self.add_custom_files())
-        self.add_html_task(self.compile_theme_sass(self.theme, volume))
+        await self.waiter.wait_all()
 
         # Combine rendered pages into a single page
         content: list[tuple[Page, TocNumber, str, str]] = []
-        for page in volume.pages:
-            await processing[page]
+        for page in volume.root.all_pages():
             content.append((page, RT[page].number, RT[page].title, RT[page].bytes.decode('utf-8')))
-
-        await self.await_all_html_tasks()
 
         head = self.heads[volume].render('')
 
@@ -95,7 +87,6 @@ class WeasyPrintBuilder(ThemeableVolumeBuilder['WeasyPrintProcessor', 'WeasyPrin
             content=content,
         )
 
-        update_progressbar('Writing PDF...')
         self.render_pdf(html)
 
     def render_pdf(self, html: str):
@@ -142,12 +133,12 @@ class WeasyPrintBuilder(ThemeableVolumeBuilder['WeasyPrintProcessor', 'WeasyPrin
     def make_internal_url(self, href: PageHref, *, page: Page = None) -> str:
         """
         Nobody really cares about how nice the internal URLs will in the intermediate HTML,
-        so we use URLs like '#path/to/page.md' and '#path/to/page.md::section'.
+        so we use URLs like '#path/to/page' and '#path/to/page::section'.
         Luckily, WeasyPrint does not mind these characters.
         """
         if page is not None and page.volume is not href.target.volume:
             raise DisableLink
-        result = '#' + str(href.target.path_in_volume)
+        result = '#' + str(href.target.location)[1:]
         if href.anchor:
             result += '::' + href.anchor
         return result
@@ -179,7 +170,7 @@ class WeasyPrintBuilder(ThemeableVolumeBuilder['WeasyPrintProcessor', 'WeasyPrin
         return RelativePath('_resources')
 
     def get_path_to_static(self, page: Page) -> RelativePath:
-        return RelativePath('_static')  # TODO
+        return RelativePath('_static')
 
     async def add_custom_files(self):
         config: Config = self.volume.config
@@ -200,9 +191,9 @@ class WeasyPrintBuilder(ThemeableVolumeBuilder['WeasyPrintProcessor', 'WeasyPrin
                     # Typically, tests do not use includes, so that's ok.
                     target = RelativePath('_static') / 'css' / f'{source.stem}.css'
                     if isinstance(fs, RealFileSystem):
-                        self.add_html_task(to_thread(self.compile_sass, self.volume, fs.resolve(source), target))
+                        await to_thread(self.compile_sass, self.volume, fs.resolve(source), target)
                     else:
-                        self.add_html_task(to_thread(self.compile_sass, self.volume, fs.read_bytes(source), target))
+                        await to_thread(self.compile_sass, self.volume, fs.read_bytes(source), target)
 
                 case _:
                     raise ValueError(source)
@@ -229,7 +220,8 @@ class WeasyPrintProcessor(AbstractHtmlProcessor[WeasyPrintBuilder]):
             assert isinstance(header, Header)
             assert header.level == 1
         except AssertionError:
-            doc.content.insert(0, Header(Str(page.stem), level=1))
+            if not page.location.is_root and page.volume.codename:
+                doc.content.insert(0, Header(Str(page.volume.codename), level=1))
 
         await super().process_doc(doc, page)
 
@@ -246,17 +238,17 @@ class WeasyPrintProcessor(AbstractHtmlProcessor[WeasyPrintBuilder]):
             href = PageHref(page, anchor.identifier)
             header.identifier = self.builder.make_internal_url(href)[1:]
 
-        if page.is_root():
+        if page.location.is_root:
             header.attributes['style'] = 'bookmark-level: none'
         else:
-            header.attributes['style'] = f'bookmark-level: {page.level + header.level - 1}'
+            header.attributes['style'] = f'bookmark-level: {page.location.level + header.level - 1}'
 
-        self.builder.add_html_task(self.numerate_header(header, page))
+        self.builder.waiter.add_task(self.numerate_header(header, page))
 
         return header,
 
     async def numerate_header(self, header: Header, page: Page):
-        await self.builder.require(page, PageStatus.PROCESS3)
+        await self.builder.waiter.wait(page, Status.NUMERATE)
 
         if header.level == 1:
             header.attributes['data-number'] = str(RT[page].number)

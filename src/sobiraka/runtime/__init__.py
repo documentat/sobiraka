@@ -1,4 +1,3 @@
-from sobiraka.runtime.anchorruntime import AnchorRuntime
-from sobiraka.runtime.pageruntime import PageRuntime
-from sobiraka.runtime.runtime import RT, Runtime
-from sobiraka.runtime.volumeruntime import VolumeRuntime
+from .anchorruntime import AnchorRuntime
+from .pageruntime import PageRuntime
+from .runtime import RT, Runtime

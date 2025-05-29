@@ -4,5 +4,5 @@ def unfold_exception_types(eg: BaseException) -> set[type[BaseException]]:
         for e in eg.exceptions:
             result |= unfold_exception_types(e)
         return result
-    else:
-        return {type(eg)}
+
+    return {type(eg)}

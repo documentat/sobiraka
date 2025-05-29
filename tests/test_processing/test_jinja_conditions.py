@@ -1,42 +1,33 @@
-from textwrap import dedent
 from unittest import main
-from unittest.mock import Mock
 
 from panflute import stringify
 
 from abstracttests.abstracttestwithrt import AbstractTestWithRtTmp
-from abstracttests.projecttestcase import ProjectTestCase
-from sobiraka.models import FileSystem, Page, PageStatus, Project, Volume
+from abstracttests.singlepageprojecttest import SinglePageProjectTest
+from sobiraka.models import Status
 from sobiraka.processing.latex import LatexBuilder
 from sobiraka.processing.weasyprint import WeasyPrintBuilder
 from sobiraka.processing.web import WebBuilder
 from sobiraka.prover import Prover
 from sobiraka.runtime import RT
-from sobiraka.utils import RelativePath
 
 
-class AbstractJinjaConditionsTestCase(ProjectTestCase, AbstractTestWithRtTmp):
-    REQUIRE = PageStatus.PREPARE
+class AbstractJinjaConditionsTestCase(SinglePageProjectTest, AbstractTestWithRtTmp):
+    REQUIRE = Status.PARSE
 
     EXPECTED_VARIABLES: set[str]
 
-    def _init_project(self) -> Project:
-        return Project(Mock(FileSystem), {
-            RelativePath('src'): Volume({
-                RelativePath('page.md'): Page(dedent('''
-                    {%- if HTML -%}       HTML       {% endif -%}
-                    {%- if LATEX -%}      LATEX      {% endif -%}
-                    {%- if PDF -%}        PDF        {% endif -%}
-                    {%- if PROVER -%}     PROVER     {% endif -%}
-                    {%- if WEASYPRINT -%} WEASYPRINT {% endif -%}
-                    {%- if WEB -%}        WEB        {% endif -%}
-                ''')),
-            })
-        })
+    SOURCE = '''
+        {%- if HTML -%}       HTML       {% endif -%}
+        {%- if LATEX -%}      LATEX      {% endif -%}
+        {%- if PDF -%}        PDF        {% endif -%}
+        {%- if PROVER -%}     PROVER     {% endif -%}
+        {%- if WEASYPRINT -%} WEASYPRINT {% endif -%}
+        {%- if WEB -%}        WEB        {% endif -%}
+    '''
 
     def test_page_source(self):
-        page = self.project.pages[-1]
-        actual = set(stringify(RT[page].doc).strip().split())
+        actual = set(stringify(RT[self.page].doc).strip().split())
         self.assertSetEqual(self.EXPECTED_VARIABLES, actual)
 
 
@@ -75,7 +66,7 @@ class TestConditions_Web(AbstractJinjaConditionsTestCase):
         return WebBuilder(self.project, RT.TMP)
 
 
-del AbstractJinjaConditionsTestCase, AbstractTestWithRtTmp
+del AbstractJinjaConditionsTestCase, AbstractTestWithRtTmp, SinglePageProjectTest
 
 if __name__ == '__main__':
     main()

@@ -1,59 +1,47 @@
 from abc import ABCMeta
-from contextlib import suppress
+from dataclasses import replace
 from textwrap import dedent
-from unittest.mock import Mock
 
-from abstracttests.projectdirtestcase import ProjectDirTestCase
-from abstracttests.projecttestcase import ProjectTestCase
-from sobiraka.models import FileSystem, Href, Page, PageHref, Project, UrlHref, Volume
+from abstracttests.projecttestcase import FailingProjectTestCase
+from helpers.fakeproject import FakeProject, FakeVolume
+from sobiraka.models import Href, Page, PageHref, Project, UrlHref
 from sobiraka.models.issues import BadLink, Issue
+from sobiraka.processing.abstract.waiter import IssuesOccurred
 from sobiraka.runtime import RT
-from sobiraka.utils import RelativePath
 
 
-class AbstractTestLinksBad(ProjectTestCase, metaclass=ABCMeta):
-    SOURCE: dict[str, str]
+class AbstractTestLinksBad(FailingProjectTestCase, metaclass=ABCMeta):
+    SOURCES: dict[str, str]
     EXT: str
 
+    EXPECTED_EXCEPTION_TYPES = {IssuesOccurred}
+
     def _init_project(self) -> Project:
-        return Project(Mock(FileSystem), {
-            RelativePath('src'): Volume({
-                RelativePath(k): Page(dedent(v).strip())
+        return FakeProject({
+            'src': FakeVolume({
+                k: dedent(v).strip()
                 for k, v in self.SOURCES.items()
             }),
         })
 
     async def asyncSetUp(self):
         await super().asyncSetUp()
-        _, self.document0, _, self.document1, _, self.document2, self.document3, _, self.document4 = self.project.pages
+        volume = self.project.get_volume()
 
-    def test_ids(self):
-        expected_ids = (
-            'r',
-            'r--document0',
-            'r--sub',
-            'r--sub--document1',
-            'r--sub--subsub',
-            'r--sub--subsub--document2',
-            'r--sub--subsub--document3',
-            'r--sub--subsub--subsubsub',
-            'r--sub--subsub--subsubsub--document4',
-        )
-        actual_ids = tuple(page.id for page in self.project.pages)
-        self.assertSequenceEqual(expected_ids, actual_ids)
-
-    async def _process(self):
-        with suppress(ExceptionGroup):
-            await super()._process()
+        self.document0 = volume.get_page_by_location('/document0')
+        self.document1 = volume.get_page_by_location('/sub/document1')
+        self.document2 = volume.get_page_by_location('/sub/subsub/document2')
+        self.document3 = volume.get_page_by_location('/sub/subsub/document3')
+        self.document4 = volume.get_page_by_location('/sub/subsub/subsubsub/document4')
 
     def test_issues(self):
         data: dict[Page, list[Issue]] = {
             self.document0: [
                 BadLink(f'../sub/document1.{self.EXT}'),
                 BadLink(f'document2.{self.EXT}'),
-                BadLink('sub/subsub/subsubsub/document4'),
                 BadLink(f'sub/subsub/document3.{self.EXT}#section-1'),
                 BadLink(f'sub/subsub/document3.{self.EXT}#section2'),
+                BadLink('sub/subsub/subsubsub/document4'),
             ],
             self.document1: [],
             self.document2: [],
@@ -62,15 +50,13 @@ class AbstractTestLinksBad(ProjectTestCase, metaclass=ABCMeta):
         }
         for page, expected_issues in data.items():
             with self.subTest(page):
-                self.assertEqual(expected_issues, RT[page].issues)
+                self.assertEqual(expected_issues, sorted(page.issues))
 
     def test_links(self):
         data: dict[Page, tuple[Href, ...]] = {
             self.document0: (
-                PageHref(self.document3),
-                PageHref(self.document3, 'section-1'),
-                PageHref(self.document3, 'section2'),
                 UrlHref('https://example.com/'),
+                PageHref(self.document3),
             ),
             self.document1: (
                 PageHref(self.document0),
@@ -88,9 +74,9 @@ class AbstractTestLinksBad(ProjectTestCase, metaclass=ABCMeta):
                 PageHref(self.document0),
                 PageHref(self.document1),
                 PageHref(self.document2),
-                PageHref(self.document4),
-                PageHref(self.document3, 'section-2'),
                 PageHref(self.document3, 'sect1'),
+                PageHref(self.document3, 'section-2'),
+                PageHref(self.document4),
             ),
             self.document4: (
                 PageHref(self.document0),
@@ -99,9 +85,10 @@ class AbstractTestLinksBad(ProjectTestCase, metaclass=ABCMeta):
                 PageHref(self.document3),
             ),
         }
-        for page, expected_links in data.items():
+        for page, expected in data.items():
             with self.subTest(page):
-                self.assertSequenceEqual(expected_links, tuple(RT[page].links))
-
-
-del ProjectDirTestCase
+                actual = tuple(replace(link, default_label=None)
+                               if isinstance(link, PageHref)
+                               else link
+                               for link in sorted(RT[page].links))
+                self.assertSequenceEqual(expected, actual)

@@ -1,0 +1,17 @@
+on:
+  workflow_call:
+
+jobs:
+  lint-production:
+    name: Check production code
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+      - run: make lint-production
+
+  lint-tests:
+    name: Check tests
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+      - run: make lint-tests

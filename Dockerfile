@@ -1,12 +1,11 @@
-ARG PANDOC=3.6
+ARG PANDOC=3.7
 ARG PYTHON=3.13
 
 ARG NODE=20.17
 ARG PYTHON_FOR_BUILDING=3.13
 
 
-################################################################################
-# Install dependencies
+#region Install dependencies
 
 FROM python:$PYTHON_FOR_BUILDING AS build-package
 RUN --mount=type=cache,target=/root/.cache/pip pip install setuptools
@@ -32,12 +31,15 @@ RUN unzip lato.zip **/*.ttf -d /tmp/fonts
 RUN wget --progress=bar:force https://download.jetbrains.com/fonts/JetBrainsMono-2.304.zip -O jbmono.zip
 RUN unzip jbmono.zip **/*.ttf -d /tmp/fonts
 
+# endregion
 
-################################################################################
-# Base images
+# region Base images
 
 FROM pandoc/latex:$PANDOC-ubuntu AS latex-python-nodejs
 WORKDIR /W
+RUN if [ "$(tlmgr --version | tail -n1 | grep -Poh '[0-9]{4}')" != "2025" ]; then \
+	tlmgr option repository https://ftp.math.utah.edu/pub/tex/historic/systems/texlive/$(tlmgr --version | tail -n1 | grep -Poh '[0-9]{4}')/tlnet-final; \
+	fi
 RUN tlmgr update --self
 RUN tlmgr install koma-script
 RUN apt update
@@ -60,12 +62,12 @@ ARG PYTHON
 RUN conda create -y --name myenv python=$PYTHON nodejs=$NODE
 ENV PATH=/opt/conda/envs/myenv/bin:$PATH
 
+# endregion
 
-################################################################################
-# Install dependencies that we could not install before python-nodejs
+# region Install dependencies that we could not install before python-nodejs
 
 FROM python-nodejs AS install-pip-dependencies
-COPY --from=build-package /sobiraka.egg-info/requires.txt .
+COPY --from=build-package /src/sobiraka.egg-info/requires.txt .
 RUN pip install --prefix /prefix --requirement requires.txt
 
 FROM python-nodejs AS install-pip-dependencies-for-tester
@@ -78,9 +80,9 @@ FROM install-pip-dependencies AS install-package
 COPY --from=build-package /dist/*.tar.gz .
 RUN pip install --prefix /prefix *.tar.gz
 
+# endregion
 
-################################################################################
-# The base image for all final images
+# region The base image for all final images
 
 FROM latex-python-nodejs AS common-latex
 COPY --from=get-deb-packages /var/cache/apt /var/cache/apt
@@ -96,13 +98,13 @@ RUN --mount=type=cache,target=/root/.npm npm install -g pagefind sass
 COPY --from=get-fonts /tmp/fonts /usr/share/fonts
 ENTRYPOINT [""]
 
+# endregion
 
-################################################################################
-# Final images
+# region Final images
 
 FROM common-latex AS tester
-RUN apt install --yes git poppler-utils
 COPY --from=get-tester-dependencies /var/cache/apt /var/cache/apt
+RUN apt update && apt install --yes git poppler-utils
 COPY --from=install-pip-dependencies-for-tester /prefix /opt/conda/envs/myenv
 COPY --from=install-pip-dependencies /prefix /opt/conda/envs/myenv
 RUN mkdir /EGGS
@@ -123,28 +125,10 @@ ENTRYPOINT \
 	&& python -m unittest discover --start-directory=tests --verbose \
 	&& echo ::endgroup::
 
-FROM common AS linter
-COPY --from=install-pip-dependencies-for-tester /prefix /opt/conda/envs/myenv
+FROM tester AS linter
 COPY --from=install-pip-dependencies-for-linter /prefix /opt/conda/envs/myenv
-COPY --from=install-pip-dependencies /prefix /opt/conda/envs/myenv
-RUN mkdir /EGGS
-RUN mkdir /DIST
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONPATH=src
-SHELL ["/bin/bash", "-c"]
-ENTRYPOINT \
-	echo ::group::Building Sobiraka package... \
-	&& python setup.py egg_info --egg-base ../EGGS --quiet sdist --dist-dir /DIST --quiet \
-	&& echo ::endgroup:: \
-	\
-	&& echo ::group::Installing Sobiraka package... \
-	&& pip install /DIST/sobiraka-*.tar.gz \
-	&& rm -rf /EGGS /DIST \
-	&& echo ::endgroup:: \
-	\
-	&& echo ::group::Running pylint... \
-	&& python -m pylint sobiraka src/sobiraka/files/themes/*/extension.py \
-	&& echo ::endgroup::
+ENV PYTHONPATH=src:tests
+ENTRYPOINT [""]
 
 FROM common-latex AS release-latex
 COPY --from=install-pip-dependencies /prefix /opt/conda/envs/myenv
@@ -155,3 +139,5 @@ FROM common AS release
 COPY --from=install-pip-dependencies /prefix /opt/conda/envs/myenv
 COPY --from=install-package /prefix /opt/conda/envs/myenv
 CMD ["sobiraka"]
+
+# endregion

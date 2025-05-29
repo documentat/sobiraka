@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from typing import Sequence
 
 from sobiraka.models import NamingScheme
 from sobiraka.utils import RelativePath
@@ -11,13 +12,13 @@ class Config_Paths:
     root: RelativePath = None
     """Absolute path to the directory containing the documentation sources."""
 
-    include: tuple[str] = ('**/*',)
+    include: Sequence[str] = ('**/*',)
     """
     Patterns used to find source files within the :data:`root`.
     Must be compatible with :py:meth:`Path.glob() <pathlib.Path.glob()>`.
     """
 
-    exclude: tuple[str] = ()
+    exclude: Sequence[str] = ()
     """
     Patterns used to exclude certain files within the :data:`root` from the sources.
     Must be compatible with :py:meth:`Path.glob() <pathlib.Path.glob()>`.

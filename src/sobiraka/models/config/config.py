@@ -28,12 +28,12 @@ class Config:
     web: Config_Web = field(default_factory=Config_Web, kw_only=True)
     """Settings related to :class:`.WebBuilder`."""
 
-    content: Config_Content = field(default=Config_Content, kw_only=True)
+    content: Config_Content = field(default_factory=Config_Content, kw_only=True)
 
     latex: Config_Latex = field(default_factory=Config_Latex, kw_only=True)
     """Settings related to :class:`.LatexBuilder`."""
 
-    pdf: Config_PDF = field(default=Config_PDF, kw_only=True)
+    pdf: Config_PDF = field(default_factory=Config_PDF, kw_only=True)
     """Settings related to :class:`.WeasyBuilder`."""
 
     prover: Config_Prover = field(default_factory=Config_Prover, kw_only=True)

@@ -42,7 +42,7 @@ class TocItem:
     number: TocNumber = field(kw_only=True, default=Unnumbered())
     """The item's number. If `None`, then the number must not be displayed."""
 
-    source: Page | Anchor = field(compare=False, default=None)
+    origin: Page | Anchor = field(compare=False, default=None)
     """The source from which the item was generated."""
 
     is_current: bool = field(kw_only=True, default=False)
@@ -134,8 +134,8 @@ class Toc(list[TocItem]):
 
     def find_item_by_header(self, header: Header) -> TocItem:
         for item in self.walk():
-            if isinstance(item.source, Anchor):
-                if item.source.header is header:
+            if isinstance(item.origin, Anchor):
+                if item.origin.header is header:
                     return item
         raise KeyError(header)
 
@@ -154,7 +154,7 @@ def toc(
 ) -> Toc:
     """
     Generate a Table Of Contents.
-    This function must be called after the `process3()` has been done for the volume,
+    This function must be called after the `do_numerate()` has been done for the volume,
     otherwise the TOC may end up missing anchors, numeration, etc.
 
     The TOC will contain items based on the given `base`.
@@ -184,10 +184,15 @@ def toc(
                           current_page=current_page)
 
     for page in base.children:
-        item = TocItem(title=RT[page].title,
+        item_title = page.meta.title \
+                     or RT[page].title \
+                     or page.location.name \
+                     or page.volume.codename \
+                     or ''
+        item = TocItem(title=item_title,
                        url=builder.make_internal_url(PageHref(page), page=current_page),
                        number=RT[page].number,
-                       source=page,
+                       origin=page,
                        is_current=page is current_page)
 
         if current_page is not None:
@@ -230,7 +235,7 @@ def local_toc(
             continue
 
         url = builder.make_internal_url(PageHref(page, anchor.identifier), page=current_page)
-        item = TocItem(title=anchor.label, url=url, number=RT[anchor].number, source=anchor)
+        item = TocItem(title=anchor.label, url=url, number=RT[anchor].number, origin=anchor)
 
         if anchor.level == current_level:
             breadcrumbs[-2].append(item)

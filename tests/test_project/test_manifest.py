@@ -56,7 +56,7 @@ class TestManifest_1L_1V(_TestManifest):
         self.assertEqual('Documentation', self.volume.config.title)
 
     def test_root(self):
-        self.assertEqual(RelativePath('src/en'), self.volume.relative_root)
+        self.assertEqual(RelativePath('src/en'), self.volume.root_path)
 
     def test_include(self):
         self.assertEqual(('one', 'two', 'three'), self.volume.config.paths.include)
@@ -275,7 +275,7 @@ class TestManifest_2L_2V(_TestManifest):
         expected_data = map(RelativePath, ('src/en', 'src/en', 'src/ru', 'src/ru'))
         for i, (expected, volume) in enumerate(zip(expected_data, self.project.volumes, strict=True)):
             with self.subTest(f'{i} - {expected}'):
-                self.assertEqual(expected, volume.relative_root)
+                self.assertEqual(expected, volume.root_path)
 
     def test_include(self):
         expected_data = ('one', 'two', 'three'), ('four', 'five', 'six'), ('one', 'two', 'three'), (

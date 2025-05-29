@@ -1,12 +1,11 @@
 from unittest import main
-from unittest.mock import Mock
 
 from abstracttests.projecttestcase import ProjectTestCase
-from sobiraka.models import FileSystem, Page, PageHref, Project, Volume
+from helpers.fakeproject import FakeProject, FakeVolume
+from sobiraka.models import PageHref, Project
 from sobiraka.processing.latex import LatexBuilder
 from sobiraka.processing.weasyprint import WeasyPrintBuilder
 from sobiraka.processing.web import WebBuilder
-from sobiraka.utils import RelativePath
 
 
 class AbstractTestInternalLinks(ProjectTestCase):
@@ -16,17 +15,18 @@ class AbstractTestInternalLinks(ProjectTestCase):
     EXPECTED_OTHER_PAGE_SECTION: str
 
     def _init_project(self) -> Project:
-        fs = Mock(FileSystem)
-        project = Project(fs, {
-            RelativePath(): Volume({
-                RelativePath(): Page(),
-                RelativePath('this-page.md'): Page(),
-                RelativePath('other-page.md'): Page(),
+        return FakeProject({
+            'src': FakeVolume({
+                'this-page.md': '',
+                'other-page.md': '',
             })
         })
-        self.this_page = project.pages_by_path[RelativePath('this-page.md')]
-        self.other_page = project.pages_by_path[RelativePath('other-page.md')]
-        return project
+
+    async def asyncSetUp(self):
+        await super().asyncSetUp()
+        volume = self.project.get_volume()
+        self.this_page = volume.get_page_by_location('/this-page')
+        self.other_page = volume.get_page_by_location('/other-page')
 
     def test_internal_links(self):
         with self.subTest('This page'):
@@ -46,16 +46,6 @@ class AbstractTestInternalLinks(ProjectTestCase):
             self.assertEqual(self.EXPECTED_OTHER_PAGE_SECTION, actual)
 
 
-class TestInternalLinks_HTML(AbstractTestInternalLinks):
-    def _init_builder(self):
-        return WebBuilder(self.project, None)
-
-    EXPECTED_THIS_PAGE = ''
-    EXPECTED_THIS_PAGE_SECTION = '#section'
-    EXPECTED_OTHER_PAGE = 'other-page.html'
-    EXPECTED_OTHER_PAGE_SECTION = 'other-page.html#section'
-
-
 class TestInternalLinks_Latex(AbstractTestInternalLinks):
     def _init_builder(self):
         return LatexBuilder(self.project.get_volume(), None)
@@ -70,10 +60,20 @@ class TestInternalLinks_WeasyPrint(AbstractTestInternalLinks):
     def _init_builder(self):
         return WeasyPrintBuilder(self.project.get_volume(), None)
 
-    EXPECTED_THIS_PAGE = '#this-page.md'
-    EXPECTED_THIS_PAGE_SECTION = '#this-page.md::section'
-    EXPECTED_OTHER_PAGE = '#other-page.md'
-    EXPECTED_OTHER_PAGE_SECTION = '#other-page.md::section'
+    EXPECTED_THIS_PAGE = '#this-page'
+    EXPECTED_THIS_PAGE_SECTION = '#this-page::section'
+    EXPECTED_OTHER_PAGE = '#other-page'
+    EXPECTED_OTHER_PAGE_SECTION = '#other-page::section'
+
+
+class TestInternalLinks_Web(AbstractTestInternalLinks):
+    def _init_builder(self):
+        return WebBuilder(self.project, None)
+
+    EXPECTED_THIS_PAGE = ''
+    EXPECTED_THIS_PAGE_SECTION = '#section'
+    EXPECTED_OTHER_PAGE = 'other-page.html'
+    EXPECTED_OTHER_PAGE_SECTION = 'other-page.html#section'
 
 
 del AbstractTestInternalLinks

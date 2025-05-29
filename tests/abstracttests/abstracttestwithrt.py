@@ -7,8 +7,8 @@ from sobiraka.utils import AbsolutePath
 
 class AbstractTestWithRtTmp(IsolatedAsyncioTestCase):
     async def asyncSetUp(self):
+        # pylint: disable=consider-using-with
         await super().asyncSetUp()
-
         temp_dir = self.enterContext(TemporaryDirectory(prefix='sobiraka-test-'))
         RT.TMP = AbsolutePath(temp_dir)
 

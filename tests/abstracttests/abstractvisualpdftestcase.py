@@ -1,10 +1,13 @@
 import hashlib
 import inspect
 import shutil
+from abc import ABCMeta
 from asyncio import create_subprocess_exec
 from typing import Generic, TypeVar
 
-from sobiraka.models import PageStatus
+from typing_extensions import override
+
+from sobiraka.models import Status
 from sobiraka.processing.abstract import Builder
 from sobiraka.runtime import RT
 from sobiraka.utils import AbsolutePath
@@ -15,8 +18,8 @@ from .projecttestcase import ProjectTestCase
 T = TypeVar('T', bound=Builder)
 
 
-class AbstractVisualPdfTestCase(ProjectTestCase, AbstractTestWithRtTmp, Generic[T]):
-    REQUIRE = PageStatus.PROCESS4
+class AbstractVisualPdfTestCase(ProjectTestCase, AbstractTestWithRtTmp, Generic[T], metaclass=ABCMeta):
+    REQUIRE = Status.FINALIZE
 
     PAGE_LIMIT: int = None
     """
@@ -47,13 +50,9 @@ class AbstractVisualPdfTestCase(ProjectTestCase, AbstractTestWithRtTmp, Generic[
         results_dir.mkdir(parents=True, exist_ok=True)
         return results_dir
 
-    async def test_pdf(self):
+    @override
+    async def _process(self):
         (RT.TMP / 'screenshots').mkdir()
-
-        # Scan the directory with the expected screenshots
-        expected_screenshots = self.expected_dir().iterdir()
-        expected_screenshots = list(f for f in expected_screenshots if f.name.endswith('.png'))
-        expected_screenshots.sort()
 
         # Generate PDF
         await self.builder.run()
@@ -64,6 +63,14 @@ class AbstractVisualPdfTestCase(ProjectTestCase, AbstractTestWithRtTmp, Generic[
             pdftoppm_command += ['-l', str(self.PAGE_LIMIT)]
         pdftoppm = await create_subprocess_exec(*pdftoppm_command, cwd=RT.TMP)
         await pdftoppm.wait()
+
+    async def test_pdf(self):
+        # Scan the directory with the expected screenshots
+        expected_screenshots = self.expected_dir().iterdir()
+        expected_screenshots = list(f for f in expected_screenshots if f.name.endswith('.png'))
+        expected_screenshots.sort()
+
+        # Scan the directory with the actual screenshots
         actual_screenshots: list[AbsolutePath] = list(sorted((RT.TMP / 'screenshots').iterdir()))
 
         potentially_outdated_test = False
@@ -74,7 +81,7 @@ class AbstractVisualPdfTestCase(ProjectTestCase, AbstractTestWithRtTmp, Generic[
                 self.fail('Page count is wrong!')
 
             # Compare each actual screenshot with its expected counterpart by their hash sums
-            for p, (expected, actual) in enumerate(zip(expected_screenshots, actual_screenshots)):
+            for expected, actual in zip(expected_screenshots, actual_screenshots):
                 with self.subTest(expected.stem):
                     with expected.open('rb') as file:
                         expected_sha = hashlib.file_digest(file, 'sha1')
