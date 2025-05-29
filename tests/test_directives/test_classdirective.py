@@ -1,22 +1,20 @@
-from unittest.mock import Mock
+import unittest
 
-from abstracttests.projecttestcase import ProjectTestCase
-from sobiraka.models import FileSystem, Page, PageStatus, Project, Volume
+from abstracttests.singlepageprojecttest import SinglePageProjectTest
+from sobiraka.models import Status
 from sobiraka.runtime import RT
-from sobiraka.utils import RelativePath
 
 
-class TestClassDirective(ProjectTestCase):
-    REQUIRE = PageStatus.PROCESS3
-
-    def _init_project(self) -> Project:
-        return Project(Mock(FileSystem), {
-            RelativePath('src'): Volume({
-                RelativePath(): Page('# Test\n\n@class MyClass\n\nThis is a paragraph.'),
-            }),
-        })
+class TestClassDirective(SinglePageProjectTest):
+    REQUIRE = Status.NUMERATE
+    SOURCE = '# Test\n\n@class MyClass\n\nThis is a paragraph.'
 
     def test_paragraph_class(self):
-        doc = RT[self.project.pages[0]].doc
-        header, para = doc.content
+        _, para = RT[self.page].doc.content
         self.assertEqual('MyClass', RT.CLASSES[id(para)])
+
+
+del SinglePageProjectTest
+
+if __name__ == '__main__':
+    unittest.main()
