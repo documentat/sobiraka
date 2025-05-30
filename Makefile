@@ -1,7 +1,7 @@
 .PHONY: *
 
 PYTHON := 3.13
-PANDOC := 3.6
+PANDOC := 3.7
 
 DOCKER_RUN := docker run --rm -it
 ifdef CI
@@ -18,12 +18,14 @@ prepull-all:
 	docker pull pandoc/latex:3.4-ubuntu
 	docker pull pandoc/latex:3.5-ubuntu
 	docker pull pandoc/latex:3.6-ubuntu
+	docker pull pandoc/latex:3.7-ubuntu
 
 	docker pull pandoc/core:3.2-ubuntu
 	docker pull pandoc/core:3.3-ubuntu
 	docker pull pandoc/core:3.4-ubuntu
 	docker pull pandoc/core:3.5-ubuntu
 	docker pull pandoc/core:3.6-ubuntu
+	docker pull pandoc/core:3.7-ubuntu
 
 prebuild-all:
 	$(MAKE) build-tester PYTHON=3.11 PANDOC=3.2
@@ -31,31 +33,34 @@ prebuild-all:
 	$(MAKE) build-tester PYTHON=3.11 PANDOC=3.4
 	$(MAKE) build-tester PYTHON=3.11 PANDOC=3.5
 	$(MAKE) build-tester PYTHON=3.11 PANDOC=3.6
+	$(MAKE) build-tester PYTHON=3.11 PANDOC=3.7
 
 	$(MAKE) build-tester PYTHON=3.12 PANDOC=3.2
 	$(MAKE) build-tester PYTHON=3.12 PANDOC=3.3
 	$(MAKE) build-tester PYTHON=3.12 PANDOC=3.4
 	$(MAKE) build-tester PYTHON=3.12 PANDOC=3.5
 	$(MAKE) build-tester PYTHON=3.12 PANDOC=3.6
+	$(MAKE) build-tester PYTHON=3.12 PANDOC=3.7
 
 	$(MAKE) build-tester PYTHON=3.13 PANDOC=3.2
 	$(MAKE) build-tester PYTHON=3.13 PANDOC=3.3
 	$(MAKE) build-tester PYTHON=3.13 PANDOC=3.4
 	$(MAKE) build-tester PYTHON=3.13 PANDOC=3.5
 	$(MAKE) build-tester PYTHON=3.13 PANDOC=3.6
+	$(MAKE) build-tester PYTHON=3.13 PANDOC=3.7
 
-release-latex:
+release:
 	$(eval IMAGE:=sobiraka:release)
 	@docker build . \
-		--target release-latex \
+		--target release \
 		--build-arg PYTHON=$(PYTHON) \
 		--build-arg PANDOC=$(PANDOC) \
 		--tag $(IMAGE)
 
-release:
+release-latex:
 	$(eval IMAGE:=sobiraka:release-latex)
 	@docker build . \
-		--target release \
+		--target release-latex \
 		--build-arg PYTHON=$(PYTHON) \
 		--build-arg PANDOC=$(PANDOC) \
 		--tag $(IMAGE)
@@ -130,4 +135,16 @@ docs-pdf: release
 	@$(DOCKER_RUN) \
 		-v $(PWD)/docs/build:/W/docs/build \
 		sobiraka:release \
+		chown $$(id -u):$$(id -g) docs/build/sobiraka.pdf
+
+docs-latex: release-latex
+	@mkdir -p docs/build
+	@$(DOCKER_RUN) \
+		-v $(PWD)/docs:/W/docs:ro \
+		-v $(PWD)/docs/build:/W/docs/build \
+		sobiraka:release-latex \
+		sobiraka latex docs/docs.yaml --output docs/build/sobiraka.pdf
+	@$(DOCKER_RUN) \
+		-v $(PWD)/docs/build:/W/docs/build \
+		sobiraka:release-latex \
 		chown $$(id -u):$$(id -g) docs/build/sobiraka.pdf

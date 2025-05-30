@@ -1,11 +1,11 @@
 from asyncio import Task, create_task, get_event_loop, sleep, wait
 from collections import defaultdict
 from itertools import chain
-from typing import Sequence, TYPE_CHECKING, overload
+from typing import Coroutine, Sequence, TYPE_CHECKING, overload
 
 from sobiraka.models import AggregationPolicy, Issue, Page, Source, Status, Volume
 from sobiraka.report import Reporter
-from sobiraka.utils import KeyDefaultDict, MISSING, RelativePath, sorted_dict
+from sobiraka.utils import KeyDefaultDict, MISSING, RelativePath, print_colorful_exc, sorted_dict
 from .events import AggregatingEvent, PreventableEvent, ProductiveEvent
 
 if TYPE_CHECKING:
@@ -30,6 +30,7 @@ class Waiter:
 
         self.tasks: dict[Source | Page, dict[Status, Task]] = defaultdict(dict)
         self.tasks_p3: dict[Volume, Task] = {}
+        self.additional_tasks: list[Task] = []
 
         self.aggregating: dict[Source, AggregatingEvent] = KeyDefaultDict(AggregatingEvent)
         self.path_events: dict[RelativePath, ProductiveEvent[Source]] = defaultdict(ProductiveEvent)
@@ -45,6 +46,11 @@ class Waiter:
             Reporter.register_volume(root.volume)
             self.schedule_tasks(root, self.target_status)
         assert self.tasks
+
+    def add_task(self, coro: Coroutine):
+        task = create_task(coro, name=coro.__name__)
+        task.add_done_callback(self.maybe_done)
+        self.additional_tasks.append(task)
 
     async def wait_all(self):
         if not self.tasks:
@@ -218,6 +224,7 @@ class Waiter:
             raise
 
         except Exception as exc:
+            print_colorful_exc()
             source.status = Status.SOURCE_FAILURE
             source.exception = exc
             raise DependencyFailed(exc) from exc
@@ -290,6 +297,7 @@ class Waiter:
             raise
 
         except Exception as exc:
+            print_colorful_exc()
             page.status = Status.PAGE_FAILURE
             page.exception = exc
             raise DependencyFailed(exc) from exc
@@ -314,6 +322,7 @@ class Waiter:
             raise
 
         except Exception as exc:
+            print_colorful_exc()
             self.set_status_recursively(volume, Status.VOL_FAILURE)
             volume.root.exception = exc
             raise DependencyFailed(exc) from exc
@@ -326,7 +335,7 @@ class Waiter:
     # ------------------------------------------------------------------------------------------------------------------
     # region Checking completion
 
-    def maybe_done(self):
+    def maybe_done(self, _: Task = None):
         """
         Check the statuses of all sources and pages.
         The purpose of this function is to be called after each status change,
@@ -344,7 +353,7 @@ class Waiter:
         # pylint: disable=too-many-branches
         still_loading = False
         still_processing = False
-        excs: dict[RelativePath, list[Exception]] = defaultdict(list)
+        excs: dict[RelativePath | None, list[BaseException]] = defaultdict(list)
 
         # We start by iterating over just the roots,
         # but we will be adding all children to the queue as we go
@@ -380,6 +389,14 @@ class Waiter:
                     elif page.status.is_failed():
                         excs[source.path_in_project].append(RuntimeError(f'Page status: {page.status.name}.'))
 
+        if not still_processing:
+            for task in self.additional_tasks:
+                if not task.done():
+                    still_processing = True
+                    break
+                if task.exception() is not None:
+                    excs[None].append(task.exception())
+
         Reporter.refresh()
 
         # If the generation is complete for all sources,
@@ -398,7 +415,8 @@ class Waiter:
                         task.cancel()
 
             if excs:
-                sorted_exceptions = list(chain(*sorted_dict(excs).values()))
+                excs = sorted_dict(excs, key=lambda k: (k is None, k))
+                sorted_exceptions = list(chain(*excs.values()))
                 self.done.fail(BuildFailure('Build failure', sorted_exceptions))
             else:
                 self.done.set()
@@ -420,16 +438,22 @@ class Waiter:
         # Make sure child sources and pages are discovered
         await self.tasks[source][Status.LOAD]
 
-        aws = []
+        aws: list[Task] = []
 
         for child in source.child_sources:
-            aws.append(create_task(self.wait_recursively(child, target_status)))
+            aws.append(create_task(self.wait_recursively(child, target_status),
+                                   name=f'WAIT RECURSIVELY FOR {child.path_in_volume}'))
 
         for page in source.pages:
             aws.append(self.tasks[page][target_status])
 
-        if aws:
-            await wait(aws)
+        if not aws:
+            return
+
+        await wait(aws)
+
+        if any(a.exception() for a in aws):
+            raise DependencyFailed
 
     def set_status_recursively(self, volume: Volume, status: Status):
         """
@@ -464,7 +488,7 @@ class IssuesOccurred(Exception):
 
 
 class DependencyFailed(Exception):
-    def __init__(self, original_exc: Exception):
+    def __init__(self, original_exc: Exception = None):
         super().__init__()
         self.original_exc = original_exc
 

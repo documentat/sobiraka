@@ -14,7 +14,7 @@ from typing import BinaryIO, final
 from panflute import Element, Header, Str, stringify
 from typing_extensions import override
 
-from sobiraka.models import FileSystem, Page, PageHref, Status, Volume
+from sobiraka.models import FileSystem, Page, PageHref, Volume
 from sobiraka.models.config import Config, Config_Latex_Headers
 from sobiraka.runtime import RT
 from sobiraka.utils import AbsolutePath, LatexInline, convert_or_none, panflute_to_bytes
@@ -41,7 +41,7 @@ class LatexBuilder(ThemeableVolumeBuilder['LatexProcessor', 'LatexTheme']):
         return processor_class(self)
 
     def init_theme(self) -> LatexTheme:
-        return LatexTheme(self.volume.config.web.theme)
+        return LatexTheme(self.volume.config.latex.theme)
 
     @override
     def additional_variables(self) -> dict:
@@ -74,6 +74,8 @@ class LatexBuilder(ThemeableVolumeBuilder['LatexProcessor', 'LatexTheme']):
 
         self.output.parent.mkdir(parents=True, exist_ok=True)
         copyfile(xelatex_workdir / 'build.pdf', self.output)
+
+        await self.waiter.wait_all()
 
         return 0
 
@@ -127,8 +129,8 @@ class LatexBuilder(ThemeableVolumeBuilder['LatexProcessor', 'LatexTheme']):
             latex_output.write(b'\n\n%%% Table of contents\n\n')
             latex_output.write(self.theme.toc.read_bytes())
 
+        await self.waiter.wait_all()
         for page in volume.root.all_pages():
-            await self.waiter.wait(page, Status.FINALIZE)
             latex_output.write(b'\n\n' + (80 * b'%'))
             latex_output.write(b'\n\n%%% ' + bytes(page.source.path_in_project) + b'\n\n')
             latex_output.write(RT[page].bytes)

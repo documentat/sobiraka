@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from importlib.resources import files
 
 from utilspie.collectionsutils import frozendict
 
@@ -27,7 +28,7 @@ class Config_Latex:
     header: RelativePath | None = None
     """Path to the file containing LaTeX header directives for the volume, if provided."""
 
-    theme: AbsolutePath = None
+    theme: AbsolutePath = AbsolutePath(files('sobiraka')) / 'files' / 'themes' / 'simple'
     """Path to the theme that should be used when generating LaTeX."""
 
     processor: RelativePath = None

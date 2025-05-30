@@ -55,20 +55,18 @@ class WebBuilder(ThemeableProjectBuilder['WebProcessor', 'WebTheme'], AbstractHt
     async def run(self):
         self.output.mkdir(parents=True, exist_ok=True)
 
-        self.add_html_task(self.waiter.wait_all())
-
         for volume in self.get_volumes():
             theme = self.themes[volume]
 
-            # Launch non-page processing tasks
-            self.add_html_task(self.add_directory_from_location(theme.static_dir, RelativePath('_static')))
-            self.add_html_task(self.add_custom_files(volume))
-            self.add_html_task(self.compile_theme_sass(theme, volume))
-            self.add_html_task(self.prepare_search_indexer(volume))
+            # Prepare non-page processing tasks
+            self.waiter.add_task(self.add_directory_from_location(theme.static_dir, RelativePath('_static')))
+            self.waiter.add_task(self.add_custom_files(volume))
+            self.waiter.add_task(self.compile_theme_sass(theme, volume))
+            self.waiter.add_task(self.prepare_search_indexer(volume))
 
         # Wait until all pages will be generated and all additional files will be copied to the output directory
         # This may include tasks that started as a side effect of generating the HTML pages
-        await self.await_all_html_tasks()
+        await self.waiter.wait_all()
 
         # Finalize all search indexers
         for indexer in self._indexers.values():
@@ -213,13 +211,13 @@ class WebBuilder(ThemeableProjectBuilder['WebProcessor', 'WebTheme'], AbstractHt
             match source.suffix:
                 case '.css':
                     target = RelativePath() / 'css' / source.name
-                    self.add_html_task(self.add_file_from_project(source, target))
+                    self.waiter.add_task(self.add_file_from_project(source, target))
                     self.heads[volume].append(HeadCssFile(target))
 
                 case '.sass' | '.scss':
                     source = fs.resolve(source)
                     target = RelativePath('_static') / 'css' / f'{source.stem}.css'
-                    self.add_html_task(to_thread(self.compile_sass, volume, source, target))
+                    self.waiter.add_task(to_thread(self.compile_sass, volume, source, target))
                     self.heads[volume].append(HeadCssFile(target))
 
                 case _:

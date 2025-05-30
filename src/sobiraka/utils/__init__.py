@@ -13,6 +13,7 @@ from .merge_dicts import merge_dicts
 from .missing import MISSING
 from .panflute_utils import panflute_to_bytes
 from .parse_vars import parse_vars
+from .print_colorful_exc import print_colorful_exc
 from .quotationmark import Apostrophe, QuotationMark
 from .raw import HtmlBlock, HtmlInline, LatexBlock, LatexInline
 from .replace_element import replace_element

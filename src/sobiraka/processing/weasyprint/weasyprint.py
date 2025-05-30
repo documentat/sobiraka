@@ -56,14 +56,11 @@ class WeasyPrintBuilder(ThemeableVolumeBuilder['WeasyPrintProcessor', 'WeasyPrin
 
         volume: Volume = self.volume
 
-        # Launch page processing tasks
-        self.add_html_task(self.waiter.wait_all())
+        # Prepare non-page processing tasks
+        self.waiter.add_task(self.add_custom_files())
+        self.waiter.add_task(self.compile_theme_sass(self.theme, volume))
 
-        # Launch non-page processing tasks
-        self.add_html_task(self.add_custom_files())
-        self.add_html_task(self.compile_theme_sass(self.theme, volume))
-
-        await self.await_all_html_tasks()
+        await self.waiter.wait_all()
 
         # Combine rendered pages into a single page
         content: list[tuple[Page, TocNumber, str, str]] = []
@@ -194,9 +191,9 @@ class WeasyPrintBuilder(ThemeableVolumeBuilder['WeasyPrintProcessor', 'WeasyPrin
                     # Typically, tests do not use includes, so that's ok.
                     target = RelativePath('_static') / 'css' / f'{source.stem}.css'
                     if isinstance(fs, RealFileSystem):
-                        self.add_html_task(to_thread(self.compile_sass, self.volume, fs.resolve(source), target))
+                        await to_thread(self.compile_sass, self.volume, fs.resolve(source), target)
                     else:
-                        self.add_html_task(to_thread(self.compile_sass, self.volume, fs.read_bytes(source), target))
+                        await to_thread(self.compile_sass, self.volume, fs.read_bytes(source), target)
 
                 case _:
                     raise ValueError(source)
@@ -246,7 +243,7 @@ class WeasyPrintProcessor(AbstractHtmlProcessor[WeasyPrintBuilder]):
         else:
             header.attributes['style'] = f'bookmark-level: {page.location.level + header.level - 1}'
 
-        self.builder.add_html_task(self.numerate_header(header, page))
+        self.builder.waiter.add_task(self.numerate_header(header, page))
 
         return header,
 
