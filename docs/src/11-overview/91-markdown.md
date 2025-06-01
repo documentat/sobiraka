@@ -4,7 +4,7 @@ Markdown — основной синтаксис исходного текста
 
 Собирака использует вариацию Markdown, реализованную в конвертере Pandoc. Полную документацию по его особенностям можно найти здесь: [Pandoc's Markdown](https://pandoc.org/MANUAL.html#pandocs-markdown).
 
-По сравнению с конфигурацией Pandoc по умолчанию, в Собираке выключены расширения [`smart`](https://pandoc.org/MANUAL.html#extension-smart), [`raw_html`](https://pandoc.org/MANUAL.html#extension-raw_html), [`raw_tex`](https://pandoc.org/MANUAL.html#extension-raw_tex) и [`implicit_figures`](https://pandoc.org/MANUAL.html#extension-implicit_figures), а также добавлено расширение [`mark`](https://pandoc.org/MANUAL.html#extension-mark). Также в файлах Markdown, как и в любых текстовых файлах для Собираки, можно использовать [директивы](../12-syntax/3-directives.md) и [синтаксис Jinja](../12-syntax/2-jinja.md).
+По сравнению с конфигурацией Pandoc по умолчанию, в Собираке выключены расширения [`citations`](https://pandoc.org/MANUAL.html#extension-citations), [`smart`](https://pandoc.org/MANUAL.html#extension-smart), [`raw_html`](https://pandoc.org/MANUAL.html#extension-raw_html), [`raw_tex`](https://pandoc.org/MANUAL.html#extension-raw_tex) и [`implicit_figures`](https://pandoc.org/MANUAL.html#extension-implicit_figures), а также добавлено расширение [`mark`](https://pandoc.org/MANUAL.html#extension-mark). Также в файлах Markdown, как и в любых текстовых файлах для Собираки, можно использовать [директивы](../12-syntax/3-directives.md) и [синтаксис Jinja](../12-syntax/2-jinja.md).
 
 Ниже перечислены некоторые наиболее важные особенности Pandoc Markdown и порядок их обработки.
 

@@ -3,7 +3,6 @@ from __future__ import annotations
 from abc import ABCMeta, abstractmethod
 from asyncio import Task, create_subprocess_exec, wait
 from collections import defaultdict
-from functools import partial
 from io import BytesIO
 from subprocess import PIPE
 from typing import Generic, TYPE_CHECKING, TypeVar, final
@@ -11,13 +10,13 @@ from typing import Generic, TYPE_CHECKING, TypeVar, final
 import jinja2
 import panflute
 from jinja2 import StrictUndefined
+
 from sobiraka.models import FileSystem, Page, PageHref, Project, Source, Volume
 from sobiraka.models.config import Config
-from sobiraka.processing.directive import para_to_directive
 from sobiraka.runtime import RT
 from sobiraka.utils import replace_element
-
 from .waiter import Waiter
+from ..directive import parse_directives
 from ..numerate import numerate
 
 if TYPE_CHECKING:
@@ -120,7 +119,7 @@ class Builder(Generic[P], metaclass=ABCMeta):
 
         This method is called by :obj:`.Page.processed1`.
         """
-        RT[page].doc.walk(partial(para_to_directive, builder=self, page=page))
+        parse_directives(page, self)
         processor = self.get_processor_for_page(page)
         await processor.process_doc(RT[page].doc, page)
         return page

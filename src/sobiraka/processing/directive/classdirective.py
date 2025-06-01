@@ -8,7 +8,7 @@ from .directive import Directive
 
 
 class ClassDirective(Directive):
-    DIRECTIVE_NAME = '@class'
+    DIRECTIVE_NAME = 'class'
 
     id: str
 

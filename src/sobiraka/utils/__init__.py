@@ -1,4 +1,3 @@
-from .all_subclasses import all_subclasses
 from .autoprefix import autoprefix
 from .betterpath import AbsolutePath, IncompatiblePathTypes, PathGoesOutsideStartDirectory, RelativePath, \
     WrongPathType, absolute_or_relative
@@ -11,7 +10,7 @@ from .last_item import last_key, last_value, update_last_dataclass, update_last_
 from .location import Location
 from .merge_dicts import merge_dicts
 from .missing import MISSING
-from .panflute_utils import panflute_to_bytes, replace_element
+from .panflute_utils import insert_after, panflute_to_bytes, replace_element
 from .parse_vars import parse_vars
 from .print_colorful_exc import print_colorful_exc
 from .quotationmark import Apostrophe, QuotationMark

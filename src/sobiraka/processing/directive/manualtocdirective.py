@@ -10,11 +10,11 @@ from sobiraka.models import PageHref
 from sobiraka.models.config import CombinedToc
 from sobiraka.models.issues import Issue
 from sobiraka.processing.toc import local_toc, toc
-from .directive import ClosingDirective, OpeningDirective
+from .directive import BlockDirective
 
 
-class ManualTocDirective(OpeningDirective):
-    DIRECTIVE_NAME = '@manual-toc'
+class ManualTocDirective(BlockDirective):
+    DIRECTIVE_NAME = 'manual-toc'
 
     local: bool
     combined: bool
@@ -69,10 +69,6 @@ class ManualTocDirective(OpeningDirective):
         for href in expected_hrefs:
             if href not in actual_hrefs:
                 self.page.issues.append(MissingTocLink(href.url_relative_to(self.page)))
-
-
-class EndManualTocDirective(ClosingDirective[ManualTocDirective]):
-    DIRECTIVE_NAME = '@end-manual-toc'
 
 
 @dataclass(order=True, frozen=True)

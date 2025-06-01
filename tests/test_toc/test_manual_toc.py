@@ -37,8 +37,22 @@ class TestManualToc_Default(AbstractTestManualToc):
         - [](part2)
         - [](part2/chapter1.md)
         - [](part2/chapter2.md)
+    '''
+
+
+class TestManualToc_MultiBlock(AbstractTestManualToc):
+    SOURCE = '''
+        @@manual-toc
         
-        @end-manual-toc
+        [Part one](part1):
+        - [](part1/chapter1.md)
+        - [](part1/chapter2.md)
+        
+        [Part two](part2):
+        - [](part2/chapter1.md)
+        - [](part2/chapter2.md)
+        
+        @@
     '''
 
 
@@ -48,8 +62,6 @@ class TestManualToc_Default_Missing(AbstractTestManualToc):
         
         - [](part1)
         - [](part2)
-        
-        @end-manual-toc
     '''
 
     EXPECTED_ISSUES = (
@@ -72,8 +84,6 @@ class TestManualToc_Unique(AbstractTestManualToc):
         - [](part2)
         - [](part2/chapter1.md)
         - [](part2/chapter2.md)
-        
-        @end-manual-toc
     '''
 
     EXPECTED_ISSUES = (
@@ -88,8 +98,6 @@ class TestManualToc_Depth1(AbstractTestManualToc):
         
         - [](part1)
         - [](part2)
-        
-        @end-manual-toc
     '''
 
 
@@ -98,8 +106,6 @@ class TestManualToc_Depth1_Missing(AbstractTestManualToc):
         @manual-toc --depth 1
         
         - [](part1)
-        
-        @end-manual-toc
     '''
 
     EXPECTED_ISSUES = (
@@ -117,8 +123,6 @@ class TestManualToc_Ordered(AbstractTestManualToc):
         - [](part2)
         - [](part2/chapter1.md)
         - [](part2/chapter2.md)
-        
-        @end-manual-toc
     '''
 
     EXPECTED_ISSUES = (
@@ -147,8 +151,6 @@ class TestManualToc_Local(AbstractTestManualToc):
         - [](#section-0.3.1)
         - [](#section-0.3.2)
         
-        @end-manual-toc
-        
         ## Section 0.1
         ### Section 0.1.1
         ### Section 0.1.2
@@ -170,8 +172,6 @@ class TestManualToc_Local_Depth1(AbstractTestManualToc):
         - [](#section-0.1)
         - [](#section-0.2)
         - [](#section-0.3)
-        
-        @end-manual-toc
         
         ## Section 0.1
         ### Section 0.1.1
@@ -211,8 +211,6 @@ class TestManualToc_Combined(AbstractTestManualToc):
         - [](part2/chapter2.md)
         - [](part2/chapter2.md#section-2.2.1)
         - [](part2/chapter2.md#section-2.2.2)
-        
-        @end-manual-toc
     '''
 
 
@@ -232,8 +230,6 @@ class TestManualToc_Combined_Missing(AbstractTestManualToc):
         - [](part2/chapter2.md)
         - [](part2/chapter2.md#section-2.2.1)
         - [](part2/chapter2.md#section-2.2.2)
-        
-        @end-manual-toc
     '''
 
     EXPECTED_ISSUES = (

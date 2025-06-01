@@ -13,7 +13,7 @@ from .directive import Directive
 
 
 class TocDirective(Directive):
-    DIRECTIVE_NAME = '@toc'
+    DIRECTIVE_NAME = 'toc'
 
     local: bool
     combined: bool

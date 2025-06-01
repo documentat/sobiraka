@@ -18,7 +18,7 @@ from sobiraka.runtime import RT
 from sobiraka.utils import AbsolutePath, MISSING, PathGoesOutsideStartDirectory, RelativePath, absolute_or_relative
 from .dispatcher import Dispatcher
 from .waiter import NoSourceCreatedForPath
-from ..directive import Directive, ManualTocDirective, OpeningDirective
+from ..directive import Directive, ManualTocDirective, BlockDirective
 
 B = TypeVar('B', bound='Builder')
 
@@ -29,7 +29,7 @@ class Processor(Dispatcher, Generic[B], metaclass=ABCMeta):
         super().__init__()
         self.builder: B = builder
         self.directives: dict[Page, list[Directive]] = defaultdict(list)
-        self.current_directives: dict[Page, list[OpeningDirective]] = defaultdict(list)
+        self.unclosed_directives: dict[Page, BlockDirective | None] = {}
 
     async def process_role_doc(self, code: Code, page: Page):
         if m := re.fullmatch(r'(.+) < (.+) >', code.text, flags=re.X):
@@ -139,16 +139,14 @@ class Processor(Dispatcher, Generic[B], metaclass=ABCMeta):
         # If we are inside a @manual-toc directive, prepare to report any generated links to it.
         # Note that the actual link processing will be called asynchronously in an arbitrary order,
         # and yet we will have to report the generated PageHrefs in the order of their appearance on the Page.
-        # The solution is to reserve the position now, while we are inside the consequtive tree processing,
+        # The solution is to reserve the position now, while we are inside the consecutive tree processing,
         # and create a callback that will replace the value at this position with a PageHref later.
         callback = None
-        for directive in self.current_directives[page]:
-            if isinstance(directive, ManualTocDirective):
-                manual_toc = directive
-                manual_toc.hrefs.append(MISSING)
-                pos = len(manual_toc.hrefs) - 1
-                callback = partial(manual_toc.hrefs.__setitem__, pos)
-                break
+        if isinstance(self.unclosed_directives.get(page), ManualTocDirective):
+            manual_toc: ManualTocDirective = self.unclosed_directives[page]
+            manual_toc.hrefs.append(MISSING)
+            pos = len(manual_toc.hrefs) - 1
+            callback = partial(manual_toc.hrefs.__setitem__, pos)
 
         # Schedule the actual link processing for the next stage
         self.builder.referencing_tasks[page].append(create_task(
