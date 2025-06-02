@@ -48,11 +48,17 @@ class FakeFileSystem(FileSystem):
 
     @contextmanager
     def open_bytes(self, path: RelativePath) -> AbstractContextManager[BinaryIO]:
-        yield BytesIO(self.pseudofiles[path])
+        data = self.pseudofiles[path]
+        if isinstance(data, str):
+            data = data.encode('utf-8')
+        yield BytesIO(data)
 
     @contextmanager
     def open_text(self, path: RelativePath) -> AbstractContextManager[TextIO]:
-        yield StringIO(self.pseudofiles[path])
+        data = self.pseudofiles[path]
+        if isinstance(data, bytes):
+            data = data.decode('utf-8')
+        yield StringIO(data)
 
     def copy(self, source: RelativePath, target: AbsolutePath):
         target.parent.mkdir(parents=True, exist_ok=True)

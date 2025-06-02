@@ -5,15 +5,17 @@ import re
 import sys
 from asyncio import to_thread
 from contextlib import suppress
+from datetime import datetime
 from functools import lru_cache
 from mimetypes import guess_type
 from typing import final
+from urllib.parse import unquote
 
 import weasyprint
 from panflute import Doc, Element, Header, Image, Str
 from typing_extensions import override
 
-from sobiraka.models import FileSystem, Page, PageHref, RealFileSystem, Status, Volume
+from sobiraka.models import DirPage, FileSystem, Page, PageHref, RealFileSystem, Status, Volume
 from sobiraka.models.config import CombinedToc, Config, Config_Pygments
 from sobiraka.processing import load_processor
 from sobiraka.processing.abstract import Theme, ThemeableVolumeBuilder
@@ -65,6 +67,8 @@ class WeasyPrintBuilder(ThemeableVolumeBuilder['WeasyPrintProcessor', 'WeasyPrin
         # Combine rendered pages into a single page
         content: list[tuple[Page, TocNumber, str, str]] = []
         for page in volume.root.all_pages():
+            if page.location.is_root and isinstance(page, DirPage):
+                continue
             content.append((page, RT[page].number, RT[page].title, RT[page].bytes.decode('utf-8')))
 
         head = self.heads[volume].render('')
@@ -78,6 +82,7 @@ class WeasyPrintBuilder(ThemeableVolumeBuilder['WeasyPrintProcessor', 'WeasyPrin
             config=volume.config,
 
             head=head,
+            now=datetime.now(),
             toc=lambda **kwargs: toc(volume.root_page,
                                      builder=self,
                                      toc_depth=volume.config.pdf.toc_depth,
@@ -85,6 +90,8 @@ class WeasyPrintBuilder(ThemeableVolumeBuilder['WeasyPrintProcessor', 'WeasyPrin
                                      **kwargs),
 
             content=content,
+
+            **volume.config.variables,
         )
 
         self.render_pdf(html)
@@ -112,6 +119,7 @@ class WeasyPrintBuilder(ThemeableVolumeBuilder['WeasyPrintProcessor', 'WeasyPrin
 
     def fetch_url(self, url: str) -> dict:
         config: Config = self.volume.config
+        fs: FileSystem = self.get_project().fs
 
         with suppress(KeyError):
             mime_type, content = self.pseudofiles[url]
@@ -120,12 +128,12 @@ class WeasyPrintBuilder(ThemeableVolumeBuilder['WeasyPrintProcessor', 'WeasyPrin
         if re.match('^_static/(.+)$', url):
             file_path = self.theme.theme_dir / url
             mime_type, _ = guess_type(file_path, strict=False)
-            return dict(file_obj=file_path.open('rb'), mime_type=mime_type)
+            return dict(string=file_path.read_bytes(), mime_type=mime_type)
 
         if ':' not in url:
-            file_path = config.paths.resources / url
-            mime_type, _ = guess_type(file_path, strict=False)[0]
-            return dict(file_obj=file_path.open('rb'), mime_type=mime_type)
+            file_path = config.paths.resources / unquote(url)
+            mime_type, _ = guess_type(file_path, strict=False)
+            return dict(string=fs.read_bytes(file_path), mime_type=mime_type)
 
         print(url, file=sys.stderr)
         return weasyprint.default_url_fetcher(url)
@@ -159,7 +167,8 @@ class WeasyPrintBuilder(ThemeableVolumeBuilder['WeasyPrintProcessor', 'WeasyPrin
 
     @override
     async def add_file_from_project(self, source: RelativePath, target: RelativePath):
-        raise NotImplementedError
+        # Do nothing. We will just load the file from the source in fetch_url().
+        pass
 
     @override
     def compile_sass(self, volume: Volume, source: AbsolutePath | bytes, target: RelativePath):
@@ -202,6 +211,7 @@ class WeasyPrintBuilder(ThemeableVolumeBuilder['WeasyPrintProcessor', 'WeasyPrin
         return image.url
 
 
+@final
 class WeasyPrintProcessor(AbstractHtmlProcessor[WeasyPrintBuilder]):
 
     @override
@@ -230,6 +240,7 @@ class WeasyPrintProcessor(AbstractHtmlProcessor[WeasyPrintBuilder]):
         header, = await super().process_header(header, page)
         assert isinstance(header, Header)
 
+        # Generate a unique identifier across the whole document
         if header.level == 1:
             href = PageHref(page)
             header.identifier = self.builder.make_internal_url(href)[1:]
@@ -238,11 +249,24 @@ class WeasyPrintProcessor(AbstractHtmlProcessor[WeasyPrintBuilder]):
             href = PageHref(page, anchor.identifier)
             header.identifier = self.builder.make_internal_url(href)[1:]
 
+        # Show or hide the bookmark for the PDF navigation
         if page.location.is_root:
             header.attributes['style'] = 'bookmark-level: none'
         else:
             header.attributes['style'] = f'bookmark-level: {page.location.level + header.level - 1}'
 
+        # Remember both the local and the global levels in attributes
+        header.attributes['data-local-level'] = str(header.level)
+        header.attributes['data-global-level'] = str(page.location.level + header.level - 1)
+
+        # For the 'global' header policy, change the actual level of the header
+        # Also, hide the very top header
+        if page.volume.config.pdf.headers_policy == 'global':
+            if page.location.level == 1 and header.level == 1:
+                return ()
+            header.level = int(header.attributes['data-global-level']) - 1
+
+        # Don't forget to numrate the header later
         self.builder.waiter.add_task(self.numerate_header(header, page))
 
         return header,
@@ -250,7 +274,7 @@ class WeasyPrintProcessor(AbstractHtmlProcessor[WeasyPrintBuilder]):
     async def numerate_header(self, header: Header, page: Page):
         await self.builder.waiter.wait(page, Status.NUMERATE)
 
-        if header.level == 1:
+        if header.attributes['data-local-level'] == '1':
             header.attributes['data-number'] = str(RT[page].number)
         else:
             anchor = RT[page].anchors.by_header(header)

@@ -28,9 +28,14 @@ table {
         border-top-right-radius: .3em;
     }
 
+    tr {
+        page-break-inside: avoid;
+    }
+
     td {
         border: 1px solid var(--gray);
         page-break-inside: avoid;
         padding: .3em .5em;
+        vertical-align: top;
     }
 }

@@ -14,8 +14,8 @@ from typing import BinaryIO, final
 from panflute import Element, Header, Str, stringify
 from typing_extensions import override
 
-from sobiraka.models import FileSystem, Page, PageHref, Volume
-from sobiraka.models.config import Config, Config_Latex_Headers
+from sobiraka.models import DirPage, FileSystem, Page, PageHref, Status, Volume
+from sobiraka.models.config import Config
 from sobiraka.runtime import RT
 from sobiraka.utils import AbsolutePath, LatexInline, convert_or_none, panflute_to_bytes
 from ..abstract import Processor, Theme, ThemeableVolumeBuilder
@@ -131,6 +131,9 @@ class LatexBuilder(ThemeableVolumeBuilder['LatexProcessor', 'LatexTheme']):
 
         await self.waiter.wait_all()
         for page in volume.root.all_pages():
+            if page.location.is_root and isinstance(page, DirPage):
+                continue
+            await self.waiter.wait(page, Status.FINALIZE)
             latex_output.write(b'\n\n' + (80 * b'%'))
             latex_output.write(b'\n\n%%% ' + bytes(page.source.path_in_project) + b'\n\n')
             latex_output.write(RT[page].bytes)
@@ -259,20 +262,20 @@ class LatexProcessor(Processor[LatexBuilder]):
         return (HeaderReplPara(header, result),)
 
     def choose_header_tag(self, header: Header, page: Page) -> str:
-        config_headers: Config_Latex_Headers = page.volume.config.latex.headers
+        config = page.volume.config.latex.headers_transform
 
         for klass in header.classes:
             with suppress(KeyError):
-                return config_headers.by_class[klass]
+                return config.by_class[klass]
 
         with suppress(KeyError):
-            return config_headers.by_global_level[page.location.level + header.level - 1]
+            return config.by_global_level[page.location.level + header.level - 1]
 
         if header.level == 1:
             with suppress(KeyError):
-                return config_headers.by_page_level[page.level]
+                return config.by_page_level[page.level]
 
-        return config_headers.by_element[header.level]
+        return config.by_element[header.level]
 
 
 @final

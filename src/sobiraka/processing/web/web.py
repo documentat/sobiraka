@@ -3,9 +3,8 @@ from __future__ import annotations
 from asyncio import to_thread
 from datetime import datetime
 from functools import lru_cache
-from itertools import chain
 from os.path import relpath
-from shutil import copyfile, rmtree
+from shutil import copyfile
 from typing import final
 
 import iso639
@@ -15,7 +14,8 @@ from typing_extensions import override
 from sobiraka.models import FileSystem, Page, PageHref, Project, Volume
 from sobiraka.models.config import Config, Config_HighlightJS, Config_Prism, Config_Pygments, SearchIndexerName
 from sobiraka.runtime import RT
-from sobiraka.utils import AbsolutePath, RelativePath, configured_jinja, convert_or_none, expand_vars
+from sobiraka.utils import AbsolutePath, RelativePath, configured_jinja, convert_or_none, delete_extra_files, \
+    expand_vars
 from .abstracthtml import AbstractHtmlBuilder, AbstractHtmlProcessor
 from .head import HeadCssFile, HeadJsFile
 from .highlight import HighlightJs, Highlighter, Prism, Pygments
@@ -73,23 +73,7 @@ class WebBuilder(ThemeableProjectBuilder['WebProcessor', 'WebTheme'], AbstractHt
             await indexer.finalize()
             self._results |= indexer.results()
 
-        self.delete_old_files()
-
-    def delete_old_files(self):
-        # Delete files that were not produced during this build
-        all_files = set()
-        all_dirs = set()
-        for file in self.output.walk_all():
-            if file.is_dir():
-                all_dirs.add(file)
-            else:
-                all_files.add(file)
-        files_to_delete = all_files - self._results
-        dirs_to_delete = all_dirs - set(chain(*(f.parents for f in self._results)))
-        for file in files_to_delete:
-            file.unlink()
-        for directory in dirs_to_delete:
-            rmtree(directory, ignore_errors=True)
+        delete_extra_files(self.output, self._results)
 
     @override
     async def do_finalize(self, page: Page):

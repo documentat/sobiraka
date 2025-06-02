@@ -1,16 +1,19 @@
 import sys
-from argparse import ArgumentParser
+from argparse import ArgumentParser, Namespace
 from asyncio import run
+from typing import Iterable
 
+from sobiraka.models import Volume
 from sobiraka.models.load import load_project
 from sobiraka.processing.latex import LatexBuilder
+from sobiraka.processing.markdown import MarkdownBuilder
 from sobiraka.processing.weasyprint import WeasyPrintBuilder
 from sobiraka.processing.web import WebBuilder
 from sobiraka.prover import Prover
 from sobiraka.report import run_beautifully
 from sobiraka.runtime import RT
 from sobiraka.translating import check_translations
-from sobiraka.utils import AbsolutePath, DictionaryValidator, absolute_or_relative, parse_vars
+from sobiraka.utils import AbsolutePath, DictionaryValidator, parse_vars
 
 
 async def async_main():
@@ -37,6 +40,11 @@ async def async_main():
     cmd_latex.add_argument('config', metavar='CONFIG', type=AbsolutePath)
     cmd_latex.add_argument('volume', nargs='?')
     cmd_latex.add_argument('--output', type=AbsolutePath, default=AbsolutePath('build/pdf'))
+
+    cmd_markdown = commands.add_parser('markdown', help='Build Markdown file.')
+    cmd_markdown.add_argument('config', metavar='CONFIG', type=AbsolutePath)
+    cmd_markdown.add_argument('volume', nargs='?')
+    cmd_markdown.add_argument('--output', type=AbsolutePath, default=AbsolutePath('build/markdown'))
 
     cmd_prover = commands.add_parser('prover', help='Check a volume for various issues.')
     cmd_prover.add_argument('config', metavar='CONFIG', type=AbsolutePath)
@@ -70,54 +78,28 @@ async def async_main():
                 exit_code = await RT.run_isolated(builder.run())
 
         elif cmd is cmd_latex:
-            project = load_project(args.config)
-            output = absolute_or_relative(args.output)
-
-            if args.volume is not None or len(project.volumes) == 1:
-                volume = project.get_volume(args.volume)
-                if output.suffix.lower() != '.pdf':
-                    output /= f'{volume.config.title}.pdf'
-                print(f'Building {output.name!r}...', file=sys.stderr)
+            for volume, output in selected_volumes(args, autosuffix='.pdf'):
                 builder = LatexBuilder(volume, output)
                 with run_beautifully():
                     exit_code = await RT.run_isolated(builder.run())
-
-            else:
-                assert output.suffix.lower() != '.pdf'
-                exit_code = 0
-                for volume in project.volumes:
-                    output_file = output / f'{volume.config.title}.pdf'
-                    print(f'Building {output_file.name!r}...', file=sys.stderr)
-                    builder = LatexBuilder(volume, output_file)
-                    with run_beautifully():
-                        exit_code = await RT.run_isolated(builder.run())
-                        if exit_code != 0:
-                            break
+                    if exit_code != 0:
+                        break
 
         elif cmd is cmd_pdf:
-            project = load_project(args.config)
-            output = absolute_or_relative(args.output)
-
-            if args.volume is not None or len(project.volumes) == 1:
-                volume = project.get_volume(args.volume)
-                if output.suffix.lower() != '.pdf':
-                    output /= f'{volume.config.title}.pdf'
-                print(f'Building {output.name!r}...', file=sys.stderr)
+            for volume, output in selected_volumes(args, autosuffix='.pdf'):
                 builder = WeasyPrintBuilder(volume, output)
                 with run_beautifully():
                     exit_code = await RT.run_isolated(builder.run())
+                    if exit_code != 0:
+                        break
 
-            else:
-                assert output.suffix.lower() != '.pdf'
-                exit_code = 0
-                for volume in project.volumes:
-                    output_file = output / f'{volume.config.title}.pdf'
-                    print(f'Building {output_file.name!r}...', file=sys.stderr)
-                    builder = WeasyPrintBuilder(volume, output_file)
-                    with run_beautifully():
-                        exit_code = await RT.run_isolated(builder.run())
-                        if exit_code != 0:
-                            break
+        elif cmd is cmd_markdown:
+            for volume, output in selected_volumes(args):
+                builder = MarkdownBuilder(volume, output)
+                with run_beautifully():
+                    exit_code = await RT.run_isolated(builder.run())
+                    if exit_code != 0:
+                        break
 
         elif cmd is cmd_prover:
             project = load_project(args.config)
@@ -140,6 +122,27 @@ async def async_main():
             raise NotImplementedError(args.command)
 
     sys.exit(exit_code or 0)
+
+
+def selected_volumes(args: Namespace, *, autosuffix: str = '') -> Iterable[tuple[Volume, AbsolutePath]]:
+    project = load_project(args.config)
+    output = AbsolutePath(args.output)
+
+    if args.volume is not None or len(project.volumes) == 1:
+        volume = project.get_volume(args.volume)
+        if autosuffix:
+            if output.suffix.lower() != autosuffix:
+                output /= volume.config.title + autosuffix
+        print(f'Building {output.name!r}...', file=sys.stderr)
+        yield volume, output
+
+    else:
+        if autosuffix:
+            assert output.suffix.lower() != autosuffix
+        for volume in project.volumes:
+            output_file = output / volume.config.title + autosuffix
+            print(f'Building {output_file.name!r}...', file=sys.stderr)
+            yield volume, output_file
 
 
 def main():

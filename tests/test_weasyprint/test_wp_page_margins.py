@@ -64,7 +64,9 @@ class TestWeasyPrint_PageMargins(SinglePageProjectTest, WeasyPrintProjectTestCas
                 theme=AbsolutePath(files('sobiraka')) / 'files' / 'themes' / 'raw',
                 custom_styles=(
                     RelativePath('theme/style.css'),
-                )))
+                )),
+            variables=dict(NOCOVER=True),
+        )
 
 
 del SinglePageProjectTest, WeasyPrintProjectTestCase

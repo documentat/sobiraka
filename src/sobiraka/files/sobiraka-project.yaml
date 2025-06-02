@@ -165,24 +165,24 @@ $defs:
           processor: { type: string }
           toc: { type: boolean }
           paths: { type: object }
-          headers:
+          headers_transform:
             properties:
               by_class:
                 additionalProperties: false
                 patternProperties:
                   .+: { type: string }
-              by_element:
-                additionalProperties: false
-                patternProperties:
-                  '^h\d*$': { type: string }
-              by_page_level:
-                additionalProperties: false
-                patternProperties:
-                  '^[1-9]\d*$': { type: string }
               by_global_level:
                 additionalProperties: false
                 patternProperties:
                   '^[1-9]\d*$': { type: string }
+              by_page_level:
+                additionalProperties: false
+                patternProperties:
+                  '^[1-9]\d*$': { type: string }
+              by_element:
+                additionalProperties: false
+                patternProperties:
+                  '^h\d*$': { type: string }
 
       pdf:
         additionalProperties: false
@@ -198,6 +198,8 @@ $defs:
               - type: integer
               - enum: [infinity]
           combined_toc: { type: boolean }
+          headers_policy:
+            enum: [local, global]
           highlight:
             oneOf:
               - enum: [pygments]

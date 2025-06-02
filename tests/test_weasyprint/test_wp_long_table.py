@@ -2,6 +2,8 @@ from unittest import main
 
 from abstracttests.singlepageprojecttest import SinglePageProjectTest
 from abstracttests.weasyprintprojecttestcase import WeasyPrintProjectTestCase
+from sobiraka.models.config import Config, Config_Paths
+from sobiraka.utils import RelativePath
 
 SOURCE = '''
 # Hello, world!
@@ -22,6 +24,12 @@ SOURCE += 20 * '''
 
 class TestWeasyPrint_LongTable(SinglePageProjectTest, WeasyPrintProjectTestCase):
     SOURCE = SOURCE
+
+    def _init_config(self) -> Config:
+        return Config(
+            paths=Config_Paths(root=RelativePath('src')),
+            variables=dict(NOCOVER=True),
+        )
 
 
 del SinglePageProjectTest, WeasyPrintProjectTestCase
