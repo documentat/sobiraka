@@ -10,6 +10,7 @@ class AbstractTestLocalToc(SinglePageProjectTest):
     REQUIRE = Status.FINALIZE
 
     PATH = 'page.md'
+    LOCATION = '/page'
 
     TOC_DEPTH: int | float = inf
     EXPECTED: Toc

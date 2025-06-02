@@ -16,6 +16,7 @@ from sobiraka.utils import update_last_dataclass
 from .fragment import Fragment
 from .pos import Pos
 from .textmodel import TextModel
+from ..directive import Directive
 
 
 class PlainTextDispatcher(Dispatcher):
@@ -301,6 +302,10 @@ class PlainTextDispatcher(Dispatcher):
 
     ################################################################################
     # Ignored elements
+
+    @override
+    async def process_directive(self, directive: Directive, page: Page) -> tuple[Element, ...]:
+        pass
 
     @override
     async def process_horizontal_rule(self, rule: HorizontalRule, page: Page):

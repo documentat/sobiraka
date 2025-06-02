@@ -226,7 +226,9 @@ class TestProverPreprocessing(AbstractProverTest):
     '''
 
     async def test_lines(self):
-        tm = self.tm(self.page)
+        _, page = self.project.get_volume().root.all_pages()
+
+        tm = self.tm(page)
         actual = tm.lines
         while actual[-1] == '':
             actual.pop()
@@ -235,9 +237,10 @@ class TestProverPreprocessing(AbstractProverTest):
 
     async def test_fragments(self):
         expected = list(filter(None, (f.strip() for f in self.EXPECTED_FRAGMENTS.splitlines())))
-
         actual: list[str] = []
-        tm = self.tm(self.page)
+
+        _, page = self.project.get_volume().root.all_pages()
+        tm = self.tm(page)
         self.assertSequenceEqual(sorted(tm.fragments, key=lambda f: f.start), tm.fragments)
 
         for f in tm.fragments:

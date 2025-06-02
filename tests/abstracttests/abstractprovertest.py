@@ -10,11 +10,10 @@ from sobiraka.processing.abstract.waiter import IssuesOccurred
 from sobiraka.processing.txt import TextModel
 from sobiraka.prover import Prover
 from sobiraka.utils import Apostrophe, QuotationMark, RelativePath
-from .projecttestcase import FailingProjectTestCase
-from .singlepageprojecttest import SinglePageProjectTest
+from .projecttestcase import FailingProjectTestCase, ProjectTestCase
 
 
-class AbstractProverTest(SinglePageProjectTest[Prover]):
+class AbstractProverTest(ProjectTestCase[Prover]):
     maxDiff = None
     REQUIRE = Status.PROCESS
 
@@ -87,7 +86,9 @@ class AbstractProverTest(SinglePageProjectTest[Prover]):
         return self.builder.processor.tm[page]
 
     def test_phrases(self):
-        tm = self.tm(self.page)
+        _, page = self.project.get_volume().root.all_pages()
+
+        tm = self.tm(page)
         phrases = tuple(x.text for x in tm.phrases())
         assertNoDiff(self.EXPECTED_PHRASES, phrases)
 
@@ -98,8 +99,10 @@ class AbstractFailingProverTest(AbstractProverTest, FailingProjectTestCase):
     EXPECTED_ISSUES: Sequence[str] = ()
 
     def test_issues(self):
+        _, page = self.project.get_volume().root.all_pages()
+
         expected = '\n'.join(self.EXPECTED_ISSUES) + '\n'
-        actual = '\n'.join(map(str, self.page.issues)) + '\n'
+        actual = '\n'.join(map(str, page.issues)) + '\n'
         self.assertEqual(expected, actual)
 
 

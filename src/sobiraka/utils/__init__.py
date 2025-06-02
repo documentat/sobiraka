@@ -10,12 +10,11 @@ from .last_item import last_key, last_value, update_last_dataclass, update_last_
 from .location import Location
 from .merge_dicts import merge_dicts
 from .missing import MISSING
-from .panflute_utils import panflute_to_bytes
+from .panflute_utils import insert_after, panflute_to_bytes, replace_element
 from .parse_vars import parse_vars
 from .print_colorful_exc import print_colorful_exc
 from .quotationmark import Apostrophe, QuotationMark
 from .raw import HtmlBlock, HtmlInline, LatexBlock, LatexInline
-from .replace_element import replace_element
 from .sorted_dict import sorted_dict
 from .tocnumber import RootNumber, TocNumber, Unnumbered
 from .unique_list import UniqueList

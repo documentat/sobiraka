@@ -10,7 +10,8 @@ class TestClassDirective(SinglePageProjectTest):
     SOURCE = '# Test\n\n@class MyClass\n\nThis is a paragraph.'
 
     def test_paragraph_class(self):
-        _, para = RT[self.page].doc.content
+        doc = RT[self.page].doc
+        header, para = doc.content  # pylint: disable=unused-variable
         self.assertEqual('MyClass', RT.CLASSES[id(para)])
 
 
