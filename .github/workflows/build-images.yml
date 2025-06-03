@@ -44,3 +44,13 @@ jobs:
           &&
           docker push
           ghcr.io/documentat/${{ matrix.variant.image }}:${{ github.ref_name }}
+
+      - name: Push image for 'latest'
+        if: github.ref == 'refs/heads/master'
+        run: >
+          docker tag
+          ghcr.io/documentat/${{ matrix.variant.image }}:${{ inputs.image_tag }}
+          ghcr.io/documentat/${{ matrix.variant.image }}:latest
+          &&
+          docker push
+          ghcr.io/documentat/${{ matrix.variant.image }}:latest
