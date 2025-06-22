@@ -2,17 +2,16 @@ from collections import defaultdict
 from typing import Awaitable, Callable
 
 from panflute import BlockQuote, BulletList, Caption, Citation, Cite, Code, CodeBlock, Definition, DefinitionItem, \
-    DefinitionList, Div, Doc, Element, Emph, Header, HorizontalRule, Image, LineBlock, LineBreak, LineItem, Link, \
-    ListItem, Math, Note, Null, OrderedList, Para, Plain, Quoted, RawBlock, RawInline, SmallCaps, SoftBreak, Space, \
-    Span, Str, Strikeout, Strong, Subscript, Superscript, Table, TableBody, TableCell, TableFoot, TableHead, TableRow, \
-    Underline, stringify
+    DefinitionList, Div, Doc, Element, Emph, Figure, Header, HorizontalRule, Image, LineBlock, LineBreak, LineItem, \
+    Link, ListItem, Math, Note, Null, OrderedList, Para, Plain, Quoted, RawBlock, RawInline, SmallCaps, SoftBreak, \
+    Space, Span, Str, Strikeout, Strong, Subscript, Superscript, Table, TableBody, TableCell, TableFoot, TableHead, \
+    TableRow, Underline, stringify
 from typing_extensions import override
 
 from sobiraka.models import Anchor, Page
 from sobiraka.processing.abstract import Dispatcher
 from sobiraka.runtime import RT
 from sobiraka.utils import update_last_dataclass
-
 from .fragment import Fragment
 from .pos import Pos
 from .textmodel import TextModel
@@ -94,8 +93,9 @@ class PlainTextDispatcher(Dispatcher):
         if tm.lines[-1] != '':
             tm.lines.append('')
 
-    ################################################################################
-    # Inline non-containers
+    # endregion
+
+    # region Inline non-containers
 
     @override
     async def process_code(self, code: Code, page: Page):
@@ -122,8 +122,9 @@ class PlainTextDispatcher(Dispatcher):
         tm.fragments.append(Fragment(tm, tm.end_pos, tm.end_pos, soft_break))
         tm.lines.append('')
 
-    ################################################################################
-    # Inline containers
+    # endregion
+
+    # region Inline containers
 
     @override
     async def process_emph(self, emph: Emph, page: Page):
@@ -161,8 +162,9 @@ class PlainTextDispatcher(Dispatcher):
     async def process_underline(self, underline: Underline, page: Page):
         await self._container(page, underline)
 
-    ################################################################################
-    # Block containers
+    # endregion
+
+    # region Block containers
 
     @override
     async def process_code_block(self, block: CodeBlock, page: Page):
@@ -225,8 +227,14 @@ class PlainTextDispatcher(Dispatcher):
         await self._container(page, para, allow_new_line=True)
         self._ensure_new_line(page)
 
-    ################################################################################
-    # Lists
+    @override
+    async def process_figure(self, figure: Figure, page: Page):
+        await self._container(page, figure.caption)
+        self._ensure_new_line(page)
+
+    # endregion
+
+    # region Lists
 
     @override
     async def process_bullet_list(self, bullet_list: BulletList, page: Page):
@@ -241,8 +249,9 @@ class PlainTextDispatcher(Dispatcher):
         await self._container(page, item, allow_new_line=True)
         self._ensure_new_line(page)
 
-    ################################################################################
-    # Tables
+    # endregion
+
+    # region Tables
 
     @override
     async def process_table(self, table: Table, page: Page):
@@ -280,8 +289,9 @@ class PlainTextDispatcher(Dispatcher):
         await self._container(page, caption, allow_new_line=True)
         self._ensure_new_line(page)
 
-    ################################################################################
-    # Line blocks
+    # endregion
+
+    # region Line blocks
 
     @override
     async def process_line_block(self, line_block: LineBlock, page: Page):
@@ -300,8 +310,9 @@ class PlainTextDispatcher(Dispatcher):
     async def process_line_item(self, line_item: LineItem, page: Page):
         await self._container(page, line_item)
 
-    ################################################################################
-    # Ignored elements
+    # endregion
+
+    # region Ignored elements
 
     @override
     async def process_directive(self, directive: Directive, page: Page) -> tuple[Element, ...]:
@@ -331,8 +342,9 @@ class PlainTextDispatcher(Dispatcher):
     async def process_superscript(self, superscript: Superscript, page: Page):
         pass
 
-    ################################################################################
-    # Rarely used elements, not implemented
+    # endregion
+
+    # region Rarely used elements, not implemented
 
     @override
     async def process_citation(self, citation: Citation, page: Page):
@@ -354,7 +366,7 @@ class PlainTextDispatcher(Dispatcher):
     async def process_quoted(self, quoted: Quoted, page: Page):
         return await self.process_default(quoted, page)
 
-    ################################################################################
+    # endregion
 
     @override
     async def process_default(self, elem: Element, page: Page):
