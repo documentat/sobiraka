@@ -34,7 +34,7 @@ class AbstractHtmlBuilder(Builder, metaclass=ABCMeta):
             if theme_sass_dir.exists():
                 for source in theme_sass_dir.iterdir():
                     if source.suffix in ('.sass', '.scss') and not source.stem.startswith('_'):
-                        target = RelativePath('_static') / 'css' / f'{source.stem}.css'
+                        target = RelativePath('_static') / f'{source.stem}.css'
                         tg.create_task(to_thread(self.compile_sass, volume, source, target))
                         self.heads[volume].append(HeadCssFile(target))
 

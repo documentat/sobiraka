@@ -192,7 +192,7 @@ class WebBuilder(ThemeableProjectBuilder['WebProcessor', 'WebTheme'], AbstractHt
         for script in config.web.custom_scripts:
             source = RelativePath(script)
             assert source.suffix == '.js'
-            target = RelativePath() / 'js' / source.name
+            target = RelativePath() / source.name
             await self.add_file_from_project(source, target)
             self.heads[volume].append(HeadJsFile(target))
 
@@ -200,13 +200,13 @@ class WebBuilder(ThemeableProjectBuilder['WebProcessor', 'WebTheme'], AbstractHt
             source = RelativePath(style)
             match source.suffix:
                 case '.css':
-                    target = RelativePath() / 'css' / source.name
+                    target = RelativePath() / source.name
                     self.waiter.add_task(self.add_file_from_project(source, target))
                     self.heads[volume].append(HeadCssFile(target))
 
                 case '.sass' | '.scss':
                     source = fs.resolve(source)
-                    target = RelativePath('_static') / 'css' / f'{source.stem}.css'
+                    target = RelativePath('_static') / f'{source.stem}.css'
                     self.waiter.add_task(to_thread(self.compile_sass, volume, source, target))
                     self.heads[volume].append(HeadCssFile(target))
 
