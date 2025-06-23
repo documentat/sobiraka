@@ -94,6 +94,7 @@ $defs:
             properties:
               engine:
                 enum: [pagefind]
+              container: { type: string }
               index_path: { type: string }
               skip_elements:
                 type: array

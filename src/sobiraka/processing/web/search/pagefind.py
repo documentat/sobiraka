@@ -2,7 +2,7 @@ from asyncio.subprocess import Process, create_subprocess_exec
 from importlib.resources import files
 from subprocess import PIPE
 from textwrap import dedent
-from typing import Sequence
+from typing import Iterable
 
 from panflute import Element, Header, stringify
 from typing_extensions import override
@@ -93,12 +93,12 @@ class PagefindIndexer(SearchIndexer, PlainTextDispatcher):
     def results(self) -> set[AbsolutePath]:
         return set(self.index_path.walk_all())
 
-    def head_tags(self) -> Sequence[HeadTag]:
+    def head_tags(self) -> Iterable[HeadTag]:
         yield HeadJsFile(self.index_path_relative / 'pagefind-ui.js')
         yield HeadJsCode(dedent(f'''
             window.addEventListener("DOMContentLoaded", (event) => {{
                 new PagefindUI({{
-                    element: ".book-search",
+                    element: {self.search_config.container!r},
                     baseUrl: new URL("../%ROOT%", location),
                     translations: {self.search_config.translations.to_json()},
                 }})

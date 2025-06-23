@@ -52,6 +52,7 @@ class Config_Pagefind_Translations:
 @dataclass(kw_only=True, frozen=True)
 class Config_Web_Search:
     engine: SearchIndexerName = None
+    container: str = 'search'
     index_path: str = None
     skip_elements: tuple[type[Element], ...] = ()
     link_target: Config_Search_LinkTarget = Config_Search_LinkTarget.H1

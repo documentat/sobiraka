@@ -58,6 +58,7 @@ def load_volume(lang: str | None, codename: str, volume_data: dict, fs: FileSyst
             combined_toc=CombinedToc(_('web.combined_toc', 'never')),
             search=Config_Web_Search(
                 engine=convert_or_none(SearchIndexerName, _('web.search.engine')),
+                container=_('web.search.container', 'search'),
                 index_path=_expand(_('web.search.index_path')),
                 skip_elements=tuple(getattr(panflute.elements, x) for x in _('web.search.skip_elements', ())),
                 link_target=Config_Search_LinkTarget(_('web.search.link_target', 'h1')),
