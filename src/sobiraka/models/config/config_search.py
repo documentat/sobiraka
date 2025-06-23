@@ -46,12 +46,13 @@ class Config_Pagefind_Translations:
         for key, value in copy(translations).items():
             if value is None:
                 del translations[key]
-        return json.dumps(translations, ensure_ascii=False)
+        return json.dumps(translations, ensure_ascii=False, separators=(',', ':'))
 
 
 @dataclass(kw_only=True, frozen=True)
 class Config_Web_Search:
     engine: SearchIndexerName = None
+    generate_js: bool = True
     container: str = 'search'
     index_path: str = None
     skip_elements: tuple[type[Element], ...] = ()

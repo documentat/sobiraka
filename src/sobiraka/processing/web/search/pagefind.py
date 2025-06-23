@@ -95,15 +95,16 @@ class PagefindIndexer(SearchIndexer, PlainTextDispatcher):
 
     def head_tags(self) -> Iterable[HeadTag]:
         yield HeadJsFile(self.index_path_relative / 'pagefind-ui.js')
-        yield HeadJsCode(dedent(f'''
-            window.addEventListener("DOMContentLoaded", (event) => {{
-                new PagefindUI({{
-                    element: {self.search_config.container!r},
-                    baseUrl: new URL("../%ROOT%", location),
-                    translations: {self.search_config.translations.to_json()},
+        if self.search_config.generate_js:
+            yield HeadJsCode(dedent(f'''
+                window.addEventListener("DOMContentLoaded", (event) => {{
+                    new PagefindUI({{
+                        element: {self.search_config.container!r},
+                        baseUrl: new URL("../%ROOT%", location),
+                        translations: {self.search_config.translations.to_json()},
+                    }})
                 }})
-            }})
-        ''').strip())
+            ''').strip())
 
     @override
     async def must_skip(self, elem: Element, page: Page):

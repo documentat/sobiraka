@@ -94,6 +94,7 @@ $defs:
             properties:
               engine:
                 enum: [pagefind]
+              generate_js: { type: boolean }
               container: { type: string }
               index_path: { type: string }
               skip_elements:
