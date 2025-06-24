@@ -13,15 +13,14 @@ from typing_extensions import override
 
 from sobiraka.models import FileSystem, Page, PageHref, Project, Volume
 from sobiraka.models.config import Config, Config_HighlightJS, Config_Prism, Config_Pygments, SearchIndexerName
+from sobiraka.processing.abstract import Theme, ThemeableProjectBuilder
+from sobiraka.processing.html import AbstractHtmlBuilder, AbstractHtmlProcessor, HeadCssFile, HeadJsFile
+from sobiraka.processing.html.highlight import HighlightJs, Highlighter, Prism, Pygments
+from sobiraka.processing.load_processor import load_processor
 from sobiraka.runtime import RT
 from sobiraka.utils import AbsolutePath, RelativePath, configured_jinja, convert_or_none, delete_extra_files, \
     expand_vars
-from .abstracthtml import AbstractHtmlBuilder, AbstractHtmlProcessor
-from .head import HeadCssFile, HeadJsFile
-from .highlight import HighlightJs, Highlighter, Prism, Pygments
 from .search import PagefindIndexer, SearchIndexer
-from ..abstract import Theme, ThemeableProjectBuilder
-from ..load_processor import load_processor
 
 
 @final

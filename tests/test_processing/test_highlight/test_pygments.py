@@ -4,10 +4,10 @@ from unittest import main
 
 from abstracttests.singlepageprojecttest import SinglePageProjectTest
 from abstracttests.weasyprintprojecttestcase import WeasyPrintProjectTestCase
+from test_processing.test_highlight.abstract import AbstractHighlightTest
 from sobiraka.models.config import Config, Config_PDF, Config_Paths, Config_Pygments
-from sobiraka.processing.web import Head, HeadCssFile
+from sobiraka.processing.html import Head, HeadCssFile
 from sobiraka.utils import RelativePath
-from .abstract import AbstractHighlightTest
 
 
 class AbstractHighlightTest_Pygments(AbstractHighlightTest, metaclass=ABCMeta):

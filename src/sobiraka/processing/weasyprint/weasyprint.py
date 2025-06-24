@@ -20,7 +20,8 @@ from sobiraka.models.config import CombinedToc, Config, Config_Pygments
 from sobiraka.processing import load_processor
 from sobiraka.processing.abstract import Theme, ThemeableVolumeBuilder
 from sobiraka.processing.abstract.processor import DisableLink
-from sobiraka.processing.web import AbstractHtmlBuilder, AbstractHtmlProcessor, HeadCssFile, Highlighter, Pygments
+from sobiraka.processing.html import AbstractHtmlBuilder, AbstractHtmlProcessor, HeadCssFile
+from sobiraka.processing.html.highlight import Highlighter, Pygments
 from sobiraka.runtime import RT
 from sobiraka.utils import AbsolutePath, RelativePath, TocNumber, configured_jinja, convert_or_none
 

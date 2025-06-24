@@ -5,8 +5,8 @@ from panflute import Block, CodeBlock, RawBlock
 from typing_extensions import override
 
 from sobiraka.models.config import Config_Prism
-from ..head import HeadTag
 from .abstract import JavaScriptHighlighterLibrary
+from ..head import HeadTag
 
 SUPPORTED_LANGUAGES = ('abap', 'abnf', 'actionscript', 'ada', 'adoc', 'agda', 'al', 'antlr4', 'apacheconf', 'apex',
                        'apl', 'applescript', 'aql', 'arduino', 'arff', 'arm-asm', 'armasm', 'art', 'arturo', 'asciidoc',

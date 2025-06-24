@@ -5,8 +5,8 @@ from panflute import Block, CodeBlock
 
 from sobiraka.models import FileSystem
 from sobiraka.models.config import JavaScriptHighlighterLibraryConfig
-from sobiraka.processing.web.head import HeadCssFile, HeadCssUrl, HeadJsFile, HeadJsUrl, HeadTag
 from sobiraka.utils import RelativePath
+from ..head import HeadCssFile, HeadCssUrl, HeadJsFile, HeadJsUrl, HeadTag
 
 if TYPE_CHECKING:
     from sobiraka.processing.web import WebBuilder
@@ -16,6 +16,7 @@ class Highlighter(metaclass=ABCMeta):
     """
     Base class for all highlighting implementations.
     """
+
     @abstractmethod
     def highlight(self, block: CodeBlock) -> tuple[Block, Iterable[HeadTag]]:
         """

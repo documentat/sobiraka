@@ -9,8 +9,8 @@ from typing_extensions import override
 
 from sobiraka.models import Page, PageHref, Volume
 from sobiraka.models.config import Config_Search_LinkTarget
+from sobiraka.processing.html import HeadJsCode, HeadJsFile, HeadTag
 from sobiraka.processing.txt import PlainTextDispatcher
-from sobiraka.processing.web import HeadJsCode, HeadJsFile, HeadTag
 from sobiraka.runtime import RT
 from sobiraka.utils import AbsolutePath, RelativePath
 from .searchindexer import SearchIndexer

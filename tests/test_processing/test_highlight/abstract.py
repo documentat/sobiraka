@@ -6,7 +6,8 @@ from typing_extensions import override
 from abstracttests.singlepageprojecttest import SinglePageProjectTest
 from helpers.fakefilesystem import PseudoFiles
 from sobiraka.models.config import Config, Config_Paths, Config_Web, Config_Web_Highlight
-from sobiraka.processing.web import Head, WebBuilder
+from sobiraka.processing.html import Head
+from sobiraka.processing.web import WebBuilder
 from sobiraka.utils import AbsolutePath, RelativePath
 
 

@@ -3,7 +3,7 @@ from typing import Iterable, TYPE_CHECKING
 
 from sobiraka.models import Page, Volume
 from sobiraka.models.config import Config_Web_Search
-from sobiraka.processing.web import HeadTag
+from sobiraka.processing.html import HeadTag
 from sobiraka.utils import AbsolutePath, RelativePath
 
 if TYPE_CHECKING:
