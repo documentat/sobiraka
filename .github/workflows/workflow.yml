@@ -20,13 +20,6 @@ jobs:
 
       - uses: actions/setup-python@v5
 
-      - uses: actions/cache@v4
-        with:
-          key: setuptools
-          path: ~/.cache/pip
-
-      - run: pip install setuptools
-
       - name: Build package
         run: |
           python setup.py sdist
