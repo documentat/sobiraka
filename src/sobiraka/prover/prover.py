@@ -56,7 +56,7 @@ class ProverProcessor(PlainTextDispatcher):
 class Prover(VolumeBuilder[ProverProcessor]):
     def __init__(self, volume: Volume, variables: dict = None):
         super().__init__(volume)
-        self.waiter.target_status = Status.PROCESS
+        self.waiter.target_status = Status.PROCESS1
         self._variables: dict = variables or {}
 
     @override
@@ -83,8 +83,8 @@ class Prover(VolumeBuilder[ProverProcessor]):
         await self.waiter.wait_all()
 
     @override
-    async def do_process(self, page: Page):
-        await super().do_process(page)
+    async def do_process1(self, page: Page):
+        await super().do_process1(page)
         tm = self.processor.tm[page]
 
         phrases = tm.phrases()

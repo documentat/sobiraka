@@ -51,7 +51,7 @@ class AbstractHtmlBuilder(Builder, metaclass=ABCMeta):
         return process.stdout
 
     @override
-    async def do_finalize(self, page: Page):
+    async def do_process4(self, page: Page):
         self.apply_postponed_image_changes(page)
         html = await self.render_html(page)
         RT[page].bytes = html

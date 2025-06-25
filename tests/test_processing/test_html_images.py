@@ -11,7 +11,7 @@ from sobiraka.utils import AbsolutePath, RelativePath
 
 
 class TestHtmlImages(ProjectTestCase[WebBuilder]):
-    REQUIRE = Status.FINALIZE
+    REQUIRE = Status.PROCESS4
 
     def _init_builder(self) -> WebBuilder:
         # pylint: disable=consider-using-with

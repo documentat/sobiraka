@@ -14,7 +14,7 @@ from sobiraka.runtime import RT
 
 @patch(f'{PagefindIndexer.__module__}.{PagefindIndexer.__qualname__}._add_record')
 class AbstractTestPagefindIndexer(ProjectTestCase[WebBuilder], AbstractTestWithRtTmp, metaclass=ABCMeta):
-    REQUIRE = Status.FINALIZE
+    REQUIRE = Status.PROCESS4
 
     LINK_TARGET = Config_Search_LinkTarget.H1
     EXPECTED: tuple[call, ...]

@@ -70,7 +70,7 @@ class TestLinks2(AbstractTestWithRtPages):
                 project.fs.pseudofiles[RelativePath('A/section1/subsection1/page.md')] = f'[Link]({target_text})'
 
                 builder = FakeBuilder(project)
-                builder.waiter.target_status = Status.REFERENCE
+                builder.waiter.target_status = Status.PROCESS2
                 await builder.waiter.wait_all()
 
                 page = project.volumes[0].get_page_by_location('/section1/subsection1/page')

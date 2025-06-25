@@ -6,7 +6,7 @@ from sobiraka.processing.abstract.waiter import IssuesOccurred
 
 
 class TestInvalidDirective(SinglePageProjectTest):
-    REQUIRE = Status.NUMERATE
+    REQUIRE = Status.PROCESS3
     EXPECTED_EXCEPTION_TYPES = {IssuesOccurred}
 
     SOURCE = '''

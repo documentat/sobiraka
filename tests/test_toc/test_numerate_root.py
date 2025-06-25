@@ -10,7 +10,7 @@ from sobiraka.utils import RelativePath, TocNumber
 
 
 class TestNumerateRoot(ProjectTestCase[FakeBuilder]):
-    REQUIRE = Status.NUMERATE
+    REQUIRE = Status.PROCESS3
 
     def _init_project(self) -> Project:
         config = Config(

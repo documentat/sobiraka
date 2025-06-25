@@ -272,7 +272,7 @@ class WeasyPrintProcessor(AbstractHtmlProcessor[WeasyPrintBuilder]):
         return header,
 
     async def numerate_header(self, header: Header, page: Page):
-        await self.builder.waiter.wait(page, Status.NUMERATE)
+        await self.builder.waiter.wait(page, Status.PROCESS3)
 
         if header.attributes['data-local-level'] == '1':
             header.attributes['data-number'] = str(RT[page].number)

@@ -6,7 +6,7 @@ from sobiraka.runtime import RT
 
 
 class TestClassDirective(SinglePageProjectTest):
-    REQUIRE = Status.NUMERATE
+    REQUIRE = Status.PROCESS3
     SOURCE = '# Test\n\n@class MyClass\n\nThis is a paragraph.'
 
     def test_paragraph_class(self):

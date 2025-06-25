@@ -10,7 +10,7 @@ from sobiraka.runtime import RT
 
 
 class AbstractTestTocDirective(SinglePageProjectTest[FakeBuilder]):
-    REQUIRE = Status.NUMERATE
+    REQUIRE = Status.PROCESS3
 
     EXPECTED: tuple[Element, ...] = None
 

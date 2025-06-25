@@ -30,7 +30,7 @@ class Builder(Generic[P], metaclass=ABCMeta):
     def __init__(self):
         self.waiter = Waiter(self)
         self.jinja: dict[Volume, jinja2.Environment] = {}
-        self.referencing_tasks: dict[Page, list[Task]] = defaultdict(list)
+        self.process2_tasks: dict[Page, list[Task]] = defaultdict(list)
 
     def __repr__(self):
         return f'<{self.__class__.__name__} at {hex(id(self))}>'
@@ -111,7 +111,7 @@ class Builder(Generic[P], metaclass=ABCMeta):
 
         RT[page].doc = panflute.load(BytesIO(json_bytes))
 
-    async def do_process(self, page: Page) -> Page:
+    async def do_process1(self, page: Page) -> Page:
         """
         The first stage of page processing.
 
@@ -124,14 +124,14 @@ class Builder(Generic[P], metaclass=ABCMeta):
         await processor.process_doc(RT[page].doc, page)
         return page
 
-    async def do_reference(self, page: Page):
+    async def do_process2(self, page: Page):
         """
         The second stage of the processing.
         """
-        if self.referencing_tasks[page]:
-            await wait(self.referencing_tasks[page])
+        if self.process2_tasks[page]:
+            await wait(self.process2_tasks[page])
 
-    async def do_numerate(self, volume: Volume):
+    async def do_process3(self, volume: Volume):
         """
         The third stage of the processing.
         Unlike other stages, this deals with the Volume as a whole.
@@ -144,7 +144,7 @@ class Builder(Generic[P], metaclass=ABCMeta):
             for directive in processor.directives[page]:
                 replace_element(directive, directive.postprocess())
 
-    async def do_finalize(self, page: Page):
+    async def do_process4(self, page: Page):
         """
         The fourth stage of the processing.
         """

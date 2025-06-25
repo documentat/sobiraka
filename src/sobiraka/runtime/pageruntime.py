@@ -21,7 +21,7 @@ class PageRuntime:
     title: str = None
     """Page title.
     
-    Do not rely on the value for page here until `do_process()` is awaited for that page.
+    Do not rely on the value for page here until `do_process1()` is awaited for that page.
     """
 
     number: TocNumber = Unnumbered()
@@ -37,7 +37,7 @@ class PageRuntime:
     links: set[Href] = field(default_factory=set)
     """All links present on the page, both internal and external.
     
-    Do not rely on the value for page here until `do_process()` is awaited for that page."""
+    Do not rely on the value for page here until `do_process1()` is awaited for that page."""
 
     anchors: Anchors = field(default_factory=Anchors)
 

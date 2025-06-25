@@ -51,7 +51,7 @@ class MarkdownBuilder(VolumeBuilder['MarkdownProcessor']):
         delete_extra_files(self.output, self._results)
 
     @override
-    async def do_finalize(self, page: Page):
+    async def do_process4(self, page: Page):
         if len(RT[page].doc.content) == 0:
             RT[page].bytes = b''
 
@@ -121,7 +121,7 @@ class MarkdownProcessor(Processor[MarkdownBuilder]):
         # Schedule copying the image file to the output directory
         source_path = config.paths.resources / image.url
         target_path = RelativePath('resources') / image.url
-        self.builder.referencing_tasks[page].append(create_task(
+        self.builder.process2_tasks[page].append(create_task(
             self.builder.add_file_from_project(source_path, target_path)))
 
         image.url = str(target_path)

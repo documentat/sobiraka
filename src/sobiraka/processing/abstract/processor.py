@@ -149,7 +149,7 @@ class Processor(Dispatcher, Generic[B], metaclass=ABCMeta):
             callback = partial(manual_toc.hrefs.__setitem__, pos)
 
         # Schedule the actual link processing for the next stage
-        self.builder.referencing_tasks[page].append(create_task(
+        self.builder.process2_tasks[page].append(create_task(
             self.process_internal_link_2(elem, target_text, page, callback)))
 
     async def process_internal_link_2(self, elem: Link, target_text: str, page: Page,
@@ -180,7 +180,7 @@ class Processor(Dispatcher, Generic[B], metaclass=ABCMeta):
                 target_path = volume.config.paths.root / target_path
 
                 # Wait until the Waiter finds the Source by the path and loads its pages and anchors
-                target = await self.builder.waiter.wait(target_path, Status.PROCESS)
+                target = await self.builder.waiter.wait(target_path, Status.PROCESS1)
 
             # Resolve the link and update the elem accordingly
             href = target.href(identifier)

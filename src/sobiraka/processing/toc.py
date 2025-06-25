@@ -156,7 +156,7 @@ def toc(
 ) -> Toc:
     """
     Generate a Table Of Contents.
-    This function must be called after the `do_numerate()` has been done for the volume,
+    This function must be called after the `do_process3()` has been done for the volume,
     otherwise the TOC may end up missing anchors, numeration, etc.
 
     The TOC will contain items based on the given `base`.

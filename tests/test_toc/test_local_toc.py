@@ -7,7 +7,7 @@ from sobiraka.processing.toc import Toc, TocItem, local_toc
 
 
 class AbstractTestLocalToc(SinglePageProjectTest):
-    REQUIRE = Status.FINALIZE
+    REQUIRE = Status.PROCESS4
 
     PATH = 'page.md'
     LOCATION = '/page'

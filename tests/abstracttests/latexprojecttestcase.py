@@ -8,7 +8,7 @@ from .abstractvisualpdftestcase import AbstractVisualPdfTestCase
 
 
 class LatexProjectTestCase(AbstractVisualPdfTestCase[LatexBuilder], metaclass=ABCMeta):
-    REQUIRE = Status.FINALIZE
+    REQUIRE = Status.PROCESS4
 
     def _init_builder(self):
         return LatexBuilder(self.project.volumes[0], RT.TMP / 'test.pdf')

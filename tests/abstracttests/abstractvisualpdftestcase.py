@@ -19,7 +19,7 @@ T = TypeVar('T', bound=Builder)
 
 
 class AbstractVisualPdfTestCase(ProjectTestCase, AbstractTestWithRtTmp, Generic[T], metaclass=ABCMeta):
-    REQUIRE = Status.FINALIZE
+    REQUIRE = Status.PROCESS4
 
     PAGE_LIMIT: int = None
     """

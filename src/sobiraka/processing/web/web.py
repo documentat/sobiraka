@@ -76,11 +76,11 @@ class WebBuilder(ThemeableProjectBuilder['WebProcessor', 'WebTheme'], AbstractHt
         delete_extra_files(self.output, self._results)
 
     @override
-    async def do_finalize(self, page: Page):
+    async def do_process4(self, page: Page):
         if indexer := self._indexers.get(page.volume):
             await indexer.add_page(page)
 
-        await super().do_finalize(page)
+        await super().do_process4(page)
         await self.decorate_html(page)
 
         target_file = self.output / self.get_target_path(page)

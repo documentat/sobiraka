@@ -17,7 +17,7 @@ from sobiraka.utils import RelativePath, TocNumber, Unnumbered
 
 
 class TestNumerate(ProjectTestCase[FakeBuilder]):
-    REQUIRE = Status.NUMERATE
+    REQUIRE = Status.PROCESS3
     numeration_enabled = True
 
     def _init_project(self) -> Project:

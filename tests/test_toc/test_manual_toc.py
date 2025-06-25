@@ -7,7 +7,7 @@ from sobiraka.models import Project, Status
 
 
 class AbstractTestManualToc(SinglePageProjectTest):
-    REQUIRE = Status.NUMERATE
+    REQUIRE = Status.PROCESS3
 
     def _init_project(self) -> Project:
         return FakeProject({

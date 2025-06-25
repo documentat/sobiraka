@@ -18,7 +18,7 @@ T = TypeVar('T', bound=Builder)
 class ProjectTestCase(AbstractTestWithRtPages, Generic[T], metaclass=ABCMeta):
     maxDiff = None
 
-    REQUIRE: Status = Status.REFERENCE
+    REQUIRE: Status = Status.PROCESS2
 
     async def asyncSetUp(self):
         await super().asyncSetUp()

@@ -24,7 +24,7 @@ class Waiter:
       - `wait_all()` for waiting until all pages get the target status.
     """
 
-    def __init__(self, builder: 'Builder', target_status: Status = Status.FINALIZE):
+    def __init__(self, builder: 'Builder', target_status: Status = Status.PROCESS4):
         self.builder: Builder = builder
         self.target_status: Status = target_status
 
@@ -116,7 +116,7 @@ class Waiter:
                 case Status.LOAD:
                     coro = self.do_load(source)
                 case _:
-                    coro = self.do_process_source(source, status)
+                    coro = self.do_process1_source(source, status)
 
             # Create a task
             task = create_task(coro, name=f'{status.name} SOURCE {source.path_in_project}')
@@ -133,23 +133,23 @@ class Waiter:
             if status in self.tasks[page]:
                 continue
 
-            if status is Status.NUMERATE:
-                # NUMERATE is a special step that must be performed once on the whole Volume.
+            if status is Status.PROCESS3:
+                # PROCESS3 is a special step that must be performed once on the whole Volume.
                 # So, we create the task only when we first need it.
                 # Then we store it in `tasks_p3` and reuse many times in `tasks`.
                 try:
-                    self.tasks[page][Status.NUMERATE] = self.tasks_p3[page.volume]
+                    self.tasks[page][Status.PROCESS3] = self.tasks_p3[page.volume]
 
                 except KeyError:
-                    task = create_task(self.do_numerate_volume(page.volume),
-                                       name=f'NUMERATE VOLUME {page.volume.codename}')
-                    self.tasks[page][Status.NUMERATE] = task
+                    task = create_task(self.do_process3_volume(page.volume),
+                                       name=f'PROCESS3 VOLUME {page.volume.codename}')
+                    self.tasks[page][Status.PROCESS3] = task
                     self.tasks_p3[page.volume] = task
 
             else:
                 # All other tasks are page-specific,
                 # so we just create a task and store it in `tasks`
-                self.tasks[page][status] = create_task(self.do_process_page(page, status),
+                self.tasks[page][status] = create_task(self.do_process1_page(page, status),
                                                        name=f'{status.name} PAGE {page.location}')
 
     # endregion
@@ -232,7 +232,7 @@ class Waiter:
         finally:
             self.maybe_done()
 
-    async def do_process_source(self, source: Source, status: Status):
+    async def do_process1_source(self, source: Source, status: Status):
         """
         Make sure the given source has generated its pages,
         then make sure the pages reach the requested status.
@@ -250,7 +250,7 @@ class Waiter:
         finally:
             self.maybe_done()
 
-    async def do_process_page(self, page: Page, status: Status):
+    async def do_process1_page(self, page: Page, status: Status):
         """
         Run the Builder's processing function for the given status on the given page.
         Remember any issues or exceptions if they occur.
@@ -268,12 +268,12 @@ class Waiter:
                 coro = sleep(0)
             case Status.PARSE:
                 coro = self.builder.prepare(page)
-            case Status.PROCESS:
-                coro = self.builder.do_process(page)
-            case Status.REFERENCE:
-                coro = self.builder.do_reference(page)
-            case Status.FINALIZE:
-                coro = self.builder.do_finalize(page)
+            case Status.PROCESS1:
+                coro = self.builder.do_process1(page)
+            case Status.PROCESS2:
+                coro = self.builder.do_process2(page)
+            case Status.PROCESS4:
+                coro = self.builder.do_process4(page)
             case _:
                 raise ValueError(status)
 
@@ -305,17 +305,17 @@ class Waiter:
         finally:
             self.maybe_done()
 
-    async def do_numerate_volume(self, volume: Volume):
+    async def do_process3_volume(self, volume: Volume):
         """
-        Run the Builder's function for the NUMERATE status on the given volume.
+        Run the Builder's function for the PROCESS3 status on the given volume.
         Remember any issues or exceptions if they occur.
 
         This method must be called exactly one time per one page.
         """
         try:
-            await self.wait_recursively(volume.root, Status.REFERENCE)
-            await self.builder.do_numerate(volume)
-            self.set_status_recursively(volume, Status.NUMERATE)
+            await self.wait_recursively(volume.root, Status.PROCESS2)
+            await self.builder.do_process3(volume)
+            self.set_status_recursively(volume, Status.PROCESS3)
 
         except DependencyFailed:
             self.set_status_recursively(volume, Status.DEP_FAILURE)

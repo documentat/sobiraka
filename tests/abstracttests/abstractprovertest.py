@@ -15,7 +15,7 @@ from .projecttestcase import FailingProjectTestCase, ProjectTestCase
 
 class AbstractProverTest(ProjectTestCase[Prover]):
     maxDiff = None
-    REQUIRE = Status.PROCESS
+    REQUIRE = Status.PROCESS1
 
     PHRASES_MUST_BEGIN_WITH_CAPITALS = False
     ALLOWED_QUOTATION_MARKS: Sequence[Sequence[QuotationMark]] = ()

@@ -133,7 +133,7 @@ class LatexBuilder(ThemeableVolumeBuilder['LatexProcessor', 'LatexTheme']):
         for page in volume.root.all_pages():
             if page.location.is_root and isinstance(page, DirPage):
                 continue
-            await self.waiter.wait(page, Status.FINALIZE)
+            await self.waiter.wait(page, Status.PROCESS4)
             latex_output.write(b'\n\n' + (80 * b'%'))
             latex_output.write(b'\n\n%%% ' + bytes(page.source.path_in_project) + b'\n\n')
             latex_output.write(RT[page].bytes)
@@ -142,7 +142,7 @@ class LatexBuilder(ThemeableVolumeBuilder['LatexProcessor', 'LatexTheme']):
         latex_output.write(b'\n\n\\end{sloppypar}\n\\end{document}')
 
     @override
-    async def do_finalize(self, page: Page):
+    async def do_process4(self, page: Page):
         if len(RT[page].doc.content) == 0:
             RT[page].bytes = b''
 
