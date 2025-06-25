@@ -1,3 +1,5 @@
+from asyncio import create_task
+
 from panflute import Div, Element, Header, Link, RawBlock, Space, Str
 from typing_extensions import override
 
@@ -17,10 +19,10 @@ class BookThemeProcessor(WebProcessor):
         header, = await super().process_header(header, page)
         assert isinstance(header, Header)
 
-        if header.level >= 2:
-            header.content += Space(), Link(Str('#'), url=f'#{header.identifier}', classes=['anchor'])
+        self.builder.process4_tasks[page].append(create_task(self._numerate_header(header, page)))
 
-        self.builder.waiter.add_task(self.numerate_header(header, page))
+        if header.level >= 2:
+            self.builder.process4_tasks[page].append(create_task(self._linkify_header(header, page)))
 
         return header,
 
@@ -56,7 +58,7 @@ class BookThemeProcessor(WebProcessor):
                 *div.content,
                 RawBlock('</blockquote>'))
 
-    async def numerate_header(self, header: Header, page: Page):
+    async def _numerate_header(self, header: Header, page: Page):
         await self.builder.waiter.wait(page, Status.PROCESS3)
 
         if header.level == 1:
@@ -64,3 +66,8 @@ class BookThemeProcessor(WebProcessor):
         else:
             anchor = RT[page].anchors.by_header(header)
             header.content = Str(RT[anchor].number.format('{}. ')), *header.content
+
+    async def _linkify_header(self, header: Header, page: Page):
+        await self.builder.waiter.wait(page, Status.PROCESS3)
+
+        header.content += Space(), Link(Str('#'), url=f'#{header.identifier}', classes=['anchor'])

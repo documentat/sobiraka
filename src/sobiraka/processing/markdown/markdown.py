@@ -52,6 +52,8 @@ class MarkdownBuilder(VolumeBuilder['MarkdownProcessor']):
 
     @override
     async def do_process4(self, page: Page):
+        await super().do_process4(page)
+
         if len(RT[page].doc.content) == 0:
             RT[page].bytes = b''
 

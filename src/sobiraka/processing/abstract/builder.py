@@ -31,6 +31,7 @@ class Builder(Generic[P], metaclass=ABCMeta):
         self.waiter = Waiter(self)
         self.jinja: dict[Volume, jinja2.Environment] = {}
         self.process2_tasks: dict[Page, list[Task]] = defaultdict(list)
+        self.process4_tasks: dict[Page, list[Task]] = defaultdict(list)
 
     def __repr__(self):
         return f'<{self.__class__.__name__} at {hex(id(self))}>'
@@ -148,6 +149,8 @@ class Builder(Generic[P], metaclass=ABCMeta):
         """
         The fourth stage of the processing.
         """
+        if self.process4_tasks[page]:
+            await wait(self.process4_tasks[page])
 
     @abstractmethod
     def make_internal_url(self, href: PageHref, *, page: Page = None) -> str:
