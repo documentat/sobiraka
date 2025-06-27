@@ -127,6 +127,7 @@ class WebBuilder(ThemeableProjectBuilder['WebProcessor', 'WebTheme'], AbstractHt
             STATIC=self.get_path_to_static(page),
             RESOURCES=self.get_path_to_resources(page),
             theme_data=volume.config.web.theme_data,
+            **volume.config.variables,
         )
 
         RT[page].bytes = html.encode('utf-8')

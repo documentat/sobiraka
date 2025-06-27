@@ -24,7 +24,12 @@
 
             <nav>
                 <h2 class="book-brand">
-                    <a class="flex align-center" href="{{ ROOT_PAGE }}"><span>{{ config.title }}</span>
+                    <a class="flex align-center" href="{{ ROOT_PAGE }}">
+                        {% if LOGO is defined %}
+                            <img src='{{ RESOURCES }}/{{ LOGO }}' alt='{{ config.title }}'/>
+                        {% else %}
+                            <span>{{ config.title }}</span>
+                        {% endif %}
                     </a>
                 </h2>
 
