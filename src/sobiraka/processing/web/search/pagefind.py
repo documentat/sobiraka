@@ -99,7 +99,7 @@ class PagefindIndexer(SearchIndexer, PlainTextDispatcher):
             window.addEventListener("DOMContentLoaded", (event) => {{
                 new PagefindUI({{
                     element: ".book-search",
-                    baseUrl: new URL("%ROOT%", location),
+                    baseUrl: new URL("../%ROOT%", location),
                     translations: {self.search_config.translations.to_json()},
                 }})
             }})
