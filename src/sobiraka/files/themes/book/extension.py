@@ -1,6 +1,6 @@
 from asyncio import create_task
 
-from panflute import Div, Element, Header, Link, RawBlock, Space, Str
+from panflute import Div, Element, Header, Image, Link, Para, RawBlock, Space, Str
 from typing_extensions import override
 
 from sobiraka.models import Page, Status
@@ -25,6 +25,15 @@ class BookThemeProcessor(WebProcessor):
             self.builder.process4_tasks[page].append(create_task(self._linkify_header(header, page)))
 
         return header,
+
+    async def process_image(self, image: Image, page: Page) -> tuple[Image, ...]:
+        image, = await super().process_image(image, page)
+        assert isinstance(image, Image)
+
+        if not isinstance(image.parent, Para) or len(image.parent.content) > 1:
+            image.classes = ['inline']
+
+        return image,
 
     async def process_div_note(self, div: Div, page: Page) -> tuple[Element, ...]:
         div, = await super().process_div(div, page)
