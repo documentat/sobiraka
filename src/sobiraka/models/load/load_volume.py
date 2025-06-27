@@ -48,6 +48,7 @@ def load_volume(lang: str | None, codename: str, volume_data: dict, fs: FileSyst
         web=Config_Web(
             prefix=_expand(_('web.prefix', '$AUTOPREFIX')),
             resources_prefix=_expand(_('web.resources_prefix', '_resources')),
+            resources_force_copy=_expand(_('web.resources_force_copy', ())),
             theme=_find_theme_dir(_expand(_('web.theme', 'simple')), fs=fs),
             theme_data=_expand(_('web.theme_data', {})),
             processor=convert_or_none(RelativePath, _expand(_('web.processor'))),

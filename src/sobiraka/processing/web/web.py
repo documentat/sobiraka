@@ -183,6 +183,11 @@ class WebBuilder(ThemeableProjectBuilder['WebProcessor', 'WebTheme'], AbstractHt
         fs: FileSystem = self.project.fs
         config: Config = volume.config
 
+        for filename in volume.config.web.resources_force_copy:
+            source_path = (volume.config.paths.resources or volume.config.paths.root) / filename
+            target_path = RelativePath() / volume.config.web.resources_prefix / filename
+            self.waiter.add_task(self.add_file_from_project(source_path, target_path))
+
         for script in config.web.custom_scripts:
             source = RelativePath(script)
             assert source.suffix == '.js'
