@@ -15,7 +15,7 @@ import weasyprint
 from panflute import Doc, Element, Header, Image, Str
 from typing_extensions import override
 
-from sobiraka.models import DirPage, FileSystem, Page, PageHref, RealFileSystem, Status, Volume
+from sobiraka.models import DirPage, FileSystem, Page, PageHref, RealFileSystem, Volume
 from sobiraka.models.config import CombinedToc, Config, Config_Pygments
 from sobiraka.processing import load_processor
 from sobiraka.processing.abstract import Theme, ThemeableVolumeBuilder
@@ -255,10 +255,6 @@ class WeasyPrintProcessor(AbstractHtmlProcessor[WeasyPrintBuilder]):
         else:
             header.attributes['style'] = f'bookmark-level: {page.location.level + header.level - 1}'
 
-        # Remember both the local and the global levels in attributes
-        header.attributes['data-local-level'] = str(header.level)
-        header.attributes['data-global-level'] = str(page.location.level + header.level - 1)
-
         # For the 'global' header policy, change the actual level of the header
         # Also, hide the very top header
         if page.volume.config.pdf.headers_policy == 'global':
@@ -266,19 +262,7 @@ class WeasyPrintProcessor(AbstractHtmlProcessor[WeasyPrintBuilder]):
                 return ()
             header.level = int(header.attributes['data-global-level']) - 1
 
-        # Don't forget to numrate the header later
-        self.builder.waiter.add_task(self.numerate_header(header, page))
-
         return header,
-
-    async def numerate_header(self, header: Header, page: Page):
-        await self.builder.waiter.wait(page, Status.PROCESS3)
-
-        if header.attributes['data-local-level'] == '1':
-            header.attributes['data-number'] = str(RT[page].number)
-        else:
-            anchor = RT[page].anchors.by_header(header)
-            header.attributes['data-number'] = str(RT[anchor].number)
 
 
 @final

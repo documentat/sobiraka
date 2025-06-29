@@ -6,10 +6,10 @@ from collections import defaultdict
 from subprocess import PIPE, run
 from typing import Generic, TypeVar, final
 
-from panflute import CodeBlock, Element, Image
+from panflute import CodeBlock, Element, Header, Image
 from typing_extensions import override
 
-from sobiraka.models import Page, Volume
+from sobiraka.models import Page, Status, Volume
 from sobiraka.models.config import Config
 from sobiraka.runtime import RT
 from sobiraka.utils import AbsolutePath, RelativePath, panflute_to_bytes
@@ -142,6 +142,18 @@ class AbstractHtmlProcessor(Processor[B], Generic[B], metaclass=ABCMeta):
         return block,
 
     @override
+    async def process_header(self, header: Header, page: Page) -> tuple[Element, ...]:
+        header, = await super().process_header(header, page)
+        assert isinstance(header, Header)
+
+        header.attributes['data-local-level'] = str(header.level)
+        header.attributes['data-global-level'] = str(page.location.level + header.level - 1)
+
+        self.builder.waiter.add_task(self.numerate_header(header, page))
+
+        return header,
+
+    @override
     async def process_image(self, image: Image, page: Page) -> tuple[Image, ...]:
         config: Config = page.volume.config
 
@@ -164,3 +176,14 @@ class AbstractHtmlProcessor(Processor[B], Generic[B], metaclass=ABCMeta):
             RT[page].converted_image_urls.append((image, new_url))
 
         return image,
+
+    # -----------------------------------------------------------------------------------------------------------------
+
+    async def numerate_header(self, header: Header, page: Page):
+        await self.builder.waiter.wait(page, Status.PROCESS3)
+
+        if header.attributes['data-local-level'] == '1':
+            header.attributes['data-number'] = str(RT[page].number)
+        else:
+            anchor = RT[page].anchors.by_header(header)
+            header.attributes['data-number'] = str(RT[anchor].number)
