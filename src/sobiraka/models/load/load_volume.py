@@ -74,7 +74,7 @@ def load_volume(lang: str | None, codename: str, volume_data: dict, fs: FileSyst
             headers_transform=Config_Latex_HeadersTransform.load(_('latex.headers_transform', {})),
         ),
         pdf=Config_PDF(
-            theme=_find_theme_dir(_expand(_('pdf.theme', 'printable')), fs=fs),
+            theme=_find_theme_dir(_expand(_('pdf.theme', 'sobiraka2025')), fs=fs),
             processor=convert_or_none(RelativePath, _expand(_('pdf.processor'))),
             custom_styles=tuple(map(RelativePath, _expand(_('pdf.custom_styles', ())))),
             toc_depth=int(re.sub(r'^infinity$', '0', str(_('pdf.toc_depth', 'infinity')))) or inf,
