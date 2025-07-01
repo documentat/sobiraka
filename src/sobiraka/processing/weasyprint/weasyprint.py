@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 import re
 import sys
-from asyncio import to_thread
+from asyncio import create_task, to_thread
 from contextlib import suppress
 from datetime import datetime
 from functools import lru_cache
@@ -60,8 +60,8 @@ class WeasyPrintBuilder(ThemeableVolumeBuilder['WeasyPrintProcessor', 'WeasyPrin
         volume: Volume = self.volume
 
         # Prepare non-page processing tasks
-        self.waiter.add_task(self.add_custom_files())
-        self.waiter.add_task(self.compile_theme_sass(self.theme, volume))
+        self.process3_tasks[volume].append(create_task(self.add_custom_files()))
+        self.process3_tasks[volume].append(create_task(self.compile_theme_sass(self.theme, volume)))
 
         await self.waiter.wait_all()
 

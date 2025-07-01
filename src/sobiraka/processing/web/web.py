@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from asyncio import to_thread
+from asyncio import create_task, to_thread
 from datetime import datetime
 from functools import lru_cache
 from os.path import relpath
@@ -59,9 +59,9 @@ class WebBuilder(ThemeableProjectBuilder['WebProcessor', 'WebTheme'], AbstractHt
 
             # Prepare non-page processing tasks
             self.waiter.add_task(self.add_directory_from_location(theme.static_dir, RelativePath('_static')))
-            self.waiter.add_task(self.add_custom_files(volume))
-            self.waiter.add_task(self.compile_theme_sass(theme, volume))
-            self.waiter.add_task(self.prepare_search_indexer(volume))
+            self.process3_tasks[volume].append(create_task(self.add_custom_files(volume)))
+            self.process3_tasks[volume].append(create_task(self.compile_theme_sass(theme, volume)))
+            self.process3_tasks[volume].append(create_task(self.prepare_search_indexer(volume)))
 
         # Wait until all pages will be generated and all additional files will be copied to the output directory
         # This may include tasks that started as a side effect of generating the HTML pages
