@@ -5,7 +5,7 @@ from unittest import main
 from abstracttests.projecttestcase import ProjectTestCase
 from helpers.fakeproject import FakeProject, FakeVolume
 from sobiraka.models import Project, Status
-from sobiraka.models.config import Config, Config_Paths, Config_Web
+from sobiraka.models.config import Config, Config_Paths, Config_Theme, Config_Web
 from sobiraka.processing.web import WebBuilder
 from sobiraka.utils import AbsolutePath, RelativePath
 
@@ -25,7 +25,7 @@ class TestHtmlImages(ProjectTestCase[WebBuilder]):
                 resources=RelativePath('img_src'),
             ),
             web=Config_Web(
-                theme=AbsolutePath(files('sobiraka')) / 'files' / 'themes' / 'raw',
+                theme=Config_Theme(path=AbsolutePath(files('sobiraka')) / 'files' / 'themes' / 'raw'),
                 resources_prefix='img_dst',
             )
         )

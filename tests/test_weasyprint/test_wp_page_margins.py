@@ -6,7 +6,7 @@ from typing_extensions import override
 from abstracttests.singlepageprojecttest import SinglePageProjectTest
 from abstracttests.weasyprintprojecttestcase import WeasyPrintProjectTestCase
 from helpers.fakefilesystem import PseudoFiles
-from sobiraka.models.config import Config, Config_PDF, Config_Paths
+from sobiraka.models.config import Config, Config_PDF, Config_Paths, Config_Theme
 from sobiraka.utils import AbsolutePath, RelativePath
 
 CSS = b'''
@@ -61,7 +61,9 @@ class TestWeasyPrint_PageMargins(SinglePageProjectTest, WeasyPrintProjectTestCas
                 root=RelativePath('src'),
             ),
             pdf=Config_PDF(
-                theme=AbsolutePath(files('sobiraka')) / 'files' / 'themes' / 'raw',
+                theme=Config_Theme(
+                    path=AbsolutePath(files('sobiraka')) / 'files' / 'themes' / 'raw',
+                ),
                 custom_styles=(
                     RelativePath('theme/style.css'),
                 )),

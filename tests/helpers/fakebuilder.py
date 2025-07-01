@@ -7,7 +7,7 @@ class FakeBuilder(ThemeableProjectBuilder):
         return Processor(self)
 
     def init_theme(self, volume: Volume) -> Theme:
-        return Theme(volume.config.web.theme)
+        return Theme(volume.config.web.theme.path)
 
     def additional_variables(self) -> dict:
         return {}

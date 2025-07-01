@@ -15,6 +15,7 @@ pdf
 reStructuredText
 ReST
 rst
+SCSS
 WeasyPrint
 wcmatch
 YAML

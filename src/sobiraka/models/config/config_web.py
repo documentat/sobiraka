@@ -1,14 +1,13 @@
 from dataclasses import dataclass, field
-from importlib.resources import files
 from math import inf
 from typing import Any
 
 from utilspie.collectionsutils import frozendict
 
-from sobiraka.utils import AbsolutePath, RelativePath
+from sobiraka.utils import RelativePath
 from .config_highlight import Config_Web_Highlight
 from .config_search import Config_Web_Search
-from .config_utils import CombinedToc
+from .config_utils import CombinedToc, Config_Theme
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -33,8 +32,7 @@ class Config_Web:
 
     resources_force_copy: tuple[str, ...] = ()
 
-    theme: AbsolutePath = AbsolutePath(files('sobiraka')) / 'files' / 'themes' / 'simple'
-    """Path to the theme that should be used when generating HTML."""
+    theme: Config_Theme = field(default_factory=lambda: Config_Theme.from_name('book'))
 
     theme_data: dict[str, Any] = field(default=frozendict)
 

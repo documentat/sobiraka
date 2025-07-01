@@ -1,18 +1,19 @@
 from __future__ import annotations
 
 from abc import ABCMeta, abstractmethod
-from asyncio import Task, TaskGroup, create_subprocess_exec, to_thread
+from asyncio import Task, TaskGroup, create_subprocess_exec
 from collections import defaultdict
-from subprocess import PIPE, run
+from os.path import dirname
+from subprocess import PIPE
 from typing import Generic, TypeVar, final
 
 from panflute import CodeBlock, Element, Header, Image
 from typing_extensions import override
 
 from sobiraka.models import Page, Status, Volume
-from sobiraka.models.config import Config
+from sobiraka.models.config import Config, Config_Theme
 from sobiraka.runtime import RT
-from sobiraka.utils import AbsolutePath, RelativePath, panflute_to_bytes
+from sobiraka.utils import AbsolutePath, RelativePath, configured_jinja, first_existing_path, panflute_to_bytes
 from .head import Head, HeadCssFile
 from .highlight import Highlighter
 from ..abstract import Builder, Processor, Theme
@@ -28,27 +29,51 @@ class AbstractHtmlBuilder(Builder, metaclass=ABCMeta):
         self.heads: dict[Volume, Head] = defaultdict(Head)
 
     @final
-    async def compile_theme_sass(self, theme: Theme, volume: Volume):
-        async with TaskGroup() as tg:
-            theme_sass_dir = theme.theme_dir / 'sass'
-            if theme_sass_dir.exists():
-                for source in theme_sass_dir.iterdir():
-                    if source.suffix in ('.sass', '.scss') and not source.stem.startswith('_'):
-                        target = RelativePath('_static') / f'{source.stem}.css'
-                        tg.create_task(to_thread(self.compile_sass, volume, source, target))
-                        self.heads[volume].append(HeadCssFile(target))
+    async def compile_theme_sass(self, theme: AbstractHtmlTheme, volume: Volume, *, pdf: bool = False):
+        """
+        Generate CSS from up to three SASS/SCSS files:
 
-    @abstractmethod
-    def compile_sass(self, volume: Volume, source: AbsolutePath | bytes, target: RelativePath):
-        ...
+        - the theme's main style,
+        - the theme's flavor (if provided),
+        - the project's customization (if provided).
+        """
+        if not theme.sass_main:
+            return
+
+        command = ['node', f'{dirname(__file__)}/compile_sass.js', '--source', str(theme.sass_main)]
+        if pdf:
+            command += '--pdf',
+        if theme.sass_flavor:
+            command += '--flavor', str(theme.sass_flavor)
+        if theme.sass_customization:
+            command += '--customization', str(volume.project.fs.resolve(theme.sass_customization))
+
+        process = await create_subprocess_exec(*command, stdout=PIPE)
+        css, _ = await process.communicate()
+        assert process.returncode == 0
+
+        target = RelativePath() / '_static' / 'theme.css'
+        self.add_file_from_data(target, css)
+        self.heads[volume].append(HeadCssFile(target))
 
     @final
-    def compile_sass_impl(self, source: AbsolutePath | bytes) -> bytes:
-        if isinstance(source, AbsolutePath):
-            process = run(['sass', '--style=compressed', source.name], cwd=source.parent, stdout=PIPE, check=True)
-        else:
-            process = run(['sass', '--style=compressed', '--stdin'], input=source, stdout=PIPE, check=True)
-        return process.stdout
+    async def compile_sass(self, source: AbsolutePath | bytes) -> bytes:
+        match source:
+            case AbsolutePath() as source_path:
+                process = await create_subprocess_exec('sass', '--style=compressed', source_path.name,
+                                                       cwd=source_path.parent, stdout=PIPE)
+                sass, _ = await process.communicate()
+                assert process.returncode == 0
+                return sass
+
+            case bytes() as source_content:
+                process = await create_subprocess_exec('sass', '--style=compressed', '--stdin', stdout=PIPE)
+                sass, _ = await process.communicate(source_content)
+                assert process.returncode
+                return sass
+
+            case _:
+                raise ValueError(source)
 
     @override
     async def do_process4(self, page: Page):
@@ -187,3 +212,21 @@ class AbstractHtmlProcessor(Processor[B], Generic[B], metaclass=ABCMeta):
         else:
             anchor = RT[page].anchors.by_header(header)
             header.attributes['data-number'] = str(RT[anchor].number)
+
+
+class AbstractHtmlTheme(Theme, metaclass=ABCMeta):
+    TYPE: str
+
+    def __init__(self, config: Config_Theme):
+        super().__init__(config.path)
+        self.page_template = configured_jinja(self.theme_dir).get_template(f'{self.TYPE}.html')
+        self.sass_main = first_existing_path(
+            self.theme_dir / 'sass' / f'{self.TYPE}.scss',
+            self.theme_dir / 'sass' / f'{self.TYPE}.sass')
+        self.sass_flavor = config.flavor and first_existing_path(
+            self.theme_dir / 'sass' / '_flavors' / f'{config.flavor}.scss',
+            self.theme_dir / 'sass' / '_flavors' / f'{config.flavor}.scss')
+        self.sass_customization = config.customization
+
+    def __repr__(self):
+        return f'<{self.__class__.__name__}: {str(self.sass_main)!r}>'

@@ -21,7 +21,9 @@ languages:
         web:
           prefix: docs-$LANG
           resources_prefix: static/$LANG
-          theme: themes/$VOLUME
+          theme: 
+            name: themes/$VOLUME
+            customization: theme/customization.$VOLUME.scss
           theme_data:
             logo: logo-$VOLUME-$LANG.png
           processor: processor_$VOLUME.py
@@ -40,7 +42,9 @@ languages:
             fonts: fonts/$VOLUME
 
         pdf:
-          theme: themes/$VOLUME
+          theme: 
+            name: themes/$VOLUME
+            customization: theme/customization.$VOLUME.scss
           processor: processor_$VOLUME.py
           custom_styles:
             - style.$VOLUME.css
@@ -79,8 +83,10 @@ class TestVariables(TestCase):
             self.assertEqual('docs-en', self.config.web.prefix)
         with self.subTest('resources_prefix'):
             self.assertEqual('static/en', self.config.web.resources_prefix)
-        with self.subTest('theme'):
-            self.assertEqual(AbsolutePath('/FAKE/themes/mydoc'), self.config.web.theme)
+        with self.subTest('theme.path'):
+            self.assertEqual(AbsolutePath('/FAKE/themes/mydoc'), self.config.web.theme.path)
+        with self.subTest('theme.customization'):
+            self.assertEqual(RelativePath('theme/customization.mydoc.scss'), self.config.web.theme.customization)
         with self.subTest('theme_data'):
             self.assertEqual(frozendict({'logo': 'logo-mydoc-en.png'}), self.config.web.theme_data)
         with self.subTest('processor'):
@@ -103,8 +109,10 @@ class TestVariables(TestCase):
             self.assertEqual(frozendict({'fonts': RelativePath('fonts/mydoc')}), self.config.latex.paths)
 
     def test_pdf(self):
-        with self.subTest('theme'):
-            self.assertEqual(AbsolutePath('/FAKE/themes/mydoc'), self.config.pdf.theme)
+        with self.subTest('theme.path'):
+            self.assertEqual(AbsolutePath('/FAKE/themes/mydoc'), self.config.pdf.theme.path)
+        with self.subTest('theme.customization'):
+            self.assertEqual(RelativePath('theme/customization.mydoc.scss'), self.config.pdf.theme.customization)
         with self.subTest('processor'):
             self.assertEqual(RelativePath('processor_mydoc.py'), self.config.pdf.processor)
         with self.subTest('custom_styles'):

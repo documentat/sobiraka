@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 import re
 import sys
-from asyncio import create_task, to_thread
+from asyncio import create_task
 from contextlib import suppress
 from datetime import datetime
 from functools import lru_cache
@@ -18,12 +18,12 @@ from typing_extensions import override
 from sobiraka.models import DirPage, FileSystem, Page, PageHref, RealFileSystem, Volume
 from sobiraka.models.config import CombinedToc, Config, Config_Pygments
 from sobiraka.processing import load_processor
-from sobiraka.processing.abstract import Theme, ThemeableVolumeBuilder
+from sobiraka.processing.abstract import ThemeableVolumeBuilder
 from sobiraka.processing.abstract.processor import DisableLink
-from sobiraka.processing.html import AbstractHtmlBuilder, AbstractHtmlProcessor, HeadCssFile
+from sobiraka.processing.html import AbstractHtmlBuilder, AbstractHtmlProcessor, AbstractHtmlTheme, HeadCssFile
 from sobiraka.processing.html.highlight import Highlighter, Pygments
 from sobiraka.runtime import RT
-from sobiraka.utils import AbsolutePath, RelativePath, TocNumber, configured_jinja, convert_or_none
+from sobiraka.utils import AbsolutePath, RelativePath, TocNumber, convert_or_none
 
 
 @final
@@ -41,7 +41,7 @@ class WeasyPrintBuilder(ThemeableVolumeBuilder['WeasyPrintProcessor', 'WeasyPrin
         config: Config = self.volume.config
         processor_class = load_processor(
             convert_or_none(fs.resolve, config.pdf.processor),
-            config.pdf.theme,
+            config.pdf.theme.path,
             WeasyPrintProcessor)
         return processor_class(self)
 
@@ -61,7 +61,7 @@ class WeasyPrintBuilder(ThemeableVolumeBuilder['WeasyPrintProcessor', 'WeasyPrin
 
         # Prepare non-page processing tasks
         self.process3_tasks[volume].append(create_task(self.add_custom_files()))
-        self.process3_tasks[volume].append(create_task(self.compile_theme_sass(self.theme, volume)))
+        self.process3_tasks[volume].append(create_task(self.compile_theme_sass(self.theme, volume, pdf=True)))
 
         await self.waiter.wait_all()
 
@@ -171,11 +171,6 @@ class WeasyPrintBuilder(ThemeableVolumeBuilder['WeasyPrintProcessor', 'WeasyPrin
         # Do nothing. We will just load the file from the source in fetch_url().
         pass
 
-    @override
-    def compile_sass(self, volume: Volume, source: AbsolutePath | bytes, target: RelativePath):
-        self.pseudofiles[str(target)] = 'text/css', self.compile_sass_impl(source)
-        self.heads[volume].append(HeadCssFile(target))
-
     def get_path_to_resources(self, page: Page) -> RelativePath:
         return RelativePath('_resources')
 
@@ -199,11 +194,13 @@ class WeasyPrintBuilder(ThemeableVolumeBuilder['WeasyPrintProcessor', 'WeasyPrin
                     # When in a test with a FakeFileSystem which cannot resolve(),
                     # we just read the source text and pipe it to SASS.
                     # Typically, tests do not use includes, so that's ok.
-                    target = RelativePath('_static') / 'css' / f'{source.stem}.css'
                     if isinstance(fs, RealFileSystem):
-                        await to_thread(self.compile_sass, self.volume, fs.resolve(source), target)
+                        sass = await self.compile_sass(fs.resolve(source))
                     else:
-                        await to_thread(self.compile_sass, self.volume, fs.read_bytes(source), target)
+                        sass = await self.compile_sass(fs.read_bytes(source))
+                    target = RelativePath('_static') / 'css' / f'{source.stem}.css'
+                    self.add_file_from_data(target, sass)
+                    self.heads[self.volume].append(HeadCssFile(target))
 
                 case _:
                     raise ValueError(source)
@@ -267,10 +264,8 @@ class WeasyPrintProcessor(AbstractHtmlProcessor[WeasyPrintBuilder]):
 
 
 @final
-class WeasyPrintTheme(Theme):
-    def __init__(self, theme_dir: AbsolutePath):
-        super().__init__(theme_dir)
-        self.page_template = configured_jinja(theme_dir).get_template('print.html')
+class WeasyPrintTheme(AbstractHtmlTheme):
+    TYPE = 'print'
 
 
 class WeasyPrintException(Exception):

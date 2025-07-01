@@ -7,8 +7,8 @@ from utilspie.collectionsutils import frozendict
 from sobiraka.models import FileSystem, NamingScheme, Volume
 from sobiraka.models.config import CombinedToc, Config, Config_Content, Config_Latex, Config_Latex_HeadersTransform, \
     Config_PDF, Config_Pagefind_Translations, Config_Paths, Config_Pdf_Highlight, Config_Prover, \
-    Config_Prover_Dictionaries, Config_Search_LinkTarget, Config_Web, Config_Web_Highlight, Config_Web_Search, \
-    SearchIndexerName, find_theme_dir
+    Config_Prover_Dictionaries, Config_Search_LinkTarget, Config_Theme, Config_Web, Config_Web_Highlight, \
+    Config_Web_Search, SearchIndexerName, find_theme_dir
 from sobiraka.utils import Apostrophe, QuotationMark, RelativePath, convert_or_none, expand_vars
 
 
@@ -17,9 +17,10 @@ def load_volume(lang: str | None, codename: str, volume_data: dict, fs: FileSyst
         try:
             _result = volume_data
             for key in _keys.split('.'):
+                assert isinstance(_result, dict)
                 _result = _result[key]
             return _result
-        except KeyError:
+        except (AssertionError, KeyError):
             return _default
 
     def _expand(_value):
@@ -28,7 +29,8 @@ def load_volume(lang: str | None, codename: str, volume_data: dict, fs: FileSyst
         if isinstance(_value, (list, tuple)):
             return tuple(expand_vars(_v, lang=lang, codename=codename) for _v in _value)
         if isinstance(_value, (dict, frozendict)):
-            return frozendict({_k: expand_vars(_v, lang=lang, codename=codename) for _k, _v in _value.items()})
+            return frozendict({_k: expand_vars(_v, lang=lang, codename=codename) if isinstance(_v, str) else _v
+                               for _k, _v in _value.items()})
         return _value
 
     return Volume(lang, codename, Config(
@@ -48,7 +50,11 @@ def load_volume(lang: str | None, codename: str, volume_data: dict, fs: FileSyst
             prefix=_expand(_('web.prefix', '$AUTOPREFIX')),
             resources_prefix=_expand(_('web.resources_prefix', '_resources')),
             resources_force_copy=_expand(_('web.resources_force_copy', ())),
-            theme=find_theme_dir(_expand(_('web.theme', 'simple')), fs=fs),
+            theme=Config_Theme(
+                path=find_theme_dir(_expand(_('web.theme.name') or _('web.theme') or 'book'), fs=fs),
+                flavor=_('web.theme.flavor'),
+                customization=convert_or_none(RelativePath, _expand(_('web.theme.customization'))),
+            ),
             theme_data=_expand(_('web.theme_data', {})),
             processor=convert_or_none(RelativePath, _expand(_('web.processor'))),
             custom_styles=tuple(map(RelativePath, _expand(_('web.custom_styles', ())))),
@@ -75,7 +81,11 @@ def load_volume(lang: str | None, codename: str, volume_data: dict, fs: FileSyst
             headers_transform=Config_Latex_HeadersTransform.load(_('latex.headers_transform', {})),
         ),
         pdf=Config_PDF(
-            theme=find_theme_dir(_expand(_('pdf.theme', 'sobiraka2025')), fs=fs),
+            theme=Config_Theme(
+                path=find_theme_dir(_expand(_('pdf.theme.name') or _('pdf.theme') or 'sobiraka2025'), fs=fs),
+                flavor=_('pdf.theme.flavor'),
+                customization=convert_or_none(RelativePath, _expand(_('pdf.theme.customization'))),
+            ),
             processor=convert_or_none(RelativePath, _expand(_('pdf.processor'))),
             custom_styles=tuple(map(RelativePath, _expand(_('pdf.custom_styles', ())))),
             toc_depth=int(re.sub(r'^infinity$', '0', str(_('pdf.toc_depth', 'infinity')))) or inf,

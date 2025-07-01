@@ -28,7 +28,10 @@ setup(
     ],
     packages=find_packages('src'),
     package_dir={'': 'src'},
-    package_data={'sobiraka': ['files/**']},
+    package_data={'sobiraka': [
+        'files/**',
+        '**/*.js',
+    ]},
     entry_points={
         'console_scripts': ['sobiraka=sobiraka.__main__:main'],
     },

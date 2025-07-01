@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from enum import Enum
 from importlib.resources import files
 from typing import Self
@@ -18,6 +19,17 @@ def find_theme_dir(name: str, *, fs: FileSystem) -> AbsolutePath:
             return theme_dir
 
     raise FileNotFoundError(name)
+
+
+@dataclass(kw_only=True, frozen=True)
+class Config_Theme:
+    path: AbsolutePath = AbsolutePath(files('sobiraka')) / 'files' / 'themes' / 'sobiraka2025'
+    flavor: str = None
+    customization: RelativePath = None
+
+    @classmethod
+    def from_name(cls, name: str) -> Self:
+        return Config_Theme(path=AbsolutePath(files('sobiraka')) / 'files' / 'themes' / name)
 
 
 class CombinedToc(Enum):

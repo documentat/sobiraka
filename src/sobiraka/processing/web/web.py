@@ -13,14 +13,14 @@ from typing_extensions import override
 
 from sobiraka.models import FileSystem, Page, PageHref, Project, Volume
 from sobiraka.models.config import Config, Config_HighlightJS, Config_Prism, Config_Pygments, SearchIndexerName
-from sobiraka.processing.abstract import Theme, ThemeableProjectBuilder
-from sobiraka.processing.html import AbstractHtmlBuilder, AbstractHtmlProcessor, HeadCssFile, HeadJsFile
+from sobiraka.processing.html import AbstractHtmlBuilder, AbstractHtmlProcessor, AbstractHtmlTheme, HeadCssFile, \
+    HeadJsFile
 from sobiraka.processing.html.highlight import HighlightJs, Highlighter, Prism, Pygments
-from sobiraka.processing.load_processor import load_processor
 from sobiraka.runtime import RT
-from sobiraka.utils import AbsolutePath, RelativePath, configured_jinja, convert_or_none, delete_extra_files, \
-    expand_vars
+from sobiraka.utils import AbsolutePath, RelativePath, convert_or_none, delete_extra_files, expand_vars
 from .search import PagefindIndexer, SearchIndexer
+from ..abstract import ThemeableProjectBuilder
+from ..load_processor import load_processor
 
 
 @final
@@ -40,7 +40,7 @@ class WebBuilder(ThemeableProjectBuilder['WebProcessor', 'WebTheme'], AbstractHt
         config: Config = volume.config
         processor_class = load_processor(
             convert_or_none(fs.resolve, config.web.processor),
-            config.web.theme,
+            config.web.theme.path,
             WebProcessor)
         return processor_class(self)
 
@@ -206,7 +206,8 @@ class WebBuilder(ThemeableProjectBuilder['WebProcessor', 'WebTheme'], AbstractHt
                 case '.sass' | '.scss':
                     source = fs.resolve(source)
                     target = RelativePath('_static') / f'{source.stem}.css'
-                    self.waiter.add_task(to_thread(self.compile_sass, volume, source, target))
+                    sass = await self.compile_sass(source)
+                    self.add_file_from_data(target, sass)
                     self.heads[volume].append(HeadCssFile(target))
 
                 case _:
@@ -258,11 +259,6 @@ class WebBuilder(ThemeableProjectBuilder['WebProcessor', 'WebTheme'], AbstractHt
         await to_thread(self.project.fs.copy, source, target)
         self._results.add(target)
 
-    @override
-    def compile_sass(self, volume: Volume, source: AbsolutePath | bytes, target: RelativePath):
-        css = self.compile_sass_impl(source)
-        self.add_file_from_data(target, css)
-
 
 class WebProcessor(AbstractHtmlProcessor[WebBuilder]):
     @override
@@ -279,7 +275,5 @@ class WebProcessor(AbstractHtmlProcessor[WebBuilder]):
 
 
 @final
-class WebTheme(Theme):
-    def __init__(self, theme_dir: AbsolutePath):
-        super().__init__(theme_dir)
-        self.page_template = configured_jinja(theme_dir).get_template('web.html')
+class WebTheme(AbstractHtmlTheme):
+    TYPE = 'web'
