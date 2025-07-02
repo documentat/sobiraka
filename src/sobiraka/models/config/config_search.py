@@ -52,7 +52,7 @@ class Config_Pagefind_Translations:
 @dataclass(kw_only=True, frozen=True)
 class Config_Web_Search:
     engine: SearchIndexerName = None
-    generate_js: bool = True
+    generate_js: bool = False
     container: str = 'search'
     index_path: str = None
     skip_elements: tuple[type[Element], ...] = ()
