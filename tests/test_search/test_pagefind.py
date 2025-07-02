@@ -1,34 +1,64 @@
 from abc import ABCMeta
 from unittest import main
-from unittest.mock import MagicMock, call, patch
+from unittest.mock import Mock, call
+
+from typing_extensions import override
 
 from abstracttests.abstracttestwithrt import AbstractTestWithRtTmp
 from abstracttests.projecttestcase import ProjectTestCase
 from helpers.fakeproject import FakeProject, FakeVolume
-from sobiraka.models import Project, Status
-from sobiraka.models.config import Config_Search_LinkTarget, Config_Web_Search
+from sobiraka.models import Project, Status, Volume
+from sobiraka.models.config import Config, Config_Paths, Config_Search_LinkTarget, Config_Web, Config_Web_Search, \
+    SearchIndexerName
 from sobiraka.processing.web import WebBuilder
 from sobiraka.processing.web.search import PagefindIndexer
 from sobiraka.runtime import RT
+from sobiraka.utils import RelativePath
 
 
-@patch(f'{PagefindIndexer.__module__}.{PagefindIndexer.__qualname__}._add_record')
+class WebBuilderWithMockIndexer(WebBuilder):
+    # pylint: disable=subclassed-final-class
+
+    @override
+    async def prepare_search_indexer(self, volume: Volume):
+        await super().prepare_search_indexer(volume)
+
+        indexer = self._indexers[volume]
+        assert isinstance(indexer, PagefindIndexer)
+        indexer._add_record = Mock()  # pylint: disable=protected-access
+
+
 class AbstractTestPagefindIndexer(ProjectTestCase[WebBuilder], AbstractTestWithRtTmp, metaclass=ABCMeta):
     REQUIRE = Status.PROCESS4
 
     LINK_TARGET = Config_Search_LinkTarget.H1
     EXPECTED: tuple[call, ...]
 
+    @override
     def _init_builder(self):
-        return WebBuilder(self.project, RT.TMP / 'build')
+        return WebBuilderWithMockIndexer(self.project, RT.TMP)
 
-    async def test_add_record(self, mock: MagicMock):
-        indexer = PagefindIndexer(self.builder, self.project.get_volume(), RT.TMP / 'build' / 'pagefind')
-        indexer.search_config = Config_Web_Search(link_target=self.LINK_TARGET)
-        await indexer.initialize()
-        for page in self.project.get_volume().root.all_pages():
-            await indexer.add_page(page)
-        await indexer.finalize()
+    def _init_config(self) -> Config:
+        return Config(
+            paths=Config_Paths(
+                root=RelativePath('src'),
+            ),
+            web=Config_Web(
+                search=Config_Web_Search(
+                    engine=SearchIndexerName.PAGEFIND,
+                    link_target=self.LINK_TARGET,
+                ),
+            ),
+        )
+
+    @override
+    async def _process(self):
+        await self.builder.run()
+
+    async def test_add_record(self):
+        # pylint: disable=protected-access
+        indexer: PagefindIndexer = self.builder._indexers[self.project.get_volume()]
+        mock: Mock = indexer._add_record
 
         for expected_call in self.EXPECTED:
             with self.subTest(expected_call.kwargs['url'].replace('.html', '')):
@@ -40,7 +70,7 @@ class AbstractTestPagefindIndexer(ProjectTestCase[WebBuilder], AbstractTestWithR
 class TestPagefindIndexer_Basic(AbstractTestPagefindIndexer):
     def _init_project(self) -> Project:
         return FakeProject({
-            'src': FakeVolume({
+            'src': FakeVolume(self._init_config(), {
                 'index.md': '''
                     # Test Pagefind
                     @toc
@@ -79,7 +109,7 @@ class TestPagefindIndexer_Basic(AbstractTestPagefindIndexer):
 class AbstractTestPagefindIndexer_UpToLevel(AbstractTestPagefindIndexer, metaclass=ABCMeta):
     def _init_project(self) -> Project:
         return FakeProject({
-            'src': FakeVolume({
+            'src': FakeVolume(self._init_config(), {
                 'index.md': '''
                     # H1
                     text1
