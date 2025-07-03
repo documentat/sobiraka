@@ -7,7 +7,7 @@ from .config import Config
 from .namingscheme import NamingScheme
 from .page import Page
 from .project import Project
-from .source import Source, SourceDirectory
+from .source import Source
 
 
 class Volume:
@@ -55,8 +55,9 @@ class Volume:
         return self.config.paths.root
 
     @cached_property
-    def root(self) -> Source:
-        return SourceDirectory(self, self.config.paths.root, parent=None)
+    def root(self) -> 'Source':
+        from .source import make_source
+        return make_source(self, self.config.paths.root, parent=None)
 
     @property
     def root_page(self) -> Page:

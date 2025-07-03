@@ -29,7 +29,7 @@ class Source(ObjectWithStatus, metaclass=ABCMeta):
     This process is called discovery.
     """
 
-    aggregation_policy: AggregationPolicy = None
+    aggregation_policy: AggregationPolicy = AggregationPolicy.WAIT_FOR_CHILDREN
 
     def __init__(self, volume: Volume, path_in_project: RelativePath, *, parent: Source = None):
         self.volume: Volume = volume
@@ -138,3 +138,7 @@ class Source(ObjectWithStatus, metaclass=ABCMeta):
                 if page not in (index_page, *index_page.children):
                     page.parent = index_page
                     index_page.children.append(page)
+
+
+class IdentifierResolutionError(Exception):
+    pass

@@ -13,7 +13,7 @@ from typing_extensions import override
 from sobiraka.models import Anchor, DirPage, FileSystem, Page, PageHref, Status, Syntax, UrlHref, Volume
 from sobiraka.models.config import Config
 from sobiraka.models.issues import BadImage, BadLink
-from sobiraka.models.source.sourcefile import IdentifierResolutionError
+from sobiraka.models.source import IdentifierResolutionError
 from sobiraka.runtime import RT
 from sobiraka.utils import AbsolutePath, MISSING, PathGoesOutsideStartDirectory, RelativePath, absolute_or_relative
 from .dispatcher import Dispatcher

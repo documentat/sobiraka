@@ -1,10 +1,11 @@
 import re
+from typing import Any
 
 import yaml
 from typing_extensions import override
 
 from sobiraka.utils import MISSING
-from .source import Source
+from .source import IdentifierResolutionError, Source
 from ..href import PageHref
 from ..namingscheme import NamingScheme
 from ..page import Page, PageMeta
@@ -15,6 +16,8 @@ _META_PATTERN = re.compile(r'--- \n (.+?\n)? --- (?: \n+ (.+) )?', re.DOTALL | r
 
 class SourceFile(Source):
     PAGE_CLASS = Page
+
+    base_meta: dict[str, Any] = None
 
     @override
     async def generate_pages(self):
@@ -32,7 +35,7 @@ class SourceFile(Source):
         text = self.volume.project.fs.read_text(self.path_in_project)
 
         # Parse the front matter, if any
-        meta = {}
+        meta = self.base_meta.copy() if self.base_meta else {}
         if m := _META_PATTERN.fullmatch(text):
             if meta_str := m.group(1):
                 meta = yaml.safe_load(meta_str)
@@ -59,7 +62,3 @@ class SourceFile(Source):
 
         except (KeyError, AssertionError) as exc:
             raise IdentifierResolutionError from exc
-
-
-class IdentifierResolutionError(Exception):
-    pass

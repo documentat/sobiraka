@@ -156,7 +156,7 @@ class WebBuilder(ThemeableProjectBuilder['WebProcessor', 'WebTheme'], AbstractHt
         result = href.target.location.as_relative_path_str(
             start=page and page.location,
             suffix='.html',
-            index_file_name='index.html',
+            index_file_name='' if self.hide_index_html else 'index.html',
         )
         if href.anchor:
             result += '#' + href.anchor

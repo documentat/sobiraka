@@ -20,6 +20,8 @@ class SourceDirectory(Source):
 
     @override
     async def generate_child_sources(self):
+        from .make_source import make_source
+
         volume = self.volume
         fs: FileSystem = volume.project.fs
         include_pattern: Sequence[str] = volume.config.paths.include
@@ -28,10 +30,10 @@ class SourceDirectory(Source):
 
         child_sources = []
         for child_path in fs.iterdir(self.path_in_project):
-            # A directory is being discovered unconditionally,
-            # but if all of its subtree gets excluded by the patterns, it won't create any pages
+            # A directory is being discovered unconditionally
+            # (it may or may not generate pages later, depending on the NamingScheme)
             if fs.is_dir(child_path):
-                child_sources.append(SourceDirectory(self.volume, child_path, parent=self))
+                child_sources.append(make_source(self.volume, child_path, parent=self))
 
             # A file is being discovered or not, according to the patterns
             elif globmatch(child_path.relative_to(self.volume.root.path_in_project),
