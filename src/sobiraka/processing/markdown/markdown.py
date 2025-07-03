@@ -94,7 +94,6 @@ class MarkdownBuilder(VolumeBuilder['MarkdownProcessor']):
         self._results.add(target)
 
 
-@final
 class MarkdownProcessor(Processor[MarkdownBuilder]):
 
     @override
