@@ -1,0 +1,9 @@
+:2019 {
+	file_server
+	redir / /demo.html
+	root * {$THEME}
+
+	handle_path /_pagefind/* {
+		root * {$PAGEFIND}
+	}
+}
