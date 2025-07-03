@@ -1,0 +1,60 @@
+@use '../sizes' as *;
+
+div.tabs {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+
+    margin-bottom: $paragraph-spacing;
+
+    label {
+        order: 1;
+        width: fit-content;
+        padding: var(--cell-padding);
+        height: 1.5em;
+        border-top: .2em solid transparent;
+        border-radius: var(--border-radius-small) var(--border-radius-small) 0 0;
+
+        transition: background .1s;
+
+        input {
+            display: none;
+        }
+    }
+
+    .tab-content {
+        order: 3;
+        width: 100%;
+        display: none;
+
+        &:not(:has(pre:only-child)) {
+            border: 2px solid var(--highlight-color);
+            border-radius: var(--border-radius-small);
+            padding: var(--card-padding);
+        }
+    }
+
+    label:not(:has(input:checked)) {
+        cursor: pointer;
+
+        &:hover {
+            color: var(--link-color);
+        }
+    }
+
+    label:has(input:checked) {
+        box-sizing: content-box;
+        background: var(--highlight-color);
+        border-top-color: var(--highlight-accent-color);
+        cursor: unset;
+
+        & + .tab-content {
+            display: unset;
+        }
+    }
+
+    label:first-of-type:has(input:checked) ~ .tab-content > pre:only-child {
+        border-start-start-radius: 0;
+        margin-bottom: 0;
+    }
+}

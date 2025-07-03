@@ -84,7 +84,7 @@ $defs:
                 additionalProperties: false
                 properties:
                   name: { const: sobiraka2025 }
-                  flavor: { enum: [pink] }
+                  flavor: { enum: [green] }
                   customization: { type: string }
                 required:
                   - name
@@ -232,7 +232,7 @@ $defs:
                 additionalProperties: false
                 properties:
                   name: { const: sobiraka2025 }
-                  flavor: { enum: [pink] }
+                  flavor: { enum: [green] }
                   customization: { type: string }
                 required:
                   - name

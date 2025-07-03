@@ -51,7 +51,7 @@ def load_volume(lang: str | None, codename: str, volume_data: dict, fs: FileSyst
             resources_prefix=_expand(_('web.resources_prefix', '_resources')),
             resources_force_copy=_expand(_('web.resources_force_copy', ())),
             theme=Config_Theme(
-                path=find_theme_dir(_expand(_('web.theme.name') or _('web.theme') or 'book'), fs=fs),
+                path=find_theme_dir(_expand(_('web.theme.name') or _('web.theme') or 'sobiraka2025'), fs=fs),
                 flavor=_('web.theme.flavor'),
                 customization=convert_or_none(RelativePath, _expand(_('web.theme.customization'))),
             ),

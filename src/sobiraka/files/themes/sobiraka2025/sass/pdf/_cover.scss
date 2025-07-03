@@ -1,0 +1,64 @@
+@page cover {
+    margin: 0;
+
+    @top-left {
+        content: none;
+    }
+
+    @top-right {
+        content: none;
+    }
+}
+
+.cover {
+    page: cover;
+
+    position: relative;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+
+    &::after {
+        break-after: page;
+    }
+
+    height: 297mm;  // full height of A4
+    box-sizing: border-box;
+
+    display: flex;
+    flex-direction: column;
+
+    %cover-element {
+        text-align: center;
+        margin: 0 3rem;
+
+        &:first-child{
+            margin-top: 3rem;
+        }
+
+        &:last-child{
+            margin-bottom: 3rem;
+        }
+    }
+
+    .cover-top {
+        @extend %cover-element;
+        flex-grow: 35;
+        font-size: 1.3em;
+        font-weight: bold;
+    }
+
+    .cover-center {
+        @extend %cover-element;
+        flex-grow: 65;
+        font-size: 2.5em;
+        font-weight: bold;
+    }
+
+    .cover-bottom {
+        @extend %cover-element;
+        flex-grow: 0;
+        font-size: 1.3em;
+    }
+}

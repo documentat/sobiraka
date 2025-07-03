@@ -1,0 +1,98 @@
+@use 'sass:meta' as *;
+
+@use 'flavor' as *;
+@use 'customization' as *;
+
+@mixin light-colors {
+    $white: #ffffff;
+    $black: #000000;
+    $blue: #576edc;
+    $lightblue: #e1e5f1;
+    $lightgray: #ececec;
+    $darkgray: #989898;
+    $lightgreen: #c1fbc7;
+
+    --background-color: #{$white};
+    --text-color: #{$black};
+    --link-color: #{$blue};
+    --highlight-color: #{$lightgray};
+    --highlight-accent-color: #{$darkgray};
+    --separator-color: #{$black};
+    --shadow-color: #{$darkgray};
+    --marker-color: #{$lightgreen};
+
+    --menu-current: #{$blue};
+    --menu-hover: #{$lightblue};
+
+    --admonition-example: #d8f6c7;
+    --admonition-example-accent: #84af6c;
+    --admonition-note: #d0effa;
+    --admonition-note-accent: #59a3b9;
+    --admonition-warning: #f6e9ac;
+    --admonition-warning-accent: #b1a160;
+    --admonition-danger: #f3caca;
+    --admonition-danger-accent: #c86060;
+
+    @if mixin-exists(custom-light-colors) {
+        @include custom-light-colors;
+    }
+}
+
+@mixin dark-colors {
+    $black: #353535;
+    $white: #d2d2d2;
+    $blue: #576edc;
+    $lightblue: #7988d0;
+    $darkblue: #3e4152;
+    $gray: #8d8d8d;
+
+    --background-color: #{$black};
+    --text-color: #{$white};
+    --link-color: #{$lightblue};
+    --highlight-color: #2d2c2c;
+    --highlight-accent-color: #{$gray};
+    --separator-color: #4d4d4d;
+    --shadow-color: #4d4d4d;
+    --marker-color: #577258;
+
+    --menu-current: #{$blue};
+    --menu-hover: #{$darkblue};
+
+    --admonition-example: #2c5644;
+    --admonition-example-accent: #79a695;
+    --admonition-note: #2c3e50;
+    --admonition-note-accent: #8cacc4;
+    --admonition-warning: #444227;
+    --admonition-warning-accent: #ccbc78;
+    --admonition-danger: #653838;
+    --admonition-danger-accent: #d26d6d;
+
+    @if mixin-exists(custom-dark-colors) {
+        @include custom-dark-colors;
+    }
+}
+
+@if is-browser() {
+    :root {
+        color-scheme: light dark;
+        @include light-colors;
+
+        @media only screen and (prefers-color-scheme: dark) {
+            @include dark-colors;
+        }
+
+        body[data-colors='light'] {
+            @include light-colors;
+        }
+
+        body[data-colors='dark'] {
+            @include dark-colors;
+        }
+    }
+}
+
+@if is-pdf() {
+    :root {
+        @include light-colors;
+    }
+}

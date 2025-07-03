@@ -4,17 +4,13 @@ paths:
   include: ['**/*.md']
   partials: partials
 web:
-  theme: book
   search:
     engine: pagefind
-    container: .book-search
     skip_elements: [ CodeBlock ]
     link_target: h2
     translations:
       placeholder: Поиск
-  highlight:
-    highlightjs:
-      style: github
+      load_more: Показать ещё...
 pdf:
   combined_toc: true
   highlight:

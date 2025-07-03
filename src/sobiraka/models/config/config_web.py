@@ -32,7 +32,7 @@ class Config_Web:
 
     resources_force_copy: tuple[str, ...] = ()
 
-    theme: Config_Theme = field(default_factory=lambda: Config_Theme.from_name('book'))
+    theme: Config_Theme = field(default_factory=lambda: Config_Theme.from_name('sobiraka2025'))
 
     theme_data: dict[str, Any] = field(default=frozendict)
 

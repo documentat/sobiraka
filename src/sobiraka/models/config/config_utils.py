@@ -23,7 +23,7 @@ def find_theme_dir(name: str, *, fs: FileSystem) -> AbsolutePath:
 
 @dataclass(kw_only=True, frozen=True)
 class Config_Theme:
-    path: AbsolutePath = AbsolutePath(files('sobiraka')) / 'files' / 'themes' / 'sobiraka2025'
+    path: AbsolutePath
     flavor: str = None
     customization: RelativePath = None
 

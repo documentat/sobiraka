@@ -1,9 +1,22 @@
-@use "admonitions";
-@use "code";
-@use "cover";
-@use "headings";
-@use "images";
-@use "links";
-@use "pages";
-@use "tables";
-@use "toc";
+@forward 'colors';
+@forward 'fonts';
+@forward 'sizes';
+
+@forward 'flavor';
+@forward 'customization';
+
+@forward 'common/admonitions';
+@forward 'common/blockquotes';
+@forward 'common/code';
+@forward 'common/content';
+@forward 'common/headings';
+@forward 'common/images';
+@forward 'common/links';
+@forward 'common/lists';
+@forward 'common/snippets';
+@forward 'common/tables';
+@forward 'common/tiles';
+
+@use 'pdf/cover';
+@use 'pdf/pages';
+@use 'pdf/toc';

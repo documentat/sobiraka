@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang='ru'>
+<head>
+    <meta charset='utf-8'/>
+    <meta name='viewport' content='width=device-width, initial-scale=1, minimum-scale=1, interactive-widget=resizes-content'/>
+    <meta name='color-scheme' content='dark light'/>
+    <title>Пример документации</title>
+
+    <!-- highlight.js -->
+    <link rel='preload' as='style' data-theme='light' href='https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css'>
+    <link rel='preload' as='style' data-theme='dark' href='https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github-dark.min.css'>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js'></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', (event) => {
+            hljs.configure({languages: []});
+            hljs.initHighlightingOnLoad();
+        });
+    </script>
+
+    <!-- Pagefind -->
+    <script src='_pagefind/pagefind-ui.js'></script>
+
+    <!-- Sobiraka2025 -->
+    <script src='_static/colors.js'></script>
+    <script src='_static/fullscreen.js'></script>
+    <script src='_static/search.js'></script>
+    <script src='_static/scroll.js'></script>
+    <link rel='stylesheet' type='text/css' href='_static/theme.css'/>
+</head>
+<body>
+
+<div class='fullscreen' tabindex='-1'></div>
+
+<header>
+    <a href='' class='site-logo'>
+        <img alt='' src='https://placehold.co/32x32?text=logo'/>
+        <div>Пример документации</div>
+    </a>
+
+    <div class='fill-space'></div>
+
+    <button class='btn-language'>RU</button>
+
+    <button class='btn-colors'>Dark Mode</button>
+
+    <search data-translations='{"placeholder":"Поиск по документации"}'></search>
+    <div class='close-search'></div>
+</header>
+
+<div class='main-wrapper'>
+
+    <label class='show-nav'><input type='checkbox'/></label>
+    <nav>
+        <ul>
+            <li><a class='selected' href=''>Первый раздел</a>
+                <ul>
+                    <li><a href=''>Первый подраздел</a></li>
+                    <li><a href=''>Второй подраздел</a></li>
+                    <li><a href=''>Третий подраздел</a></li>
+                    <li><a class='current' href=''>Четвёртый подраздел</a></li>
+                    <li><a href=''>Пятый подраздел</a></li>
+                </ul>
+            </li>
+            <li><a class='selected' href=''>Второй раздел, с более сложной иерархией и более длинным названием</a>
+                <ul>
+                    <li><a href=''>Первый подраздел</a>
+                        <ul>
+                            <li><a href=''>Второй подраздел, внутри которого есть ещё два подраздела более мелкого уровня</a>
+                                <ul>
+                                    <li><a href=''>Третий подраздел</a>
+                                    <li><a href=''>Четвёртый подраздел</a></li>
+                                </ul>
+                            <li><a href=''>Пятый подраздел</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+    </nav>
+
+    <aside>
+        <label><input type='checkbox'/>На этой странице</label>
+        <ul>
+            <li><a href='#lists'>Списки</a>
+                <ul>
+                    <li><a href='#ul'>Ненумерованные списки</a></li>
+                    <li><a href='#ol'>Нумерованные списки</a></li>
+                </ul>
+            </li>
+            <li><a href='#admonitions'>Инфоблоки</a></li>
+            <li><a href='#tables'>Таблицы</a></li>
+            <li><a href='#tabs'>Вкладки и код</a></li>
+            <li><a href='#images'>Изображения</a></li>
+            <li><a href='#snippets-and-tiles'>Сниппеты и плитки</a>
+                <ul>
+                    <li><a href='#snippets'>Сниппеты</a></li>
+                    <li><a href='#tiles'>Плитки</a></li>
+                </ul>
+            </li>
+        </ul>
+    </aside>
+
+
+    <main>
+        <article>
+            <h1 data-number='1.4'>Форматирование</h1>
+
+            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Proin tortor purus platea sit eu id nisi litora libero. Neque vulputate consequat ac amet augue blandit maximus aliquet congue. Pharetra vestibulum posuere ornare faucibus fusce dictumst orci aenean eu facilisis ut volutpat commodo senectus purus himenaeos fames primis convallis nisi.</p>
+
+            <p>Phasellus fermentum malesuada phasellus <strong>netus dictum</strong> aenean placerat egestas amet. <em>Ornare</em> taciti semper dolor tristique morbi. Sem leo tincidunt aliquet semper eu <code>lectus scelerisque quis</code>. Sagittis vivamus mollis nisi mollis enim fermentum laoreet.</p>
+
+            <p>Curabitur semper venenatis <a href=''>lectus viverra</a> ex dictumst nulla maximus. <a href=''><strong>Primis iaculis elementum</strong></a> conubia feugiat venenatis dolor augue ac blandit nullam ac phasellus <a href=''><code>turpis feugiat mollis</code></a>. Duis lectus porta mattis imperdiet vivamus augue litora lectus arcu. Justo torquent pharetra volutpat ad blandit bibendum accumsan nec elit cras luctus primis ipsum gravida class congue.</p>
+
+            <blockquote>
+                <p>Vehicula etiam elementum finibus enim duis feugiat commodo adipiscing tortor tempor elit. Et mollis consectetur habitant turpis tortor consectetur adipiscing vulputate dolor lectus iaculis convallis adipiscing. Nam hendrerit dignissim condimentum ullamcorper diam morbi eget consectetur odio in sagittis.</p>
+            </blockquote>
+
+            <p>Rutrum dictumst mollis vestibulum est nascetur neque nullam, cursus placerat pellentesque tellus mi tortor. Commodo augue iaculis rhoncus integer massa imperdiet porta enim sed donec platea, praesent himenaeos turpis nisi sem class lacinia suspendisse justo congue. <mark>Condimentum dignissim nostra aptent</mark> felis ultrices accumsan rutrum, aenean placerat enim habitasse ridiculus faucibus inceptos nullam, gravida augue phasellus in litora at.
+            </p>
+
+
+            <h2 data-number='1.4.1' id='lists'>Списки<a class='anchor' href='#lists'>#</a></h2>
+
+            <h3 data-number='1.4.1.1' id='ul'>Ненумерованные списки<a class='anchor' href='#ul'>#</a></h3>
+
+            <p>Компактный список:</p>
+
+            <ul>
+                <li>Lorem ipsum dolor sit amet,</li>
+                <li>consectetur adipiscing <img src='https://upload.wikimedia.org/wikipedia/commons/8/85/Smiley.svg'/> elit,</li>
+                <li>sed do eiusmod tempor incididunt.</li>
+            </ul>
+
+            <p>Некомпактный список:</p>
+
+            <ul>
+                <li><p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Proin tortor purus platea sit eu id nisi litora libero. Neque vulputate consequat ac amet augue blandit maximus aliquet congue. <img src='https://upload.wikimedia.org/wikipedia/commons/8/85/Smiley.svg'/> Pharetra vestibulum posuere ornare faucibus fusce dictumst orci aenean eu facilisis ut volutpat commodo senectus purus himenaeos fames primis convallis nisi.</p></li>
+
+                <li><p>Phasellus fermentum malesuada phasellus netus dictum aenean placerat egestas amet. Ornare taciti semper dolor tristique morbi. Sem leo tincidunt aliquet semper eu lectus scelerisque quis. Sagittis vivamus mollis nisi mollis enim fermentum laoreet.</p>
+                    <ul>
+                        <li>
+                            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Proin tortor purus platea sit eu id nisi litora libero. Neque vulputate consequat ac amet augue blandit maximus aliquet congue. Pharetra vestibulum posuere ornare faucibus fusce dictumst orci aenean eu facilisis ut volutpat commodo senectus purus himenaeos fames primis convallis nisi.</p>
+                            <div class='big-image'>
+                                <a href='https://placehold.co/600x100/skyblue/white'><img width='600px' height='100px' src='https://placehold.co/600x100/skyblue/white' alt=''/></a>
+                            </div>
+                        </li>
+                        <li><p>Phasellus fermentum malesuada phasellus netus dictum aenean placerat egestas amet. Ornare taciti semper dolor tristique morbi. Sem leo tincidunt aliquet semper eu lectus scelerisque quis. Sagittis vivamus mollis nisi mollis enim fermentum laoreet.</p>
+                            <ul>
+                                <li>Lorem ipsum dolor sit amet,</li>
+                                <li>consectetur adipiscing elit,</li>
+                                <li>sed do eiusmod tempor incididunt.</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </li>
+
+                <li><p>Curabitur semper venenatis lectus viverra ex dictumst nulla maximus. Primis iaculis elementum conubia feugiat venenatis dolor augue ac blandit nullam ac phasellus turpis feugiat mollis. Duis lectus porta mattis imperdiet vivamus augue litora lectus arcu. Justo torquent pharetra volutpat ad blandit bibendum accumsan nec elit cras luctus primis ipsum gravida class congue.</p></li>
+            </ul>
+
+            <h3 data-number='1.4.1.2' id='ol'>Нумерованные списки<a class='anchor' href='#ol'>#</a></h3>
+
+            <p>Номера пунктов никуда не залезут, потому что они родные браузерные, я поменял только цвет.</p>
+
+            <ol>
+                <li>Lorem ipsum dolor sit amet,</li>
+                <li>consectetur adipiscing elit,</li>
+                <li>sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</li>
+                <li>Proin tortor purus platea sit eu id nisi litora libero.</li>
+                <li>Neque vulputate consequat ac amet augue blandit maximus aliquet congue.</li>
+                <li>Pharetra vestibulum posuere ornare faucibus fusce dictumst</li>
+                <li>orci aenean eu facilisis ut volutpat commodo</li>
+                <li>senectus purus himenaeos fames primis convallis nisi.</li>
+                <li>Phasellus fermentum malesuada phasellus netus dictum aenean placerat egestas amet.</li>
+                <li>Ornare taciti semper dolor tristique morbi.</li>
+                <li>Sem leo tincidunt aliquet semper eu lectus scelerisque quis.</li>
+                <li>Sagittis vivamus mollis nisi mollis enim fermentum laoreet.</li>
+            </ol>
+
+            <p>Вложенная нумерация выглядит так:</p>
+
+            <ol start='13'>
+                <li>Lorem ipsum dolor sit amet,</li>
+                <li>consectetur adipiscing elit,</li>
+                <li>sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+                    <ol>
+                        <li>Proin tortor purus platea sit eu id nisi litora libero.</li>
+                        <li>Neque vulputate consequat ac amet augue blandit maximus aliquet congue.</li>
+                        <li>Pharetra vestibulum posuere ornare faucibus fusce dictumst
+                            <ol>
+                                <li>orci aenean eu facilisis ut volutpat commodo</li>
+                                <li>senectus purus himenaeos fames primis convallis nisi.</li>
+                                <li>Phasellus fermentum malesuada phasellus netus dictum aenean placerat egestas amet.</li>
+                            </ol>
+                        </li>
+                        <li>Ornare taciti semper dolor tristique morbi.</li>
+                        <li>Sem leo tincidunt aliquet semper eu lectus scelerisque quis.</li>
+                    </ol>
+                </li>
+            </ol>
+
+            <p>При необходимости также включим поддержку такого формата:</p>
+
+            <ol class='lower-alpha'>
+                <li>Lorem ipsum dolor sit amet,</li>
+                <li>consectetur adipiscing elit,</li>
+                <li>sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+            </ol>
+
+            <p>Или такого:</p>
+
+            <ol class='upper-alpha'>
+                <li>Lorem ipsum dolor sit amet,</li>
+                <li>consectetur adipiscing elit,</li>
+                <li>sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+            </ol>
+
+
+            <h2 data-number='1.4.2' id='admonitions'>Инфоблоки<a class='anchor' href='#admonitions'>#</a></h2>
+
+            <div class='note'>
+                <p><b>Примечание.</b> Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Proin tortor purus platea sit eu id nisi litora libero. Neque vulputate consequat ac amet augue blandit maximus aliquet congue. Pharetra vestibulum posuere ornare faucibus fusce dictumst orci aenean eu facilisis ut volutpat commodo senectus purus himenaeos fames primis convallis nisi.</p>
+                <p>Phasellus fermentum malesuada phasellus netus dictum aenean placerat egestas amet. Ornare taciti semper dolor tristique morbi. Sem leo tincidunt aliquet semper eu lectus scelerisque quis. Sagittis vivamus mollis nisi mollis enim fermentum laoreet.</p>
+            </div>
+
+            <div class='example'>
+                <p><b>Пример.</b> Curabitur semper venenatis lectus viverra ex dictumst nulla maximus. Primis iaculis elementum conubia feugiat venenatis dolor augue ac blandit nullam ac phasellus turpis feugiat mollis. Duis lectus porta mattis imperdiet vivamus augue litora lectus arcu. Justo torquent pharetra volutpat ad blandit bibendum accumsan nec elit cras luctus primis ipsum gravida class congue.</p>
+            </div>
+
+            <div class='warning'>
+                <p><b>Внимание.</b> Vehicula etiam elementum finibus enim duis feugiat commodo adipiscing tortor tempor elit. Et mollis consectetur habitant turpis tortor consectetur adipiscing vulputate dolor lectus iaculis convallis adipiscing. Nam hendrerit dignissim condimentum ullamcorper diam morbi eget consectetur odio in sagittis.</p>
+            </div>
+
+            <div class='danger'>
+                <p><b>Важно.</b> Rutrum dictumst mollis vestibulum est nascetur neque nullam, cursus placerat pellentesque tellus mi tortor. Commodo augue iaculis rhoncus integer massa imperdiet porta enim sed donec platea, praesent himenaeos turpis nisi sem class lacinia suspendisse justo congue. Condimentum dignissim nostra aptent felis ultrices accumsan rutrum, aenean placerat enim habitasse ridiculus faucibus inceptos nullam, gravida augue phasellus in litora at.</p>
+            </div>
+
+
+            <h2 data-number='1.4.3' id='tables'>Таблицы<a class='anchor' href='#tables'>#</a></h2>
+
+            <div class='table-wrapper'>
+                <table>
+                    <thead>
+                    <tr>
+                        <th>№</th>
+                        <th>Параметр</th>
+                        <th>Значение</th>
+                        <th>Комментарий</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td rowspan='2'>1</td>
+                        <td rowspan='2'>Операционная система</td>
+                        <td><p>Windows</p></td>
+                        <td>Поддерживаются версии 10 и 11.</td>
+                    </tr>
+                    <tr>
+                        <td>Linux</td>
+                        <td>
+                            <p>Рекомендуются Ubuntu и CentOS последних версий.</p>
+                            <p>Другие дистрибутивы не поддерживаются.</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td rowspan='2'>2</td>
+                        <td rowspan='2'>Браузер</td>
+                        <td>Chrome</td>
+                        <td>Рекомендуется последняя версия.</td>
+                    </tr>
+                    <tr>
+                        <td>Firefox</td>
+                        <td>Рекомендуется последняя версия.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+
+            <h2 data-number='1.4.4' id='tabs'>Вкладки и <code>код</code><a class='anchor' href='#tabs'>#</a></h2>
+
+            <p>Это код во вкладках:</p>
+
+            <div class='tabs'>
+                <label><input type='radio' name='tabs-1' checked/> Python</label>
+                <div class='tab-content'>
+                    <pre><code class='language-python'>class MyWebProcessor(WebProcessor):
+    async def process_header(self, header: Header, page: Page):
+        header, = await super().process_header(header, page)
+        if header.level >= 2:
+            url = '#' + header.identifier
+            header.content += Space(), Link(Str('#'), url=url)
+        return header,</code></pre>
+                </div>
+
+                <label><input type='radio' name='tabs-1'/> Bash</label>
+                <div class='tab-content'>
+                    <pre><code class='language-bash'>echo 'Hello, world!'</code></pre>
+                </div>
+
+                <label><input type='radio' name='tabs-1'/> Другие языки</label>
+                <div class='tab-content'>
+                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Proin tortor purus platea sit eu id nisi litora libero. Neque vulputate consequat ac amet augue blandit maximus aliquet congue. Pharetra vestibulum posuere ornare faucibus fusce dictumst orci aenean eu facilisis ut volutpat commodo senectus purus himenaeos fames primis convallis nisi.</p>
+
+                    <p>Phasellus fermentum malesuada phasellus netus dictum aenean placerat egestas amet. Ornare taciti semper dolor tristique morbi. Sem leo tincidunt aliquet semper eu lectus scelerisque quis. Sagittis vivamus mollis nisi mollis enim fermentum laoreet.
+                    </p>
+
+                    <pre><code class='language-python'>print('Hello, world!')</code></pre>
+                </div>
+            </div>
+
+            <p>А это просто код:</p>
+
+            <p>
+            <pre><code class='language-python'>class MyWebProcessor(WebProcessor):
+    async def process_header(self, header: Header, page: Page):
+        header, = await super().process_header(header, page)
+        if header.level >= 2:
+            url = '#' + header.identifier
+            header.content += Space(), Link(Str('#'), url=url)
+        return header,</code></pre>
+            </p>
+
+            <p>А это просто следующий абзац.</p>
+
+
+            <h2 data-number='1.4.5' id='images'>Изображения<a class='anchor' href='#images'>#</a></h2>
+
+            <p>Вот простое изображение без подписи:</p>
+
+            <div class='big-image'>
+                <a href='https://placehold.co/2000x500/skyblue/white'><img width='2000px' height='500px' src='https://placehold.co/2000x500/skyblue/white' alt='' class='fullscreen'/></a>
+            </div>
+
+            <p>Вот изображение с подписью:</p>
+
+            <figure>
+                <a href='https://placehold.co/600x300/skyblue/white'><img width='600px' height='300px' src='https://placehold.co/600x300/skyblue/white' alt=''/></a>
+                <figcaption>Рисунок 1. Очень важный рисунок.</figcaption>
+            </figure>
+
+            <p>Вот непрогрузившийся рисунок с alt-текстом:</p>
+
+            <div class='big-image'>
+                <a href=''><img width='600px' height='300px' src='' alt='Очень важный рисунок'/></a>
+            </div>
+
+            <p>Внутри абзаца могут быть инлайновые картинки, такие как эта <img src='https://upload.wikimedia.org/wikipedia/commons/8/85/Smiley.svg'/>. Если картинка не прогружается, то alt-текст остаётся читабельным: <img src='' alt='например, это alt-текст непрогрузившейся картинки'/>.</p>
+
+
+            <h2 data-number='1.4.6' id='snippets-and-tiles'>Сниппеты и плитки<a class='anchor' href='#snippets-and-tiles'>#</a></h2>
+
+            <h3 data-number='1.4.6.1' id='snippets'>Сниппеты<a class='anchor' href='#snippets'>#</a></h3>
+
+            <a class='snippet' href=''>
+                <div class='snippet-title'>Другая статья</div>
+            </a>
+
+            <a class='snippet' href=''>
+                <div class='snippet-title'>Другая статья</div>
+                <p>Эта ссылка ведёт на какую-то другую статью.</p>
+            </a>
+
+            <a class='snippet' href=''>
+                <div class='snippet-title'>Другая статья</div>
+                <p>Эта ссылка ведёт на какую-то другую статью. У неё очень большое описание, которое может занимать несколько строк или даже пару абзацев.</p>
+                <p>Такое описание всё равно должно выглядеть нормально и не ломаться.</p>
+            </a>
+
+            <h3 data-number='1.4.6.2' id='tiles'>Плитки<a class='anchor' href='#tiles'>#</a></h3>
+
+            <div class='tiles'>
+
+                <a class='snippet' href=''>
+                    <div class='snippet-title'>Другая статья</div>
+                    <p>Эта ссылка ведёт на какую-то другую статью.</p>
+                </a>
+
+                <a class='snippet' href=''>
+                    <div class='snippet-title'>Другая статья</div>
+                    <p>Эта ссылка ведёт на какую-то другую статью.</p>
+                </a>
+
+                <a class='snippet' href=''>
+                    <div class='snippet-title'>Другая статья</div>
+                    <p>Эта ссылка ведёт на какую-то другую статью.</p>
+                </a>
+
+                <a class='snippet' href=''>
+                    <div class='snippet-title'>Другая статья</div>
+                    <p>Эта ссылка ведёт на какую-то другую статью. У неё очень большое описание, которое может занимать несколько строк или даже пару абзацев.</p>
+                    <p>Такое описание всё равно должно выглядеть нормально и не ломаться.</p>
+                </a>
+
+                <a class='snippet' href=''>
+                    <div class='snippet-title'>Другая статья</div>
+                    <p>Эта ссылка ведёт на какую-то другую статью.</p>
+                </a>
+
+                <a class='snippet' href=''>
+                    <div class='snippet-title'>Другая статья</div>
+                    <p>Эта ссылка ведёт на какую-то другую статью.</p>
+                </a>
+
+            </div>
+
+        </article>
+    </main>
+
+</div>
+
+<footer>
+    © Documentat
+</footer>
+
+</body>
+</html>

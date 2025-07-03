@@ -1,0 +1,52 @@
+@use '../sizes' as *;
+
+article {
+    ul, ol {
+        padding-left: 2rem;
+        margin-bottom: $paragraph-spacing;
+
+        &:not(:has(p)) > li {
+            margin: $line-spacing 0;
+
+            ul, ol {
+                margin-bottom: 0;
+            }
+        }
+
+        &:has(p) > li {
+            margin: $paragraph-spacing 0;
+        }
+    }
+
+    ul {
+        list-style-type: square;
+
+        ::marker {
+            color: var(--highlight-accent-color);
+        }
+    }
+
+    ol {
+        --list-style-type: decimal;
+        list-style-type: decimal;
+
+        & > li {
+            &::marker {
+                content: counters(list-item, '.', var(--list-style-type)) '. ';
+                color: var(--highlight-accent-color);
+            }
+        }
+
+        &:has(p) > li{
+            line-height: #{1em + $line-spacing};
+        }
+
+        &.lower-alpha {
+            --list-style-type: lower-alpha;
+        }
+
+        &.upper-alpha {
+            --list-style-type: upper-alpha;
+        }
+    }
+}

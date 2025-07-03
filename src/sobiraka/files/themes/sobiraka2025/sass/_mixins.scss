@@ -1,0 +1,110 @@
+@use 'sass:color';
+@use 'sizes' as *;
+
+@mixin for-desktop {
+    @media (width >= $total-width) {
+        @content;
+    }
+}
+
+@mixin for-tablet {
+    @media (calc($total-width - $aside-right-width) <= width < $total-width) {
+        @content;
+    }
+}
+
+@mixin for-phone {
+    @media (width < calc($total-width - $aside-right-width)) {
+        @content;
+    }
+}
+
+@mixin for-desktop-or-tablet {
+    @media (calc($total-width - $aside-right-width) <= width) {
+        @content;
+    }
+}
+
+@mixin for-tablet-or-phone {
+    @media (width < $total-width) {
+        @content;
+    }
+}
+
+@mixin full-width {
+    max-width: min(100vw, var(--total-width));
+}
+
+@mixin numeration {
+    &[data-number]:not([data-number=''])::before {
+        content: attr(data-number) '. ';
+        color: var(--highlight-accent-color);
+        display: inline-block;
+        padding-right: .5ex;
+    }
+}
+
+
+/*
+    Reset the default styles for a <button> or an <input>.
+ */
+@mixin reset-input {
+    appearance: none;
+    background: none;
+    border: none;
+    outline: none;
+    padding: 0;
+}
+
+@mixin svg-icon($icon, $color, $icon-size: 1.0) {
+    font-size: 0;
+
+    &::before {
+        content: '';
+        display: inline-block;
+
+        // We only use the icon's shape, not the colors
+        background: $color;
+        mask: url('icons/#{$icon}.svg') center / contain no-repeat;
+
+        // The icon size is proportional to the container size
+        // Note that it must be given as a unitless value, not a percentage
+        width: calc($icon-size * var(--header-button-size));
+        height: calc($icon-size * var(--header-button-size));
+    }
+}
+
+/*
+    A text-based or icon-based button, highlighted with a circle when hovered.
+ */
+@mixin header-icon($icon: null, $icon-size: 1.0) {
+    @include reset-input;
+
+    min-width: var(--header-button-size);
+    min-height: var(--header-button-size);
+
+    // Make the button a perfect circle and prevent it from shrinking
+    // We use clip-path , because we don't want the invisible corners to be clickable
+    clip-path: circle(50%);
+    overflow: hidden;
+    flex: 0 0 min-content;
+
+    // Keep a distance from another button on the right
+    &:not(:last-child) {
+        margin-right: .5rem;
+    }
+
+    // Highlight the circle when hovered
+    &:hover {
+        background: var(--highlight-color);
+        cursor: pointer;
+    }
+
+    @if $icon {
+        @include svg-icon($icon, var(--text-color), $icon-size);
+    } @else {
+        font-size: calc(.4 * var(--header-button-size));
+        font-weight: bold;
+        color: var(--text-color);
+    }
+}
