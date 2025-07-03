@@ -32,8 +32,15 @@ class TestMeta_Version_12_3(SinglePageProjectTest):
         self.assertEqual(Version(12, 3), self.page.meta.version)
 
 
-class TestMeta_Version_Title(SinglePageProjectTest):
+class TestMeta_Title(SinglePageProjectTest):
     SOURCE = '---\ntitle: Hello\n---\nHello, world!'
+
+    def test_meta(self):
+        self.assertEqual('Hello', self.page.meta.title)
+
+
+class TestMeta_LongSeparators(SinglePageProjectTest):
+    SOURCE = '----------\ntitle: Hello\n------\nHello, world!'
 
     def test_meta(self):
         self.assertEqual('Hello', self.page.meta.title)

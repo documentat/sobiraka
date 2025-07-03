@@ -10,7 +10,7 @@ from ..namingscheme import NamingScheme
 from ..page import Page, PageMeta
 from ..syntax import Syntax
 
-_META_PATTERN = re.compile(r'--- \n (.+?\n)? --- (?: \n+ (.+) )?', re.DOTALL | re.VERBOSE)
+_META_PATTERN = re.compile(r'-{3,} \n (.+?\n)? -{3,} (?: \n+ (.+) )?', re.DOTALL | re.VERBOSE)
 
 
 class SourceFile(Source):
