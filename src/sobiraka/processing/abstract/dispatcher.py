@@ -144,7 +144,7 @@ class Dispatcher(metaclass=ABCMeta):
     @final
     async def process_container(self, elem: Element, page: Page) -> Element:
         """
-        Process the `elem` and modify it, if necessary.
+        Process the `link` and modify it, if necessary.
         """
         try:
             assert isinstance(elem.content, ListContainer)

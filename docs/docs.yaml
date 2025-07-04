@@ -4,6 +4,7 @@ paths:
   include: ['**/*.md']
   partials: partials
 web:
+  processor: customprocessor.py
   search:
     engine: pagefind
     skip_elements: [ CodeBlock ]
@@ -12,6 +13,7 @@ web:
       placeholder: Поиск
       load_more: Показать ещё...
 pdf:
+  processor: customprocessor.py
   combined_toc: true
   highlight:
     pygments:
@@ -40,3 +42,5 @@ prover:
     - [CurvedDouble]
   allowed_apostrophes:
     - Straight
+variables:
+  GITHUB: https://github.com/documentat/sobiraka

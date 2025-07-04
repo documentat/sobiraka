@@ -6,7 +6,7 @@
 
 ## API для всех форматов {#all}
 
-- `builder` — объект класса `Builder` из Собираки.
+- `builder` — объект класса [`Builder`](../../../src/sobiraka/processing/abstract/builder.py) из Собираки.
 
 - `project` — текущий проект.
 

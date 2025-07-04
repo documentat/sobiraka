@@ -112,10 +112,13 @@ class Processor(Dispatcher, Generic[B], metaclass=ABCMeta):
     async def process_link(self, link: Link, page: Page):
         if re.match(r'^\w+:', link.url):
             RT[page].links.add(UrlHref(link.url))
-        elif page.syntax == Syntax.RST:
+            return link,
+
+        if page.syntax == Syntax.RST:
             page.issues.append(BadLink(link.url))
-        else:
-            await self.process_internal_link(link, link.url, page)
+            return link,
+
+        return await self.process_internal_link(link, link.url, page)
 
     @override
     async def process_para(self, para: Para, page: Page) -> tuple[Element, ...]:
@@ -136,7 +139,7 @@ class Processor(Dispatcher, Generic[B], metaclass=ABCMeta):
 
     # region Process links
 
-    async def process_internal_link(self, elem: Link, target_text: str, page: Page):
+    async def process_internal_link(self, link: Link, target_text: str, page: Page) -> tuple[Element, ...]:
         # If we are inside a @manual-toc directive, prepare to report any generated links to it.
         # Note that the actual link processing will be called asynchronously in an arbitrary order,
         # and yet we will have to report the generated PageHrefs in the order of their appearance on the Page.
@@ -151,9 +154,11 @@ class Processor(Dispatcher, Generic[B], metaclass=ABCMeta):
 
         # Schedule the actual link processing for the next stage
         self.builder.process2_tasks[page].append(create_task(
-            self.process_internal_link_2(elem, target_text, page, callback)))
+            self.process_internal_link_2(link, target_text, page, callback)))
 
-    async def process_internal_link_2(self, elem: Link, target_text: str, page: Page,
+        return link,
+
+    async def process_internal_link_2(self, link: Link, target_text: str, page: Page,
                                       callback: Callable[[PageHref], None] = None):
         # pylint: disable=too-many-locals
         try:
@@ -183,11 +188,11 @@ class Processor(Dispatcher, Generic[B], metaclass=ABCMeta):
                 # Wait until the Waiter finds the Source by the path and loads its pages and anchors
                 target = await self.builder.waiter.wait(target_path, Status.PROCESS1)
 
-            # Resolve the link and update the elem accordingly
+            # Resolve the link and update the link accordingly
             href = target.href(identifier)
-            elem.url = self.builder.make_internal_url(href, page=page)
-            if not elem.content and href.default_label:
-                elem.content = Str(href.default_label),
+            link.url = self.builder.make_internal_url(href, page=page)
+            if not link.content and href.default_label:
+                link.content = Str(href.default_label),
 
             # Add the link to the list of the page's links
             RT[page].links.add(href)
@@ -195,8 +200,8 @@ class Processor(Dispatcher, Generic[B], metaclass=ABCMeta):
                 callback(href)
 
         except DisableLink:
-            i = elem.parent.content.index(elem)
-            elem.parent.content[i:i + 1] = elem.content
+            i = link.parent.content.index(link)
+            link.parent.content[i:i + 1] = link.content
 
         except (KeyError, AssertionError, PathGoesOutsideStartDirectory, NoSourceCreatedForPath,
                 IdentifierResolutionError):
