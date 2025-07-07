@@ -5,6 +5,9 @@ paths:
   partials: partials
 web:
   processor: customprocessor.py
+  highlight:
+    highlightjs:
+      style: null
   search:
     engine: pagefind
     skip_elements: [ CodeBlock ]
