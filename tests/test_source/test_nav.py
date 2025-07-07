@@ -85,12 +85,30 @@ class TestNav_Reorder(TestNav):
     EXPECTED_ORDER = 'b', 'c', 'a'
 
 
-class TestNav_SetTitle(TestNav):
+class TestNav_SetTitle_LongForm(TestNav):
+    NAV_YAML = '''
+    items:
+      - a:
+          title: Page A name from Nav
+      - b:
+          title: Page B name from Nav
+      - c:
+          title: Page C name from Nav
+    '''
+    TEXT_B = '# Page B name from content'
+    TEXT_C = '---\ntitle: Page C name from PageMeta\n---'
+
+    EXPECTED_TITLES = {'a': 'Page A name from Nav',
+                       'b': 'Page B name from Nav',
+                       'c': 'Page C name from PageMeta'}
+
+
+class TestNav_SetTitle_ShortForm(TestNav):
     NAV_YAML = '''
     items:
       - a: Page A name from Nav
       - b: Page B name from Nav
-      - c: Page C name from PageMeta
+      - c: Page C name from Nav
     '''
     TEXT_B = '# Page B name from content'
     TEXT_C = '---\ntitle: Page C name from PageMeta\n---'
