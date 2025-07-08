@@ -14,7 +14,7 @@ sobiraka [--tmpdir TMPDIR] latex CONFIG [VOLUME] [--output OUTPUT]
 
 Во время сборки Собирака использует временную директорию `TMPDIR` (по умолчанию — `build/tex`). В ней создаются промежуточные файлы, необходимые для работы `xelatex`.
 
-::: warning
+::: danger
 Сборка PDF через LaTeX имеет ряд недостатков.
 
 - Для сборки требуется пакет [TeX Live](https://tug.org/texlive/), который занимает около 2 ГБ.

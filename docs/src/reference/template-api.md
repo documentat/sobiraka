@@ -6,27 +6,27 @@
 
 ## API для всех форматов {#all}
 
-- `builder` — объект класса [`Builder`](../../../src/sobiraka/processing/abstract/builder.py) из Собираки.
+- [`builder`](../../../src/sobiraka/processing/abstract/builder.py) — объект-сборщик.
 
-- `project` — текущий проект.
+- [`project`](../../../src/sobiraka/models/project.py) — текущий проект.
 
-- `volume` — текущий [том](../overview/terms.md).
+- [`volume`](../../../src/sobiraka/models/volume.py) — текущий [том](../overview/terms.md).
 
-- `config` — объект для доступа к настройкам текущего тома.
+- [`config`](../../../src/sobiraka/models/config/config.py) — объект для доступа к настройкам текущего тома.
 
-- `head` — дополнительный код, который необходимо добавить внутрь тега `<head>`.
+- [`head`](../../../src/sobiraka/processing/html/head.py) — дополнительный код, который необходимо добавить внутрь тега `<head>`.
 
-- `toc()` — функция, генерирующая [оглавление](../overview/files.md#toc) по текущему тому.
+- [`toc()`](../../../src/sobiraka/processing/toc.py#:~:text=def%20toc) — функция, генерирующая оглавление по текущему тому.
 
 ## API для сборки HTML {#html}
 
-- `number` — номер страницы, если в томе включена [автонумерация](../overview/files.md#autonumeration).
+- `number` — номер страницы, если в томе включена [автонумерация](../writing/numeration.md).
 
 - `title` — заголовок страницы.
 
 - `body` — содержимое страницы без заголовка, преобразованное в HTML.
 
-- `page` — объект для доступа к текущей странице.
+- [`page`](../../../src/sobiraka/models/page/page.py) — объект для доступа к текущей странице.
 
 - `ROOT` — относительный путь к корню документации. Пример: `..`.
 
@@ -42,13 +42,13 @@
 
 - `Language` — класс для получения названия языка. См. библиотеку [`iso639`](https://github.com/jacksonllee/iso639).
 
-- `local_toc()` — функция, генерирующая [оглавление](../overview/files.md#toc) по текущей странице.
+- [`local_toc()`](../../../src/sobiraka/processing/toc.py#:~:text=def%20local_toc) — функция, генерирующая оглавление по текущей странице.
 
 ## API для сборки PDF {#pdf}
 
 - `content` — список кортежей, каждый из которых содержит четыре элемента:
 
    - объект для доступа к текущей странице;
-   - номер страницы, если в томе включена [автонумерация](../overview/files.md#autonumeration);
+   - номер страницы, если в томе включена [автонумерация](../writing/numeration.md);
    - заголовок страницы;
    - содержимое страницы без заголовка, преобразованное в HTML.

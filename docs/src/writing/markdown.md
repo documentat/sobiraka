@@ -1,26 +1,30 @@
+---
+toc_title: Markdown
+---
+
 # Поддержка Markdown
 
 Markdown — основной синтаксис исходного текста, поддерживаемый Собиракой. Все файлы с расширением `.md`, а также все файлы с неопознанными расширениями (то есть не [`.rst`](rest.md)), интерпретируются как файлы в формате Markdown.
 
-Собирака использует вариацию Markdown, реализованную в конвертере Pandoc. Полную документацию по его особенностям можно найти здесь: [Pandoc's Markdown](https://pandoc.org/MANUAL.html#pandocs-markdown).
+Собирака использует вариацию Markdown, реализованную в конвертере Pandoc. Полную документацию по его особенностям можно найти здесь: [Pandoc Markdown](https://pandoc.org/MANUAL.html#pandocs-markdown).
 
-По сравнению с конфигурацией Pandoc по умолчанию, в Собираке выключены расширения [`citations`](https://pandoc.org/MANUAL.html#extension-citations), [`smart`](https://pandoc.org/MANUAL.html#extension-smart), [`raw_html`](https://pandoc.org/MANUAL.html#extension-raw_html), [`raw_tex`](https://pandoc.org/MANUAL.html#extension-raw_tex) и [`implicit_figures`](https://pandoc.org/MANUAL.html#extension-implicit_figures), а также добавлено расширение [`mark`](https://pandoc.org/MANUAL.html#extension-mark). Также в файлах Markdown, как и в любых текстовых файлах для Собираки, можно использовать [директивы](../syntax/directives.md) и [синтаксис Jinja](../syntax/jinja.md).
+По сравнению с конфигурацией Pandoc по умолчанию, в Собираке выключены расширения [`citations`](https://pandoc.org/MANUAL.html#extension-citations), [`smart`](https://pandoc.org/MANUAL.html#extension-smart), [`raw_html`](https://pandoc.org/MANUAL.html#extension-raw_html), [`raw_tex`](https://pandoc.org/MANUAL.html#extension-raw_tex) и [`implicit_figures`](https://pandoc.org/MANUAL.html#extension-implicit_figures), а также добавлено расширение [`mark`](https://pandoc.org/MANUAL.html#extension-mark). Также в файлах Markdown, как и в любых текстовых файлах для Собираки, можно использовать [директивы](directives.md) и [синтаксис Jinja](jinja.md).
 
 Ниже перечислены некоторые наиболее важные особенности Pandoc Markdown и порядок их обработки.
 
 ## Заголовки {#headers}
 
-Заголовок первого уровня интерпретируется как простой текст без форматирования. Он обрабатывается отдельно от тела страницы — в частности, это означает, что заголовок и тело страницы передаются в разных переменных для [HTML-шаблона](../reference/template-api.md).
+Текст заголовка первого уровня будет отображаться в [оглавлении](../organizing/toc.md) при отсутствии у страницы свойств [`toc_title`](../organizing/metadata.md#toc_title) и [`title`](../organizing/metadata.md#title).
 
-Если после заголовка стоит конструкция `{-}`, Собирака исключает его из [автонумерации](files.md#autonumeration).
+Если в конце заголовка стоит конструкция `{-}`, Собирака исключает его из [автонумерации](numeration.md).
 
 ## Подзаголовки {#subheaders}
 
 Заголовок любого уровня, кроме первого, интерпретируется как блочный элемент и может содержать форматирование.
 
-Если после заголовка стоит конструкция `{-}`, Собирака исключает его из [автонумерации](files.md#autonumeration).
+Если в конце подзаголовка стоит конструкция `{-}`, Собирака исключает его из [автонумерации](numeration.md).
 
-Каждому заголовку назначается идентификатор (см. [`header_attributes`](https://pandoc.org/MANUAL.html#extension-header_attributes)). Этот идентификатор следует указывать в [ссылках на подзаголовок](../syntax/links.md#anchor-links), а при сборке [HTML](../build-html/) он же может быть виден читателю в строке браузера при переходе к подзаголовку из оглавления.
+Каждому заголовку назначается идентификатор (см. [`header_attributes`](https://pandoc.org/MANUAL.html#extension-header_attributes)). Этот идентификатор следует указывать в [ссылках на подзаголовок](links.md#anchor-links), а при сборке [HTML](../build-html/) он же может быть виден читателю в строке браузера при переходе к подзаголовку из оглавления.
 
 Если идентификатор не указан явно, то он формируется автоматически на основе текста заголовка. За автоматическое формирование идентификатора отвечает Pandoc Markdown (см. [`auto_identifiers`](https://pandoc.org/MANUAL.html#extension-auto_identifiers)), но это поведение может измениться в будущих версиях Собираки. Для заголовков, ссылки на которые важно сохранять неизменными, рекомендуется указывать идентификаторы эксплицитно.
 
@@ -35,11 +39,11 @@ Markdown — основной синтаксис исходного текста
 
 :::
 
-Обратите внимание, что если на одной странице есть несколько подзаголовков с одинаковыми идентификаторами, это может привести к некорректной работе оглавления и затруднить навигацию для читателя. Собирака предупреждает о таких ситуациях, а если они приводят к неоднозначности [ссылок на подзаголовки](../syntax/links.md#anchor-links) — прекращает сборку.
+Обратите внимание, что если на одной странице есть несколько подзаголовков с одинаковыми идентификаторами, это может привести к некорректной работе оглавления и затруднить навигацию для читателя. Собирака предупреждает о таких ситуациях, а если они приводят к неоднозначности [ссылок на подзаголовки](links.md#anchor-links) — прекращает сборку.
 
 ## Ссылки {#links}
 
-Обработка всех ссылок, в том числе написанных как [reference links](https://pandoc.org/MANUAL.html#reference-links), происходит в соответствии с правилами, описанными в разделе [](../syntax/links.md).
+Обработка всех ссылок, в том числе написанных как [reference links](https://pandoc.org/MANUAL.html#reference-links), происходит в соответствии с правилами, описанными в разделе [](links.md).
 
 ## Инфоблоки {#admonitions}
 
@@ -97,5 +101,3 @@ Pandoc Markdown содержит расширение [`raw_attribute`](https://
 ```
 
 :::
-
-См. также [условия Jinja](../syntax/jinja.md#conditions).

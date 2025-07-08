@@ -20,10 +20,13 @@ properties:
           maxProperties: 1
           patternProperties:
             .+:
-              type: object
-              additionalProperties: false
-              properties:
-                permalink: { type: string }
-                title: { type: string }
-                toc_title: { type: string }
-                toc_collapse: { type: boolean }
+              oneOf:
+                - type: string
+
+                - type: object
+                  additionalProperties: false
+                  properties:
+                    permalink: { type: string }
+                    title: { type: string }
+                    toc_title: { type: string }
+                    toc_collapse: { type: boolean }

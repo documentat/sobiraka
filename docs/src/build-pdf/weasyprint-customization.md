@@ -33,7 +33,7 @@ toc_title: Кастомизация WeasyPrint
 
 В файле `extension.py` может быть определён _обработчик страниц_ — код на Python для дополнительной обработки содержимого перед рендерингом.
 
-Класс плагина должен наследоваться от класса [`WeasyPrintProcessor`](../../../src/sobiraka/processing/weasyprint/weasyprint.py). Плагин имеет почти неограниченные возможности в рамках обработки отдельной страницы, см. [](../reference/processor-api.md).
+Класс плагина должен наследоваться от класса [`WeasyPrintProcessor`](../../../src/sobiraka/processing/weasyprint/weasyprint.py#:~:text=class%20WeasyPrintProcessor). Плагин имеет почти неограниченные возможности в рамках обработки отдельной страницы, см. [](../reference/processor-api.md).
 
 ## Нумерация заголовков {#autonumeration}
 

@@ -2,14 +2,14 @@
 
 Исходный файл стиля должен располагаться по адресу `sass/{{ style_filename }}.sass` или `sass/{{ style_filename }}.scss` в директории темы. При необходимости он может подключать другие файлы с помощью SASS-директивы [`@use`](https://sass-lang.com/documentation/at-rules/use/). {% if show_output_filename %} Сгенерированный стиль будет размещён по адресу `_static/theme.css` в выходной директории. {% endif %}
 
-Тема может включать в себя несколько вариантов оформления в поддиректории `_flavors`. Для выбора нужного варианта следует указать его название в настройке [`{{ config_section }}.theme.flavor`](../reference/configuration.md#{{ config_section }}.theme). Разработчик темы должен подключить выбранный пользователем вариант с помощью конструкции `@use 'flavor'`. Какие именно SASS-переменные и миксины возможно переопределить таким способом, зависит от конкретной темы.
+Тема может включать в себя несколько вариантов оформления в поддиректории `_flavors`. Для выбора нужного варианта следует указать его название в настройке [`{{ config_section }}.theme.flavor`](/reference/configuration.md#{{ config_section }}.theme). Разработчик темы должен подключить выбранный пользователем вариант с помощью конструкции `@use 'flavor'`. Какие именно SASS-переменные и миксины возможно переопределить таким способом, зависит от конкретной темы.
 
-Также возможно добавление файлов SASS/SCSS из директории проекта. Файлы, указанные в [`{{ config_section }}.theme.customization`](../reference/configuration.md#{{ config_section }}.theme), участвуют в генерации
+Также возможно добавление файлов SASS/SCSS из директории проекта. Файлы, указанные в [`{{ config_section }}.theme.customization`](/reference/configuration.md#{{ config_section }}.theme), участвуют в генерации
 {% if show_output_filename -%}
 стиля `_static/theme.css`
 {%- else -%}
 основного стиля
 {%- endif %}
-наравне с собственными файлами темы. Из файлов, указанных в [`{{ config_section }}.custom_styles`](../reference/configuration.md#{{ config_section }}.custom_styles), генерируются дополнительные CSS-стили.
+наравне с собственными файлами темы. Из файлов, указанных в [`{{ config_section }}.custom_styles`](/reference/configuration.md#{{ config_section }}.custom_styles), генерируются дополнительные CSS-стили.
 
-Теги `<link>` со ссылками на все собранные стили CSS будут автоматически включены в переменную `head`, которую рекомендуется подключить в HTML-шаблон, см. [](../reference/template-api.md).
+Теги `<link>` со ссылками на все собранные стили CSS будут автоматически включены в переменную `head`, которую рекомендуется подключить в HTML-шаблон, см. [](/reference/template-api.md).
