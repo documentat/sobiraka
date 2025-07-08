@@ -11,7 +11,7 @@ jobs:
         with:
           sparse-checkout: docs
 
-      - run: sobiraka prover docs/docs.yaml
+      - run: cd docs && sobiraka prover
 
       - run: rm -rf * .* || true
 

@@ -1,10 +1,10 @@
 # Сборка в HTML
 
 ```
-sobiraka web CONFIG [--output OUTPUT] [--hide-index-html]
+sobiraka web [--config CONFIG] [--output OUTPUT] [--hide-index-html]
 ```
 
-Эта команда собирает HTML-документацию из файла `CONFIG` в директорию `OUTPUT` (по умолчанию — `build/html`).
+Эта команда собирает HTML-документацию из файла `CONFIG` (по умолчанию — `sobiraka.yaml`) в директорию `OUTPUT` (по умолчанию — `build/web`).
 
 Если директория, указанная в `OUTPUT`, существует и содержит файлы (например, результат сборки предыдущей версии), то после сборки они будут удалены или перезаписаны.
 

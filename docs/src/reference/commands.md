@@ -9,7 +9,7 @@ toc_title: Список команд
 ### `web`
 
 ```
-sobiraka web CONFIG [--output OUTPUT] [--hide-index-html]
+sobiraka web [--config CONFIG] [--output OUTPUT] [--hide-index-html]
 ```
 
 Команда собирает HTML-документацию, см. [](../build-html/web.md).
@@ -17,7 +17,7 @@ sobiraka web CONFIG [--output OUTPUT] [--hide-index-html]
 ### `pdf`
 
 ```
-sobiraka pdf CONFIG [VOLUME] [--output OUTPUT]
+sobiraka pdf [VOLUME] [--config CONFIG] [--output OUTPUT]
 ```
 
 Команда собирает PDF-документацию с помощью WeasyPrint, см. [](../build-pdf/weasyprint.md).
@@ -25,7 +25,7 @@ sobiraka pdf CONFIG [VOLUME] [--output OUTPUT]
 ### `latex`
 
 ```
-sobiraka [--tmpdir TMPDIR] latex CONFIG [VOLUME] [--output OUTPUT]
+sobiraka [--tmpdir TMPDIR] latex [VOLUME] [--config CONFIG] [--output OUTPUT]
 ```
 
 Команда собирает PDF-документацию с помощью LaTeX, см. [](../build-pdf/latex.md).
@@ -35,7 +35,7 @@ sobiraka [--tmpdir TMPDIR] latex CONFIG [VOLUME] [--output OUTPUT]
 ### `prover`
 
 ```
-sobiraka prover CONFIG [--var KEY1=VAL1 --var KEY2=VAL2 ...]
+sobiraka prover [--config CONFIG] [--var KEY1=VAL1 --var KEY2=VAL2 ...]
 ```
 
 Команда выполняет [проверку проекта](../overview/prover.md), руководствуясь соответствующими настройками.
@@ -75,7 +75,7 @@ sobiraka validate_dictionary DICTIONARY [--autofix]
 ### `check_translations`
 
 ```
-sobiraka check_translations CONFIG [--strict]
+sobiraka check_translations [--config CONFIG] [--strict]
 ```
 
 Вспомогательная команда для работы с [мультиязычными проектами](../overview/multilang.md). Команда сравнивает версии переводов и оригиналов и делит страницы на три категории:

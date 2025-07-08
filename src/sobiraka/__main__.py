@@ -15,6 +15,8 @@ from sobiraka.runtime import RT
 from sobiraka.translating import check_translations
 from sobiraka.utils import AbsolutePath, DictionaryValidator, parse_vars
 
+SOBIRAKA_YAML = AbsolutePath('sobiraka.yaml')
+
 
 async def async_main():
     # pylint: disable=too-many-branches
@@ -28,28 +30,28 @@ async def async_main():
     commands = parser.add_subparsers(title='commands', dest='command')
 
     cmd_web = commands.add_parser('web', help='Build web documentation.')
-    cmd_web.add_argument('config', metavar='CONFIG', type=AbsolutePath)
+    cmd_web.add_argument('--config', metavar='CONFIG', type=AbsolutePath, default=SOBIRAKA_YAML)
     cmd_web.add_argument('--output', type=AbsolutePath, default=AbsolutePath('build/web'))
     cmd_web.add_argument('--hide-index-html', action='store_true', help='Remove the "index.html" part from links.')
 
     cmd_pdf = commands.add_parser('pdf', help='Build PDF file via WeasyPrint.')
-    cmd_pdf.add_argument('config', metavar='CONFIG', type=AbsolutePath)
     cmd_pdf.add_argument('volume', nargs='?')
+    cmd_pdf.add_argument('--config', metavar='CONFIG', type=AbsolutePath, default=SOBIRAKA_YAML)
     cmd_pdf.add_argument('--output', type=AbsolutePath, default=AbsolutePath('build/pdf'))
 
     cmd_latex = commands.add_parser('latex', help='Build PDF file fia LaTeX.')
-    cmd_latex.add_argument('config', metavar='CONFIG', type=AbsolutePath)
     cmd_latex.add_argument('volume', nargs='?')
+    cmd_latex.add_argument('--config', metavar='CONFIG', type=AbsolutePath, default=SOBIRAKA_YAML)
     cmd_latex.add_argument('--output', type=AbsolutePath, default=AbsolutePath('build/pdf'))
 
     cmd_markdown = commands.add_parser('markdown', help='Build Markdown file.')
-    cmd_markdown.add_argument('config', metavar='CONFIG', type=AbsolutePath)
     cmd_markdown.add_argument('volume', nargs='?')
+    cmd_markdown.add_argument('--config', metavar='CONFIG', type=AbsolutePath, default=SOBIRAKA_YAML)
     cmd_markdown.add_argument('--output', type=AbsolutePath, default=AbsolutePath('build/markdown'))
 
     cmd_prover = commands.add_parser('prover', help='Check a volume for various issues.')
-    cmd_prover.add_argument('config', metavar='CONFIG', type=AbsolutePath)
     cmd_prover.add_argument('volume', nargs='?')
+    cmd_prover.add_argument('--config', metavar='CONFIG', type=AbsolutePath, default=SOBIRAKA_YAML)
     cmd_prover.add_argument('--var', metavar='KEY[=VALUE]', action='append')
 
     cmd_validate_dictionary = commands.add_parser('validate_dictionary',
@@ -59,7 +61,7 @@ async def async_main():
 
     cmd_check_translations = commands.add_parser('check_translations',
                                                  help='Display translation status of the project.')
-    cmd_check_translations.add_argument('config', metavar='CONFIG', type=AbsolutePath)
+    cmd_check_translations.add_argument('--config', metavar='CONFIG', type=AbsolutePath, default=SOBIRAKA_YAML)
     cmd_check_translations.add_argument('--strict', action='store_true')
 
     args = parser.parse_args()

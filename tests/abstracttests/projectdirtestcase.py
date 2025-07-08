@@ -18,4 +18,4 @@ class ProjectDirTestCase(ProjectTestCase, Generic[T]):
         return AbsolutePath(inspect.getfile(self.__class__)).parent
 
     def _init_project(self) -> Project:
-        return load_project(self.dir / 'project.yaml')
+        return load_project(self.dir / 'sobiraka.yaml')

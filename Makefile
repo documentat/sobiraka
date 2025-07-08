@@ -118,15 +118,16 @@ prover: release
 	@$(DOCKER_RUN) \
 		-v $(PWD)/docs:/W/docs:ro \
 		sobiraka:release \
-		sobiraka prover docs/docs.yaml
+		sh -c 'cd docs && sobiraka prover'
 
 docs-web: release
 	@mkdir -p docs/build
 	@$(DOCKER_RUN) \
+		-v $(PWD)/src:/W/src:ro \
 		-v $(PWD)/docs:/W/docs:ro \
 		-v $(PWD)/docs/build:/W/docs/build \
 		sobiraka:release \
-		sobiraka web docs/docs.yaml --output docs/build
+		sh -c 'cd docs && sobiraka web --output build'
 	@$(DOCKER_RUN) \
 		-v $(PWD)/docs/build:/W/docs/build \
 		sobiraka:release \
@@ -135,10 +136,12 @@ docs-web: release
 docs-pdf: release
 	@mkdir -p docs/build
 	@$(DOCKER_RUN) \
+		-v $(PWD)/src:/W/src:ro \
 		-v $(PWD)/docs:/W/docs:ro \
 		-v $(PWD)/docs/build:/W/docs/build \
+		-v $(PWD)/src/sobiraka:/W/src/sobiraka \
 		sobiraka:release \
-		sobiraka pdf docs/docs.yaml --output docs/build/sobiraka.pdf
+		sh -c 'cd docs && sobiraka pdf --output docs/build/sobiraka.pdf'
 	@$(DOCKER_RUN) \
 		-v $(PWD)/docs/build:/W/docs/build \
 		sobiraka:release \
@@ -147,10 +150,11 @@ docs-pdf: release
 docs-latex: release-latex
 	@mkdir -p docs/build
 	@$(DOCKER_RUN) \
+		-v $(PWD)/src:/W/src:ro \
 		-v $(PWD)/docs:/W/docs:ro \
 		-v $(PWD)/docs/build:/W/docs/build \
 		sobiraka:release-latex \
-		sobiraka latex docs/docs.yaml --output docs/build/sobiraka.pdf
+		sh -c 'cd docs && sobiraka latex --output docs/build/sobiraka.pdf'
 	@$(DOCKER_RUN) \
 		-v $(PWD)/docs/build:/W/docs/build \
 		sobiraka:release-latex \
