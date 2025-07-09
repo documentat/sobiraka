@@ -35,8 +35,8 @@ class LatexBuilder(ThemeableVolumeBuilder['LatexProcessor', 'LatexTheme']):
         fs: FileSystem = self.get_project().fs
         config: Config = self.volume.config
         processor_class = load_processor(
-            convert_or_none(fs.resolve, config.web.processor),
-            config.web.theme,
+            convert_or_none(fs.resolve, config.latex.processor),
+            config.latex.theme,
             LatexProcessor)
         return processor_class(self)
 

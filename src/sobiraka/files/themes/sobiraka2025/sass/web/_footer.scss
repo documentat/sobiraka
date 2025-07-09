@@ -1,0 +1,23 @@
+@use '../mixins' as *;
+
+@if is-browser() {
+    footer {
+        grid-area: footer;
+
+        padding: 2rem var(--global-padding-horizontal) 5rem;
+        box-sizing: border-box;
+
+        @include full-width;
+        margin: 0 auto;
+
+        &::before {
+            content: '';
+            display: block;
+            background: var(--separator-color);
+            position: absolute;
+            inset: auto 0 auto 0;
+            height: var(--separator-size);
+            margin-top: -2rem;
+        }
+    }
+}

@@ -1,0 +1,109 @@
+@use '../mixins' as *;
+
+@if is-browser() {
+    header {
+        grid-area: header;
+        container: header / size;
+
+        @include full-width;
+        margin: 0 auto;
+        padding: 0 var(--global-padding-horizontal);
+        box-sizing: border-box;
+
+        &::after {
+            content: '';
+            display: block;
+            background: var(--separator-color);
+            position: absolute;
+            inset: var(--header-height) 0 auto 0;
+            height: var(--separator-size);
+        }
+
+        // The headers takes a predetermines amount of space
+        // and is separated by a thin line from the rest of the page
+        height: var(--header-height);
+
+        // Items in the header are placed one after another horizontally
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+
+        // In the mobile mode, reserve space for the hamburger
+        // (the hamburger itself will be defined in _nav.scss)
+        @include for-phone {
+            padding-left: calc(2 * var(--cell-padding-horizontal) + var(--hamburger-size));
+        }
+
+        // The logo is a link wit two inner elements: the actual logo image and the title
+        .site-logo {
+            flex: 0 1 min-content;
+
+            overflow: hidden;
+
+            display: flex;
+            flex-direction: row;
+            padding: var(--cell-padding-vertical) 0;
+            color: var(--text-color);
+            white-space: nowrap;
+
+            // Make a hover effect only if the logo is actually a clickable link
+            &:is(a):hover {
+                color: var(--link-color);
+                text-decoration: underline;
+                text-decoration-skip-ink: none;
+            }
+
+            // The logo image and a small margin between it and the title
+            img {
+                display: inline-block;
+                height: var(--header-content-height);
+                margin: 0 .5rem 0 0;
+            }
+
+            // The title
+            div {
+                overflow: hidden;
+                text-overflow: ellipsis;
+
+                display: inline-block;
+                font-weight: normal;
+                font-size: var(--header-text);
+                line-height: var(--header-content-height);
+                height: var(--header-content-height);
+            }
+        }
+
+        .fill-space {
+            flex: 1 1 0;
+        }
+
+        button.btn-language {
+            @include header-icon;
+            background-size: 80% !important;
+
+            & + ul.languages {
+                display: none;
+            }
+
+            &:hover + ul.languages {
+                display: block;
+                position: abs;
+                top: 100%;
+                right: 0;
+            }
+        }
+
+        button.btn-colors {
+            @include header-icon('moon', .55);
+        }
+
+        button.btn-search {
+            display: none;
+
+            @include for-phone {
+                display: block;
+                @include header-icon('search');
+            }
+        }
+    }
+}

@@ -1,0 +1,33 @@
+@use 'sass:color';
+
+@mixin overlay {
+    backdrop-filter: blur(1rem);
+    position: fixed;
+    inset: 0;
+
+    transition: background .2s;
+}
+
+@mixin overlay-hidden {
+    @include overlay;
+
+    visibility: hidden;
+    background: transparent;
+}
+
+@mixin overlay-transparent {
+    @include overlay;
+    visibility: visible;
+
+    background: none;
+    backdrop-filter: none;
+    cursor: auto;
+}
+
+@mixin overlay-blur {
+    @include overlay;
+    visibility: visible;
+
+    background: color.scale(black, $alpha: -60%);
+    cursor: pointer;
+}

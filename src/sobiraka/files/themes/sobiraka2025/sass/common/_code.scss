@@ -1,0 +1,34 @@
+@use '../sizes' as *;
+
+code {
+    background: var(--highlight-color);
+    border-radius: var(--border-radius-small);
+    box-sizing: content-box;
+    display: inline-block;
+    font-family: var(--font-monospace);
+    font-size: .9em;
+    font-weight: normal;
+    padding: 0 .2em;
+    overflow-wrap: anywhere;
+}
+
+pre {
+    background: var(--highlight-color);
+    border-radius: var(--border-radius-small);
+    font-family: var(--font-monospace);
+    overflow-wrap: anywhere;
+    padding: .5em .5em;
+    margin: 0 0 $paragraph-spacing 0;
+    white-space: pre-wrap;
+
+    break-inside: auto;
+
+    &:last-child{
+        margin-bottom: 0;
+    }
+
+    code {
+        background: none !important;
+        padding: 0 !important;
+    }
+}

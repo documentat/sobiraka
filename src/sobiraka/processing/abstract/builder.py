@@ -31,6 +31,7 @@ class Builder(Generic[P], metaclass=ABCMeta):
         self.waiter = Waiter(self)
         self.jinja: dict[Volume, jinja2.Environment] = {}
         self.process2_tasks: dict[Page, list[Task]] = defaultdict(list)
+        self.process3_tasks: dict[Volume, list[Task]] = defaultdict(list)
         self.process4_tasks: dict[Page, list[Task]] = defaultdict(list)
 
     def __repr__(self):
@@ -144,6 +145,9 @@ class Builder(Generic[P], metaclass=ABCMeta):
             processor = self.get_processor_for_page(page)
             for directive in processor.directives[page]:
                 replace_element(directive, directive.postprocess())
+
+        if self.process3_tasks[volume]:
+            await wait(self.process3_tasks[volume])
 
     async def do_process4(self, page: Page):
         """

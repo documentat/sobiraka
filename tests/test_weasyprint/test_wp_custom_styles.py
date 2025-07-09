@@ -22,9 +22,8 @@ class TestWeasyPrint_CustomStyles(SinglePageProjectTest, WeasyPrintProjectTestCa
             'theme/style1.css': b'''
                 h1 { color: lightgreen; }
             ''',
-            'theme/style2.scss': b'''
-                @mixin red_text { color: indianred; }
-                p { @include red_text; }
+            'theme/style2.css': b'''
+                p { color: indianred; }
             ''',
         }
 
@@ -37,7 +36,7 @@ class TestWeasyPrint_CustomStyles(SinglePageProjectTest, WeasyPrintProjectTestCa
             pdf=Config_PDF(
                 custom_styles=(
                     RelativePath('theme/style1.css'),
-                    RelativePath('theme/style2.scss'),
+                    RelativePath('theme/style2.css'),
                 ),
             ),
             variables=dict(NOCOVER=True),

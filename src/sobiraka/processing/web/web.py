@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from asyncio import to_thread
+from asyncio import create_task, to_thread
 from datetime import datetime
 from functools import lru_cache
 from os.path import relpath
@@ -13,14 +13,13 @@ from typing_extensions import override
 
 from sobiraka.models import FileSystem, Page, PageHref, Project, Volume
 from sobiraka.models.config import Config, Config_HighlightJS, Config_Prism, Config_Pygments, SearchIndexerName
+from sobiraka.processing.html import AbstractHtmlBuilder, AbstractHtmlProcessor, AbstractHtmlTheme, HeadCssFile, \
+    HeadJsFile
+from sobiraka.processing.html.highlight import HighlightJs, Highlighter, Prism, Pygments
 from sobiraka.runtime import RT
-from sobiraka.utils import AbsolutePath, RelativePath, configured_jinja, convert_or_none, delete_extra_files, \
-    expand_vars
-from .abstracthtml import AbstractHtmlBuilder, AbstractHtmlProcessor
-from .head import HeadCssFile, HeadJsFile
-from .highlight import HighlightJs, Highlighter, Prism, Pygments
+from sobiraka.utils import AbsolutePath, RelativePath, convert_or_none, delete_extra_files, expand_vars
 from .search import PagefindIndexer, SearchIndexer
-from ..abstract import Theme, ThemeableProjectBuilder
+from ..abstract import ThemeableProjectBuilder
 from ..load_processor import load_processor
 
 
@@ -41,7 +40,7 @@ class WebBuilder(ThemeableProjectBuilder['WebProcessor', 'WebTheme'], AbstractHt
         config: Config = volume.config
         processor_class = load_processor(
             convert_or_none(fs.resolve, config.web.processor),
-            config.web.theme,
+            config.web.theme.path,
             WebProcessor)
         return processor_class(self)
 
@@ -60,9 +59,9 @@ class WebBuilder(ThemeableProjectBuilder['WebProcessor', 'WebTheme'], AbstractHt
 
             # Prepare non-page processing tasks
             self.waiter.add_task(self.add_directory_from_location(theme.static_dir, RelativePath('_static')))
-            self.waiter.add_task(self.add_custom_files(volume))
-            self.waiter.add_task(self.compile_theme_sass(theme, volume))
-            self.waiter.add_task(self.prepare_search_indexer(volume))
+            self.process3_tasks[volume].append(create_task(self.add_custom_files(volume)))
+            self.process3_tasks[volume].append(create_task(self.compile_theme_sass(theme, volume)))
+            self.process3_tasks[volume].append(create_task(self.prepare_search_indexer(volume)))
 
         # Wait until all pages will be generated and all additional files will be copied to the output directory
         # This may include tasks that started as a side effect of generating the HTML pages
@@ -192,7 +191,7 @@ class WebBuilder(ThemeableProjectBuilder['WebProcessor', 'WebTheme'], AbstractHt
         for script in config.web.custom_scripts:
             source = RelativePath(script)
             assert source.suffix == '.js'
-            target = RelativePath() / 'js' / source.name
+            target = RelativePath() / source.name
             await self.add_file_from_project(source, target)
             self.heads[volume].append(HeadJsFile(target))
 
@@ -200,14 +199,15 @@ class WebBuilder(ThemeableProjectBuilder['WebProcessor', 'WebTheme'], AbstractHt
             source = RelativePath(style)
             match source.suffix:
                 case '.css':
-                    target = RelativePath() / 'css' / source.name
+                    target = RelativePath() / source.name
                     self.waiter.add_task(self.add_file_from_project(source, target))
                     self.heads[volume].append(HeadCssFile(target))
 
                 case '.sass' | '.scss':
                     source = fs.resolve(source)
-                    target = RelativePath('_static') / 'css' / f'{source.stem}.css'
-                    self.waiter.add_task(to_thread(self.compile_sass, volume, source, target))
+                    target = RelativePath('_static') / f'{source.stem}.css'
+                    sass = await self.compile_sass(source)
+                    self.add_file_from_data(target, sass)
                     self.heads[volume].append(HeadCssFile(target))
 
                 case _:
@@ -259,11 +259,6 @@ class WebBuilder(ThemeableProjectBuilder['WebProcessor', 'WebTheme'], AbstractHt
         await to_thread(self.project.fs.copy, source, target)
         self._results.add(target)
 
-    @override
-    def compile_sass(self, volume: Volume, source: AbsolutePath | bytes, target: RelativePath):
-        css = self.compile_sass_impl(source)
-        self.add_file_from_data(target, css)
-
 
 class WebProcessor(AbstractHtmlProcessor[WebBuilder]):
     @override
@@ -280,7 +275,5 @@ class WebProcessor(AbstractHtmlProcessor[WebBuilder]):
 
 
 @final
-class WebTheme(Theme):
-    def __init__(self, theme_dir: AbsolutePath):
-        super().__init__(theme_dir)
-        self.page_template = configured_jinja(theme_dir).get_template('web.html')
+class WebTheme(AbstractHtmlTheme):
+    TYPE = 'web'

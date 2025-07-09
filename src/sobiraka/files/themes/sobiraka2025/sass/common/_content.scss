@@ -1,0 +1,17 @@
+@use '../sizes' as *;
+
+p {
+    line-height: #{1em + $line-spacing};
+    margin: 0 0 $paragraph-spacing 0;
+}
+
+mark {
+    background-color: var(--marker-color);
+}
+
+hr {
+    border-color: var(--separator-color);
+    border-style: solid;
+    border-width: var(--separator-size) 0 0 0;
+    margin: 2.5rem 0;
+}

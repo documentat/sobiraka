@@ -16,13 +16,13 @@ class Project:
     A single documentation project that needs to be processed and rendered.
     """
 
-    def __init__(self, fs: FileSystem, volumes: tuple[Volume, ...], primary_language: str):
+    def __init__(self, fs: FileSystem, volumes: tuple[Volume, ...], primary_language: str = None):
         self.fs: FileSystem = fs
         self.volumes: tuple[Volume, ...] = volumes
         for volume in self.volumes:
             volume.project = self
 
-        self.primary_language: str = primary_language
+        self.primary_language: str | None = primary_language
 
     def __repr__(self):
         return f'<{self.__class__.__name__}: {self.fs}>'

@@ -19,7 +19,8 @@ RUN apt install --yes --download-only git poppler-utils
 
 FROM python:$PYTHON AS get-deb-packages
 RUN apt update
-RUN apt install --yes --download-only weasyprint hunspell
+RUN apt install --yes --download-only hunspell
+RUN apt install --yes --download-only libpango-1.0-0 libharfbuzz0b libpangoft2-1.0-0 libharfbuzz-subset0
 
 FROM python:$PYTHON_FOR_BUILDING AS get-conda
 RUN wget --progress=bar:force https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /tmp/miniconda.sh
@@ -86,14 +87,16 @@ RUN pip install --prefix /prefix *.tar.gz
 
 FROM latex-python-nodejs AS common-latex
 COPY --from=get-deb-packages /var/cache/apt /var/cache/apt
-RUN apt install --yes weasyprint hunspell
+RUN apt install --yes hunspell
+RUN apt install --yes libpango-1.0-0 libharfbuzz0b libpangoft2-1.0-0 libharfbuzz-subset0
 RUN --mount=type=cache,target=/root/.npm npm install -g pagefind sass
 COPY --from=get-fonts /tmp/fonts /usr/share/fonts
 ENTRYPOINT [""]
 
 FROM python-nodejs AS common
 COPY --from=get-deb-packages /var/cache/apt /var/cache/apt
-RUN apt install --yes weasyprint hunspell
+RUN apt install --yes hunspell
+RUN apt install --yes libpango-1.0-0 libharfbuzz0b libpangoft2-1.0-0 libharfbuzz-subset0
 RUN --mount=type=cache,target=/root/.npm npm install -g pagefind sass
 COPY --from=get-fonts /tmp/fonts /usr/share/fonts
 ENTRYPOINT [""]

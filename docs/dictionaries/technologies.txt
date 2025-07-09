@@ -15,12 +15,14 @@ pdf
 reStructuredText
 ReST
 rst
+SCSS
 WeasyPrint
 wcmatch
 YAML
 yaml
 blockquote
 ui
+UI
 config
 divs
 CodeBlock

@@ -1,0 +1,21 @@
+@mixin custom-light-colors {
+    $green: #4d9375;
+    $lightgreen: #c4ecd8;
+
+    --link-color: #{$green};
+    --marker-color: #{$lightgreen};
+
+    --menu-current: #{$green};
+    --menu-hover: #{$lightgreen};
+}
+
+@mixin custom-dark-colors {
+    $green: #4d9375;
+    $darkgreen: #375044;
+
+    --link-color: #{$green};
+    --highlight-accent-color: #{$green};
+
+    --menu-current: #{$green};
+    --menu-hover: #{$darkgreen};
+}

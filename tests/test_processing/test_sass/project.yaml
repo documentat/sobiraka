@@ -1,0 +1,8 @@
+paths:
+  root: src
+  include: ['**/*.md']
+web:
+  theme:
+    name: my-theme
+    flavor: icecream
+    customization: my-theme/custom.scss

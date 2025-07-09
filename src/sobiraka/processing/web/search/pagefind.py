@@ -2,15 +2,15 @@ from asyncio.subprocess import Process, create_subprocess_exec
 from importlib.resources import files
 from subprocess import PIPE
 from textwrap import dedent
-from typing import Sequence
+from typing import Iterable
 
 from panflute import Element, Header, stringify
 from typing_extensions import override
 
 from sobiraka.models import Page, PageHref, Volume
 from sobiraka.models.config import Config_Search_LinkTarget
+from sobiraka.processing.html import HeadJsCode, HeadJsFile, HeadTag
 from sobiraka.processing.txt import PlainTextDispatcher
-from sobiraka.processing.web import HeadJsCode, HeadJsFile, HeadTag
 from sobiraka.runtime import RT
 from sobiraka.utils import AbsolutePath, RelativePath
 from .searchindexer import SearchIndexer
@@ -93,17 +93,18 @@ class PagefindIndexer(SearchIndexer, PlainTextDispatcher):
     def results(self) -> set[AbsolutePath]:
         return set(self.index_path.walk_all())
 
-    def head_tags(self) -> Sequence[HeadTag]:
+    def head_tags(self) -> Iterable[HeadTag]:
         yield HeadJsFile(self.index_path_relative / 'pagefind-ui.js')
-        yield HeadJsCode(dedent(f'''
-            window.addEventListener("DOMContentLoaded", (event) => {{
-                new PagefindUI({{
-                    element: ".book-search",
-                    baseUrl: new URL("../%ROOT%", location),
-                    translations: {self.search_config.translations.to_json()},
+        if self.search_config.generate_js:
+            yield HeadJsCode(dedent(f'''
+                window.addEventListener("DOMContentLoaded", (event) => {{
+                    new PagefindUI({{
+                        element: {self.search_config.container!r},
+                        baseUrl: new URL("../%ROOT%", location),
+                        translations: {self.search_config.translations.to_json()},
+                    }})
                 }})
-            }})
-        ''').strip())
+            ''').strip())
 
     @override
     async def must_skip(self, elem: Element, page: Page):

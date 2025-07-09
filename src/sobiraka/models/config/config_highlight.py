@@ -9,9 +9,41 @@ from sobiraka.utils import RelativePath
 class Config_Web_Highlight(metaclass=ABCMeta):
     """Abstract type for any highlighter configuration suitable for WebBuilder."""
 
+    @classmethod
+    def load(cls, data: str | dict[str, dict]) -> Self:
+        if isinstance(data, str):
+            engine, config = data, {}
+        else:
+            assert len(data) == 1
+            engine, config = next(iter(data.items()))
+
+        match engine:
+            case 'highlightjs':
+                return Config_HighlightJS.load(config or {})
+            case 'prism':
+                return Config_Prism.load(config or {})
+            case 'pygments':
+                return Config_Pygments(**(config or {}))
+            case _:
+                raise ValueError(engine)
+
 
 class Config_Pdf_Highlight(metaclass=ABCMeta):
     """Abstract type for any highlighter configuration suitable for WeasyPrintBuilder."""
+
+    @classmethod
+    def load(cls, data: str | dict[str, dict]) -> Self:
+        if isinstance(data, str):
+            engine, config = data, {}
+        else:
+            assert len(data) == 1
+            engine, config = next(iter(data.items()))
+
+        match engine:
+            case 'pygments':
+                return Config_Pygments(**(config or {}))
+            case _:
+                raise ValueError(engine)
 
 
 @dataclass(kw_only=True, frozen=True)

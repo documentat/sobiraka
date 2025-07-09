@@ -3,7 +3,7 @@ from unittest import main
 
 from abstracttests.projecttestcase import FailingProjectTestCase
 from test_processing.test_highlight.abstract import AbstractHighlightTest
-from sobiraka.processing.web import Head, HeadCssFile, HeadCssUrl, HeadJsFile, HeadJsUrl
+from sobiraka.processing.html import Head, HeadCssFile, HeadCssUrl, HeadJsFile, HeadJsUrl
 from sobiraka.utils import RelativePath
 
 

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html{% if volume.lang %} lang='{{ volume.lang }}'{% endif %}>
+<head>
+    <meta charset='utf-8'/>
+    <meta name='viewport' content='width=device-width, initial-scale=1, minimum-scale=1, interactive-widget=resizes-content'/>
+    <meta name='color-scheme' content='dark light'/>
+    <title>{{ title }}</title>
+
+    <!-- highlight.js -->
+    <link rel='preload' as='style' data-theme='light' href='https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css'>
+    <link rel='preload' as='style' data-theme='dark' href='https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github-dark.min.css'>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js'></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', (event) => {
+            hljs.configure({languages: []});
+            hljs.initHighlightingOnLoad();
+        });
+    </script>
+
+    <!-- Pagefind -->
+    <script src='{{ ROOT }}_pagefind/pagefind-ui.js'></script>
+
+    <!-- Sobiraka2025 -->
+    <script src='{{ STATIC }}/colors.js'></script>
+    <script src='{{ STATIC }}/fullscreen.js'></script>
+    <script src='{{ STATIC }}/search.js'></script>
+    <script src='{{ STATIC }}/scroll.js'></script>
+
+    {{ head | indent(4) -}}
+</head>
+<body>
+
+<div class='fullscreen' tabindex='-1'></div>
+
+<header>
+    <a href='{{ ROOT }}' class='site-logo'>
+        {% if 'LOGO' in config.variables %}
+            <img alt='' src='{{ config.variables.LOGO }}'/>
+        {% endif %}
+        <div>{{ config.title }}</div>
+    </a>
+
+    <div class='fill-space'></div>
+
+    <button class='btn-colors'>Dark Mode</button>
+
+    <search data-translations='{{ config.web.search.translations.to_json() }}'></search>
+    <div class='close-search'></div>
+</header>
+
+<div class='main-wrapper'>
+
+    <label class='show-nav'><input type='checkbox'/></label>
+    <nav>
+        <ul>
+            {% for item in toc() recursive %}
+            <li>
+                {% if item.is_current %}
+                <a class='current' href='{{ item.url }}'>{{ item.title }}</a>
+                {% elif item.is_breadcrumb %}
+                {{ item.number.format('{}.') }} <a class='selected' href='{{ item.url }}'>{{ item.title }}</a>
+                {% else %}
+                {{ item.number.format('{}.') }} <a href='{{ item.url }}'>{{ item.title }}</a>
+                {% endif %}
+
+                {% if item.children %}
+                <ul>
+                    {{ loop(item.children) }}
+                </ul>
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+    </nav>
+
+
+    {% set local_toc = local_toc() %}
+    {% if local_toc %}
+    <aside>
+        <label><input type='checkbox'/>На этой странице</label>
+        <ul>
+            {% for item in local_toc recursive %}
+            <li>
+                <a href='{{ item.url }}'>
+                    {{ item.number.format('{}.') }}
+                    {{ item.title|e }}
+                </a>
+                {% if item.children %}
+                <ul>
+                    {{ loop(item.children) }}
+                </ul>
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+    </aside>
+    {% endif %}
+
+
+    <main>
+        <article>
+            {{ body }}
+        </article>
+    </main>
+
+</div>
+
+</body>
+</html>

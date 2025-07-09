@@ -72,9 +72,37 @@ $defs:
             type: array
             items:
               type: string
-          theme: { type: string }
-          theme_data: { type: object }
           processor: { type: string }
+          theme:
+            oneOf:
+              - enum: [book, material, raw, simple, sobiraka2025]
+
+              - type: string
+                not: { enum: [book, material, raw, simple, sobiraka2025] }
+
+              - type: object
+                additionalProperties: false
+                properties:
+                  name: { const: sobiraka2025 }
+                  flavor: { enum: [green] }
+                  customization: { type: string }
+                required:
+                  - name
+
+              - type: object
+                additionalProperties: false
+                properties:
+                  name:
+                    oneOf:
+                      - enum: [book, material, raw, simple]
+                      - type: string
+                        not: { enum: [book, material, raw, simple, sobiraka2025] }
+                  flavor: { type: string }
+                  customization: { type: string }
+                required:
+                  - name
+
+          theme_data: { type: object }
           custom_scripts:
             type: array
             uniqueItems: true
@@ -94,6 +122,8 @@ $defs:
             properties:
               engine:
                 enum: [pagefind]
+              generate_js: { type: boolean }
+              container: { type: string }
               index_path: { type: string }
               skip_elements:
                 type: array
@@ -191,7 +221,35 @@ $defs:
       pdf:
         additionalProperties: false
         properties:
-          theme: { type: string }
+          theme:
+            oneOf:
+              - enum: [raw, sobiraka2025]
+
+              - type: string
+                not: { enum: [raw, sobiraka2025] }
+
+              - type: object
+                additionalProperties: false
+                properties:
+                  name: { const: sobiraka2025 }
+                  flavor: { enum: [green] }
+                  customization: { type: string }
+                required:
+                  - name
+
+              - type: object
+                additionalProperties: false
+                properties:
+                  name:
+                    oneOf:
+                      - enum: [raw]
+                      - type: string
+                        not: { enum: [raw, sobiraka2025] }
+                  flavor: { type: string }
+                  customization: { type: string }
+                required:
+                  - name
+
           processor: { type: string }
           custom_styles:
             type: array

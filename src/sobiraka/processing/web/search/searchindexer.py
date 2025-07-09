@@ -1,9 +1,9 @@
 from abc import ABCMeta, abstractmethod
-from typing import Sequence, TYPE_CHECKING
+from typing import Iterable, TYPE_CHECKING
 
 from sobiraka.models import Page, Volume
 from sobiraka.models.config import Config_Web_Search
-from sobiraka.processing.web import HeadTag
+from sobiraka.processing.html import HeadTag
 from sobiraka.utils import AbsolutePath, RelativePath
 
 if TYPE_CHECKING:
@@ -45,7 +45,7 @@ class SearchIndexer(metaclass=ABCMeta):
         """
 
     @abstractmethod
-    def head_tags(self) -> Sequence[HeadTag]:
+    def head_tags(self) -> Iterable[HeadTag]:
         """
         The tags that must be added to the final HTML for the search to work.
         """

@@ -1,0 +1,35 @@
+%admonition {
+    border-left: var(--colored-border-size) solid;
+    border-radius: var(--border-radius-small);
+    margin: var(--card-margin-vertical) 0;
+    padding: var(--card-padding);
+
+    p {
+        margin: 0;
+        padding: var(--card-padding-vertical) 0;
+    }
+}
+
+div.example {
+    @extend %admonition;
+    background: var(--admonition-example);
+    border-left-color: var(--admonition-example-accent);
+}
+
+div.note {
+    @extend %admonition;
+    background: var(--admonition-note);
+    border-left-color: var(--admonition-note-accent);
+}
+
+div.warning {
+    @extend %admonition;
+    background: var(--admonition-warning);
+    border-left-color: var(--admonition-warning-accent);
+}
+
+div.danger {
+    @extend %admonition;
+    background: var(--admonition-danger);
+    border-left-color: var(--admonition-danger-accent);
+}

@@ -1,0 +1,70 @@
+@use '../mixins' as *;
+
+body {
+    margin: 0;
+    background: var(--background-color);
+    color: var(--text-color);
+
+    font-family: var(--font-default);
+
+    // These parameters prevent unwanted zooming on mobile
+    font-size: 100%;
+    font-size-adjust: none;
+
+    .main-wrapper {
+        width: min(100%, var(--total-width));
+        margin: 0 auto;
+
+        display: grid;
+
+        grid-template-areas: 'nav main aside';
+        grid-template-columns: var(--aside-left-width) 1fr var(--aside-right-width);
+        align-items: stretch;
+        align-content: start;
+        justify-content: stretch;
+        height: fit-content;
+
+        @include for-tablet-or-phone {
+            grid-template-areas: 'nav aside'
+                                 'nav main';
+            grid-template-columns: var(--aside-left-width) auto;
+
+            &:not(:has(aside)) {
+                grid-template-areas: 'nav main';
+            }
+        }
+
+        @include for-phone {
+            grid-template-areas: 'aside'
+                                 'main';
+            grid-template-columns: 1fr;
+
+            &:not(:has(aside)) {
+                grid-template-areas: 'main';
+            }
+        }
+
+        main {
+            grid-area: main;
+            height: fit-content;
+
+            min-width: 0;
+
+            font-size: 1rem !important;
+
+            article {
+                padding: var(--article-padding);
+                box-sizing: border-box;
+                overflow-wrap: break-word;
+
+                @include for-tablet-or-phone {
+                    padding-right: var(--global-padding-horizontal);
+                }
+
+                @include for-phone {
+                    padding-left: var(--global-padding-horizontal);
+                }
+            }
+        }
+    }
+}

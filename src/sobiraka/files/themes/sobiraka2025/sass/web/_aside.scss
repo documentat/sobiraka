@@ -1,0 +1,113 @@
+@use '../mixins' as *;
+
+aside {
+    grid-area: aside;
+
+    // The sidebar is fixed on the same position for the most part
+    // and can only be moved by a footer when the user scrolls to the end
+    position: sticky;
+    top: var(--header-height);
+    height: fit-content;
+    max-height: calc(100vh - var(--header-height));
+
+    // The scrollbar is invisible until hover
+    overflow-x: hidden;
+    overflow-y: auto;
+    scrollbar-width: none;
+
+    &:hover {
+        scrollbar-width: thin;
+    }
+
+    // The label for toggling the sidebar is hidden in the normal mode
+    label {
+        display: none;
+    }
+
+    // The list is pretty much a default list, but with inflated spacing between items,
+    // because usually this list is not very long, and I don't want it to look too small
+    ul {
+        list-style: none;
+        padding-left: 0;
+        @include numeration;
+
+        li {
+            a {
+                display: block;
+                margin-bottom: .7em;
+                line-height: 1.3em;
+            }
+
+            ul {
+                padding-left: 1em;
+            }
+        }
+    }
+}
+
+@include for-tablet-or-phone {
+    aside {
+        border: 1px solid var(--highlight-accent-color);
+        border-radius: var(--border-radius-big);
+
+        position: static;
+        max-height: unset;
+
+        margin: 1rem var(--article-padding-right) 0 var(--article-padding-left);
+
+        display: grid;
+        grid-template-rows: 2em 0fr;
+        transition: grid-template-rows 100ms ease-out;
+
+        @include for-tablet-or-phone {
+            margin-right: var(--global-padding-horizontal);
+        }
+
+        @include for-phone {
+            margin-left: var(--global-padding-horizontal);
+        }
+
+        label {
+            background: var(--highlight-color);
+            display: block;
+            cursor: pointer;
+            padding: var(--card-padding);
+
+            input {
+                display: none;
+            }
+
+            &:hover {
+                text-decoration: underline;
+            }
+
+            &::before {
+                content: '»';
+                display: inline-block;
+                text-align: center;
+                vertical-align: baseline;
+                margin-right: 1ex;
+
+                transition: transform 150ms ease-in;
+            }
+        }
+
+        ul {
+            overflow: hidden;
+            margin: 0 var(--card-padding-horizontal);
+        }
+
+        &:has(input:checked) {
+            grid-template-rows: 2em 1fr;
+
+            label::before {
+                transform: rotate(90deg);
+            }
+
+            & > ul {
+
+                margin: var(--card-padding);
+            }
+        }
+    }
+}

@@ -4,6 +4,7 @@ from .betterpath import AbsolutePath, IncompatiblePathTypes, PathGoesOutsideStar
 from .convert_or_none import convert_or_none
 from .delete_extra_files import delete_extra_files
 from .expand_vars import expand_vars
+from .first_existing_path import first_existing_path
 from .jinja import configured_jinja
 from .keydefaultdict import KeyDefaultDict
 from .last_item import last_key, last_value, update_last_dataclass, update_last_value

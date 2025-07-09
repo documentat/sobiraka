@@ -1,0 +1,53 @@
+$total-width: 90rem;
+$aside-left-width: 15rem;
+$aside-left-width-max: 80vw;
+$aside-right-width: 15rem;
+
+:root {
+    // Common sizes
+    --colored-border-size: .2rem;
+    --border-radius-small: .25rem;
+    --border-radius-big: .4rem;
+
+    --card-margin-vertical: .5rem;
+    --card-padding-vertical: .5rem;
+    --card-padding-horizontal: 1rem;
+    --card-padding: var(--card-padding-vertical) var(--card-padding-horizontal);
+
+    --cell-padding-vertical: .3rem;
+    --cell-padding-horizontal: .5rem;
+    --cell-padding: var(--cell-padding-vertical) var(--cell-padding-horizontal);
+
+    // Layout
+    --total-width: #{$total-width};
+    --aside-left-width: #{$aside-left-width};
+    --aside-left-width-max: #{$aside-left-width-max};
+    --aside-right-width: #{$aside-right-width};
+
+    // Paddings
+    --global-padding-horizontal: 1rem;
+
+    // Header
+    --header-height: 4rem;
+    --header-text: 2.2rem;
+    --header-content-height: calc(var(--header-height) - 2 * var(--cell-padding-vertical));
+    --header-button-size: 2rem;
+    --hamburger-size: 3rem;
+    --separator-size: 1px;
+
+    // Search
+    --search-field-width: 20rem;
+    --search-clear-circle: 1rem;
+    --search-drawer-height: 40em;
+
+    // Article
+    --article-padding-top: 3rem;
+    --article-padding-right: 2rem;
+    --article-padding-bottom: 7rem;
+    --article-padding-left: 2rem;
+    --article-padding: var(--article-padding-top) var(--article-padding-right) var(--article-padding-bottom) var(--article-padding-left);
+}
+
+// Text
+$line-spacing: .3em;
+$paragraph-spacing: 1rem;

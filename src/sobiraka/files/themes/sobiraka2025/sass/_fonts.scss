@@ -1,0 +1,13 @@
+@if is-browser() {
+    :root {
+        --font-default: sans-serif;
+        --font-monospace: monospace;
+    }
+}
+
+@if is-pdf() {
+    :root {
+        --font-default: Lato;
+        --font-monospace: JetBrains Mono NL Medium;
+    }
+}

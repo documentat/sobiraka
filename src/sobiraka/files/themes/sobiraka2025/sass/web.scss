@@ -1,0 +1,26 @@
+@forward 'colors';
+@forward 'fonts';
+@forward 'sizes';
+
+@forward 'flavor';
+@forward 'customization';
+
+@forward 'common/admonitions';
+@forward 'common/blockquotes';
+@forward 'common/code';
+@forward 'common/content';
+@forward 'common/headings';
+@forward 'common/images';
+@forward 'common/links';
+@forward 'common/lists';
+@forward 'common/snippets';
+@forward 'common/tables';
+@forward 'common/tiles';
+
+@forward 'web/aside';
+@forward 'web/footer';
+@forward 'web/header';
+@forward 'web/layout';
+@forward 'web/nav';
+@forward 'web/search';
+@forward 'web/tabs';

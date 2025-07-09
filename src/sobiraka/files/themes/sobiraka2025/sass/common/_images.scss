@@ -1,0 +1,79 @@
+@use '../layers';
+@use '../mixins' as *;
+@use '../overlay' as *;
+@use 'sass:color';
+
+// Prevent ugly highlighting of block images' alt texts
+a:has(> img:only-child):hover {
+    text-decoration: none;
+}
+
+// Small inline images
+p img, li > img {
+    line-height: 1.5ex;
+    max-height: 2.5ex;
+    vertical-align: text-bottom;
+
+    color: var(--highlight-accent-color);
+}
+
+// Big images
+div.big-image img, figure img {
+    max-width: 100%;
+
+    border: 1px solid var(--separator-color);
+
+    color: var(--highlight-accent-color);
+
+    margin-bottom: 1.5rem;
+    vertical-align: middle;
+    display: block;
+
+    @if is-browser() {
+        height: fit-content;
+    }
+}
+
+figure {
+    margin: 0 0 1.5rem 0;
+
+    img {
+        margin-bottom: 0.5em;
+    }
+
+    figcaption {
+        color: var(--highlight-accent-color);
+        font-style: italic;
+    }
+}
+
+@if is-browser() {
+    div.fullscreen {
+        @include overlay-hidden;
+        z-index: layers.$fullscreen;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        img {
+            cursor: auto;
+
+            width: fit-content;
+            height: fit-content;
+            max-width: calc(100% - 2rem);
+            //border: 1px solid black;
+            //margin: auto;
+            display: block;
+        }
+
+
+        &.active {
+            @include overlay-blur;
+        }
+    }
+}
+
+body:has(.fullscreen.active) {
+    overscroll-behavior: contain;
+}

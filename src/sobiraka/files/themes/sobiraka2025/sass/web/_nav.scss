@@ -1,0 +1,174 @@
+@use '../layers';
+@use '../mixins' as *;
+@use '../overlay' as *;
+
+@if is-browser() {
+
+    label.show-nav {
+        display: none;
+    }
+
+    nav {
+        grid-area: nav;
+
+        font-size: 1rem !important;
+        padding: 0;
+
+        position: sticky;
+        top: var(--header-height);
+        max-height: calc(100vh - var(--header-height));
+
+        overflow-x: hidden;
+        overflow-y: auto;
+        scrollbar-width: none;
+
+
+        &:hover {
+            scrollbar-width: thin;
+        }
+
+        label {
+            display: none;
+        }
+    }
+
+    nav > ul {
+        --toc-item-height: 1.3rem;
+        --toc-item-font-size: 1rem;
+
+        padding: 0 0.2em 0 0;
+        margin-left: calc(var(--global-padding-horizontal) - var(--cell-padding-horizontal));
+        margin-right: 1rem;
+
+        // Universal rule that sets size for items on all levels
+        li {
+            list-style: none;
+
+            a {
+                display: block;
+                line-height: var(--toc-item-height);
+                padding: 0 var(--cell-padding-horizontal);
+                border-radius: var(--border-radius-small);
+                color: var(--text-color);
+
+                @include numeration;
+
+                &:hover {
+                    background: var(--menu-hover);
+                    text-decoration: none;
+                }
+
+                &.current {
+                    background: var(--menu-current);
+                    color: white;
+                }
+            }
+        }
+
+        // Top-level links
+        & > li {
+            & > a {
+                font-weight: bold;
+                font-size: var(--toc-item-font-size);
+                padding-top: calc((var(--toc-item-height) - var(--toc-item-font-size)) / 2);
+                padding-bottom: calc((var(--toc-item-height) - var(--toc-item-font-size)) / 2);
+            }
+
+            &:not(:first-of-type) {
+                margin-top: 1rem;
+            }
+        }
+
+        // Lower-level links
+        ul {
+            padding: 0;
+
+            li {
+                a {
+                    font-size: var(--toc-item-font-size);
+                    padding-top: calc((var(--toc-item-height) - var(--toc-item-font-size)) / 2);
+                    padding-bottom: calc((var(--toc-item-height) - var(--toc-item-font-size)) / 2);
+
+                }
+
+                ul {
+                    padding: 0;
+                    margin-left: 1em;
+                }
+            }
+        }
+    }
+
+    @include for-phone {
+        nav {
+            grid-area: unset;
+
+            position: fixed;
+            top: 0;
+            right: 100%;
+            bottom: 0;
+            background: var(--background-color);
+            max-height: 100vh;
+            width: min(var(--aside-left-width), var(--aside-left-width-max));
+
+            scrollbar-width: auto !important;
+
+            transition: right 200ms ease-in;
+            z-index: layers.$nav;
+
+            label {
+                display: block;
+                background: #00b0ff;
+
+                position: fixed;
+                top: var(--cell-padding-vertical);
+                left: var(--cell-padding-horizontal);
+
+                input {
+                    display: none;
+                }
+            }
+        }
+
+        label.show-nav {
+            display: block;
+
+            input {
+                display: none;
+            }
+
+            // The hamburger icon (visually belongs to the page header)
+            &::before {
+                content: '';
+                cursor: pointer;
+
+                position: absolute;
+                top: 11px;
+                left: 11px;
+                display: block;
+                width: var(--hamburger-size);
+                height: var(--hamburger-size);
+
+                background: var(--text-color);
+                mask: url(icons/hamburger.svg) center / contain no-repeat;
+            }
+
+            // The dark overlay over the whole page
+            &::after {
+                @include overlay-hidden;
+                z-index: layers.$under-nav;
+                content: '';
+            }
+
+            &:has(input:checked) {
+                &::after {
+                    @include overlay-blur;
+                }
+
+                & + nav {
+                    right: calc(100% - min(var(--aside-left-width), var(--aside-left-width-max)));
+                }
+            }
+        }
+    }
+}
