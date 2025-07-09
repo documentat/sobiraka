@@ -16,8 +16,8 @@
 1. Создайте [файл конфигурации](reference/configuration.md) для вашего проекта.
 1. Разместите файлы Markdown или ReST согласно [требуемой структуре](overview/).
 1. Выполните [автоматические проверки](overview/prover.md) качества текста.
-1. Запустите сборку документации в формат [HTML](build-html/web.md) или [PDF](build-pdf/latex.md).
-1. При необходимости настройте кастомизацию сборки и оформления.
+1. Запустите сборку документации в формат [HTML](build-html/web.md) или [PDF](build-pdf/weasyprint.md).
+1. При необходимости кастомизируйте оформление [HTML](build-html/web-customization.md) и [PDF](build-pdf/weasyprint-customization.md).
 
 ----
 
