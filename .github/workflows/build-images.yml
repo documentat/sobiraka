@@ -1,56 +1,71 @@
+name: Build Docker images
+
 on:
   workflow_call:
     inputs:
-      image_tag:
+      image_name:
         type: string
-        default: ${{ github.sha }}
+        required: true
+      image_name_latex:
+        type: string
+        required: true
+
+  workflow_dispatch:
+    inputs:
+      image_name:
+        description: Image name for Sobiraka+WeasyPrint
+        type: string
+        required: true
+      image_name_latex:
+        description: Image name for Sobiraka+WeasyPrint+LaTeX
+        type: string
+        required: true
 
 jobs:
-  build-image:
-    strategy:
-      fail-fast: false
-      matrix:
-        variant:
-          - { target: release, image: sobiraka }
-          - { target: release-latex, image: sobiraka-latex }
-
-    name: ${{ matrix.variant.image }}
+  build-sobiraka:
+    name: Build sobiraka
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v4
+      - run: make release IMAGE=sobiraka:${{ github.sha }}
 
-      - name: Build image
-        run: >
-          make ${{ matrix.variant.target }}
-          IMAGE=ghcr.io/documentat/${{ matrix.variant.image }}:${{ inputs.image_tag }}
+  build-sobiraka-latex:
+    name: Build sobiraka-latex
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+      - run: make release-latex IMAGE=sobiraka-latex:${{ github.sha }}
 
+  publish-images:
+    name: Publish images
+    needs: [build-sobiraka, build-sobiraka-latex]
+    runs-on: self-hosted
+    steps:
       - uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Push image for this commit
-        run: >
-          docker push
-          ghcr.io/documentat/${{ matrix.variant.image }}:${{ inputs.image_tag }}
+      - name: Choose tags to publish
+        run: |
+          if [ ${{ github.ref }} = 'refs/heads/master' ]; then
+            echo TAGS="${{ github.sha }} latest" >> $GITHUB_ENV
+          else
+            echo TAGS="${{ github.sha }} ${{ github.ref_name }}" >> $GITHUB_ENV
+          fi
 
-      - name: Push image for this branch
-        if: github.ref != 'refs/heads/master'
-        run: >
-          docker tag
-          ghcr.io/documentat/${{ matrix.variant.image }}:${{ inputs.image_tag }}
-          ghcr.io/documentat/${{ matrix.variant.image }}:${{ github.ref_name }}
-          &&
-          docker push
-          ghcr.io/documentat/${{ matrix.variant.image }}:${{ github.ref_name }}
-
-      - name: Push image for 'latest'
-        if: github.ref == 'refs/heads/master'
-        run: >
-          docker tag
-          ghcr.io/documentat/${{ matrix.variant.image }}:${{ inputs.image_tag }}
-          ghcr.io/documentat/${{ matrix.variant.image }}:latest
-          &&
-          docker push
-          ghcr.io/documentat/${{ matrix.variant.image }}:latest
+      - name: Publish images
+        run: |
+          for TAG in ${{ env.TAGS }}; do
+            echo ::group::Publish ${{ inputs.image_name }}:$TAG
+            docker tag sobiraka:${{ github.sha }} ghcr.io/documentat/${{ inputs.image_name }}:$TAG
+            docker push ghcr.io/documentat/${{ inputs.image_name }}:$TAG
+            echo ::endgroup::
+          done
+          for TAG in ${{ env.TAGS }}; do
+            echo ::group::Publish ${{ inputs.image_name_latex }}:$TAG
+            docker tag sobiraka-latex:${{ github.sha }} ghcr.io/documentat/${{ inputs.image_name_latex }}:$TAG
+            docker push ghcr.io/documentat/${{ inputs.image_name_latex }}:$TAG
+            echo ::endgroup::
+          done

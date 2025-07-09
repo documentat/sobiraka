@@ -115,16 +115,16 @@ RUN mkdir /DIST
 ENV PYTHONDONTWRITEBYTECODE=1
 SHELL ["/bin/bash", "-c"]
 ENTRYPOINT \
-	echo ::group::Building Sobiraka package... \
+	echo ::group::Build Sobiraka package \
 	&& python setup.py egg_info --egg-base ../EGGS --quiet sdist --dist-dir /DIST --quiet \
 	&& echo ::endgroup:: \
 	\
-	&& echo ::group::Installing Sobiraka package... \
+	&& echo ::group::Install Sobiraka package \
 	&& pip install /DIST/sobiraka-*.tar.gz \
 	&& rm -rf /EGGS /DIST \
 	&& echo ::endgroup:: \
 	\
-	&& echo ::group::Running tests... \
+	&& echo ::group::Run tests \
 	&& python -m unittest discover --start-directory=tests --verbose \
 	&& echo ::endgroup::
 

@@ -5,7 +5,7 @@ jobs:
   prover:
     name: Check documentation
     runs-on: self-hosted
-    container: ghcr.io/documentat/sobiraka:${{ github.sha }}
+    container: ghcr.io/documentat/${{ vars.IMAGE_NAME }}:${{ github.sha }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -43,7 +43,7 @@ jobs:
     name: Validate ${{ matrix.dic_file }}
     needs: [find-dictionaries]
     runs-on: self-hosted
-    container: ghcr.io/documentat/sobiraka:${{ github.sha }}
+    container: ghcr.io/documentat/${{ vars.IMAGE_NAME }}:${{ github.sha }}
     steps:
       - uses: actions/checkout@v4
         with:
