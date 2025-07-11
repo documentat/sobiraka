@@ -137,10 +137,42 @@ FROM common-latex AS release-latex
 COPY --from=install-pip-dependencies /prefix /opt/conda/envs/myenv
 COPY --from=install-package /prefix /opt/conda/envs/myenv
 CMD ["sobiraka"]
+ARG GITHUB_REF_NAME
+ARG GITHUB_SHA
+ARG CREATED
+ARG VERSION
+ARG PUBLIC_REPOSITORY_URL
+ARG DOCS_MASTER_URL
+LABEL maintainer="Max Alibaev <max.alibaev@documentat.io>"
+LABEL org.opencontainers.image.title="Sobiraka"
+LABEL org.opencontainers.image.description="HTML and PDF documentation builder"
+LABEL org.opencontainers.image.licenses="MIT"
+LABEL org.opencontainers.image.version="$VERSION"
+LABEL org.opencontainers.image.created="$CREATED"
+LABEL org.opencontainers.image.ref.name="$GITHUB_REF_NAME"
+LABEL org.opencontainers.image.revision="$GITHUB_SHA"
+LABEL org.opencontainers.image.source="$PUBLIC_REPOSITORY_URL"
+LABEL org.opencontainers.image.url="$DOCS_MASTER_URL"
 
 FROM common AS release
 COPY --from=install-pip-dependencies /prefix /opt/conda/envs/myenv
 COPY --from=install-package /prefix /opt/conda/envs/myenv
 CMD ["sobiraka"]
+ARG GITHUB_REF_NAME
+ARG GITHUB_SHA
+ARG CREATED
+ARG VERSION
+ARG PUBLIC_REPOSITORY_URL
+ARG DOCS_MASTER_URL
+LABEL maintainer="Max Alibaev <max.alibaev@documentat.io>"
+LABEL org.opencontainers.image.title="Sobiraka"
+LABEL org.opencontainers.image.description="HTML and PDF documentation builder"
+LABEL org.opencontainers.image.licenses="MIT"
+LABEL org.opencontainers.image.version="$VERSION"
+LABEL org.opencontainers.image.created="$CREATED"
+LABEL org.opencontainers.image.ref.name="$GITHUB_REF_NAME"
+LABEL org.opencontainers.image.revision="$GITHUB_SHA"
+LABEL org.opencontainers.image.source="$PUBLIC_REPOSITORY_URL"
+LABEL org.opencontainers.image.url="$DOCS_MASTER_URL"
 
 # endregion

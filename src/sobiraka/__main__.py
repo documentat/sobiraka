@@ -22,6 +22,7 @@ async def async_main():
     # pylint: disable=too-many-statements
 
     parser = ArgumentParser()
+    parser.add_argument('--version', action='store_true')
     parser.add_argument('--tmpdir', type=AbsolutePath, default=AbsolutePath('build'))
 
     commands = parser.add_subparsers(title='commands', dest='command')
@@ -64,7 +65,11 @@ async def async_main():
     args = parser.parse_args()
     RT.TMP = args.tmpdir
 
-    if args.command is None:
+    if args.version:
+        print((AbsolutePath(__file__).parent / 'VERSION').read_text().strip())
+        exit_code = 0
+
+    elif args.command is None:
         parser.print_help()
         exit_code = 1
 

@@ -4,8 +4,10 @@ PYTHON := 3.13
 PANDOC := 3.7
 
 DOCKER_RUN := docker run --rm -it
+VERSION := $(shell cat src/sobiraka/VERSION)
 ifdef CI
   DOCKER_RUN := docker run --rm
+  VERSION := $(GITHUB_SHA)
 endif
 
 prepull-all:
@@ -55,6 +57,12 @@ release:
 		--target release \
 		--build-arg PYTHON=$(PYTHON) \
 		--build-arg PANDOC=$(PANDOC) \
+		--build-arg CREATED='$(shell date -u +%Y-%m-%dT%H:%M:%SZ)' \
+		--build-arg GITHUB_REF_NAME='$(GITHUB_REF_NAME)' \
+		--build-arg GITHUB_SHA='$(GITHUB_SHA)' \
+		--build-arg VERSION='$(shell cat src/sobiraka/VERSION)' \
+		--build-arg PUBLIC_REPOSITORY_URL='$(PUBLIC_REPOSITORY_URL)' \
+		--build-arg DOCS_MASTER_URL='$(DOCS_MASTER_URL)' \
 		--tag $(IMAGE)
 
 release-latex:
@@ -63,6 +71,12 @@ release-latex:
 		--target release-latex \
 		--build-arg PYTHON=$(PYTHON) \
 		--build-arg PANDOC=$(PANDOC) \
+		--build-arg CREATED='$(shell date -u +%Y-%m-%dT%H:%M:%SZ)' \
+		--build-arg GITHUB_REF_NAME='$(GITHUB_REF_NAME)' \
+		--build-arg GITHUB_SHA='$(GITHUB_SHA)' \
+		--build-arg VERSION='$(shell cat src/sobiraka/VERSION)' \
+		--build-arg PUBLIC_REPOSITORY_URL='$(PUBLIC_REPOSITORY_URL)' \
+		--build-arg DOCS_MASTER_URL='$(DOCS_MASTER_URL)' \
 		--tag $(IMAGE)
 
 build-tester:

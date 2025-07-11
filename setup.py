@@ -1,8 +1,11 @@
+from pathlib import Path
+
 from setuptools import find_packages, setup
 
 setup(
     name='sobiraka',
-    version='0.3',
+    dynamic=(Path() / 'src' / 'sobiraka' / 'VERSION').read_text().strip(),
+    license='MIT',
     author='Max Alibaev',
     python_requires='~=3.11',
     install_requires=[
@@ -32,6 +35,7 @@ setup(
     package_data={'sobiraka': [
         'files/**',
         '**/*.js',
+        'VERSION',
     ]},
     entry_points={
         'console_scripts': ['sobiraka=sobiraka.__main__:main'],
