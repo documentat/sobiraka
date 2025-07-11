@@ -64,11 +64,11 @@ jobs:
       - name: Choose uploading URL
         run: |
           if [[ ${{ github.ref }} == 'refs/heads/master' ]]; then
-            echo PUBLICATION_DEST=demo@demo.documentat.io:/home/demo/sobiraka/ >> $GITHUB_ENV
-            echo PUBLICATION_URL=http://sobiraka.demo.documentat.io/ >> $GITHUB_ENV
+            echo PUBLICATION_DEST=${{ vars.DOCS_MASTER_RSYNC }} >> $GITHUB_ENV
+            echo PUBLICATION_URL=${{ vars.DOCS_MASTER_URL }} >> $GITHUB_ENV
           else
-            echo PUBLICATION_DEST=demo@demo.documentat.io:/home/demo/sobiraka/~${{ github.ref_name }} >> $GITHUB_ENV
-            echo PUBLICATION_URL=http://sobiraka.demo.documentat.io/~${{ github.ref_name }}/ >> $GITHUB_ENV
+            echo PUBLICATION_DEST=${{ format(vars.DOCS_BRANCH_RSYNC, github.ref_name) }} >> $GITHUB_ENV
+            echo PUBLICATION_URL=${{ format(vars.DOCS_BRANCH_URL, github.ref_name) }}/ >> $GITHUB_ENV
           fi
 
       - name: Upload directory
@@ -76,8 +76,7 @@ jobs:
           rsync
           docs/build/
           ${{ env.PUBLICATION_DEST }}
-          --verbose
-          --rsh 'ssh -i ./gha_identity -o UserKnownHostsFile=./gha_known_hosts'
+          --rsh 'ssh -i ./gha_identity -o UserKnownHostsFile=./gha_known_hosts -v'
           --human-readable
           --recursive
           --delete
@@ -85,4 +84,4 @@ jobs:
           --exclude .htpasswd
           --exclude ~*
           &&
-          echo ::notice title=Documentation published on the demo server::${{ env.PUBLICATION_URL }}
+          echo ::notice title=Documentation published::${{ env.PUBLICATION_URL }}

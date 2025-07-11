@@ -46,6 +46,6 @@ jobs:
 
   build-docs:
     name: Build documentation
-    needs: [build-images]
+    needs: [build-images, check-docs]
     uses: ./.github/workflows/build-docs.yml
     secrets: inherit
