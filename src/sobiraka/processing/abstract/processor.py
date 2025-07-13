@@ -7,7 +7,7 @@ from functools import partial
 from os.path import normpath
 from typing import Callable, Generic, TypeVar
 
-from panflute import Code, Element, Header, Image, Link, Para, Space, Str, stringify
+from panflute import Code, Element, Header, Image, Link, Para, Space, Str, Table, stringify
 from typing_extensions import override
 
 from sobiraka.models import Anchor, DirPage, FileSystem, Page, PageHref, Status, Syntax, UrlHref, Volume
@@ -18,7 +18,7 @@ from sobiraka.runtime import RT
 from sobiraka.utils import AbsolutePath, MISSING, PathGoesOutsideStartDirectory, RelativePath, absolute_or_relative
 from .dispatcher import Dispatcher
 from .waiter import NoSourceCreatedForPath
-from ..directive import Directive, ManualTocDirective, BlockDirective
+from ..directive import BlockDirective, Directive, ManualTocDirective
 
 B = TypeVar('B', bound='Builder')
 
@@ -132,6 +132,17 @@ class Processor(Dispatcher, Generic[B], metaclass=ABCMeta):
                 text += stringify(elem)
 
         return (para,)
+
+    @override
+    async def process_table(self, table: Table, page: Page) -> tuple[Element, ...]:
+        table, = await super().process_table(table, page)
+        assert isinstance(table, Table)
+
+        # Remove the width specification from all columns
+        for i, (align, _) in enumerate(table.colspec):
+            table.colspec[i] = align, 'ColWidthDefault'
+
+        return table,
 
     # region Process links
 
