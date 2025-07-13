@@ -35,9 +35,7 @@ jobs:
   build-images:
     name: Build Docker images
     uses: ./.github/workflows/build-images.yml
-    with:
-      image_name: ${{ vars.IMAGE_NAME }}
-      image_name_latex: ${{ vars.IMAGE_NAME_LATEX }}
+    secrets: inherit
 
   check-docs:
     name: Check documentation
