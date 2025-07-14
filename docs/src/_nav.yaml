@@ -1,5 +1,7 @@
 items:
   - overview
+  - installation:
+      toc_collapse: true
   - organizing
   - writing
   - build-html

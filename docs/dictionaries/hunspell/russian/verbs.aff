@@ -35,6 +35,18 @@ SFX P овать овано .
 SFX P овать ованы .
 SFX P овать уйте/c .
 
+# скачивать
+SFX S N 9
+SFX S ть ю/c .
+SFX S ть ешь/s .
+SFX S ть ет/s .
+SFX S ть ем/s .
+SFX S ть ете/c .
+SFX S ть ют/s .
+SFX S ть л/s .
+SFX S ть ла/c .
+SFX S ть ли/c .
+
 # сь
 SFX c N 1
 SFX c 0 сь .
