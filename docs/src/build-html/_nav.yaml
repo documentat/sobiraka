@@ -1,0 +1,5 @@
+items:
+  - web.md:
+      permalink: /web/
+  - web-customization.md:
+      permalink: /web/customization

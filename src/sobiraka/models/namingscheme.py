@@ -7,14 +7,14 @@ from math import inf
 from sobiraka.utils import Location, RelativePath
 
 DEFAULT_PATTERNS = (
-    re.compile(r'(?P<is_main> ^$                                 )  # (empty name)   ', re.VERBOSE),
-    re.compile(r'(?P<is_main> index                              )  # index.md       ', re.VERBOSE),
-    re.compile(r'(?P<is_main> (?P<pos> \d+ ) - (?P<stem> index ) )  # 123-index.md   ', re.VERBOSE),
-    re.compile(r'(?P<is_main> (?P<pos> 0 )                       )  # 0.md           ', re.VERBOSE),
-    re.compile(r'(?P<is_main> (?P<pos> 0 ) - .*                  )  # 0-anything.md  ', re.VERBOSE),
-    re.compile(r'(?P<pos> \d+ ) - (?P<stem> .+ )                    # 123-anything.md', re.VERBOSE),
-    re.compile(r'(?P<pos> \d+ )                                     # 123.md         ', re.VERBOSE),
-    re.compile(r'(?P<stem> .+ )                                     # anything.md    ', re.VERBOSE),
+    re.compile(r'_? (?P<is_main> ^$                                 )  # (empty name)   ', re.VERBOSE),
+    re.compile(r'_? (?P<stem> (?P<is_main> index )                  )  # index.md       ', re.VERBOSE),
+    re.compile(r'_? (?P<is_main> (?P<pos> \d+ ) - (?P<stem> index ) )  # 123-index.md   ', re.VERBOSE),
+    re.compile(r'_? (?P<is_main> (?P<pos> 0 )                       )  # 0.md           ', re.VERBOSE),
+    re.compile(r'_? (?P<is_main> (?P<pos> 0 ) - .*                  )  # 0-anything.md  ', re.VERBOSE),
+    re.compile(r'_? (?P<pos> \d+ ) - (?P<stem> .+ )                    # 123-anything.md', re.VERBOSE),
+    re.compile(r'_? (?P<pos> \d+ )                                     # 123.md         ', re.VERBOSE),
+    re.compile(r'_? (?P<stem> .+ )                                     # anything.md    ', re.VERBOSE),
 )
 
 

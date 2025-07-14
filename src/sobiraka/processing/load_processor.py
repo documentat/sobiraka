@@ -1,3 +1,5 @@
+import inspect
+import sys
 from contextlib import suppress
 from importlib.util import module_from_spec, spec_from_file_location
 from inspect import isclass
@@ -29,15 +31,17 @@ def _load_processor_from_file(extension_file: AbsolutePath, base_class: type[P])
         raise ExtensionFileNotFound
     module_spec = spec_from_file_location('extension', extension_file)
     module = module_from_spec(module_spec)
+    sys.modules['extension'] = module
     module_spec.loader.exec_module(module)
 
     # Find the class that extends the base class
     klasses = []
-    for klass_name, klass in module.__dict__.items():
-        if not klass_name.startswith('__'):
-            if isclass(klass) and issubclass(klass, base_class):
-                if klass is not base_class:
-                    klasses.append(klass)
+    for _, klass in inspect.getmembers(module):
+        with suppress(AssertionError, TypeError):
+            assert inspect.getfile(klass) == str(extension_file)
+            assert isclass(klass)
+            assert issubclass(klass, base_class)
+            klasses.append(klass)
 
     # Make sure there is one and only one such class
     if len(klasses) != 1:

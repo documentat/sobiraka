@@ -6,8 +6,6 @@ article {
         margin-bottom: $paragraph-spacing;
 
         &:not(:has(p)) > li {
-            margin: $line-spacing 0;
-
             ul, ol {
                 margin-bottom: 0;
             }

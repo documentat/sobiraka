@@ -1,0 +1,6 @@
+title: Справочник
+items:
+  - configuration.md
+  - commands.md
+  - template-api.md
+  - processor-api.md

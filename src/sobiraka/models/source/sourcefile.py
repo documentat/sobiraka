@@ -4,13 +4,13 @@ import yaml
 from typing_extensions import override
 
 from sobiraka.utils import MISSING
-from .source import Source
+from .source import IdentifierResolutionError, Source
 from ..href import PageHref
 from ..namingscheme import NamingScheme
 from ..page import Page, PageMeta
 from ..syntax import Syntax
 
-_META_PATTERN = re.compile(r'--- \n (.+?\n)? --- (?: \n+ (.+) )?', re.DOTALL | re.VERBOSE)
+_META_PATTERN = re.compile(r'-{3,} \n (.+?\n)? -{3,} (?: \n+ (.+) )?', re.DOTALL | re.VERBOSE)
 
 
 class SourceFile(Source):
@@ -32,12 +32,12 @@ class SourceFile(Source):
         text = self.volume.project.fs.read_text(self.path_in_project)
 
         # Parse the front matter, if any
-        meta = {}
+        meta = self.base_meta or PageMeta()
         if m := _META_PATTERN.fullmatch(text):
             if meta_str := m.group(1):
-                meta = yaml.safe_load(meta_str)
+                meta += PageMeta(**yaml.safe_load(meta_str))
 
-        page = self.PAGE_CLASS(self, location, syntax, PageMeta(**meta), text)
+        page = self.PAGE_CLASS(self, location, syntax, meta, text)
         page.children = []
         self.pages = page,
 
@@ -51,7 +51,7 @@ class SourceFile(Source):
         from sobiraka.runtime import RT
 
         if identifier is None:
-            return PageHref(self.page, default_label=RT[self.page].title)
+            return PageHref(self.page, default_label=self.page.meta.title)
 
         try:
             anchor = RT[self.page].anchors.by_identifier(identifier)
@@ -59,7 +59,3 @@ class SourceFile(Source):
 
         except (KeyError, AssertionError) as exc:
             raise IdentifierResolutionError from exc
-
-
-class IdentifierResolutionError(Exception):
-    pass

@@ -107,7 +107,7 @@ class WebBuilder(ThemeableProjectBuilder['WebProcessor', 'WebTheme'], AbstractHt
             page=page,
 
             number=RT[page].number,
-            title=RT[page].title,
+            title=page.meta.title,
             body=RT[page].bytes.decode('utf-8').strip(),
 
             head=head,
@@ -138,8 +138,9 @@ class WebBuilder(ThemeableProjectBuilder['WebProcessor', 'WebTheme'], AbstractHt
         prefix = config.web.prefix or '$AUTOPREFIX'
         prefix = expand_vars(prefix, lang=volume.lang, codename=volume.codename)
 
-        target_path = RelativePath() / prefix / page.location.as_path()
-        if page.location.is_dir:
+        page_location = page.meta.permalink or page.location
+        target_path = RelativePath() / prefix / page_location.as_path()
+        if page_location.is_dir:
             target_path /= 'index.html'
         else:
             target_path = target_path.with_name(target_path.name + '.html')
@@ -153,10 +154,13 @@ class WebBuilder(ThemeableProjectBuilder['WebProcessor', 'WebTheme'], AbstractHt
         return relpath(image_path, start=start_path)
 
     def make_internal_url(self, href: PageHref, *, page: Page = None) -> str:
-        result = href.target.location.as_relative_path_str(
-            start=page and page.location,
+        source_location = page and (page.meta.permalink or page.location)
+        target_location = href.target.meta.permalink or href.target.location
+
+        result = target_location.as_relative_path_str(
+            start=source_location,
             suffix='.html',
-            index_file_name='index.html',
+            index_file_name='' if self.hide_index_html else 'index.html',
         )
         if href.anchor:
             result += '#' + href.anchor

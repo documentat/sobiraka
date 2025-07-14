@@ -88,7 +88,7 @@ class TocItem:
     @property
     def is_collapsed(self) -> bool:
         """True if the item would have some children but they were omitted due to a depth limit."""
-        return self.children is CollapsedToc
+        return isinstance(self.children, CollapsedToc)
 
 
 class Toc(list[TocItem]):
@@ -186,11 +186,7 @@ def toc(
                           current_page=current_page)
 
     for page in base.children:
-        item_title = page.meta.title \
-                     or RT[page].title \
-                     or page.location.name \
-                     or page.volume.codename \
-                     or ''
+        item_title = page.meta.toc_title or page.meta.title or page.location.name or page.volume.codename or ''
         href = PageHref(page)
         url = builder.make_internal_url(href, page=current_page)
         item = TocItem(title=item_title, url=url, href=href, origin=page,
@@ -201,7 +197,7 @@ def toc(
                 item.is_breadcrumb = True
 
         if len(RT[page].anchors) > 0 or len(page.children) > 0:
-            if toc_depth > 1 or item.is_breadcrumb:
+            if (toc_depth > 1 and not page.meta.toc_collapse) or item.is_breadcrumb:
                 item.children = toc(page,
                                     builder=builder,
                                     current_page=current_page,

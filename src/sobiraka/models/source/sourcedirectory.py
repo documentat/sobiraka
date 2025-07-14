@@ -12,18 +12,16 @@ from ..filesystem import FileSystem
 from ..filesystem.filesystem import GLOB_KWARGS
 from ..href import PageHref
 from ..namingscheme import NamingScheme
-from ..page import DirPage, Page
+from ..page import DirPage
 
 
 class SourceDirectory(Source):
     aggregation_policy = AggregationPolicy.WAIT_FOR_CHILDREN | AggregationPolicy.WAIT_FOR_ANY_PAGE
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.index_page: Page | None = None
-
     @override
     async def generate_child_sources(self):
+        from .make_source import make_source
+
         volume = self.volume
         fs: FileSystem = volume.project.fs
         include_pattern: Sequence[str] = volume.config.paths.include
@@ -32,10 +30,10 @@ class SourceDirectory(Source):
 
         child_sources = []
         for child_path in fs.iterdir(self.path_in_project):
-            # A directory is being discovered unconditionally,
-            # but if all of its subtree gets excluded by the patterns, it won't create any pages
+            # A directory is being discovered unconditionally
+            # (it may or may not generate pages later, depending on the NamingScheme)
             if fs.is_dir(child_path):
-                child_sources.append(SourceDirectory(self.volume, child_path, parent=self))
+                child_sources.append(make_source(self.volume, child_path, parent=self))
 
             # A file is being discovered or not, according to the patterns
             elif globmatch(child_path.relative_to(self.volume.root.path_in_project),
@@ -73,36 +71,13 @@ class SourceDirectory(Source):
         self._set_index_page(DirPage(self, location))
         self.pages = self.index_page,
 
-    def _set_index_page(self, index_page: Page):
-        """
-        Set the given page as this source's index page
-        and arrange the necessary parent-children relations
-        """
-        self.index_page = index_page
-        self.index_page.children = []
-
-        for child in self.child_sources:
-
-            # A subdirectory's index page becomes a child of the index page
-            if isinstance(child, SourceDirectory) and child.index_page is not None:
-                child.index_page.parent = index_page
-                index_page.children.append(child.index_page)
-
-            # A normal page becomes a child of the index page
-            for page in child.pages:
-                if page not in (index_page, *index_page.children):
-                    page.parent = index_page
-                    index_page.children.append(page)
-
     @property
     def path_in_volume(self) -> RelativePath:
         return self.path_in_project.relative_to(self.volume.root_path)
 
     @override
     def href(self, identifier: str = None) -> PageHref:
-        from sobiraka.runtime import RT
-
         assert self.index_page is not None
         return PageHref(self.index_page,
                         anchor=identifier,
-                        default_label=RT[self.index_page].title)
+                        default_label=self.index_page.meta.title)

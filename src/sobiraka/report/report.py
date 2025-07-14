@@ -1,3 +1,4 @@
+import sys
 from contextlib import contextmanager
 
 import rich
@@ -17,6 +18,8 @@ _SUBTREES: dict[Source | Page, Tree] = {}
 
 @contextmanager
 def run_beautifully():
+    from sobiraka.processing.abstract.waiter import BuildFailure
+
     global _REPORTING  # pylint: disable=global-statement
     _REPORTING = True
     try:
@@ -27,6 +30,9 @@ def run_beautifully():
             finally:
                 _TREE.extra_new_line = False
                 Reporter.refresh()
+
+    except BuildFailure:
+        sys.exit(1)
 
     finally:
         _REPORTING = False

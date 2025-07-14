@@ -13,7 +13,7 @@ from ..issues import Issue
 from ..status import ObjectWithStatus
 
 if TYPE_CHECKING:
-    from sobiraka.models import Page, Volume
+    from sobiraka.models import Page, PageMeta, Volume
 
 
 class Source(ObjectWithStatus, metaclass=ABCMeta):
@@ -29,16 +29,19 @@ class Source(ObjectWithStatus, metaclass=ABCMeta):
     This process is called discovery.
     """
 
-    aggregation_policy: AggregationPolicy = None
+    aggregation_policy: AggregationPolicy = AggregationPolicy.WAIT_FOR_CHILDREN
 
     def __init__(self, volume: Volume, path_in_project: RelativePath, *, parent: Source = None):
         self.volume: Volume = volume
         self.path_in_project: RelativePath = path_in_project
         self.parent: Source | None = parent
 
+        self.base_meta: PageMeta | None = None
+
         # Fields that are being filled while processing
         self.child_sources: Sequence[Source] = MISSING
         self.pages: Sequence[Page] = MISSING
+        self.index_page: Page | None = None
         self.subtree_has_pages: bool = False
 
         # Fields for collecting bad results
@@ -115,3 +118,33 @@ class Source(ObjectWithStatus, metaclass=ABCMeta):
         for child in self.child_sources:
             pages += child.all_pages()
         return tuple(unique_everseen(pages))
+
+    @final
+    def _set_index_page(self, index_page: Page):
+        """
+        Set the given page as this source's index page
+        and arrange the necessary parent-children relations
+        """
+        self.index_page = index_page
+        self.index_page.children = []
+
+        # Use the directory's base meta for the index page's meta
+        if self.base_meta:
+            index_page.meta = self.base_meta + index_page.meta
+
+        for child in self.child_sources:
+
+            # A subdirectory's index page becomes a child of the index page
+            if child.index_page is not None:
+                child.index_page.parent = index_page
+                index_page.children.append(child.index_page)
+
+            # A normal page becomes a child of the index page
+            for page in child.pages:
+                if page not in (index_page, *index_page.children):
+                    page.parent = index_page
+                    index_page.children.append(page)
+
+
+class IdentifierResolutionError(Exception):
+    pass

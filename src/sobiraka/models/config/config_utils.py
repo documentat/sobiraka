@@ -37,6 +37,9 @@ class CombinedToc(Enum):
     CURRENT = 'current'
     ALWAYS = 'always'
 
+    def __repr__(self):
+        return f'{self.__class__.__name__}.{self.name}'
+
     @classmethod
     def from_bool(cls, value: bool) -> Self:
         if value:

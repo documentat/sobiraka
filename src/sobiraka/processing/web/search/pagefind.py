@@ -60,7 +60,7 @@ class PagefindIndexer(SearchIndexer, PlainTextDispatcher):
 
         tm = self.tm[page]
         url = str(self.builder.make_internal_url(PageHref(page)))
-        title = RT[page].title
+        title = page.meta.title
 
         match self.search_config.link_target:
             case Config_Search_LinkTarget.H1:
