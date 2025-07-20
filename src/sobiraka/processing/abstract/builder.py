@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from abc import ABCMeta, abstractmethod
 from asyncio import Task, create_subprocess_exec, wait
 from collections import defaultdict
@@ -87,6 +88,9 @@ class Builder(Generic[P], metaclass=ABCMeta):
             PROVER=False,
             WEASYPRINT=False,
             WEB=False,
+
+            # Python library
+            os=os,
         )
         variables = config.variables | default_variables | self.additional_variables()
 

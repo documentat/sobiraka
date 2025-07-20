@@ -1,5 +1,16 @@
 on:
   workflow_call:
+    inputs:
+      PUBLIC_REPOSITORY_URL:
+        type: string
+        required: true
+      DOCKER_PROD_IMAGE:
+        type: string
+        required: true
+
+env:
+  PUBLIC_REPOSITORY_URL: ${{ inputs.PUBLIC_REPOSITORY_URL }}
+  DOCKER_PROD_IMAGE: ${{ inputs.DOCKER_PROD_IMAGE }}
 
 jobs:
   build-docs-pdf:

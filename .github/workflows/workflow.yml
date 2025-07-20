@@ -32,4 +32,7 @@ jobs:
     name: Build documentation
     needs: [build-images, check-docs]
     uses: ./.github/workflows/build-docs.yml
+    with:
+      PUBLIC_REPOSITORY_URL: ${{ vars.PUBLIC_REPOSITORY_URL }}
+      DOCKER_PROD_IMAGE: ${{ vars.DOCKER_PROD_IMAGE }}
     secrets: inherit

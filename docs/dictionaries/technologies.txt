@@ -4,12 +4,14 @@ iso639
 jsDelivr
 JSON
 json
+macOS
 md
 Pagefind
 pagefind
 Pandoc
 Panflute
 Pygments
+PowerShell
 PDF
 pdf
 reStructuredText
