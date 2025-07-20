@@ -1,7 +1,7 @@
 from unittest import main
 
 from abstracttests.projecttestcase import ProjectTestCase
-from helpers.fakeproject import FakeProject, FakeVolume
+from helpers.fakeproject import FakeDocument, FakeProject
 from sobiraka.models import Page, Project
 
 
@@ -10,7 +10,7 @@ class TestChildren(ProjectTestCase):
 
     def _init_project(self) -> Project:
         return FakeProject({
-            'src': FakeVolume({
+            'src': FakeDocument({
                 'document1.md': '# Document 1',
                 'sub': {
                     '0-index.md': '# Sub',
@@ -26,16 +26,16 @@ class TestChildren(ProjectTestCase):
 
     async def _process(self):
         await super()._process()
-        volume = self.project.get_volume()
+        document = self.project.get_document()
 
-        self.index_root = volume.root_page
-        self.document1 = volume.get_page_by_location('/document1')
-        self.index_sub = volume.get_page_by_location('/sub/')
-        self.document2 = volume.get_page_by_location('/sub/document2')
-        self.index_subsub = volume.get_page_by_location('/sub/subsub/')
-        self.document3 = volume.get_page_by_location('/sub/subsub/document3')
-        self.document4 = volume.get_page_by_location('/sub/subsub/document4')
-        self.document5 = volume.get_page_by_location('/sub/subsub/document5')
+        self.index_root = document.root_page
+        self.document1 = document.get_page_by_location('/document1')
+        self.index_sub = document.get_page_by_location('/sub/')
+        self.document2 = document.get_page_by_location('/sub/document2')
+        self.index_subsub = document.get_page_by_location('/sub/subsub/')
+        self.document3 = document.get_page_by_location('/sub/subsub/document3')
+        self.document4 = document.get_page_by_location('/sub/subsub/document4')
+        self.document5 = document.get_page_by_location('/sub/subsub/document5')
 
     def test_breadcrumbs(self):
         data: tuple[tuple[Page, ...], ...] = (

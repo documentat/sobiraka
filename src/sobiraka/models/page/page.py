@@ -10,7 +10,7 @@ from ..syntax import Syntax
 from ..version import TranslationStatus, Version
 
 if TYPE_CHECKING:
-    from sobiraka.models import Project, Source, Volume
+    from sobiraka.models import Document, Project, Source
 
 
 class Page(ObjectWithStatus):
@@ -19,7 +19,7 @@ class Page(ObjectWithStatus):
     It represents a piece of output documentation (not necessarily the full Source).
     For example, in the HTML output format, a page is literally a single HTML page.
 
-    Each page is located at a unique Location (basically, a URI) within its Volume.
+    Each page is located at a unique Location (basically, a URI) within its Document.
     Its relation to other pages in the hierarchy is stored in the `parent` and `children` fields.
     Note that the Location does not necessarily reflect the real hierarchy.
     """
@@ -40,22 +40,22 @@ class Page(ObjectWithStatus):
         self.exception: Exception | None = None
 
     @property
-    def volume(self) -> Volume:
-        return self.source.volume
+    def document(self) -> Document:
+        return self.source.document
 
     @property
     def project(self) -> Project:
-        return self.source.volume.project
+        return self.source.document.project
 
     def __repr__(self):
         return f'<{self.__class__.__name__}: {str(self.location)!r}>'
 
     def __lt__(self, other):
         assert isinstance(other, Page), TypeError
-        assert self.volume.project == other.volume.project
+        assert self.document.project == other.document.project
 
-        if self.volume is not other.volume:
-            return self.volume < other.volume
+        if self.document is not other.document:
+            return self.document < other.document
 
         self_breadcrumbs_as_indexes = []
         for crumb in self.breadcrumbs[1:]:
@@ -83,7 +83,7 @@ class Page(ObjectWithStatus):
 
     @property
     def original(self) -> Page:
-        project = self.volume.project
+        project = self.document.project
         return project.get_translation(self, project.primary_language)
 
     @property

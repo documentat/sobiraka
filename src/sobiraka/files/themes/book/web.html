@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html{% if volume.lang %} lang="{{ volume.lang }}"{% endif %} dir="ltr">
+<html{% if document.lang %} lang="{{ document.lang }}"{% endif %} dir="ltr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -43,7 +43,7 @@
                             <label for="languages" class="flex justify-between">
                                 <a role="button" class="flex align-center">
                                     <img src="{{ STATIC }}/svg/translate.svg" class="book-icon" alt="Languages"/>
-                                    {{ Language.from_part1(page.volume.lang).name }}
+                                    {{ Language.from_part1(page.document.lang).name }}
                                 </a>
                             </label>
                             <ul>
@@ -51,7 +51,7 @@
                                     {% if translation is not sameas page %}
                                         <li>
                                             <a href="{{ builder.make_internal_url(translation, page=page) }}"
-                                            >{{ Language.from_part1(translation.volume.lang).name }}</a>
+                                            >{{ Language.from_part1(translation.document.lang).name }}</a>
                                         </li>
                                     {% endif %}
                                 {% endfor %}

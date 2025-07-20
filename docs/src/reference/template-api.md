@@ -10,17 +10,17 @@
 
 - [`project`](../../../src/sobiraka/models/project.py) — текущий проект.
 
-- [`volume`](../../../src/sobiraka/models/volume.py) — текущий [том](../overview/terms.md).
+- [`document`](../../../src/sobiraka/models/document.py) — текущий [документ](../overview/terms.md).
 
-- [`config`](../../../src/sobiraka/models/config/config.py) — объект для доступа к настройкам текущего тома.
+- [`config`](../../../src/sobiraka/models/config/config.py) — объект для доступа к настройкам текущего документа.
 
 - [`head`](../../../src/sobiraka/processing/html/head.py) — дополнительный код, который необходимо добавить внутрь тега `<head>`.
 
-- [`toc()`](../../../src/sobiraka/processing/toc.py#:~:text=def%20toc) — функция, генерирующая оглавление по текущему тому.
+- [`toc()`](../../../src/sobiraka/processing/toc.py#:~:text=def%20toc) — функция, генерирующая оглавление по текущему документу.
 
 ## API для сборки HTML {#html}
 
-- `number` — номер страницы, если в томе включена [автонумерация](../writing/numeration.md).
+- `number` — номер страницы, если в документе включена [автонумерация](../writing/numeration.md).
 
 - `title` — заголовок страницы.
 
@@ -49,6 +49,6 @@
 - `content` — список кортежей, каждый из которых содержит четыре элемента:
 
    - объект для доступа к текущей странице;
-   - номер страницы, если в томе включена [автонумерация](../writing/numeration.md);
+   - номер страницы, если в документе включена [автонумерация](../writing/numeration.md);
    - заголовок страницы;
    - содержимое страницы без заголовка, преобразованное в HTML.

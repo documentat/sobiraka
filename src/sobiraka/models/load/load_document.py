@@ -4,18 +4,20 @@ from math import inf
 import panflute
 from utilspie.collectionsutils import frozendict
 
-from sobiraka.models import FileSystem, NamingScheme, Volume
-from sobiraka.models.config import CombinedToc, Config, Config_Content, Config_Latex, Config_Latex_HeadersTransform, \
-    Config_PDF, Config_Pagefind_Translations, Config_Paths, Config_Pdf_Highlight, Config_Prover, \
-    Config_Prover_Dictionaries, Config_Search_LinkTarget, Config_Theme, Config_Web, Config_Web_Highlight, \
-    Config_Web_Search, SearchIndexerName, find_theme_dir
 from sobiraka.utils import Apostrophe, QuotationMark, RelativePath, convert_or_none, expand_vars
+from ..config import CombinedToc, Config, Config_Content, Config_Latex, Config_Latex_HeadersTransform, Config_PDF, \
+    Config_Pagefind_Translations, Config_Paths, Config_Pdf_Highlight, Config_Prover, Config_Prover_Dictionaries, \
+    Config_Search_LinkTarget, Config_Theme, Config_Web, Config_Web_Highlight, Config_Web_Search, SearchIndexerName, \
+    find_theme_dir
+from ..document import Document
+from ..filesystem import FileSystem
+from ..namingscheme import NamingScheme
 
 
-def load_volume(lang: str | None, codename: str, volume_data: dict, fs: FileSystem) -> Volume:
+def load_document(lang: str | None, codename: str, document_data: dict, fs: FileSystem) -> Document:
     def _(_keys, _default=None):
         try:
-            _result = volume_data
+            _result = document_data
             for key in _keys.split('.'):
                 assert isinstance(_result, dict)
                 _result = _result[key]
@@ -33,7 +35,7 @@ def load_volume(lang: str | None, codename: str, volume_data: dict, fs: FileSyst
                                for _k, _v in _value.items()})
         return _value
 
-    return Volume(lang, codename, Config(
+    return Document(lang, codename, Config(
         title=_('title'),
         paths=Config_Paths(
             root=RelativePath(_expand(_('paths.root', '.'))),

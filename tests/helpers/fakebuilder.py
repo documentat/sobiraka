@@ -1,13 +1,13 @@
-from sobiraka.models import Page, PageHref, Volume
+from sobiraka.models import Document, Page, PageHref
 from sobiraka.processing.abstract import Processor, Theme, ThemeableProjectBuilder
 
 
 class FakeBuilder(ThemeableProjectBuilder):
-    def init_processor(self, volume: Volume) -> Processor:
+    def init_processor(self, document: Document) -> Processor:
         return Processor(self)
 
-    def init_theme(self, volume: Volume) -> Theme:
-        return Theme(volume.config.web.theme.path)
+    def init_theme(self, document: Document) -> Theme:
+        return Theme(document.config.web.theme.path)
 
     def additional_variables(self) -> dict:
         return {}

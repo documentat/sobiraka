@@ -3,7 +3,7 @@ from unittest import main
 from abstracttests.abstracttestwithrt import AbstractTestWithRtPages
 from abstracttests.projecttestcase import ProjectTestCase
 from helpers import FakeBuilder
-from helpers.fakeproject import FakeProject, FakeVolume
+from helpers.fakeproject import FakeDocument, FakeProject
 from sobiraka.models import PageHref, Status
 from sobiraka.models.config import Config, Config_Paths
 from sobiraka.runtime import RT
@@ -15,7 +15,7 @@ class TestLinks2(AbstractTestWithRtPages):
         config_a = Config(paths=Config_Paths(root=RelativePath('A')))
         config_b = Config(paths=Config_Paths(root=RelativePath('B')))
         return FakeProject({
-            'A': FakeVolume(config_a, {
+            'A': FakeDocument(config_a, {
                 'page.md': '',
                 'section1/page.md': '',
                 'section1/subsection1/page.md': '',  # <-- we will start here
@@ -24,7 +24,7 @@ class TestLinks2(AbstractTestWithRtPages):
                 'section1/subsection2/page.md': '',
                 'section2/page.md': '',
             }),
-            'B': FakeVolume(config_b, {
+            'B': FakeDocument(config_b, {
                 'page.md': '',
             })
         })
@@ -73,7 +73,7 @@ class TestLinks2(AbstractTestWithRtPages):
                 builder.waiter.target_status = Status.PROCESS2
                 await builder.waiter.wait_all()
 
-                page = project.volumes[0].get_page_by_location('/section1/subsection1/page')
+                page = project.documents[0].get_page_by_location('/section1/subsection1/page')
                 href, = RT[page].links
 
                 self.assertIsInstance(href, PageHref)

@@ -4,7 +4,7 @@ from typing import overload
 
 from helpers import FakeFileSystem
 from helpers.fakefilesystem import PseudoFiles
-from sobiraka.models import Project, Volume
+from sobiraka.models import Document, Project
 from sobiraka.models.config import Config, Config_Paths
 from sobiraka.utils import RelativePath
 
@@ -12,23 +12,23 @@ from sobiraka.utils import RelativePath
 class FakeProject(Project):
     fs: FakeFileSystem
 
-    def __init__(self, volumes: dict[str, FakeVolume]):
+    def __init__(self, documents: dict[str, FakeDocument]):
         fs = FakeFileSystem()
-        super().__init__(fs, tuple(volumes.values()), None)
+        super().__init__(fs, tuple(documents.values()), None)
 
-        for root, volume in volumes.items():
+        for root, document in documents.items():
             root = RelativePath(root)
 
-            volume.codename = root.name
+            document.codename = root.name
 
-            fs.add_files(volume.pseudofiles, parent=root)
-            delattr(volume, 'pseudofiles')
+            fs.add_files(document.pseudofiles, parent=root)
+            delattr(document, 'pseudofiles')
 
-            if volume.config is None:
-                volume.config = Config(paths=Config_Paths(root=root))
+            if document.config is None:
+                document.config = Config(paths=Config_Paths(root=root))
 
 
-class FakeVolume(Volume):
+class FakeDocument(Document):
     sources = None
 
     @overload

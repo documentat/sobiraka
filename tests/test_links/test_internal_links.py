@@ -1,7 +1,7 @@
 from unittest import main
 
 from abstracttests.projecttestcase import ProjectTestCase
-from helpers.fakeproject import FakeProject, FakeVolume
+from helpers.fakeproject import FakeDocument, FakeProject
 from sobiraka.models import PageHref, Project
 from sobiraka.processing.latex import LatexBuilder
 from sobiraka.processing.weasyprint import WeasyPrintBuilder
@@ -16,7 +16,7 @@ class AbstractTestInternalLinks(ProjectTestCase):
 
     def _init_project(self) -> Project:
         return FakeProject({
-            'src': FakeVolume({
+            'src': FakeDocument({
                 'this-page.md': '',
                 'other-page.md': '',
             })
@@ -24,9 +24,9 @@ class AbstractTestInternalLinks(ProjectTestCase):
 
     async def asyncSetUp(self):
         await super().asyncSetUp()
-        volume = self.project.get_volume()
-        self.this_page = volume.get_page_by_location('/this-page')
-        self.other_page = volume.get_page_by_location('/other-page')
+        document = self.project.get_document()
+        self.this_page = document.get_page_by_location('/this-page')
+        self.other_page = document.get_page_by_location('/other-page')
 
     def test_internal_links(self):
         with self.subTest('This page'):
@@ -48,7 +48,7 @@ class AbstractTestInternalLinks(ProjectTestCase):
 
 class TestInternalLinks_Latex(AbstractTestInternalLinks):
     def _init_builder(self):
-        return LatexBuilder(self.project.get_volume(), None)
+        return LatexBuilder(self.project.get_document(), None)
 
     EXPECTED_THIS_PAGE = '#r--this-page'
     EXPECTED_THIS_PAGE_SECTION = '#r--this-page--section'
@@ -58,7 +58,7 @@ class TestInternalLinks_Latex(AbstractTestInternalLinks):
 
 class TestInternalLinks_WeasyPrint(AbstractTestInternalLinks):
     def _init_builder(self):
-        return WeasyPrintBuilder(self.project.get_volume(), None)
+        return WeasyPrintBuilder(self.project.get_document(), None)
 
     EXPECTED_THIS_PAGE = '#this-page'
     EXPECTED_THIS_PAGE_SECTION = '#this-page::section'

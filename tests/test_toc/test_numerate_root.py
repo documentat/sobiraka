@@ -2,7 +2,7 @@ from math import inf
 
 from abstracttests.projecttestcase import ProjectTestCase
 from helpers import FakeBuilder
-from helpers.fakeproject import FakeProject, FakeVolume
+from helpers.fakeproject import FakeDocument, FakeProject
 from sobiraka.models import Project, Status
 from sobiraka.models.config import CombinedToc, Config, Config_Content, Config_Paths
 from sobiraka.processing.toc import Toc, TocItem, toc
@@ -18,7 +18,7 @@ class TestNumerateRoot(ProjectTestCase[FakeBuilder]):
             content=Config_Content(numeration=True),
         )
         return FakeProject({
-            'src': FakeVolume(config, {
+            'src': FakeDocument(config, {
                 'index.md': '# Root \n## Section 1\n## Section 2',
                 'section-3.md': '# Section 3',
                 'section-4.md': '# Section 4',
@@ -33,7 +33,7 @@ class TestNumerateRoot(ProjectTestCase[FakeBuilder]):
             TocItem('Section 4', 'section-4.md', number=TocNumber(4)),
         )
 
-        root_page = self.project.get_volume().root_page
+        root_page = self.project.get_document().root_page
         actual = toc(root_page,
                      builder=self.builder,
                      toc_depth=inf,

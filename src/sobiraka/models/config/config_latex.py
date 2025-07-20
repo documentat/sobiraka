@@ -41,7 +41,7 @@ class Config_Latex:
     """Settings related to :class:`.LatexBuilder`."""
 
     header: RelativePath | None = None
-    """Path to the file containing LaTeX header directives for the volume, if provided."""
+    """Path to the file containing LaTeX header directives for the document, if provided."""
 
     theme: AbsolutePath = AbsolutePath(files('sobiraka')) / 'files' / 'themes' / 'simple'
     """Path to the theme that should be used when generating LaTeX."""

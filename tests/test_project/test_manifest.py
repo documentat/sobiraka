@@ -2,7 +2,7 @@ from abc import ABCMeta, abstractmethod
 from unittest import TestCase, main
 from unittest.mock import Mock
 
-from sobiraka.models import FileSystem, Volume
+from sobiraka.models import Document, FileSystem
 from sobiraka.models.load import load_project_from_str
 from sobiraka.utils import RelativePath
 
@@ -35,40 +35,40 @@ class _TestManifest(TestCase, metaclass=ABCMeta):
     def test_resources_prefix(self): ...
 
     def test_primary_language(self):
-        self.assertIs(self.project.volumes[0].lang, self.project.primary_language)
+        self.assertIs(self.project.documents[0].lang, self.project.primary_language)
 
 
 class TestManifest_1L_1V(_TestManifest):
     def setUp(self):
         super().setUp()
-        self.volume: Volume = self.project.volumes[0]
+        self.document: Document = self.project.documents[0]
 
     def test_lang(self):
-        self.assertEqual('en', self.volume.lang)
+        self.assertEqual('en', self.document.lang)
 
     def test_codename(self):
-        self.assertEqual('vol1', self.volume.codename)
+        self.assertEqual('doc1', self.document.codename)
 
     def test_autoprefix(self):
-        self.assertEqual('en/vol1', self.volume.autoprefix)
+        self.assertEqual('en/doc1', self.document.autoprefix)
 
     def test_title(self):
-        self.assertEqual('Documentation', self.volume.config.title)
+        self.assertEqual('Documentation', self.document.config.title)
 
     def test_root(self):
-        self.assertEqual(RelativePath('src/en'), self.volume.root_path)
+        self.assertEqual(RelativePath('src/en'), self.document.root_path)
 
     def test_include(self):
-        self.assertEqual(('one', 'two', 'three'), self.volume.config.paths.include)
+        self.assertEqual(('one', 'two', 'three'), self.document.config.paths.include)
 
     def test_resources_prefix(self):
-        self.assertEqual('img', self.volume.config.web.resources_prefix)
+        self.assertEqual('img', self.document.config.web.resources_prefix)
 
     YAML = '''
         languages:
             en:
-                volumes:
-                    vol1:
+                documents:
+                    doc1:
                         title: Documentation
                         paths:
                             root: src/en
@@ -80,15 +80,15 @@ class TestManifest_1L_1V(_TestManifest):
 
 class TestManifest_1L_1VDefault(TestManifest_1L_1V):
     def test_codename(self):
-        self.assertEqual(None, self.volume.codename)
+        self.assertEqual(None, self.document.codename)
 
     def test_autoprefix(self):
-        self.assertEqual('en', self.volume.autoprefix)
+        self.assertEqual('en', self.document.autoprefix)
 
     YAML = '''
         languages:
             en:
-                volumes:
+                documents:
                     DEFAULT:
                         title: Documentation
                         paths:
@@ -101,10 +101,10 @@ class TestManifest_1L_1VDefault(TestManifest_1L_1V):
 
 class TestManifest_1L_1VFlat(TestManifest_1L_1V):
     def test_codename(self):
-        self.assertEqual(None, self.volume.codename)
+        self.assertEqual(None, self.document.codename)
 
     def test_autoprefix(self):
-        self.assertEqual('en', self.volume.autoprefix)
+        self.assertEqual('en', self.document.autoprefix)
 
     YAML = '''
         languages:
@@ -120,16 +120,16 @@ class TestManifest_1L_1VFlat(TestManifest_1L_1V):
 
 class TestManifest_1LDefault_1V(TestManifest_1L_1V):
     def test_lang(self):
-        self.assertEqual(None, self.volume.lang)
+        self.assertEqual(None, self.document.lang)
 
     def test_autoprefix(self):
-        self.assertEqual('vol1', self.volume.autoprefix)
+        self.assertEqual('doc1', self.document.autoprefix)
 
     YAML = '''
         languages:
             DEFAULT:
-                volumes:
-                    vol1:
+                documents:
+                    doc1:
                         title: Documentation
                         paths:
                             root: src/en
@@ -141,18 +141,18 @@ class TestManifest_1LDefault_1V(TestManifest_1L_1V):
 
 class TestManifest_1LDefault_1VDefault(TestManifest_1L_1V):
     def test_lang(self):
-        self.assertEqual(None, self.volume.lang)
+        self.assertEqual(None, self.document.lang)
 
     def test_codename(self):
-        self.assertEqual(None, self.volume.codename)
+        self.assertEqual(None, self.document.codename)
 
     def test_autoprefix(self):
-        self.assertEqual(None, self.volume.autoprefix)
+        self.assertEqual(None, self.document.autoprefix)
 
     YAML = '''
         languages:
             DEFAULT:
-                volumes:
+                documents:
                     DEFAULT:
                         title: Documentation
                         paths:
@@ -165,13 +165,13 @@ class TestManifest_1LDefault_1VDefault(TestManifest_1L_1V):
 
 class TestManifest_1LDefault_1VFlat(TestManifest_1L_1V):
     def test_lang(self):
-        self.assertEqual(None, self.volume.lang)
+        self.assertEqual(None, self.document.lang)
 
     def test_codename(self):
-        self.assertEqual(None, self.volume.codename)
+        self.assertEqual(None, self.document.codename)
 
     def test_autoprefix(self):
-        self.assertEqual(None, self.volume.autoprefix)
+        self.assertEqual(None, self.document.autoprefix)
 
     YAML = '''
         languages:
@@ -187,14 +187,14 @@ class TestManifest_1LDefault_1VFlat(TestManifest_1L_1V):
 
 class TestManifest_1LFlat_1V(TestManifest_1L_1V):
     def test_lang(self):
-        self.assertEqual(None, self.volume.lang)
+        self.assertEqual(None, self.document.lang)
 
     def test_autoprefix(self):
-        self.assertEqual('vol1', self.volume.autoprefix)
+        self.assertEqual('doc1', self.document.autoprefix)
 
     YAML = '''
-        volumes:
-            vol1:
+        documents:
+            doc1:
                 title: Documentation
                 paths:
                     root: src/en
@@ -206,16 +206,16 @@ class TestManifest_1LFlat_1V(TestManifest_1L_1V):
 
 class TestManifest_1LFlat_1VDefault(TestManifest_1L_1V):
     def test_lang(self):
-        self.assertEqual(None, self.volume.lang)
+        self.assertEqual(None, self.document.lang)
 
     def test_codename(self):
-        self.assertEqual(None, self.volume.codename)
+        self.assertEqual(None, self.document.codename)
 
     def test_autoprefix(self):
-        self.assertEqual(None, self.volume.autoprefix)
+        self.assertEqual(None, self.document.autoprefix)
 
     YAML = '''
-        volumes:
+        documents:
             DEFAULT:
                 title: Documentation
                 paths:
@@ -228,13 +228,13 @@ class TestManifest_1LFlat_1VDefault(TestManifest_1L_1V):
 
 class TestManifest_1LFlat_1VFlat(TestManifest_1L_1V):
     def test_lang(self):
-        self.assertEqual(None, self.volume.lang)
+        self.assertEqual(None, self.document.lang)
 
     def test_codename(self):
-        self.assertEqual(None, self.volume.codename)
+        self.assertEqual(None, self.document.codename)
 
     def test_autoprefix(self):
-        self.assertEqual(None, self.volume.autoprefix)
+        self.assertEqual(None, self.document.autoprefix)
 
     YAML = '''
         title: Documentation
@@ -249,46 +249,46 @@ class TestManifest_1LFlat_1VFlat(TestManifest_1L_1V):
 class TestManifest_2L_2V(_TestManifest):
     def test_lang(self):
         expected_data = 'en', 'en', 'ru', 'ru'
-        for i, (expected, volume) in enumerate(zip(expected_data, self.project.volumes, strict=True)):
+        for i, (expected, document) in enumerate(zip(expected_data, self.project.documents, strict=True)):
             with self.subTest(f'{i} - {expected}'):
-                self.assertEqual(expected, volume.lang)
+                self.assertEqual(expected, document.lang)
 
     def test_codename(self):
-        expected_data = 'vol1', 'vol2', 'vol1', 'vol2'
-        for i, (expected, volume) in enumerate(zip(expected_data, self.project.volumes, strict=True)):
+        expected_data = 'doc1', 'doc2', 'doc1', 'doc2'
+        for i, (expected, document) in enumerate(zip(expected_data, self.project.documents, strict=True)):
             with self.subTest(f'{i} - {expected}'):
-                self.assertEqual(expected, volume.codename)
+                self.assertEqual(expected, document.codename)
 
     def test_autoprefix(self):
-        expected_data = 'en/vol1', 'en/vol2', 'ru/vol1', 'ru/vol2'
-        for i, (expected, volume) in enumerate(zip(expected_data, self.project.volumes, strict=True)):
+        expected_data = 'en/doc1', 'en/doc2', 'ru/doc1', 'ru/doc2'
+        for i, (expected, document) in enumerate(zip(expected_data, self.project.documents, strict=True)):
             with self.subTest(f'{i} - {expected}'):
-                self.assertEqual(expected, volume.autoprefix)
+                self.assertEqual(expected, document.autoprefix)
 
     def test_title(self):
         expected_data = 'Documentation', 'Documentation', 'Документация', 'Документация'
-        for i, (expected, volume) in enumerate(zip(expected_data, self.project.volumes, strict=True)):
+        for i, (expected, document) in enumerate(zip(expected_data, self.project.documents, strict=True)):
             with self.subTest(f'{i} - {expected}'):
-                self.assertEqual(expected, volume.config.title)
+                self.assertEqual(expected, document.config.title)
 
     def test_root(self):
         expected_data = map(RelativePath, ('src/en', 'src/en', 'src/ru', 'src/ru'))
-        for i, (expected, volume) in enumerate(zip(expected_data, self.project.volumes, strict=True)):
+        for i, (expected, document) in enumerate(zip(expected_data, self.project.documents, strict=True)):
             with self.subTest(f'{i} - {expected}'):
-                self.assertEqual(expected, volume.root_path)
+                self.assertEqual(expected, document.root_path)
 
     def test_include(self):
         expected_data = ('one', 'two', 'three'), ('four', 'five', 'six'), ('one', 'two', 'three'), (
             'four', 'five', 'six')
-        for i, (expected, volume) in enumerate(zip(expected_data, self.project.volumes, strict=True)):
+        for i, (expected, document) in enumerate(zip(expected_data, self.project.documents, strict=True)):
             with self.subTest(f'{i} - {expected}'):
-                self.assertEqual(expected, volume.config.paths.include)
+                self.assertEqual(expected, document.config.paths.include)
 
     def test_resources_prefix(self):
         expected_data = 4 * ('img',)
-        for i, (expected, volume) in enumerate(zip(expected_data, self.project.volumes, strict=True)):
+        for i, (expected, document) in enumerate(zip(expected_data, self.project.documents, strict=True)):
             with self.subTest(f'{i} - {expected}'):
-                self.assertEqual(expected, volume.config.web.resources_prefix)
+                self.assertEqual(expected, document.config.web.resources_prefix)
 
     def test_primary_language(self):
         self.assertEqual('ru', self.project.primary_language)
@@ -297,15 +297,15 @@ class TestManifest_2L_2V(_TestManifest):
         primary_language: ru
         languages:
             en:
-                volumes:
-                    vol1:
+                documents:
+                    doc1:
                         title: Documentation
                         paths:
                             root: src/en
                             include: [one, two, three]
                         web:
                             resources_prefix: img
-                    vol2:
+                    doc2:
                         title: Documentation
                         paths:
                             root: src/en
@@ -313,15 +313,15 @@ class TestManifest_2L_2V(_TestManifest):
                         web:
                             resources_prefix: img
             ru:
-                volumes:
-                    vol1:
+                documents:
+                    doc1:
                         title: Документация
                         paths:
                             root: src/ru
                             include: [one, two, three]
                         web:
                             resources_prefix: img
-                    vol2:
+                    doc2:
                         title: Документация
                         paths:
                             root: src/ru
@@ -336,30 +336,30 @@ class TestManifest_2L_2V_LanguageDefaults(TestManifest_2L_2V):
         primary_language: ru
         languages:
             DEFAULT:
-                volumes:
+                documents:
                     DEFAULT:
                         web:
                             resources_prefix: img
             en:
-                volumes:
-                    vol1:
+                documents:
+                    doc1:
                         title: Documentation
                         paths:
                             root: src/en
                             include: [one, two, three]
-                    vol2:
+                    doc2:
                         title: Documentation
                         paths:
                             root: src/en
                             include: [four, five, six]
             ru:
-                volumes:
-                    vol1:
+                documents:
+                    doc1:
                         title: Документация
                         paths:
                             root: src/ru
                             include: [one, two, three]
-                    vol2:
+                    doc2:
                         title: Документация
                         paths:
                             root: src/ru
@@ -367,37 +367,37 @@ class TestManifest_2L_2V_LanguageDefaults(TestManifest_2L_2V):
     '''
 
 
-class TestManifest_2L_2V_VolumeDefaults(TestManifest_2L_2V):
+class TestManifest_2L_2V_DocumentDefaults(TestManifest_2L_2V):
     YAML = '''
         primary_language: ru
         languages:
             en:
-                volumes:
+                documents:
                     DEFAULT:
                         title: Documentation
-                    vol1:
+                    doc1:
                         paths:
                             root: src/en
                             include: [one, two, three]
                         web:
                             resources_prefix: img
-                    vol2:
+                    doc2:
                         paths:
                             root: src/en
                             include: [four, five, six]
                         web:
                             resources_prefix: img
             ru:
-                volumes:
+                documents:
                     DEFAULT:
                         title: Документация
-                    vol1:
+                    doc1:
                         paths:
                             root: src/ru
                             include: [one, two, three]
                         web:
                             resources_prefix: img
-                    vol2:
+                    doc2:
                         paths:
                             root: src/ru
                             include: [four, five, six]
@@ -411,31 +411,31 @@ class TestManifest_2L_2V_AllDefaults(TestManifest_2L_2V):
         primary_language: ru
         languages:
             DEFAULT:
-                volumes:
+                documents:
                     DEFAULT:
                         web:
                             resources_prefix: img
             en:
-                volumes:
+                documents:
                     DEFAULT:
                         title: Documentation
-                    vol1:
+                    doc1:
                         paths:
                             root: src/en
                             include: [one, two, three]
-                    vol2:
+                    doc2:
                         paths:
                             root: src/en
                             include: [four, five, six]
             ru:
-                volumes:
+                documents:
                     DEFAULT:
                         title: Документация
-                    vol1:
+                    doc1:
                         paths:
                             root: src/ru
                             include: [one, two, three]
-                    vol2:
+                    doc2:
                         paths:
                             root: src/ru
                             include: [four, five, six]

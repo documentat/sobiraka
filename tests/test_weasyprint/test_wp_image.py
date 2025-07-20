@@ -1,7 +1,7 @@
 from unittest import main
 
 from abstracttests.weasyprintprojecttestcase import WeasyPrintProjectTestCase
-from helpers.fakeproject import FakeProject, FakeVolume
+from helpers.fakeproject import FakeDocument, FakeProject
 from sobiraka.models import Project
 from sobiraka.models.config import Config, Config_Paths
 from sobiraka.utils import RelativePath
@@ -18,7 +18,7 @@ class TestWeasyPrint_Image(WeasyPrintProjectTestCase):
         )
 
         project = FakeProject({
-            'src': FakeVolume(config, {
+            'src': FakeDocument(config, {
                 'index.md': '# A circle\n![](/circle.svg)',
             })
         })

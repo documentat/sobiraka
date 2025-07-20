@@ -20,6 +20,6 @@ class DirPage(Page):
         if self.location.is_root:
             self.text = '@toc'
         else:
-            naming_scheme = self.volume.config.paths.naming_scheme
-            stem = naming_scheme.parse(self.source.path_in_volume).stem
+            naming_scheme = self.document.config.paths.naming_scheme
+            stem = naming_scheme.parse(self.source.path_in_document).stem
             self.text = '# ' + stem + '\n\n@toc'

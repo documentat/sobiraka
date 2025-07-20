@@ -20,7 +20,7 @@ class Sobiraka2025_Processor(AbstractHtmlProcessor, metaclass=ABCMeta):
         assert isinstance(para, Para)
 
         if len(para.content) == 1 and isinstance(image := para.content[0], Image):
-            image_path = page.volume.config.paths.resources / image.url
+            image_path = page.document.config.paths.resources / image.url
 
             if isinstance(self, WebProcessor):
                 with page.project.fs.open_bytes(image_path) as image_file:

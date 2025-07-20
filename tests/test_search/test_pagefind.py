@@ -6,8 +6,8 @@ from typing_extensions import override
 
 from abstracttests.abstracttestwithrt import AbstractTestWithRtTmp
 from abstracttests.projecttestcase import ProjectTestCase
-from helpers.fakeproject import FakeProject, FakeVolume
-from sobiraka.models import Project, Status, Volume
+from helpers.fakeproject import FakeDocument, FakeProject
+from sobiraka.models import Document, Project, Status
 from sobiraka.models.config import Config, Config_Paths, Config_Search_LinkTarget, Config_Web, Config_Web_Search, \
     SearchIndexerName
 from sobiraka.processing.web import WebBuilder
@@ -20,10 +20,10 @@ class WebBuilderWithMockIndexer(WebBuilder):
     # pylint: disable=subclassed-final-class
 
     @override
-    async def prepare_search_indexer(self, volume: Volume):
-        await super().prepare_search_indexer(volume)
+    async def prepare_search_indexer(self, document: Document):
+        await super().prepare_search_indexer(document)
 
-        indexer = self._indexers[volume]
+        indexer = self._indexers[document]
         assert isinstance(indexer, PagefindIndexer)
         indexer._add_record = Mock()  # pylint: disable=protected-access
 
@@ -57,7 +57,7 @@ class AbstractTestPagefindIndexer(ProjectTestCase[WebBuilder], AbstractTestWithR
 
     async def test_add_record(self):
         # pylint: disable=protected-access
-        indexer: PagefindIndexer = self.builder._indexers[self.project.get_volume()]
+        indexer: PagefindIndexer = self.builder._indexers[self.project.get_document()]
         mock: Mock = indexer._add_record
 
         for expected_call in self.EXPECTED:
@@ -70,7 +70,7 @@ class AbstractTestPagefindIndexer(ProjectTestCase[WebBuilder], AbstractTestWithR
 class TestPagefindIndexer_Basic(AbstractTestPagefindIndexer):
     def _init_project(self) -> Project:
         return FakeProject({
-            'src': FakeVolume(self._init_config(), {
+            'src': FakeDocument(self._init_config(), {
                 'index.md': '''
                     # Test Pagefind
                     @toc
@@ -109,7 +109,7 @@ class TestPagefindIndexer_Basic(AbstractTestPagefindIndexer):
 class AbstractTestPagefindIndexer_UpToLevel(AbstractTestPagefindIndexer, metaclass=ABCMeta):
     def _init_project(self) -> Project:
         return FakeProject({
-            'src': FakeVolume(self._init_config(), {
+            'src': FakeDocument(self._init_config(), {
                 'index.md': '''
                     # H1
                     text1

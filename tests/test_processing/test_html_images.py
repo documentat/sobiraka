@@ -3,7 +3,7 @@ from tempfile import TemporaryDirectory
 from unittest import main
 
 from abstracttests.projecttestcase import ProjectTestCase
-from helpers.fakeproject import FakeProject, FakeVolume
+from helpers.fakeproject import FakeDocument, FakeProject
 from sobiraka.models import Project, Status
 from sobiraka.models.config import Config, Config_Paths, Config_Theme, Config_Web
 from sobiraka.processing.web import WebBuilder
@@ -31,7 +31,7 @@ class TestHtmlImages(ProjectTestCase[WebBuilder]):
         )
 
         project = FakeProject({
-            'src': FakeVolume(config, {
+            'src': FakeDocument(config, {
                 'absolute.md': '![](/absolute.png)',
                 'relative.md': '![](../img_src/relative.png)',
             })

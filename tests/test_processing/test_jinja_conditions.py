@@ -35,28 +35,28 @@ class TestConditions_Latex(AbstractJinjaConditionsTestCase):
     EXPECTED_VARIABLES = {'LATEX', 'PDF'}
 
     def _init_builder(self):
-        return LatexBuilder(self.project.get_volume(), RT.TMP / 'test.pdf')
+        return LatexBuilder(self.project.get_document(), RT.TMP / 'test.pdf')
 
 
 class TestConditions_Prover(AbstractJinjaConditionsTestCase):
     EXPECTED_VARIABLES = {'HTML', 'LATEX', 'PDF', 'PROVER', 'WEASYPRINT', 'WEB'}
 
     def _init_builder(self):
-        return Prover(self.project.get_volume())
+        return Prover(self.project.get_document())
 
 
 class TestConditions_ProverWithVariables(AbstractJinjaConditionsTestCase):
     EXPECTED_VARIABLES = {'HTML', 'PDF'}
 
     def _init_builder(self):
-        return Prover(self.project.get_volume(), dict(HTML=True, PDF=True))
+        return Prover(self.project.get_document(), dict(HTML=True, PDF=True))
 
 
 class TestConditions_WeasyPrint(AbstractJinjaConditionsTestCase):
     EXPECTED_VARIABLES = {'HTML', 'PDF', 'WEASYPRINT'}
 
     def _init_builder(self):
-        return WeasyPrintBuilder(self.project.get_volume(), RT.TMP / 'test.pdf')
+        return WeasyPrintBuilder(self.project.get_document(), RT.TMP / 'test.pdf')
 
 
 class TestConditions_Web(AbstractJinjaConditionsTestCase):

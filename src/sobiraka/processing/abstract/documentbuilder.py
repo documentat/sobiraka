@@ -1,7 +1,7 @@
 from abc import ABCMeta, abstractmethod
 from typing import Generic, TypeVar, final
 
-from sobiraka.models import Page, Project, Volume
+from sobiraka.models import Document, Page, Project
 from .builder import Builder
 from .processor import Processor
 from .theme import Theme
@@ -10,27 +10,27 @@ P = TypeVar('P', bound=Processor)
 T = TypeVar('T', bound=Theme)
 
 
-class VolumeBuilder(Builder, Generic[P], metaclass=ABCMeta):
+class DocumentBuilder(Builder, Generic[P], metaclass=ABCMeta):
     """
-    A builder that works with an individual volume.
+    A builder that works with an individual document.
     """
 
-    def __init__(self, volume: Volume):
+    def __init__(self, document: Document):
         super().__init__()
-        self.volume: Volume = volume
+        self.document: Document = document
         self.processor: P = self.init_processor()
 
     @final
     def get_project(self) -> Project:
-        return self.volume.project
+        return self.document.project
 
     @final
-    def get_volumes(self) -> tuple[Volume, ...]:
-        return self.volume,
+    def get_documents(self) -> tuple[Document, ...]:
+        return self.document,
 
     @final
     def get_pages(self) -> tuple[Page, ...]:
-        return self.volume.pages
+        return self.document.pages
 
     @final
     def get_processor_for_page(self, page: Page) -> P:
@@ -40,9 +40,9 @@ class VolumeBuilder(Builder, Generic[P], metaclass=ABCMeta):
     def init_processor(self) -> P: ...
 
 
-class ThemeableVolumeBuilder(VolumeBuilder[P], Generic[P, T], metaclass=ABCMeta):
-    def __init__(self, volume: Volume):
-        super().__init__(volume)
+class ThemeableDocumentBuilder(DocumentBuilder[P], Generic[P, T], metaclass=ABCMeta):
+    def __init__(self, document: Document):
+        super().__init__(document)
         self.theme: T = self.init_theme()
 
     @abstractmethod

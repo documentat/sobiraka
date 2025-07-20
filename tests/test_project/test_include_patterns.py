@@ -2,7 +2,7 @@ from typing import Sequence
 from unittest import main
 
 from abstracttests.projecttestcase import ProjectTestCase
-from helpers.fakeproject import FakeProject, FakeVolume
+from helpers.fakeproject import FakeDocument, FakeProject
 from sobiraka.models import Project, Status
 from sobiraka.models.config import Config, Config_Paths
 from sobiraka.utils import RelativePath
@@ -25,7 +25,7 @@ class TestIncludePatterns(ProjectTestCase):
             ),
         )
         return FakeProject({
-            self.ROOT: FakeVolume(config, {
+            self.ROOT: FakeDocument(config, {
                 'intro.md': '',
                 'part1': {
                     'chapter1.md': '',
@@ -48,7 +48,7 @@ class TestIncludePatterns(ProjectTestCase):
         })
 
     def test_included_paths(self):
-        actual_paths = tuple(str(p.location) for p in self.project.get_volume().root.all_pages())
+        actual_paths = tuple(str(p.location) for p in self.project.get_document().root.all_pages())
         self.assertSequenceEqual(self.EXPECTED_LOCATIONS, actual_paths)
 
 

@@ -2,7 +2,7 @@ import unittest
 
 from abstracttests.abstracttestwithrt import AbstractTestWithRtTmp
 from abstracttests.projecttestcase import ProjectTestCase
-from helpers.fakeproject import FakeProject, FakeVolume
+from helpers.fakeproject import FakeDocument, FakeProject
 from sobiraka.models import Project, Status
 from sobiraka.models.config import Config, Config_Paths, Config_Theme, Config_Web
 from sobiraka.processing.web import WebBuilder
@@ -19,7 +19,7 @@ class TestPermalink(ProjectTestCase[WebBuilder], AbstractTestWithRtTmp):
             web=Config_Web(theme=Config_Theme.from_name('raw'))
         )
         return FakeProject({
-            'src': FakeVolume(config, {
+            'src': FakeDocument(config, {
                 'A': '''
                     ---
                     permalink: /AAA
@@ -50,7 +50,7 @@ class TestPermalink(ProjectTestCase[WebBuilder], AbstractTestWithRtTmp):
 
         for location, expected in data.items():
             with self.subTest(location):
-                page = self.project.get_volume().get_page_by_location(location)
+                page = self.project.get_document().get_page_by_location(location)
                 actual = RT[page].bytes.decode('utf-8')
                 self.assertEqual(expected, actual)
 

@@ -15,7 +15,7 @@ ICONS_AND_STYLES: dict[Status, tuple[str, Style]] = {
     Status.SOURCE_FAILURE: ('X', Style(color='red1', bold=True)),
     Status.PAGE_FAILURE: ('X', Style(color='red1', bold=True)),
     Status.DEP_FAILURE: ('X', Style(color='orange4')),
-    Status.VOL_FAILURE: ('X', Style(color='orange4')),
+    Status.DOC_FAILURE: ('X', Style(color='orange4')),
 }
 
 

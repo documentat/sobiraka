@@ -12,7 +12,7 @@ import jinja2
 import panflute
 from jinja2 import StrictUndefined
 
-from sobiraka.models import FileSystem, Page, PageHref, Project, Source, Volume
+from sobiraka.models import Document, FileSystem, Page, PageHref, Project, Source
 from sobiraka.models.config import Config
 from sobiraka.runtime import RT
 from sobiraka.utils import replace_element
@@ -30,9 +30,9 @@ P = TypeVar('P', bound='Processor')
 class Builder(Generic[P], metaclass=ABCMeta):
     def __init__(self):
         self.waiter = Waiter(self)
-        self.jinja: dict[Volume, jinja2.Environment] = {}
+        self.jinja: dict[Document, jinja2.Environment] = {}
         self.process2_tasks: dict[Page, list[Task]] = defaultdict(list)
-        self.process3_tasks: dict[Volume, list[Task]] = defaultdict(list)
+        self.process3_tasks: dict[Document, list[Task]] = defaultdict(list)
         self.process4_tasks: dict[Page, list[Task]] = defaultdict(list)
 
     def __repr__(self):
@@ -47,12 +47,12 @@ class Builder(Generic[P], metaclass=ABCMeta):
         ...
 
     @abstractmethod
-    def get_volumes(self) -> tuple[Volume, ...]:
+    def get_documents(self) -> tuple[Document, ...]:
         ...
 
     @final
     def get_roots(self) -> tuple[Source, ...]:
-        return tuple(v.root for v in self.get_volumes())
+        return tuple(v.root for v in self.get_documents())
 
     @abstractmethod
     def get_pages(self) -> tuple[Page, ...]:
@@ -70,16 +70,16 @@ class Builder(Generic[P], metaclass=ABCMeta):
         """
         Parse the syntax tree with Pandoc and save its syntax tree into `RT[page].doc`.
         """
-        volume: Volume = page.volume
-        config: Config = page.volume.config
-        project: Project = page.volume.project
-        fs: FileSystem = page.volume.project.fs
+        document: Document = page.document
+        config: Config = page.document.config
+        project: Project = page.document.project
+        fs: FileSystem = page.document.project.fs
 
         default_variables = dict(
             page=page,
-            volume=volume,
+            document=document,
             project=project,
-            LANG=volume.lang,
+            LANG=document.lang,
 
             # Format-specific variables
             HTML=False,
@@ -96,15 +96,15 @@ class Builder(Generic[P], metaclass=ABCMeta):
 
         page_text = page.text
 
-        if volume not in self.jinja:
-            self.jinja[volume] = jinja2.Environment(
+        if document not in self.jinja:
+            self.jinja[document] = jinja2.Environment(
                 comment_start_string='{{#',
                 comment_end_string='#}}',
                 undefined=StrictUndefined,
                 enable_async=True,
                 loader=config.paths.partials and jinja2.FileSystemLoader(fs.resolve(config.paths.partials)),
             )
-        page_text = await self.jinja[volume].from_string(page_text).render_async(variables)
+        page_text = await self.jinja[document].from_string(page_text).render_async(variables)
 
         pandoc = await create_subprocess_exec(
             'pandoc',
@@ -137,21 +137,21 @@ class Builder(Generic[P], metaclass=ABCMeta):
         if self.process2_tasks[page]:
             await wait(self.process2_tasks[page])
 
-    async def do_process3(self, volume: Volume):
+    async def do_process3(self, document: Document):
         """
         The third stage of the processing.
-        Unlike other stages, this deals with the Volume as a whole.
+        Unlike other stages, this deals with the Document as a whole.
         """
-        if volume.config.content.numeration:
-            numerate(volume)
+        if document.config.content.numeration:
+            numerate(document)
 
-        for page in volume.root.all_pages():
+        for page in document.root.all_pages():
             processor = self.get_processor_for_page(page)
             for directive in processor.directives[page]:
                 replace_element(directive, directive.postprocess())
 
-        if self.process3_tasks[volume]:
-            await wait(self.process3_tasks[volume])
+        if self.process3_tasks[document]:
+            await wait(self.process3_tasks[document])
 
     async def do_process4(self, page: Page):
         """

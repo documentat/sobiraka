@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang='{{ volume.lang }}'>
+<html lang='{{ document.lang }}'>
 <head>
     <meta charset='utf-8'/>
-    <title>{{ title }} — {{ volume.config.title }}</title>
+    <title>{{ title }} — {{ document.config.title }}</title>
     <link rel='stylesheet' type='text/css' href='{{ STATIC }}/simple.css'/>
     {{ head | indent(4) -}}
 </head>
@@ -65,9 +65,9 @@
                 <nav class='translations'>
                     {% for translation in translations %}
                         {% if translation is sameas page %}
-                            <span>{{ translation.volume.lang }}</span>
+                            <span>{{ translation.document.lang }}</span>
                         {% else %}
-                            <a href='{{ builder.make_internal_url(translation, page=page) }}'>{{ translation.volume.lang }}</a>
+                            <a href='{{ builder.make_internal_url(translation, page=page) }}'>{{ translation.document.lang }}</a>
                         {% endif %}
                     {% endfor %}
                 </nav>

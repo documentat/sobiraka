@@ -2,7 +2,7 @@ import unittest
 from textwrap import dedent
 
 from abstracttests.singlepageprojecttest import SinglePageProjectTest
-from helpers.fakeproject import FakeProject, FakeVolume
+from helpers.fakeproject import FakeDocument, FakeProject
 from sobiraka.models import Project, Status
 
 
@@ -11,7 +11,7 @@ class AbstractTestManualToc(SinglePageProjectTest):
 
     def _init_project(self) -> Project:
         return FakeProject({
-            'src': FakeVolume({
+            'src': FakeDocument({
                 'index.md': dedent(self.SOURCE).strip(),
                 'part1/index.md': '# Part 1',
                 'part1/chapter1.md': '# Chapter 1.1\n## Section 1.1.1\n## Section 1.1.2',

@@ -3,7 +3,7 @@ from collections import defaultdict
 from itertools import chain
 from typing import Coroutine, Sequence, TYPE_CHECKING, overload
 
-from sobiraka.models import AggregationPolicy, Issue, Page, Source, Status, Volume
+from sobiraka.models import AggregationPolicy, Document, Issue, Page, Source, Status
 from sobiraka.report import Reporter
 from sobiraka.utils import KeyDefaultDict, MISSING, RelativePath, print_colorful_exc, sorted_dict
 from .events import AggregatingEvent, PreventableEvent, ProductiveEvent
@@ -29,7 +29,7 @@ class Waiter:
         self.target_status: Status = target_status
 
         self.tasks: dict[Source | Page, dict[Status, Task]] = defaultdict(dict)
-        self.tasks_p3: dict[Volume, Task] = {}
+        self.tasks_p3: dict[Document, Task] = {}
         self.additional_tasks: list[Task] = []
 
         self.aggregating: dict[Source, AggregatingEvent] = KeyDefaultDict(AggregatingEvent)
@@ -43,7 +43,7 @@ class Waiter:
 
     def start(self):
         for root in self.builder.get_roots():
-            Reporter.register_volume(root.volume)
+            Reporter.register_document(root.document)
             self.schedule_tasks(root, self.target_status)
         assert self.tasks
 
@@ -134,17 +134,17 @@ class Waiter:
                 continue
 
             if status is Status.PROCESS3:
-                # PROCESS3 is a special step that must be performed once on the whole Volume.
+                # PROCESS3 is a special step that must be performed once on the whole Document.
                 # So, we create the task only when we first need it.
                 # Then we store it in `tasks_p3` and reuse many times in `tasks`.
                 try:
-                    self.tasks[page][Status.PROCESS3] = self.tasks_p3[page.volume]
+                    self.tasks[page][Status.PROCESS3] = self.tasks_p3[page.document]
 
                 except KeyError:
-                    task = create_task(self.do_process3_volume(page.volume),
-                                       name=f'PROCESS3 VOLUME {page.volume.codename}')
+                    task = create_task(self.do_process3_document(page.document),
+                                       name=f'PROCESS3 DOCUMENT {page.document.codename}')
                     self.tasks[page][Status.PROCESS3] = task
-                    self.tasks_p3[page.volume] = task
+                    self.tasks_p3[page.document] = task
 
             else:
                 # All other tasks are page-specific,
@@ -305,26 +305,26 @@ class Waiter:
         finally:
             self.maybe_done()
 
-    async def do_process3_volume(self, volume: Volume):
+    async def do_process3_document(self, document: Document):
         """
-        Run the Builder's function for the PROCESS3 status on the given volume.
+        Run the Builder's function for the PROCESS3 status on the given document.
         Remember any issues or exceptions if they occur.
 
         This method must be called exactly one time per one page.
         """
         try:
-            await self.wait_recursively(volume.root, Status.PROCESS2)
-            await self.builder.do_process3(volume)
-            self.set_status_recursively(volume, Status.PROCESS3)
+            await self.wait_recursively(document.root, Status.PROCESS2)
+            await self.builder.do_process3(document)
+            self.set_status_recursively(document, Status.PROCESS3)
 
         except DependencyFailed:
-            self.set_status_recursively(volume, Status.DEP_FAILURE)
+            self.set_status_recursively(document, Status.DEP_FAILURE)
             raise
 
         except Exception as exc:
             print_colorful_exc()
-            self.set_status_recursively(volume, Status.VOL_FAILURE)
-            volume.root.exception = exc
+            self.set_status_recursively(document, Status.DOC_FAILURE)
+            document.root.exception = exc
             raise DependencyFailed(exc) from exc
 
         finally:
@@ -442,7 +442,7 @@ class Waiter:
 
         for child in source.child_sources:
             aws.append(create_task(self.wait_recursively(child, target_status),
-                                   name=f'WAIT RECURSIVELY FOR {child.path_in_volume}'))
+                                   name=f'WAIT RECURSIVELY FOR {child.path_in_document}'))
 
         for page in source.pages:
             aws.append(self.tasks[page][target_status])
@@ -455,17 +455,17 @@ class Waiter:
         if any(a.exception() for a in aws):
             raise DependencyFailed
 
-    def set_status_recursively(self, volume: Volume, status: Status):
+    def set_status_recursively(self, document: Document, status: Status):
         """
-        Set the given status to all sources and pages in the volume.
+        Set the given status to all sources and pages in the document.
         """
-        volume.root.status = status
+        document.root.status = status
 
-        for child in volume.root.all_child_sources():
+        for child in document.root.all_child_sources():
             if not child.status.is_failed():
                 child.status = status
 
-        for page in volume.root.all_pages():
+        for page in document.root.all_pages():
             if not page.status.is_failed():
                 page.status = status
 

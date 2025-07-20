@@ -9,10 +9,10 @@ from sobiraka.utils import AbsolutePath, RelativePath
 DATA = '''
 languages:
   en:
-    volumes:
+    documents:
       mydoc:
         paths:
-          root: src/$VOLUME
+          root: src/$DOCUMENT
           include: ['**/*.$LANG.md']
           exclude: ['**/.*.$LANG.md']
           resources: resources/$LANG
@@ -22,32 +22,32 @@ languages:
           prefix: docs-$LANG
           resources_prefix: static/$LANG
           theme: 
-            name: themes/$VOLUME
-            customization: theme/customization.$VOLUME.scss
+            name: themes/$DOCUMENT
+            customization: theme/customization.$DOCUMENT.scss
           theme_data:
-            logo: logo-$VOLUME-$LANG.png
-          processor: processor_$VOLUME.py
+            logo: logo-$DOCUMENT-$LANG.png
+          processor: processor_$DOCUMENT.py
           custom_styles:
-            - style.$VOLUME.css
+            - style.$DOCUMENT.css
           custom_scripts:
-            - script.$VOLUME.js
+            - script.$DOCUMENT.js
           search:
-            index_path: index/$VOLUME-$LANG
+            index_path: index/$DOCUMENT-$LANG
 
         latex:
-          header: headers-$VOLUME.sty
-          theme: themes/$VOLUME
-          processor: processor_$VOLUME.py
+          header: headers-$DOCUMENT.sty
+          theme: themes/$DOCUMENT
+          processor: processor_$DOCUMENT.py
           paths:
-            fonts: fonts/$VOLUME
+            fonts: fonts/$DOCUMENT
 
         pdf:
           theme: 
-            name: themes/$VOLUME
-            customization: theme/customization.$VOLUME.scss
-          processor: processor_$VOLUME.py
+            name: themes/$DOCUMENT
+            customization: theme/customization.$DOCUMENT.scss
+          processor: processor_$DOCUMENT.py
           custom_styles:
-            - style.$VOLUME.css
+            - style.$DOCUMENT.css
         
         prover:
           dictionaries:
@@ -64,7 +64,7 @@ class TestVariables(TestCase):
             RelativePath('themes/mydoc/extension.py'): '',
         })
         project = load_project_from_str(DATA, fs=fs)
-        self.config = project.get_volume().config
+        self.config = project.get_document().config
 
     def test_paths(self):
         with self.subTest('root'):

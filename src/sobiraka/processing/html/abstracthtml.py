@@ -10,7 +10,7 @@ from typing import Generic, TypeVar, final
 from panflute import CodeBlock, Element, Header, Image
 from typing_extensions import override
 
-from sobiraka.models import Page, Status, Volume
+from sobiraka.models import Document, Page, Status
 from sobiraka.models.config import Config, Config_Theme
 from sobiraka.runtime import RT
 from sobiraka.utils import AbsolutePath, RelativePath, configured_jinja, first_existing_path, panflute_to_bytes
@@ -26,10 +26,10 @@ class AbstractHtmlBuilder(Builder, metaclass=ABCMeta):
 
         self._html_builder_tasks: list[Task] = []
         self._results: set[AbsolutePath] = set()
-        self.heads: dict[Volume, Head] = defaultdict(Head)
+        self.heads: dict[Document, Head] = defaultdict(Head)
 
     @final
-    async def compile_theme_sass(self, theme: AbstractHtmlTheme, volume: Volume, *, pdf: bool = False):
+    async def compile_theme_sass(self, theme: AbstractHtmlTheme, document: Document, *, pdf: bool = False):
         """
         Generate CSS from up to three SASS/SCSS files:
 
@@ -46,7 +46,7 @@ class AbstractHtmlBuilder(Builder, metaclass=ABCMeta):
         if theme.sass_flavor:
             command += '--flavor', str(theme.sass_flavor)
         if theme.sass_customization:
-            command += '--customization', str(volume.project.fs.resolve(theme.sass_customization))
+            command += '--customization', str(document.project.fs.resolve(theme.sass_customization))
 
         process = await create_subprocess_exec(*command, stdout=PIPE)
         css, _ = await process.communicate()
@@ -54,7 +54,7 @@ class AbstractHtmlBuilder(Builder, metaclass=ABCMeta):
 
         target = RelativePath() / '_static' / 'theme.css'
         self.add_file_from_data(target, css)
-        self.heads[volume].append(HeadCssFile(target))
+        self.heads[document].append(HeadCssFile(target))
 
     @final
     async def compile_sass(self, source: AbsolutePath | bytes) -> bytes:
@@ -151,19 +151,19 @@ B = TypeVar('B', bound=AbstractHtmlBuilder)
 class AbstractHtmlProcessor(Processor[B], Generic[B], metaclass=ABCMeta):
 
     @abstractmethod
-    def get_highlighter(self, volume: Volume) -> Highlighter:
+    def get_highlighter(self, document: Document) -> Highlighter:
         """
-        Load a Highlighter implementation based on the volume's configuration.
+        Load a Highlighter implementation based on the document's configuration.
         The implementation and the possible result types differ for different builders.
         """
 
     @override
     async def process_code_block(self, block: CodeBlock, page: Page) -> tuple[Element, ...]:
         # Use the Highlighter implementation to process the code block and produce head tags
-        highlighter = self.get_highlighter(page.volume)
+        highlighter = self.get_highlighter(page.document)
         if highlighter is not None:
             block, head_tags = highlighter.highlight(block)
-            self.builder.heads[page.volume] += head_tags
+            self.builder.heads[page.document] += head_tags
         return block,
 
     @override
@@ -180,7 +180,7 @@ class AbstractHtmlProcessor(Processor[B], Generic[B], metaclass=ABCMeta):
 
     @override
     async def process_image(self, image: Image, page: Page) -> tuple[Image, ...]:
-        config: Config = page.volume.config
+        config: Config = page.document.config
 
         # Run the default processing
         # It is important to run it first, since it normalizes the path

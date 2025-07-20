@@ -2,7 +2,7 @@ import unittest
 from math import inf
 
 from abstracttests.projecttestcase import ProjectTestCase
-from helpers.fakeproject import FakeProject, FakeVolume
+from helpers.fakeproject import FakeDocument, FakeProject
 from sobiraka.models import Project
 from sobiraka.models.config import CombinedToc
 from sobiraka.processing.toc import toc
@@ -11,7 +11,7 @@ from sobiraka.processing.toc import toc
 class TestTocCollapse(ProjectTestCase):
     def _init_project(self) -> Project:
         return FakeProject({
-            'src': FakeVolume({
+            'src': FakeDocument({
                 '_nav.yaml': '''
                     items:
                       - not collapsed
@@ -32,7 +32,7 @@ class TestTocCollapse(ProjectTestCase):
             'collapsed via page meta': True,
         }
 
-        items = toc(self.project.get_volume().root_page,
+        items = toc(self.project.get_document().root_page,
                     builder=self.builder,
                     toc_depth=inf,
                     combined_toc=CombinedToc.ALWAYS)

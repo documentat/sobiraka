@@ -4,7 +4,7 @@ from panflute import Block, BulletList, Div, Element, Header, Link, ListItem, Pl
 
 from abstracttests.singlepageprojecttest import SinglePageProjectTest
 from helpers import FakeBuilder
-from helpers.fakeproject import FakeProject, FakeVolume
+from helpers.fakeproject import FakeDocument, FakeProject
 from sobiraka.models import Project, Status
 from sobiraka.runtime import RT
 
@@ -16,7 +16,7 @@ class AbstractTestTocDirective(SinglePageProjectTest[FakeBuilder]):
 
     def _init_project(self) -> Project:
         return FakeProject({
-            'src': FakeVolume({
+            'src': FakeDocument({
                 'index.md': self.SOURCE,
                 'section1': {
                     'index.md': '# Section 1',
@@ -35,8 +35,8 @@ class AbstractTestTocDirective(SinglePageProjectTest[FakeBuilder]):
         })
 
     async def test_doc(self):
-        volume = self.project.get_volume()
-        actual = tuple(RT[volume.root_page].doc.content)
+        document = self.project.get_document()
+        actual = tuple(RT[document.root_page].doc.content)
         self.assertEqual(self.EXPECTED, actual)
 
 

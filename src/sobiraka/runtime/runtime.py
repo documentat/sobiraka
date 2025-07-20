@@ -10,7 +10,7 @@ from .pageruntime import PageRuntime
 from ..utils import AbsolutePath
 
 if TYPE_CHECKING:
-    from sobiraka.models import Anchor, Page, Volume
+    from sobiraka.models import Anchor, Document, Page
 
 
 class Runtime:
@@ -45,7 +45,7 @@ class Runtime:
     def __getitem__(self, page: Page) -> PageRuntime:
         ...
 
-    def __getitem__(self, key: Anchor | Page | Volume):
+    def __getitem__(self, key: Anchor | Page | Document):
         from sobiraka.models import Anchor, Page
         match key:
             case Anchor() as anchor:

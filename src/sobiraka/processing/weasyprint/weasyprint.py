@@ -15,10 +15,10 @@ import weasyprint
 from panflute import Doc, Element, Header, Image, Str
 from typing_extensions import override
 
-from sobiraka.models import DirPage, FileSystem, Page, PageHref, RealFileSystem, Volume
+from sobiraka.models import DirPage, Document, FileSystem, Page, PageHref, RealFileSystem
 from sobiraka.models.config import CombinedToc, Config, Config_Pygments
 from sobiraka.processing import load_processor
-from sobiraka.processing.abstract import ThemeableVolumeBuilder
+from sobiraka.processing.abstract import ThemeableDocumentBuilder
 from sobiraka.processing.abstract.processor import DisableLink
 from sobiraka.processing.html import AbstractHtmlBuilder, AbstractHtmlProcessor, AbstractHtmlTheme, HeadCssFile
 from sobiraka.processing.html.highlight import Highlighter, Pygments
@@ -27,10 +27,10 @@ from sobiraka.utils import AbsolutePath, RelativePath, TocNumber, convert_or_non
 
 
 @final
-class WeasyPrintBuilder(ThemeableVolumeBuilder['WeasyPrintProcessor', 'WeasyPrintTheme'], AbstractHtmlBuilder):
+class WeasyPrintBuilder(ThemeableDocumentBuilder['WeasyPrintProcessor', 'WeasyPrintTheme'], AbstractHtmlBuilder):
 
-    def __init__(self, volume: Volume, output: AbsolutePath, **kwargs):
-        ThemeableVolumeBuilder.__init__(self, volume, **kwargs)
+    def __init__(self, document: Document, output: AbsolutePath, **kwargs):
+        ThemeableDocumentBuilder.__init__(self, document, **kwargs)
         AbstractHtmlBuilder.__init__(self)
 
         self.output: AbsolutePath = output
@@ -38,7 +38,7 @@ class WeasyPrintBuilder(ThemeableVolumeBuilder['WeasyPrintProcessor', 'WeasyPrin
 
     def init_processor(self) -> WeasyPrintProcessor:
         fs: FileSystem = self.get_project().fs
-        config: Config = self.volume.config
+        config: Config = self.document.config
         processor_class = load_processor(
             convert_or_none(fs.resolve, config.pdf.processor),
             config.pdf.theme.path,
@@ -46,7 +46,7 @@ class WeasyPrintBuilder(ThemeableVolumeBuilder['WeasyPrintProcessor', 'WeasyPrin
         return processor_class(self)
 
     def init_theme(self) -> WeasyPrintTheme:
-        return WeasyPrintTheme(self.volume.config.pdf.theme)
+        return WeasyPrintTheme(self.document.config.pdf.theme)
 
     @override
     def additional_variables(self) -> dict:
@@ -57,42 +57,42 @@ class WeasyPrintBuilder(ThemeableVolumeBuilder['WeasyPrintProcessor', 'WeasyPrin
 
         self.output.parent.mkdir(parents=True, exist_ok=True)
 
-        volume: Volume = self.volume
+        document: Document = self.document
 
         # Prepare non-page processing tasks
-        self.process3_tasks[volume].append(create_task(self.add_custom_files()))
-        self.process3_tasks[volume].append(create_task(self.compile_theme_sass(self.theme, volume, pdf=True)))
+        self.process3_tasks[document].append(create_task(self.add_custom_files()))
+        self.process3_tasks[document].append(create_task(self.compile_theme_sass(self.theme, document, pdf=True)))
 
         await self.waiter.wait_all()
 
         # Combine rendered pages into a single page
         content: list[tuple[Page, TocNumber, str, str]] = []
-        for page in volume.root.all_pages():
+        for page in document.root.all_pages():
             if page.location.is_root and isinstance(page, DirPage):
                 continue
             content.append((page, RT[page].number, page.meta.title, RT[page].bytes.decode('utf-8')))
 
-        head = self.heads[volume].render('')
+        head = self.heads[document].render('')
 
         # Apply the rendering template
         html = await self.theme.page_template.render_async(
             builder=self,
 
-            project=volume.project,
-            volume=volume,
-            config=volume.config,
+            project=document.project,
+            document=document,
+            config=document.config,
 
             head=head,
             now=datetime.now(),
-            toc=lambda **kwargs: toc(volume.root_page,
+            toc=lambda **kwargs: toc(document.root_page,
                                      builder=self,
-                                     toc_depth=volume.config.pdf.toc_depth,
-                                     combined_toc=CombinedToc.from_bool(volume.config.pdf.combined_toc),
+                                     toc_depth=document.config.pdf.toc_depth,
+                                     combined_toc=CombinedToc.from_bool(document.config.pdf.combined_toc),
                                      **kwargs),
 
             content=content,
 
-            **volume.config.variables,
+            **document.config.variables,
         )
 
         self.render_pdf(html)
@@ -119,7 +119,7 @@ class WeasyPrintBuilder(ThemeableVolumeBuilder['WeasyPrintProcessor', 'WeasyPrin
             logging.getLogger('weasyprint').removeHandler(handler)
 
     def fetch_url(self, url: str) -> dict:
-        config: Config = self.volume.config
+        config: Config = self.document.config
         fs: FileSystem = self.get_project().fs
 
         with suppress(KeyError):
@@ -145,7 +145,7 @@ class WeasyPrintBuilder(ThemeableVolumeBuilder['WeasyPrintProcessor', 'WeasyPrin
         so we use URLs like '#path/to/page' and '#path/to/page::section'.
         Luckily, WeasyPrint does not mind these characters.
         """
-        if page is not None and page.volume is not href.target.volume:
+        if page is not None and page.document is not href.target.document:
             raise DisableLink
         result = '#' + str(href.target.location)[1:]
         if href.anchor:
@@ -178,15 +178,15 @@ class WeasyPrintBuilder(ThemeableVolumeBuilder['WeasyPrintProcessor', 'WeasyPrin
         return RelativePath('_static')
 
     async def add_custom_files(self):
-        config: Config = self.volume.config
-        fs: FileSystem = self.volume.project.fs
+        config: Config = self.document.config
+        fs: FileSystem = self.document.project.fs
 
         for style in config.pdf.custom_styles:
             source = RelativePath(style)
             match source.suffix:
                 case '.css':
                     self.pseudofiles[f'css/{source.name}'] = 'text/css', fs.read_bytes(source)
-                    self.heads[self.volume].append(HeadCssFile(RelativePath(f'css/{source.name}')))
+                    self.heads[self.document].append(HeadCssFile(RelativePath(f'css/{source.name}')))
 
                 case '.sass' | '.scss':
                     # When building a real project, we rely on a RealFileSystem,
@@ -200,7 +200,7 @@ class WeasyPrintBuilder(ThemeableVolumeBuilder['WeasyPrintProcessor', 'WeasyPrin
                         sass = await self.compile_sass(fs.read_bytes(source))
                     target = RelativePath('_static') / 'css' / f'{source.stem}.css'
                     self.add_file_from_data(target, sass)
-                    self.heads[self.volume].append(HeadCssFile(target))
+                    self.heads[self.document].append(HeadCssFile(target))
 
                 case _:
                     raise ValueError(source)
@@ -213,8 +213,8 @@ class WeasyPrintProcessor(AbstractHtmlProcessor[WeasyPrintBuilder]):
 
     @override
     @lru_cache
-    def get_highlighter(self, volume: Volume) -> Highlighter:
-        config: Config = volume.config
+    def get_highlighter(self, document: Document) -> Highlighter:
+        config: Config = document.config
         match config.pdf.highlight:
             case Config_Pygments() as config_pygments:
                 return Pygments(config_pygments, self.builder)
@@ -227,8 +227,8 @@ class WeasyPrintProcessor(AbstractHtmlProcessor[WeasyPrintBuilder]):
             assert isinstance(header, Header)
             assert header.level == 1
         except AssertionError:
-            if not page.location.is_root and page.volume.codename:
-                doc.content.insert(0, Header(Str(page.volume.codename), level=1))
+            if not page.location.is_root and page.document.codename:
+                doc.content.insert(0, Header(Str(page.document.codename), level=1))
 
         await super().process_doc(doc, page)
 
@@ -254,7 +254,7 @@ class WeasyPrintProcessor(AbstractHtmlProcessor[WeasyPrintBuilder]):
 
         # For the 'global' header policy, change the actual level of the header
         # Also, hide the very top header
-        if page.volume.config.pdf.headers_policy == 'global':
+        if page.document.config.pdf.headers_policy == 'global':
             if page.location.level == 1 and header.level == 1:
                 return ()
             header.level = int(header.attributes['data-global-level']) - 1

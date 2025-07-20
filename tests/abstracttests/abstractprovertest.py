@@ -3,7 +3,7 @@ from typing import Sequence
 
 from helpers import assertNoDiff
 from helpers.fakefilesystem import PseudoFiles
-from helpers.fakeproject import FakeProject, FakeVolume
+from helpers.fakeproject import FakeDocument, FakeProject
 from sobiraka.models import Page, Project, Status, Syntax
 from sobiraka.models.config import Config, Config_Paths, Config_Prover, Config_Prover_Dictionaries
 from sobiraka.processing.abstract.waiter import IssuesOccurred
@@ -55,7 +55,7 @@ class AbstractProverTest(ProjectTestCase[Prover]):
 
         config = Config(
             paths=Config_Paths(
-                root=RelativePath('volume'),
+                root=RelativePath('document'),
             ),
             prover=Config_Prover(
                 dictionaries=Config_Prover_Dictionaries(
@@ -72,7 +72,7 @@ class AbstractProverTest(ProjectTestCase[Prover]):
         page_filename = f'page.{self.SYNTAX.value}'
 
         project = FakeProject({
-            'volume': FakeVolume(config, {
+            'document': FakeDocument(config, {
                 page_filename: dedent(self.SOURCE).strip(),
             })
         })
@@ -80,13 +80,13 @@ class AbstractProverTest(ProjectTestCase[Prover]):
         return project
 
     def _init_builder(self) -> Prover:
-        return Prover(self.project.volumes[0])
+        return Prover(self.project.documents[0])
 
     def tm(self, page: Page) -> TextModel:
         return self.builder.processor.tm[page]
 
     def test_phrases(self):
-        _, page = self.project.get_volume().root.all_pages()
+        _, page = self.project.get_document().root.all_pages()
 
         tm = self.tm(page)
         phrases = tuple(x.text for x in tm.phrases())
@@ -99,7 +99,7 @@ class AbstractFailingProverTest(AbstractProverTest, FailingProjectTestCase):
     EXPECTED_ISSUES: Sequence[str] = ()
 
     def test_issues(self):
-        _, page = self.project.get_volume().root.all_pages()
+        _, page = self.project.get_document().root.all_pages()
 
         expected = '\n'.join(self.EXPECTED_ISSUES) + '\n'
         actual = '\n'.join(map(str, page.issues)) + '\n'

@@ -1,12 +1,12 @@
 from typing import Iterable
 
-from sobiraka.models import Anchor, Page, Volume
+from sobiraka.models import Anchor, Document, Page
 from sobiraka.runtime import RT
 from sobiraka.utils import RootNumber, TocNumber
 
 
-def numerate(volume: Volume):
-    _numerate_page(volume.root_page, RootNumber())
+def numerate(document: Document):
+    _numerate_page(document.root_page, RootNumber())
 
 
 def _numerate_page(page: Page, counter: TocNumber) -> TocNumber:

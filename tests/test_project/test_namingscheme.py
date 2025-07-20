@@ -8,7 +8,7 @@ from unittest import main
 from typing_extensions import override
 
 from abstracttests.projecttestcase import ProjectTestCase
-from helpers.fakeproject import FakeProject, FakeVolume
+from helpers.fakeproject import FakeDocument, FakeProject
 from sobiraka.models import FileNameData, NamingScheme, Project, Status
 from sobiraka.models.config import Config, Config_Paths
 from sobiraka.utils import RelativePath
@@ -37,7 +37,7 @@ class TestNamingScheme(ProjectTestCase, metaclass=ABCMeta):
                 self.assertEqual(expected, actual)
 
     def test_ordering(self):
-        actual_ordering = tuple(str(p.location) for p in self.project.get_volume().root.all_pages())
+        actual_ordering = tuple(str(p.location) for p in self.project.get_document().root.all_pages())
         self.assertSequenceEqual(self.expected_ordering, actual_ordering)
 
 
@@ -60,7 +60,7 @@ class TestDefaultNamingScheme(TestNamingScheme):
     @override
     def _init_project(self) -> Project:
         return FakeProject({
-            'src': FakeVolume(self._init_config(), {
+            'src': FakeDocument(self._init_config(), {
                 '2-aaa/3-ddd/index.md': '',
                 '2-kkk.md': '',
                 '1-ppp.md': '',
@@ -107,7 +107,7 @@ class TestInvertedNamingScheme(TestNamingScheme):
     @override
     def _init_project(self) -> Project:
         return FakeProject({
-            'src': FakeVolume(self._init_config(), {
+            'src': FakeDocument(self._init_config(), {
                 'a2/d3/index.md': '',
                 'k2.md': '',
                 'p1.md': '',

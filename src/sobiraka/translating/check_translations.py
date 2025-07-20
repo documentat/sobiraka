@@ -11,18 +11,18 @@ from sobiraka.models.version import TranslationStatus
 def check_translations(project: Project, *, strict: bool) -> int:
     ok = True
 
-    for volume in project.volumes:
-        print(f'{volume.autoprefix}:', file=sys.stderr)
+    for document in project.documents:
+        print(f'{document.autoprefix}:', file=sys.stderr)
         with textui.indent(2):
 
-            if volume.lang == project.primary_language:
-                print(colored.green('  This is the primary volume'), file=sys.stderr)
-                print(colored.green(f'  Pages: {len(volume.root.all_pages())}'), file=sys.stderr)
+            if document.lang == project.primary_language:
+                print(colored.green('  This is the primary document'), file=sys.stderr)
+                print(colored.green(f'  Pages: {len(document.root.all_pages())}'), file=sys.stderr)
 
             else:
                 pages: dict[TranslationStatus, list[Page]] = {status: [] for status in TranslationStatus}
 
-                for page in volume.root.all_pages():
+                for page in document.root.all_pages():
                     pages[page.translation_status].append(page)
 
                 print(colored.green(f'  Up-to-date pages: {len(pages[TranslationStatus.UPTODATE])}'), file=sys.stderr)

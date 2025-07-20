@@ -3,12 +3,12 @@ from __future__ import annotations
 from contextlib import suppress
 from typing import TYPE_CHECKING, overload
 
-from sobiraka.models import FileSystem
 from sobiraka.utils import RelativePath
+from .filesystem import FileSystem
 
 if TYPE_CHECKING:
+    from .document import Document
     from .page import Page
-    from .volume import Volume
 
 
 class Project:
@@ -16,11 +16,11 @@ class Project:
     A single documentation project that needs to be processed and rendered.
     """
 
-    def __init__(self, fs: FileSystem, volumes: tuple[Volume, ...], primary_language: str = None):
+    def __init__(self, fs: FileSystem, documents: tuple[Document, ...], primary_language: str = None):
         self.fs: FileSystem = fs
-        self.volumes: tuple[Volume, ...] = volumes
-        for volume in self.volumes:
-            volume.project = self
+        self.documents: tuple[Document, ...] = documents
+        for document in self.documents:
+            document.project = self
 
         self.primary_language: str | None = primary_language
 
@@ -28,51 +28,51 @@ class Project:
         return f'<{self.__class__.__name__}: {self.fs}>'
 
     @overload
-    def get_volume(self, autoprefix: str) -> Volume:
+    def get_document(self, autoprefix: str) -> Document:
         ...
 
     @overload
-    def get_volume(self, lang: str | None, codename: str | None) -> Volume:
+    def get_document(self, lang: str | None, codename: str | None) -> Document:
         ...
 
     @overload
-    def get_volume(self) -> Volume:
+    def get_document(self) -> Document:
         ...
 
-    def get_volume(self, *args) -> Volume:
+    def get_document(self, *args) -> Document:
         match args:
             case str() | None as autoprefix,:
-                for volume in self.volumes:
-                    if volume.autoprefix == autoprefix:
-                        return volume
+                for document in self.documents:
+                    if document.autoprefix == autoprefix:
+                        return document
 
             case str() | None as lang, str() | None as codename:
-                for volume in self.volumes:
-                    if volume.lang == lang and volume.codename == codename:
-                        return volume
+                for document in self.documents:
+                    if document.lang == lang and document.codename == codename:
+                        return document
 
             case ():
-                assert len(self.volumes) == 1
-                return self.volumes[0]
+                assert len(self.documents) == 1
+                return self.documents[0]
 
         raise KeyError(*args)
 
-    def get_volume_by_path(self, path_in_project: RelativePath) -> Volume:
-        for volume in self.volumes:
-            if volume.root_path in path_in_project.parents:
-                return volume
+    def get_document_by_path(self, path_in_project: RelativePath) -> Document:
+        for document in self.documents:
+            if document.root_path in path_in_project.parents:
+                return document
         raise KeyError(path_in_project)
 
     def get_translation(self, page: Page, lang: str) -> Page:
-        volume = self.get_volume(lang, page.volume.codename)
-        page_tr = volume.get_page_by_location(page.location)
+        document = self.get_document(lang, page.document.codename)
+        page_tr = document.get_page_by_location(page.location)
         return page_tr
 
     def get_all_translations(self, page: Page) -> tuple[Page, ...]:
         translations: list[Page] = []
-        for volume in self.volumes:
-            if volume.codename == page.volume.codename:
+        for document in self.documents:
+            if document.codename == page.document.codename:
                 with suppress(KeyError):
-                    page = volume.get_page_by_location(page.location)
+                    page = document.get_page_by_location(page.location)
                     translations.append(page)
         return tuple(translations)

@@ -5,9 +5,9 @@ from more_itertools import unique_everseen
 from panflute import Element
 from typing_extensions import override
 
-from sobiraka.models import Page, PageHref, Status, Volume
+from sobiraka.models import Document, Page, PageHref, Status
 from sobiraka.models.issues import MisspelledWords
-from sobiraka.processing.abstract import VolumeBuilder
+from sobiraka.processing.abstract import DocumentBuilder
 from sobiraka.processing.txt import PlainTextDispatcher, TextModel, clean_lines, clean_phrases
 from .checks import phrases_must_begin_with_capitals
 from .hunspell import run_hunspell
@@ -15,9 +15,9 @@ from .quotationsanalyzer import QuotationsAnalyzer
 
 
 class ProverProcessor(PlainTextDispatcher):
-    def __init__(self, volume: Volume):
+    def __init__(self, document: Document):
         super().__init__()
-        self.volume: Volume = volume
+        self.document: Document = document
 
     @override
     def _new_text_model(self) -> TextModel:
@@ -25,16 +25,16 @@ class ProverProcessor(PlainTextDispatcher):
 
     @override
     async def must_skip(self, elem: Element, page: Page) -> bool:
-        return isinstance(elem, self.volume.config.prover.skip_elements)
+        return isinstance(elem, self.document.config.prover.skip_elements)
 
     @cached_property
     def exceptions_regexp(self) -> re.Pattern | None:
         """
         Prepare a regular expression that matches any exception.
-        If the volume declares no exceptions, returns `None`.
+        If the document declares no exceptions, returns `None`.
         """
-        dictionaries = self.volume.config.prover.dictionaries
-        fs = self.volume.project.fs
+        dictionaries = self.document.config.prover.dictionaries
+        fs = self.document.project.fs
 
         regexp_parts: list[str] = []
 
@@ -53,9 +53,9 @@ class ProverProcessor(PlainTextDispatcher):
         return None
 
 
-class Prover(VolumeBuilder[ProverProcessor]):
-    def __init__(self, volume: Volume, variables: dict = None):
-        super().__init__(volume)
+class Prover(DocumentBuilder[ProverProcessor]):
+    def __init__(self, document: Document, variables: dict = None):
+        super().__init__(document)
         self.waiter.target_status = Status.PROCESS1
         self._variables: dict = variables or {}
 
@@ -72,7 +72,7 @@ class Prover(VolumeBuilder[ProverProcessor]):
 
     @override
     def init_processor(self) -> ProverProcessor:
-        return ProverProcessor(self.volume)
+        return ProverProcessor(self.document)
 
     @override
     def make_internal_url(self, href: PageHref, *, page: Page = None) -> str:
@@ -89,8 +89,8 @@ class Prover(VolumeBuilder[ProverProcessor]):
 
         phrases = tm.phrases()
 
-        fs = self.volume.project.fs
-        config = self.volume.config.prover
+        fs = self.document.project.fs
+        config = self.document.config.prover
 
         if config.dictionaries.hunspell_dictionaries:
             words: list[str] = []

@@ -11,7 +11,7 @@ class LatexProjectTestCase(AbstractVisualPdfTestCase[LatexBuilder], metaclass=AB
     REQUIRE = Status.PROCESS4
 
     def _init_builder(self):
-        return LatexBuilder(self.project.volumes[0], RT.TMP / 'test.pdf')
+        return LatexBuilder(self.project.documents[0], RT.TMP / 'test.pdf')
 
     async def test_latex(self):
         for page, expected in self.for_each_expected('.tex', subdir='tex'):

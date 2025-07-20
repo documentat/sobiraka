@@ -3,7 +3,7 @@ from unittest import main
 
 from abstracttests.projecttestcase import ProjectTestCase
 from helpers import FakeBuilder
-from helpers.fakeproject import FakeProject, FakeVolume
+from helpers.fakeproject import FakeDocument, FakeProject
 from sobiraka.models import Project, Status
 from sobiraka.models.config import CombinedToc, Config, Config_Content, Config_Paths
 from sobiraka.processing.toc import Toc, TocItem, toc
@@ -26,7 +26,7 @@ class TestNumerate(ProjectTestCase[FakeBuilder]):
             content=Config_Content(numeration=self.numeration_enabled),
         )
         return FakeProject({
-            'src': FakeVolume(config, {
+            'src': FakeDocument(config, {
                 'index.md': '',
                 '1-preface.md': '# preface {-}',
                 '2-intro.md': '',
@@ -72,7 +72,7 @@ class TestNumerate(ProjectTestCase[FakeBuilder]):
     async def test_numeration(self):
         expected = expected_data(self.numeration_enabled)
 
-        actual = toc(self.project.get_volume().root_page,
+        actual = toc(self.project.get_document().root_page,
                      builder=self.builder,
                      toc_depth=inf,
                      combined_toc=CombinedToc.ALWAYS)

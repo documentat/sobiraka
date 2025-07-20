@@ -15,9 +15,6 @@ from .config_web import Config_Web
 
 @dataclass(kw_only=True, frozen=True)
 class Config:
-    """
-    Configuration for a volume. Used as a base class for :obj:`.Volume`.
-    """
     # pylint: disable=too-many-instance-attributes
 
     title: str = None

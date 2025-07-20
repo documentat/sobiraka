@@ -4,7 +4,7 @@ from tempfile import TemporaryDirectory
 from textwrap import dedent
 
 from abstracttests.projecttestcase import ProjectTestCase
-from helpers.fakeproject import FakeProject, FakeVolume
+from helpers.fakeproject import FakeDocument, FakeProject
 from sobiraka.models import PageHref, Project, UrlHref
 from sobiraka.processing.web import WebBuilder
 from sobiraka.runtime import RT
@@ -21,7 +21,7 @@ class AbstractTestLinksGoodHtml(ProjectTestCase, metaclass=ABCMeta):
 
     def _init_project(self) -> Project:
         return FakeProject({
-            'src': FakeVolume({
+            'src': FakeDocument({
                 k: dedent(v).strip()
                 for k, v in self.SOURCES.items()
             }),
@@ -30,7 +30,7 @@ class AbstractTestLinksGoodHtml(ProjectTestCase, metaclass=ABCMeta):
     async def asyncSetUp(self):
         await super().asyncSetUp()
         _, self.document0, _, self.document1, _, self.document2, self.document3, _, self.document4 \
-            = self.project.get_volume().root.all_pages()
+            = self.project.get_document().root.all_pages()
 
     def test_links(self):
         data = {

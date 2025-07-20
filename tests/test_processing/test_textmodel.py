@@ -7,7 +7,7 @@ import more_itertools
 from panflute import stringify
 
 from abstracttests.projecttestcase import ProjectTestCase
-from helpers.fakeproject import FakeProject, FakeVolume
+from helpers.fakeproject import FakeDocument, FakeProject
 from sobiraka.models import Project
 from sobiraka.processing.txt import PlainTextDispatcher, TextModel, clean_phrases
 from sobiraka.runtime import RT
@@ -30,14 +30,14 @@ class AbstractTestTextModel(ProjectTestCase):
 
     def _init_project(self) -> Project:
         return FakeProject({
-            'src': FakeVolume({
+            'src': FakeDocument({
                 'index.md': dedent(self.SOURCE).strip(),
             }),
         })
 
     async def _process(self):
         await super()._process()
-        page = self.project.get_volume().root_page
+        page = self.project.get_document().root_page
 
         with patch.object(PlainTextDispatcher, '_new_text_model',
                           return_value=TextModel(exceptions_regexp=self.REGEXP)):

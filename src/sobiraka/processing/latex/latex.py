@@ -14,26 +14,26 @@ from typing import BinaryIO, final
 from panflute import Element, Header, Str, stringify
 from typing_extensions import override
 
-from sobiraka.models import DirPage, FileSystem, Page, PageHref, Status, Volume
+from sobiraka.models import DirPage, Document, FileSystem, Page, PageHref, Status
 from sobiraka.models.config import Config
 from sobiraka.runtime import RT
 from sobiraka.utils import AbsolutePath, LatexInline, convert_or_none, panflute_to_bytes
-from ..abstract import Processor, Theme, ThemeableVolumeBuilder
+from ..abstract import Processor, Theme, ThemeableDocumentBuilder
 from ..abstract.processor import DisableLink
 from ..load_processor import load_processor
 from ..replacement import HeaderReplPara
 
 
 @final
-class LatexBuilder(ThemeableVolumeBuilder['LatexProcessor', 'LatexTheme']):
-    def __init__(self, volume: Volume, output: AbsolutePath, **kwargs):
-        super().__init__(volume, **kwargs)
+class LatexBuilder(ThemeableDocumentBuilder['LatexProcessor', 'LatexTheme']):
+    def __init__(self, document: Document, output: AbsolutePath, **kwargs):
+        super().__init__(document, **kwargs)
 
         self.output: AbsolutePath = output
 
     def init_processor(self) -> LatexProcessor:
         fs: FileSystem = self.get_project().fs
-        config: Config = self.volume.config
+        config: Config = self.document.config
         processor_class = load_processor(
             convert_or_none(fs.resolve, config.latex.processor),
             config.latex.theme,
@@ -41,7 +41,7 @@ class LatexBuilder(ThemeableVolumeBuilder['LatexProcessor', 'LatexTheme']):
         return processor_class(self)
 
     def init_theme(self) -> LatexTheme:
-        return LatexTheme(self.volume.config.latex.theme)
+        return LatexTheme(self.document.config.latex.theme)
 
     @override
     def additional_variables(self) -> dict:
@@ -55,7 +55,7 @@ class LatexBuilder(ThemeableVolumeBuilder['LatexProcessor', 'LatexTheme']):
         with open(xelatex_workdir / 'build.tex', 'wb') as latex_output:
             await self.generate_latex(latex_output)
 
-        resources_dir = self.volume.project.fs.resolve(self.volume.config.paths.resources)
+        resources_dir = self.document.project.fs.resolve(self.document.config.paths.resources)
         total_runs = 3
         for _ in range(1, total_runs + 1):
             xelatex = await create_subprocess_exec(
@@ -82,20 +82,20 @@ class LatexBuilder(ThemeableVolumeBuilder['LatexProcessor', 'LatexTheme']):
     async def generate_latex(self, latex_output: BinaryIO):
         # pylint: disable=too-many-branches
 
-        volume = self.volume
-        project = self.volume.project
-        config = self.volume.config
+        document = self.document
+        project = self.document.project
+        config = self.document.config
 
         if config.latex.paths:
             latex_output.write(b'\n\n' + (80 * b'%'))
             latex_output.write(b'\n\n%%% Paths\n\n')
             for key, value in config.latex.paths.items():
-                value = self.volume.project.fs.resolve(value)
+                value = self.document.project.fs.resolve(value)
                 latex_output.write(fr'\newcommand{{\{key}}}{{{value}/}}'.encode('utf-8') + b'\n')
 
         variables = {
             'TITLE': config.title,
-            'LANG': volume.lang,
+            'LANG': document.lang,
         }
         for key, value in config.variables.items():
             if re.fullmatch(r'[A-Za-z_]+', key):
@@ -130,7 +130,7 @@ class LatexBuilder(ThemeableVolumeBuilder['LatexProcessor', 'LatexTheme']):
             latex_output.write(self.theme.toc.read_bytes())
 
         await self.waiter.wait_all()
-        for page in volume.root.all_pages():
+        for page in document.root.all_pages():
             if page.location.is_root and isinstance(page, DirPage):
                 continue
             await self.waiter.wait(page, Status.PROCESS4)
@@ -193,7 +193,7 @@ class LatexBuilder(ThemeableVolumeBuilder['LatexProcessor', 'LatexTheme']):
         The function avoids using any non-ASCII characters, as well as the ``%`` character,
         so that the result can be used for PDF bookmarks.
         """
-        if href.target.volume is not page.volume:
+        if href.target.document is not page.document:
             raise DisableLink
         result = '--'.join(('r', *str(href.target.location).strip('/').split('/'))).rstrip('-')
         if href.anchor:
@@ -234,7 +234,7 @@ class LatexProcessor(Processor[LatexBuilder]):
         if 'notoc' not in header.classes:
             level = page.location.level + header.level - 1
             label = stringify(header).replace('%', r'\%')
-            if page.volume.config.content.numeration:
+            if page.document.config.content.numeration:
                 label = '%NUMBER%' + label
             result += LatexInline(fr'\bookmark[level={level},dest={dest}]{{{label}}}'), Str('\n')
 
@@ -247,7 +247,7 @@ class LatexProcessor(Processor[LatexBuilder]):
         # Put all the content of the original header here
         # For some reason, Pandoc does not escape `%` when it is a separate word,
         # so we escape it ourselves here
-        if page.volume.config.content.numeration:
+        if page.document.config.content.numeration:
             result.append(LatexInline('%NUMBER%'))
         for item in header.content:
             if isinstance(item, Str) and item.text == '%':
@@ -264,7 +264,7 @@ class LatexProcessor(Processor[LatexBuilder]):
         return (HeaderReplPara(header, result),)
 
     def choose_header_tag(self, header: Header, page: Page) -> str:
-        config = page.volume.config.latex.headers_transform
+        config = page.document.config.latex.headers_transform
 
         for klass in header.classes:
             with suppress(KeyError):

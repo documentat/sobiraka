@@ -2,7 +2,7 @@ from typing import Literal
 from unittest import main
 
 from abstracttests.weasyprintprojecttestcase import WeasyPrintProjectTestCase
-from helpers.fakeproject import FakeProject, FakeVolume
+from helpers.fakeproject import FakeDocument, FakeProject
 from sobiraka.models import Project
 from sobiraka.models.config import Config, Config_Content, Config_PDF, Config_Paths
 from sobiraka.utils import RelativePath
@@ -28,7 +28,7 @@ class TestWeasyPrint_Headers_Abstract(WeasyPrintProjectTestCase):
         )
 
         project = FakeProject({
-            'src': FakeVolume(config, {
+            'src': FakeDocument(config, {
                 'index.md': '# Intro\n## Section 1\n## Section 2',
                 'p1/index.md': '# Part 1',
                 'p1/s1/index.md': '# Section 1\n## Paragraph 1.1',

@@ -5,7 +5,7 @@ toc_title: Сборка через LaTeX
 # Сборка PDF через LaTeX
 
 ```
-sobiraka [--tmpdir TMPDIR] latex [VOLUME] [--config CONFIG] [--output OUTPUT]
+sobiraka [--tmpdir TMPDIR] latex [DOCUMENT] [--config CONFIG] [--output OUTPUT]
 ```
 
 Эта команда собирает PDF-документацию из файла `CONFIG` (по умолчанию — `sobiraka.yaml`) с помощью языка разметки [LaTeX](https://www.latex-project.org/).

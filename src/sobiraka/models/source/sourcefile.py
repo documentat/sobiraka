@@ -19,8 +19,8 @@ class SourceFile(Source):
     @override
     async def generate_pages(self):
         # Use the naming scheme to construct a clean location for the page
-        naming_scheme: NamingScheme = self.volume.config.paths.naming_scheme
-        location = naming_scheme.make_location(self.path_in_volume.with_suffix(''))
+        naming_scheme: NamingScheme = self.document.config.paths.naming_scheme
+        location = naming_scheme.make_location(self.path_in_document.with_suffix(''))
 
         # Choose syntax based on the file suffix
         try:
@@ -29,7 +29,7 @@ class SourceFile(Source):
             syntax = Syntax.MD
 
         # Read raw text from the file
-        text = self.volume.project.fs.read_text(self.path_in_project)
+        text = self.document.project.fs.read_text(self.path_in_project)
 
         # Parse the front matter, if any
         meta = self.base_meta or PageMeta()

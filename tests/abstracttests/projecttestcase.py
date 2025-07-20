@@ -49,8 +49,8 @@ class ProjectTestCase(AbstractTestWithRtPages, Generic[T], metaclass=ABCMeta):
     def for_each_expected(self, suffix: str, *, subdir: str = '') -> Iterable[tuple[Page, AbsolutePath]]:
         test_dir = AbsolutePath(inspect.getfile(self.__class__)).parent
         ok = True
-        for page in self.project.get_volume().root.all_pages():
-            expected = test_dir / 'expected' / subdir / page.source.path_in_volume.with_suffix(suffix)
+        for page in self.project.get_document().root.all_pages():
+            expected = test_dir / 'expected' / subdir / page.source.path_in_document.with_suffix(suffix)
             if expected.exists():
                 yield page, expected
             else:

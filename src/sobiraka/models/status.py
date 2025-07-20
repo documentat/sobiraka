@@ -16,7 +16,7 @@ class Status(Enum):
     SOURCE_FAILURE = auto()
     PAGE_FAILURE = auto()
     DEP_FAILURE = auto()
-    VOL_FAILURE = auto()
+    DOC_FAILURE = auto()
 
     def __repr__(self):
         return f'{self.__class__.__name__}.{self.name}'
@@ -43,7 +43,7 @@ class Status(Enum):
 
     def is_failed(self) -> bool:
         return self in (Status.SOURCE_FAILURE, Status.PAGE_FAILURE,
-                        Status.DEP_FAILURE, Status.VOL_FAILURE)
+                        Status.DEP_FAILURE, Status.DOC_FAILURE)
 
 
 class ObjectWithStatus(metaclass=ABCMeta):

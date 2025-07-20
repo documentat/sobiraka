@@ -7,7 +7,7 @@ from rich.live import Live
 from rich.text import Text
 from rich.tree import Tree
 
-from sobiraka.models import Page, Source, Volume
+from sobiraka.models import Document, Page, Source
 from .widgets import SourceWidget, TreeAndBlankLine
 
 _REPORTING = False
@@ -40,11 +40,11 @@ def run_beautifully():
 
 class Reporter:
     @staticmethod
-    def register_volume(volume: Volume):
+    def register_document(document: Document):
         if not _REPORTING:
             return
 
-        _SUBTREES[volume.root] = _TREE.add(Text(str(volume.root_path), style='yellow bold'), guide_style='grey66')
+        _SUBTREES[document.root] = _TREE.add(Text(str(document.root_path), style='yellow bold'), guide_style='grey66')
 
     @staticmethod
     def register_child_sources(source: Source):

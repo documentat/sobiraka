@@ -2,7 +2,7 @@ from unittest import main
 
 from abstracttests.singlepageprojecttest import SinglePageProjectTest
 from abstracttests.weasyprintprojecttestcase import WeasyPrintProjectTestCase
-from helpers.fakeproject import FakeProject, FakeVolume
+from helpers.fakeproject import FakeDocument, FakeProject
 from sobiraka.models import Project
 from sobiraka.models.config import Config, Config_Content, Config_PDF, Config_Paths
 from sobiraka.utils import RelativePath
@@ -19,7 +19,7 @@ class TestWeasyPrint_Numeration(WeasyPrintProjectTestCase):
         )
 
         return FakeProject({
-            'src': FakeVolume(config, {
+            'src': FakeDocument(config, {
                 'index.md': 'Here is some introduction.',
 
                 'chapter1/index.md': '# Chapter 1\n\n@toc',

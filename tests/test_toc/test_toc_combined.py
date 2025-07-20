@@ -3,7 +3,7 @@ from unittest import main
 
 from abstracttests.projecttestcase import ProjectTestCase
 from helpers import FakeBuilder
-from helpers.fakeproject import FakeProject, FakeVolume
+from helpers.fakeproject import FakeDocument, FakeProject
 from sobiraka.models import Project
 from sobiraka.models.config import CombinedToc
 from sobiraka.processing.toc import Toc, TocItem, toc
@@ -16,7 +16,7 @@ class AbstractTestTocCombined(ProjectTestCase[FakeBuilder]):
 
     def _init_project(self) -> Project:
         return FakeProject({
-            'src': FakeVolume({
+            'src': FakeDocument({
                 'section1': {
                     'index.md': '# Section 1\n## Paragraph 1',
                     'page1.md': '# Page 1.1\n## Paragraph 1\n### Subparagraph',  # <- current page
@@ -33,12 +33,12 @@ class AbstractTestTocCombined(ProjectTestCase[FakeBuilder]):
     def test_toc_combined(self):
         self.maxDiff = None
 
-        volume = self.project.get_volume()
-        actual = toc(volume.root_page,
+        document = self.project.get_document()
+        actual = toc(document.root_page,
                      builder=self.builder,
                      toc_depth=self.toc_depth,
                      combined_toc=self.combined,
-                     current_page=volume.get_page_by_location('/section1/page1'))
+                     current_page=document.get_page_by_location('/section1/page1'))
         self.assertEqual(str(self.expected), str(actual))
 
 

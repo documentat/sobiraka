@@ -3,8 +3,8 @@ from enum import Enum
 from importlib.resources import files
 from typing import Self
 
-from sobiraka.models import FileSystem
 from sobiraka.utils import AbsolutePath, RelativePath
+from ..filesystem import FileSystem
 
 
 def find_theme_dir(name: str, *, fs: FileSystem) -> AbsolutePath:

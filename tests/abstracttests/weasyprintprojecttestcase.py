@@ -11,7 +11,7 @@ class WeasyPrintProjectTestCase(AbstractVisualPdfTestCase[WeasyPrintBuilder], me
     REQUIRE = Status.PROCESS4
 
     def _init_builder(self):
-        return WeasyPrintBuilder(self.project.volumes[0], RT.TMP / 'test.pdf')
+        return WeasyPrintBuilder(self.project.documents[0], RT.TMP / 'test.pdf')
 
 
 del AbstractVisualPdfTestCase

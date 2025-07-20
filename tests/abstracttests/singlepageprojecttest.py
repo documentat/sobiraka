@@ -5,8 +5,8 @@ from typing import Generic, Sequence, TypeVar
 from typing_extensions import override
 
 from helpers.fakefilesystem import PseudoFiles
-from helpers.fakeproject import FakeProject, FakeVolume
-from sobiraka.models import Page, Project, Volume
+from helpers.fakeproject import FakeDocument, FakeProject
+from sobiraka.models import Document, Page, Project
 from sobiraka.models.config import Config, Config_Paths
 from sobiraka.processing.abstract import Builder
 from sobiraka.utils import RelativePath
@@ -24,7 +24,7 @@ class SinglePageProjectTest(ProjectTestCase, Generic[T], metaclass=ABCMeta):
     @override
     def _init_project(self) -> Project:
         project = FakeProject({
-            'src': FakeVolume(self._init_config(), {
+            'src': FakeDocument(self._init_config(), {
                 self.PATH: dedent(self.SOURCE).strip(),
             }),
         })
@@ -38,12 +38,12 @@ class SinglePageProjectTest(ProjectTestCase, Generic[T], metaclass=ABCMeta):
         return {}
 
     @property
-    def volume(self) -> Volume:
-        return self.project.get_volume()
+    def document(self) -> Document:
+        return self.project.get_document()
 
     @property
     def page(self) -> Page:
-        return self.volume.get_page_by_location(self.LOCATION)
+        return self.document.get_page_by_location(self.LOCATION)
 
     @override
     async def _process(self):
@@ -54,7 +54,7 @@ class SinglePageProjectTest(ProjectTestCase, Generic[T], metaclass=ABCMeta):
             self.exceptions = eg
 
     def test_issues(self):
-        page, = self.project.get_volume().root.pages
+        page, = self.project.get_document().root.pages
 
         expected = '\n'.join(self.EXPECTED_ISSUES) + '\n'
         actual = '\n'.join(map(str, page.issues)) + '\n'

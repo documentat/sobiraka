@@ -16,11 +16,11 @@
 
 - `project` — текущий проект.
 
-- `volume` — текущий [том](../overview/terms.md).
+- `document` — текущий [документ](../overview/terms.md).
   
 - `page` — текущая страница.
 
-- `LANG` — язык текущего тома.
+- `LANG` — язык текущего документа.
 
 - `HTML` — во время [сборки в HTML](../build-html/web.md) принимает значение `True`, иначе — `False`.
 

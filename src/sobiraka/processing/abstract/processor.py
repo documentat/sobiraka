@@ -10,7 +10,7 @@ from typing import Callable, Generic, TypeVar
 from panflute import Code, Element, Header, Image, Link, Para, Space, Str, Table, stringify
 from typing_extensions import override
 
-from sobiraka.models import Anchor, DirPage, FileSystem, Page, PageHref, Status, Syntax, UrlHref, Volume
+from sobiraka.models import Anchor, DirPage, Document, FileSystem, Page, PageHref, Status, Syntax, UrlHref
 from sobiraka.models.config import Config
 from sobiraka.models.issues import BadImage, BadLink
 from sobiraka.models.source import IdentifierResolutionError
@@ -87,18 +87,18 @@ class Processor(Dispatcher, Generic[B], metaclass=ABCMeta):
 
         If the file does not exist, create an Issue and set `image.url` to None.
         """
-        volume: Volume = page.volume
-        config: Config = volume.config
-        fs: FileSystem = volume.project.fs
+        document: Document = page.document
+        config: Config = document.config
+        fs: FileSystem = document.project.fs
 
-        path = image.url.replace('$LANG', volume.lang or '')
+        path = image.url.replace('$LANG', document.lang or '')
         path = absolute_or_relative(path)
         if isinstance(path, AbsolutePath):
             path = path.relative_to('/')
         else:
             path = page.source.path_in_project.parent / path
             path = RelativePath(normpath(path))
-            path = path.relative_to(volume.config.paths.resources)
+            path = path.relative_to(document.config.paths.resources)
 
         if fs.exists(config.paths.resources / path):
             image.url = str(path)
@@ -174,27 +174,27 @@ class Processor(Dispatcher, Generic[B], metaclass=ABCMeta):
         # pylint: disable=too-many-locals
         try:
             m = re.fullmatch(r'(?: \$ ([A-z0-9\-_]+)? )? (/)? ([^#]+)? (?: [#] (.+) )?$', target_text, re.VERBOSE)
-            volume_name, is_absolute, target_path_str, identifier = m.groups()
+            document_name, is_absolute, target_path_str, identifier = m.groups()
 
             # If the link is empty or starts with a #, it leads to the current Source
-            if (volume_name, is_absolute, target_path_str) == (None, None, None):
+            if (document_name, is_absolute, target_path_str) == (None, None, None):
                 target = page.source
 
             # For any other link, find the Source by the relative or absolute path
             else:
-                volume = page.volume
-                if volume_name is not None:
-                    volume = page.volume.project.get_volume(volume_name)
+                document = page.document
+                if document_name is not None:
+                    document = page.document.project.get_document(document_name)
                     is_absolute = True
 
                 target_path = RelativePath(target_path_str or '.')
                 if not is_absolute:
                     if isinstance(page, DirPage):
-                        target_path = (page.path_in_volume / target_path).resolve()
+                        target_path = (page.path_in_document / target_path).resolve()
                     else:
-                        path_in_volume = page.source.path_in_project.relative_to(volume.root_path)
-                        target_path = RelativePath(normpath(path_in_volume.parent / target_path))
-                target_path = volume.config.paths.root / target_path
+                        path_in_document = page.source.path_in_project.relative_to(document.root_path)
+                        target_path = RelativePath(normpath(path_in_document.parent / target_path))
+                target_path = document.config.paths.root / target_path
 
                 # Wait until the Waiter finds the Source by the path and loads its pages and anchors
                 target = await self.builder.waiter.wait(target_path, Status.PROCESS1)

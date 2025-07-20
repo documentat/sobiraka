@@ -6,7 +6,7 @@ from typing_extensions import override
 
 from abstracttests.abstracttestwithrt import AbstractTestWithRtTmp
 from abstracttests.projecttestcase import ProjectTestCase
-from sobiraka.models import Project, RealFileSystem, Status, Volume
+from sobiraka.models import Document, Project, RealFileSystem, Status
 from sobiraka.models.config import Config, Config_PDF, Config_Paths, Config_Theme, Config_Web
 from sobiraka.processing.weasyprint import WeasyPrintBuilder
 from sobiraka.processing.web import WebBuilder
@@ -23,7 +23,7 @@ class TestSass(ProjectTestCase[WebBuilder], AbstractTestWithRtTmp, metaclass=ABC
 
     def _init_project(self) -> Project:
         return Project(RealFileSystem(AbsolutePath(__file__).parent), (
-            Volume(None, None, Config(
+            Document(None, None, Config(
                 paths=Config_Paths(
                     root=RelativePath('src'),
                 ),
@@ -61,7 +61,7 @@ class TestSass(ProjectTestCase[WebBuilder], AbstractTestWithRtTmp, metaclass=ABC
 
 class TestPrintSass(TestSass, metaclass=ABCMeta):
     def _init_builder(self):
-        return WeasyPrintBuilder(self.project.get_volume(), RT.TMP / 'test.pdf')
+        return WeasyPrintBuilder(self.project.get_document(), RT.TMP / 'test.pdf')
 
     @override
     def _actual_css(self) -> str:

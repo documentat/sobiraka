@@ -7,7 +7,7 @@ from typing_extensions import override
 
 from abstracttests.projecttestcase import FailingProjectTestCase, ProjectTestCase
 from helpers import FakeFileSystem
-from helpers.fakeproject import FakeProject, FakeVolume
+from helpers.fakeproject import FakeDocument, FakeProject
 from sobiraka.models import Page, Project, Status
 from sobiraka.models.issues import IndexFileInNav, NonExistentFileInNav
 from sobiraka.models.source import SourceNav
@@ -30,7 +30,7 @@ class TestNav(ProjectTestCase, metaclass=ABCMeta):
     @override
     def _init_project(self) -> Project:
         return FakeProject({
-            'src': FakeVolume({
+            'src': FakeDocument({
                 'chapter': {
                     '_nav.yaml': dedent(self.NAV_YAML).strip(),
                     'index': self.TEXT_INDEX,
@@ -43,14 +43,14 @@ class TestNav(ProjectTestCase, metaclass=ABCMeta):
 
     @cached_property
     def _chapter(self) -> Page:
-        return self.project.get_volume().get_page_by_location('/chapter/')
+        return self.project.get_document().get_page_by_location('/chapter/')
 
     @cached_property
     def _chapter_source(self) -> SourceNav:
-        return self.project.get_volume().root.child_sources[0]
+        return self.project.get_document().root.child_sources[0]
 
     def _get_page(self, stem: str) -> Page:
-        return self.project.get_volume().get_page_by_location(f'/chapter/{stem}')
+        return self.project.get_document().get_page_by_location(f'/chapter/{stem}')
 
     def test_index(self):
         actual = self._chapter.text
@@ -148,11 +148,11 @@ class TestNav_Root(TestNav):
     @override
     @cached_property
     def _chapter(self) -> Page:
-        return self.project.get_volume().root_page
+        return self.project.get_document().root_page
 
     @override
     def _get_page(self, stem: str) -> Page:
-        return self.project.get_volume().get_page_by_location(f'/{stem}')
+        return self.project.get_document().get_page_by_location(f'/{stem}')
 
 
 class TestNav_IndexInNav(TestNav, FailingProjectTestCase):

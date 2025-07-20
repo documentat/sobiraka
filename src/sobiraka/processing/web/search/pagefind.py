@@ -8,7 +8,7 @@ from typing import Iterable
 from panflute import Element, Header, stringify
 from typing_extensions import override
 
-from sobiraka.models import Page, PageHref, Volume
+from sobiraka.models import Document, Page, PageHref
 from sobiraka.models.config import Config_Search_LinkTarget
 from sobiraka.processing.html import HeadJsCode, HeadJsFile, HeadTag
 from sobiraka.processing.txt import PlainTextDispatcher
@@ -25,7 +25,7 @@ class PagefindIndexer(SearchIndexer, PlainTextDispatcher):
 
     node_process: Process = None
 
-    def default_index_path(self, volume: Volume) -> RelativePath:
+    def default_index_path(self, document: Document) -> RelativePath:
         return RelativePath('_pagefind')
 
     async def initialize(self):
@@ -38,7 +38,7 @@ class PagefindIndexer(SearchIndexer, PlainTextDispatcher):
         self.node_process.stdin.write(json.dumps(dict(
             url=url,
             content=content,
-            language=self.volume.lang or 'en',
+            language=self.document.lang or 'en',
             meta=dict(title=title or ''),
         )).encode('utf-8') + b'\n')
 

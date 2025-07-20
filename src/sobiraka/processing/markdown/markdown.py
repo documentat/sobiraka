@@ -7,23 +7,23 @@ from typing import final
 from panflute import Element, Header, Image
 from typing_extensions import override
 
-from sobiraka.models import Page, PageHref, Volume
+from sobiraka.models import Document, Page, PageHref
 from sobiraka.models.config import Config
-from sobiraka.processing.abstract import Processor, VolumeBuilder
+from sobiraka.processing.abstract import DocumentBuilder, Processor
 from sobiraka.processing.abstract.processor import DisableLink
 from sobiraka.runtime import RT
 from sobiraka.utils import AbsolutePath, RelativePath, delete_extra_files, panflute_to_bytes
 
 
 @final
-class MarkdownBuilder(VolumeBuilder['MarkdownProcessor']):
+class MarkdownBuilder(DocumentBuilder['MarkdownProcessor']):
     """
     A special buider for exporting the documentation to a Pandoc-compatible single-file markdown document.
     The images are saved next to the document, too.
     """
 
-    def __init__(self, volume: Volume, output: AbsolutePath):
-        super().__init__(volume)
+    def __init__(self, document: Document, output: AbsolutePath):
+        super().__init__(document)
         self.output: AbsolutePath = output
         self._results: set[AbsolutePath] = set()
 
@@ -35,7 +35,7 @@ class MarkdownBuilder(VolumeBuilder['MarkdownProcessor']):
     async def run(self):
         self.output.mkdir(parents=True, exist_ok=True)
 
-        volume = self.volume
+        document = self.document
 
         # Process all pages
         await self.waiter.wait_all()
@@ -44,8 +44,8 @@ class MarkdownBuilder(VolumeBuilder['MarkdownProcessor']):
         markdown_path = self.output / f'{self.output.name}.md'
         self._results.add(markdown_path)
         with markdown_path.open('w') as markdown:
-            markdown.write(f'---\ntitle: {volume.config.title}\n---')
-            for page in volume.root.all_pages():
+            markdown.write(f'---\ntitle: {document.config.title}\n---')
+            for page in document.root.all_pages():
                 markdown.write('\n\n' + RT[page].bytes.decode('utf-8'))
 
         delete_extra_files(self.output, self._results)
@@ -80,7 +80,7 @@ class MarkdownBuilder(VolumeBuilder['MarkdownProcessor']):
     def make_internal_url(self, href: PageHref, *, page: Page = None) -> str:
         # Same implementation as in WeasyPrintBuilder,
         # but slashes are replaced with double dashes
-        if page is not None and page.volume is not href.target.volume:
+        if page is not None and page.document is not href.target.document:
             raise DisableLink
         result = '#' + str(href.target.location)
         result = result.replace('/', '--')
@@ -90,7 +90,7 @@ class MarkdownBuilder(VolumeBuilder['MarkdownProcessor']):
 
     async def add_file_from_project(self, source: RelativePath, target: RelativePath):
         target = self.output / target
-        await to_thread(self.volume.project.fs.copy, source, target)
+        await to_thread(self.document.project.fs.copy, source, target)
         self._results.add(target)
 
 
@@ -111,7 +111,7 @@ class MarkdownProcessor(Processor[MarkdownBuilder]):
 
     @override
     async def process_image(self, image: Image, page: Page) -> tuple[Image, ...]:
-        config: Config = page.volume.config
+        config: Config = page.document.config
 
         # Run the default processing
         image, = await super().process_image(image, page)

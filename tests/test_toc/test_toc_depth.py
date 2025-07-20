@@ -8,7 +8,7 @@ from bs4.formatter import Formatter
 
 from abstracttests.projecttestcase import ProjectTestCase
 from helpers import assertNoDiff
-from helpers.fakeproject import FakeProject, FakeVolume
+from helpers.fakeproject import FakeDocument, FakeProject
 from sobiraka.models import Project
 from sobiraka.models.config import CombinedToc, Config, Config_Paths, Config_Web
 from sobiraka.processing.toc import CollapsedToc, Toc, TocItem, toc
@@ -30,7 +30,7 @@ class AbstractTestTocDepth(ProjectTestCase[WebBuilder]):
             web=Config_Web(toc_depth=self.toc_depth),
         )
         return FakeProject({
-            'src': FakeVolume(config, dataset_paths()),
+            'src': FakeDocument(config, dataset_paths()),
         })
 
     def _init_builder(self):
@@ -45,7 +45,7 @@ class AbstractTestTocDepth(ProjectTestCase[WebBuilder]):
             '/part1/chapter1/section1/article1': expected_paths_from_p1c1s1a1(),
         }
         for location, expected in data.items():
-            page = self.project.get_volume().get_page_by_location(location)
+            page = self.project.get_document().get_page_by_location(location)
             with self.subTest(page):
                 actual = toc(page,
                              builder=self.builder,
@@ -60,7 +60,7 @@ class AbstractTestTocDepth(ProjectTestCase[WebBuilder]):
             '/part1/chapter1/section1/article1': 'from-nonroot.html',
         }
         for location, name in data.items():
-            page = self.project.get_volume().get_page_by_location(location)
+            page = self.project.get_document().get_page_by_location(location)
             with self.subTest(page):
                 expected_file = AbsolutePath(__file__).parent / 'expected' / str(self.toc_depth) / name
 
@@ -69,7 +69,7 @@ class AbstractTestTocDepth(ProjectTestCase[WebBuilder]):
                     formatter=Formatter(Formatter.HTML, indent=2))
                 expected = re.sub(r'<(a|strong)([^>]*)>\n\s+([^>]+)\n\s+</\1>', r'<\1\2>\3</\1>', expected)
 
-                actual = toc(self.project.get_volume().root_page,
+                actual = toc(self.project.get_document().root_page,
                              builder=self.builder,
                              toc_depth=self.toc_depth,
                              combined_toc=CombinedToc.NEVER,

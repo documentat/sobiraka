@@ -11,7 +11,7 @@ import iso639
 from panflute import Image
 from typing_extensions import override
 
-from sobiraka.models import FileSystem, Page, PageHref, Project, Volume
+from sobiraka.models import Document, FileSystem, Page, PageHref, Project
 from sobiraka.models.config import Config, Config_HighlightJS, Config_Prism, Config_Pygments, SearchIndexerName
 from sobiraka.processing.html import AbstractHtmlBuilder, AbstractHtmlProcessor, AbstractHtmlTheme, HeadCssFile, \
     HeadJsFile
@@ -33,19 +33,19 @@ class WebBuilder(ThemeableProjectBuilder['WebProcessor', 'WebTheme'], AbstractHt
         self.output: AbsolutePath = output
         self.hide_index_html: bool = hide_index_html
 
-        self._indexers: dict[Volume, SearchIndexer] = {}
+        self._indexers: dict[Document, SearchIndexer] = {}
 
-    def init_processor(self, volume: Volume) -> WebProcessor:
+    def init_processor(self, document: Document) -> WebProcessor:
         fs: FileSystem = self.project.fs
-        config: Config = volume.config
+        config: Config = document.config
         processor_class = load_processor(
             convert_or_none(fs.resolve, config.web.processor),
             config.web.theme.path,
             WebProcessor)
         return processor_class(self)
 
-    def init_theme(self, volume: Volume) -> WebTheme:
-        return WebTheme(volume.config.web.theme)
+    def init_theme(self, document: Document) -> WebTheme:
+        return WebTheme(document.config.web.theme)
 
     @override
     def additional_variables(self) -> dict:
@@ -54,14 +54,14 @@ class WebBuilder(ThemeableProjectBuilder['WebProcessor', 'WebTheme'], AbstractHt
     async def run(self):
         self.output.mkdir(parents=True, exist_ok=True)
 
-        for volume in self.get_volumes():
-            theme = self.themes[volume]
+        for document in self.get_documents():
+            theme = self.themes[document]
 
             # Prepare non-page processing tasks
             self.waiter.add_task(self.add_directory_from_location(theme.static_dir, RelativePath('_static')))
-            self.process3_tasks[volume].append(create_task(self.add_custom_files(volume)))
-            self.process3_tasks[volume].append(create_task(self.compile_theme_sass(theme, volume)))
-            self.process3_tasks[volume].append(create_task(self.prepare_search_indexer(volume)))
+            self.process3_tasks[document].append(create_task(self.add_custom_files(document)))
+            self.process3_tasks[document].append(create_task(self.compile_theme_sass(theme, document)))
+            self.process3_tasks[document].append(create_task(self.prepare_search_indexer(document)))
 
         # Wait until all pages will be generated and all additional files will be copied to the output directory
         # This may include tasks that started as a side effect of generating the HTML pages
@@ -76,7 +76,7 @@ class WebBuilder(ThemeableProjectBuilder['WebProcessor', 'WebTheme'], AbstractHt
 
     @override
     async def do_process4(self, page: Page):
-        if indexer := self._indexers.get(page.volume):
+        if indexer := self._indexers.get(page.document):
             await indexer.add_page(page)
 
         await super().do_process4(page)
@@ -90,19 +90,19 @@ class WebBuilder(ThemeableProjectBuilder['WebProcessor', 'WebTheme'], AbstractHt
     async def decorate_html(self, page: Page):
         from ..toc import local_toc, toc
 
-        volume = page.volume
-        project = page.volume.project
-        config = page.volume.config
-        theme = self.themes[page.volume]
+        document = page.document
+        project = page.document.project
+        config = page.document.config
+        theme = self.themes[page.document]
 
         root_prefix = self.get_root_prefix(page)
-        head = self.heads[volume].render(root_prefix)
+        head = self.heads[document].render(root_prefix)
 
         html = await theme.page_template.render_async(
             builder=self,
 
             project=project,
-            volume=volume,
+            document=document,
             config=config,
             page=page,
 
@@ -112,31 +112,31 @@ class WebBuilder(ThemeableProjectBuilder['WebProcessor', 'WebTheme'], AbstractHt
 
             head=head,
             now=datetime.now(),
-            toc=lambda **kwargs: toc(volume.root_page,
+            toc=lambda **kwargs: toc(document.root_page,
                                      builder=self,
-                                     toc_depth=volume.config.web.toc_depth,
-                                     combined_toc=volume.config.web.combined_toc,
+                                     toc_depth=document.config.web.toc_depth,
+                                     combined_toc=document.config.web.combined_toc,
                                      current_page=page,
                                      **kwargs),
             local_toc=lambda: local_toc(page, builder=self, current_page=page),
             Language=iso639.Language,
 
             ROOT=root_prefix,
-            ROOT_PAGE=self.make_internal_url(PageHref(volume.root_page), page=page),
+            ROOT_PAGE=self.make_internal_url(PageHref(document.root_page), page=page),
             STATIC=self.get_path_to_static(page),
             RESOURCES=self.get_path_to_resources(page),
-            theme_data=volume.config.web.theme_data,
-            **volume.config.variables,
+            theme_data=document.config.web.theme_data,
+            **document.config.variables,
         )
 
         RT[page].bytes = html.encode('utf-8')
 
     def get_target_path(self, page: Page) -> RelativePath:
-        volume: Volume = page.volume
-        config: Config = page.volume.config
+        document: Document = page.document
+        config: Config = page.document.config
 
         prefix = config.web.prefix or '$AUTOPREFIX'
-        prefix = expand_vars(prefix, lang=volume.lang, codename=volume.codename)
+        prefix = expand_vars(prefix, lang=document.lang, codename=document.codename)
 
         page_location = page.meta.permalink or page.location
         target_path = RelativePath() / prefix / page_location.as_path()
@@ -148,7 +148,7 @@ class WebBuilder(ThemeableProjectBuilder['WebProcessor', 'WebTheme'], AbstractHt
         return target_path
 
     def get_relative_image_url(self, image: Image, page: Page) -> str:
-        config: Config = page.volume.config
+        config: Config = page.document.config
         image_path = RelativePath() / config.web.resources_prefix / image.url
         start_path = self.get_target_path(page).parent
         return relpath(image_path, start=start_path)
@@ -180,16 +180,16 @@ class WebBuilder(ThemeableProjectBuilder['WebProcessor', 'WebTheme'], AbstractHt
 
     def get_path_to_resources(self, page: Page) -> RelativePath:
         start = self.output / self.get_target_path(page)
-        resources = self.output / page.volume.config.web.resources_prefix
+        resources = self.output / page.document.config.web.resources_prefix
         return resources.relative_to(start.parent)
 
-    async def add_custom_files(self, volume: Volume):
+    async def add_custom_files(self, document: Document):
         fs: FileSystem = self.project.fs
-        config: Config = volume.config
+        config: Config = document.config
 
-        for filename in volume.config.web.resources_force_copy:
-            source_path = (volume.config.paths.resources or volume.config.paths.root) / filename
-            target_path = RelativePath() / volume.config.web.resources_prefix / filename
+        for filename in document.config.web.resources_force_copy:
+            source_path = (document.config.paths.resources or document.config.paths.root) / filename
+            target_path = RelativePath() / document.config.web.resources_prefix / filename
             self.waiter.add_task(self.add_file_from_project(source_path, target_path))
 
         for script in config.web.custom_scripts:
@@ -197,7 +197,7 @@ class WebBuilder(ThemeableProjectBuilder['WebProcessor', 'WebTheme'], AbstractHt
             assert source.suffix == '.js'
             target = RelativePath() / source.name
             await self.add_file_from_project(source, target)
-            self.heads[volume].append(HeadJsFile(target))
+            self.heads[document].append(HeadJsFile(target))
 
         for style in config.web.custom_styles:
             source = RelativePath(style)
@@ -205,20 +205,20 @@ class WebBuilder(ThemeableProjectBuilder['WebProcessor', 'WebTheme'], AbstractHt
                 case '.css':
                     target = RelativePath() / source.name
                     self.waiter.add_task(self.add_file_from_project(source, target))
-                    self.heads[volume].append(HeadCssFile(target))
+                    self.heads[document].append(HeadCssFile(target))
 
                 case '.sass' | '.scss':
                     source = fs.resolve(source)
                     target = RelativePath('_static') / f'{source.stem}.css'
                     sass = await self.compile_sass(source)
                     self.add_file_from_data(target, sass)
-                    self.heads[volume].append(HeadCssFile(target))
+                    self.heads[document].append(HeadCssFile(target))
 
                 case _:
                     raise ValueError(source)
 
-    async def prepare_search_indexer(self, volume: Volume):
-        config: Config = volume.config
+    async def prepare_search_indexer(self, document: Document):
+        config: Config = document.config
         if config.web.search.engine is None:
             return
 
@@ -230,15 +230,16 @@ class WebBuilder(ThemeableProjectBuilder['WebProcessor', 'WebTheme'], AbstractHt
         # Select the index file path
         index_relative_path = None
         if config.web.search.index_path is not None:
-            index_relative_path = expand_vars(config.web.search.index_path, lang=volume.lang, codename=volume.codename)
+            index_relative_path = expand_vars(config.web.search.index_path,
+                                              lang=document.lang, codename=document.codename)
 
         # Initialize the indexer
-        indexer = indexer_class(self, volume, index_relative_path)
+        indexer = indexer_class(self, document, index_relative_path)
         await indexer.initialize()
-        self._indexers[volume] = indexer
+        self._indexers[document] = indexer
 
         # Put required files to the HTML head
-        self.heads[volume] += indexer.head_tags()
+        self.heads[document] += indexer.head_tags()
 
     @override
     def add_file_from_data(self, target: RelativePath, data: str | bytes):
@@ -267,8 +268,8 @@ class WebBuilder(ThemeableProjectBuilder['WebProcessor', 'WebTheme'], AbstractHt
 class WebProcessor(AbstractHtmlProcessor[WebBuilder]):
     @override
     @lru_cache
-    def get_highlighter(self, volume: Volume) -> Highlighter:
-        config: Config = volume.config
+    def get_highlighter(self, document: Document) -> Highlighter:
+        config: Config = document.config
         match config.web.highlight:
             case Config_HighlightJS() as config_highlightjs:
                 return HighlightJs(config_highlightjs, self.builder)

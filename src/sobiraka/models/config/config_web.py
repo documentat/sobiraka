@@ -22,9 +22,9 @@ class Config_Web:
     
     The following variables can be used in the string:
     
-    - ``$LANG`` — will be replaced with :obj:`.Volume.lang` (or ``''``, if not set).
-    - ``$VOLUME`` — will be replaced with :obj:`.Volume.codename`,
-    - ``$AUTOPREFIX`` — will be replaced with :obj:`.Volume.autoprefix`.
+    - ``$LANG`` — will be replaced with :obj:`.Document.lang` (or ``''``, if not set).
+    - ``$DOCUMENT`` — will be replaced with :obj:`.Document.codename`,
+    - ``$AUTOPREFIX`` — will be replaced with :obj:`.Document.autoprefix`.
     """
 
     resources_prefix: str = '_resources'

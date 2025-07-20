@@ -3,7 +3,7 @@ from argparse import ArgumentParser, Namespace
 from asyncio import run
 from typing import Iterable
 
-from sobiraka.models import Volume
+from sobiraka.models import Document
 from sobiraka.models.load import load_project
 from sobiraka.processing.latex import LatexBuilder
 from sobiraka.processing.markdown import MarkdownBuilder
@@ -35,22 +35,22 @@ async def async_main():
     cmd_web.add_argument('--hide-index-html', action='store_true', help='Remove the "index.html" part from links.')
 
     cmd_pdf = commands.add_parser('pdf', help='Build PDF file via WeasyPrint.')
-    cmd_pdf.add_argument('volume', nargs='?')
+    cmd_pdf.add_argument('document', nargs='?')
     cmd_pdf.add_argument('--config', metavar='CONFIG', type=AbsolutePath, default=SOBIRAKA_YAML)
     cmd_pdf.add_argument('--output', type=AbsolutePath, default=AbsolutePath('build/pdf'))
 
     cmd_latex = commands.add_parser('latex', help='Build PDF file fia LaTeX.')
-    cmd_latex.add_argument('volume', nargs='?')
+    cmd_latex.add_argument('document', nargs='?')
     cmd_latex.add_argument('--config', metavar='CONFIG', type=AbsolutePath, default=SOBIRAKA_YAML)
     cmd_latex.add_argument('--output', type=AbsolutePath, default=AbsolutePath('build/pdf'))
 
     cmd_markdown = commands.add_parser('markdown', help='Build Markdown file.')
-    cmd_markdown.add_argument('volume', nargs='?')
+    cmd_markdown.add_argument('document', nargs='?')
     cmd_markdown.add_argument('--config', metavar='CONFIG', type=AbsolutePath, default=SOBIRAKA_YAML)
     cmd_markdown.add_argument('--output', type=AbsolutePath, default=AbsolutePath('build/markdown'))
 
-    cmd_prover = commands.add_parser('prover', help='Check a volume for various issues.')
-    cmd_prover.add_argument('volume', nargs='?')
+    cmd_prover = commands.add_parser('prover', help='Check a document for various issues.')
+    cmd_prover.add_argument('document', nargs='?')
     cmd_prover.add_argument('--config', metavar='CONFIG', type=AbsolutePath, default=SOBIRAKA_YAML)
     cmd_prover.add_argument('--var', metavar='KEY[=VALUE]', action='append')
 
@@ -85,24 +85,24 @@ async def async_main():
                 exit_code = await RT.run_isolated(builder.run())
 
         elif cmd is cmd_latex:
-            for volume, output in selected_volumes(args, autosuffix='.pdf'):
-                builder = LatexBuilder(volume, output)
+            for document, output in selected_documents(args, autosuffix='.pdf'):
+                builder = LatexBuilder(document, output)
                 with run_beautifully():
                     exit_code = await RT.run_isolated(builder.run())
                     if exit_code != 0:
                         break
 
         elif cmd is cmd_pdf:
-            for volume, output in selected_volumes(args, autosuffix='.pdf'):
-                builder = WeasyPrintBuilder(volume, output)
+            for document, output in selected_documents(args, autosuffix='.pdf'):
+                builder = WeasyPrintBuilder(document, output)
                 with run_beautifully():
                     exit_code = await RT.run_isolated(builder.run())
                     if exit_code != 0:
                         break
 
         elif cmd is cmd_markdown:
-            for volume, output in selected_volumes(args):
-                builder = MarkdownBuilder(volume, output)
+            for document, output in selected_documents(args):
+                builder = MarkdownBuilder(document, output)
                 with run_beautifully():
                     exit_code = await RT.run_isolated(builder.run())
                     if exit_code != 0:
@@ -110,8 +110,8 @@ async def async_main():
 
         elif cmd is cmd_prover:
             project = load_project(args.config)
-            volume = project.get_volume(args.volume)
-            prover = Prover(volume, parse_vars(args.var or ()))
+            document = project.get_document(args.document)
+            prover = Prover(document, parse_vars(args.var or ()))
             with run_beautifully():
                 exit_code = await RT.run_isolated(prover.run())
 
@@ -131,25 +131,25 @@ async def async_main():
     sys.exit(exit_code or 0)
 
 
-def selected_volumes(args: Namespace, *, autosuffix: str = '') -> Iterable[tuple[Volume, AbsolutePath]]:
+def selected_documents(args: Namespace, *, autosuffix: str = '') -> Iterable[tuple[Document, AbsolutePath]]:
     project = load_project(args.config)
     output = AbsolutePath(args.output)
 
-    if args.volume is not None or len(project.volumes) == 1:
-        volume = project.get_volume(args.volume)
+    if args.document is not None or len(project.documents) == 1:
+        document = project.get_document(args.document)
         if autosuffix:
             if output.suffix.lower() != autosuffix:
-                output /= volume.config.title + autosuffix
+                output /= document.config.title + autosuffix
         print(f'Building {output.name!r}...', file=sys.stderr)
-        yield volume, output
+        yield document, output
 
     else:
         if autosuffix:
             assert output.suffix.lower() != autosuffix
-        for volume in project.volumes:
-            output_file = output / volume.config.title + autosuffix
+        for document in project.documents:
+            output_file = output / document.config.title + autosuffix
             print(f'Building {output_file.name!r}...', file=sys.stderr)
-            yield volume, output_file
+            yield document, output_file
 
 
 def main():

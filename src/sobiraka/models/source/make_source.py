@@ -6,20 +6,18 @@ from sobiraka.utils import RelativePath
 from ..filesystem import FileSystem
 
 if TYPE_CHECKING:
-    from sobiraka.models import Source, Volume
+    from sobiraka.models import Document, Source
 
 
-def make_source(volume: Volume, path_in_project: RelativePath, *, parent: Source | None) -> Source:
-    from sobiraka.models.source import SourceDirectory
-    from sobiraka.models.source import SourceFile
-    from sobiraka.models.source import NAV_FILENAME, SourceNav
+def make_source(document: Document, path_in_project: RelativePath, *, parent: Source | None) -> Source:
+    from sobiraka.models.source import NAV_FILENAME, SourceDirectory, SourceFile, SourceNav
 
-    fs: FileSystem = volume.project.fs
+    fs: FileSystem = document.project.fs
 
     if not fs.is_dir(path_in_project):
-        return SourceFile(volume, path_in_project, parent=parent)
+        return SourceFile(document, path_in_project, parent=parent)
 
     if fs.exists(path_in_project / NAV_FILENAME):
-        return SourceNav(volume, path_in_project, parent=parent)
+        return SourceNav(document, path_in_project, parent=parent)
 
-    return SourceDirectory(volume, path_in_project, parent=parent)
+    return SourceDirectory(document, path_in_project, parent=parent)

@@ -1,7 +1,7 @@
 from abc import ABCMeta, abstractmethod
 from typing import Iterable, TYPE_CHECKING
 
-from sobiraka.models import Page, Volume
+from sobiraka.models import Document, Page
 from sobiraka.models.config import Config_Web_Search
 from sobiraka.processing.html import HeadTag
 from sobiraka.utils import AbsolutePath, RelativePath
@@ -12,20 +12,20 @@ if TYPE_CHECKING:
 
 class SearchIndexer(metaclass=ABCMeta):
 
-    def __init__(self, builder: 'WebBuilder', volume: Volume, index_path: RelativePath | None):
+    def __init__(self, builder: 'WebBuilder', document: Document, index_path: RelativePath | None):
         super().__init__()
         self.builder: WebBuilder = builder
-        self.volume: Volume = volume
-        self.search_config: Config_Web_Search = volume.config.web.search
+        self.document: Document = document
+        self.search_config: Config_Web_Search = document.config.web.search
 
-        self.index_path_relative: RelativePath = index_path or self.default_index_path(volume)
+        self.index_path_relative: RelativePath = index_path or self.default_index_path(document)
         self.index_path: AbsolutePath = builder.output / self.index_path_relative
 
     def __repr__(self):
         return f'<{self.__class__.__name__}: {self.index_path_relative}>'
 
     @abstractmethod
-    def default_index_path(self, volume: Volume) -> RelativePath:
+    def default_index_path(self, document: Document) -> RelativePath:
         ...
 
     async def initialize(self):

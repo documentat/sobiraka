@@ -1,14 +1,14 @@
 from unittest import main
 
 from abstracttests.projecttestcase import ProjectTestCase
-from helpers.fakeproject import FakeProject, FakeVolume
+from helpers.fakeproject import FakeDocument, FakeProject
 from sobiraka.models import Project
 
 
 class TestLevels(ProjectTestCase):
     def _init_project(self) -> Project:
         return FakeProject({
-            'src': FakeVolume({
+            'src': FakeDocument({
                 'index.md': '',
                 'part1': {
                     '0-intro.md': 'Part 1',
@@ -46,7 +46,7 @@ class TestLevels(ProjectTestCase):
             '/part2/chapter3/paragraph3': 4,
         }.items():
             with self.subTest(location):
-                page = self.project.get_volume().get_page_by_location(location)
+                page = self.project.get_document().get_page_by_location(location)
                 self.assertEqual(level, page.location.level)
 
 

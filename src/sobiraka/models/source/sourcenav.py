@@ -25,8 +25,8 @@ class SourceNav(Source):
     @override
     async def generate_child_sources(self):
         from . import make_source
-        fs = self.volume.project.fs
-        naming_scheme = self.volume.config.paths.naming_scheme
+        fs = self.document.project.fs
+        naming_scheme = self.document.config.paths.naming_scheme
 
         child_sources = []
         for subpath, options in self._data['items']:
@@ -42,7 +42,7 @@ class SourceNav(Source):
                 continue
 
             # Generate the child
-            child = make_source(self.volume, self.path_in_project / subpath, parent=self)
+            child = make_source(self.document, self.path_in_project / subpath, parent=self)
             child_sources.append(child)
 
             # Provide base options for the child, if specified in the item
@@ -54,7 +54,7 @@ class SourceNav(Source):
         for index_path in fs.iterdir(self.path_in_project):
             if not fs.is_dir(index_path):
                 if naming_scheme.parse(index_path).is_main:
-                    child_sources.insert(0, IndexSourceFile(self.volume, index_path, parent=self))
+                    child_sources.insert(0, IndexSourceFile(self.document, index_path, parent=self))
                     break
 
         # Done
@@ -62,8 +62,8 @@ class SourceNav(Source):
 
     @override
     async def generate_pages(self):
-        naming_scheme = self.volume.naming_scheme
-        location = naming_scheme.make_location(self.path_in_volume, as_dir=True)
+        naming_scheme = self.document.naming_scheme
+        location = naming_scheme.make_location(self.path_in_document, as_dir=True)
 
         # If we've already found a Source that will generate an index page, do nothing
         for child in self.child_sources:
@@ -90,7 +90,7 @@ class SourceNav(Source):
 
     @cached_property
     def _data(self) -> dict:
-        fs: FileSystem = self.volume.project.fs
+        fs: FileSystem = self.document.project.fs
         nav_path: RelativePath = self.path_in_project / NAV_FILENAME
         with fs.open_text(nav_path) as index_file:
             data = yaml.safe_load(index_file) or {}

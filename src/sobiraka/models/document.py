@@ -10,7 +10,7 @@ from .project import Project
 from .source import Source
 
 
-class Volume:
+class Document:
     """
     A part of a :obj:`.Project`, identified uniquely by :data:`lang` and :data:`codename`.
     """
@@ -31,10 +31,10 @@ class Volume:
         return f'<{self.__class__.__name__} (unnamed)>'
 
     def __lt__(self, other):
-        assert isinstance(other, Volume)
+        assert isinstance(other, Document)
         assert self.project is other.project
-        volumes = self.project.volumes
-        return volumes.index(self) < volumes.index(other)
+        documents = self.project.documents
+        return documents.index(self) < documents.index(other)
 
     # ------------------------------------------------------------------------------------------------------------------
     # Project and configuration

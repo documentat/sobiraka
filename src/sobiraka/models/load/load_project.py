@@ -5,9 +5,11 @@ from typing import Iterable
 import yaml
 from jsonschema.validators import Draft202012Validator
 
-from sobiraka.models import FileSystem, Project, RealFileSystem, Volume
 from sobiraka.utils import AbsolutePath, merge_dicts
-from .load_volume import load_volume
+from .load_document import load_document
+from ..document import Document
+from ..filesystem import FileSystem, RealFileSystem
+from ..project import Project
 
 SCHEMA = yaml.safe_load((files('sobiraka') / 'files' / 'sobiraka-project.yaml').read_text())
 
@@ -31,14 +33,14 @@ def load_project_from_dict(manifest: dict, *, fs: FileSystem) -> Project:
     if manifest:
         Draft202012Validator(manifest).validate(SCHEMA)
 
-    volumes: list[Volume] = []
+    documents: list[Document] = []
     for lang, language_data in _normalized_and_merged(manifest, 'languages'):
-        for codename, volume_data in _normalized_and_merged(language_data, 'volumes'):
-            volumes.append(load_volume(lang, codename, volume_data, fs))
+        for codename, document_data in _normalized_and_merged(language_data, 'documents'):
+            documents.append(load_document(lang, codename, document_data, fs))
 
-    primary_language = manifest.get('primary_language') or volumes[0].lang
+    primary_language = manifest.get('primary_language') or documents[0].lang
 
-    return Project(fs, tuple(volumes), primary_language)
+    return Project(fs, tuple(documents), primary_language)
 
 
 def _normalized_and_merged(data: dict, key: str) -> Iterable[tuple[str | None, dict]]:

@@ -9,7 +9,7 @@
 {% if NOCOVER is not defined %}
     <div class='cover'>
         <div class='cover-top'>{{ COVER_TOP | default('') }}</div>
-        <div class='cover-center'>{{ COVER_CENTER | default(volume.config.title) }}</div>
+        <div class='cover-center'>{{ COVER_CENTER | default(document.config.title) }}</div>
         <div class='cover-bottom'>{{ COVER_BOTTOM | default(now.year) }}</div>
     </div>
 {% endif %}

@@ -13,7 +13,7 @@ from ..issues import Issue
 from ..status import ObjectWithStatus
 
 if TYPE_CHECKING:
-    from sobiraka.models import Page, PageMeta, Volume
+    from sobiraka.models import Document, Page, PageMeta
 
 
 class Source(ObjectWithStatus, metaclass=ABCMeta):
@@ -31,8 +31,8 @@ class Source(ObjectWithStatus, metaclass=ABCMeta):
 
     aggregation_policy: AggregationPolicy = AggregationPolicy.WAIT_FOR_CHILDREN
 
-    def __init__(self, volume: Volume, path_in_project: RelativePath, *, parent: Source = None):
-        self.volume: Volume = volume
+    def __init__(self, document: Document, path_in_project: RelativePath, *, parent: Source = None):
+        self.document: Document = document
         self.path_in_project: RelativePath = path_in_project
         self.parent: Source | None = parent
 
@@ -52,8 +52,8 @@ class Source(ObjectWithStatus, metaclass=ABCMeta):
         return f'<{self.__class__.__name__}: {self.path_in_project}>'
 
     @property
-    def path_in_volume(self) -> RelativePath:
-        return self.path_in_project.relative_to(self.volume.root_path)
+    def path_in_document(self) -> RelativePath:
+        return self.path_in_project.relative_to(self.document.root_path)
 
     @final
     @cached_property

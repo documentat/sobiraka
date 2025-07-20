@@ -156,11 +156,11 @@ def toc(
 ) -> Toc:
     """
     Generate a Table Of Contents.
-    This function must be called after the `do_process3()` has been done for the volume,
+    This function must be called after the `do_process3()` has been done for the document,
     otherwise the TOC may end up missing anchors, numeration, etc.
 
     The TOC will contain items based on the given `base`.
-    If given a `Volume`, the function will generate a top-level TOC.
+    If given a `Document`, the function will generate a top-level TOC.
     If given a `Page`, the function will generate a TOC of the page's child pages.
 
     The function uses `builder` and `current_page` for generating each item's correct URL.
@@ -186,7 +186,7 @@ def toc(
                           current_page=current_page)
 
     for page in base.children:
-        item_title = page.meta.toc_title or page.meta.title or page.location.name or page.volume.codename or ''
+        item_title = page.meta.toc_title or page.meta.title or page.location.name or page.document.codename or ''
         href = PageHref(page)
         url = builder.make_internal_url(href, page=current_page)
         item = TocItem(title=item_title, url=url, href=href, origin=page,

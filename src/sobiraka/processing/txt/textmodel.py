@@ -52,7 +52,7 @@ class TextModel:
     exceptions_regexp: re.Pattern | None = field(default=None)
     """
     The regular expression what will be used for finding `exceptions`.
-    Should be loaded from the volume's configuration.
+    Should be loaded from the document's configuration.
     """
 
     __frozen: bool = field(default=False, init=False)

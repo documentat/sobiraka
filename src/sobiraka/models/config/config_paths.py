@@ -1,8 +1,8 @@
 from dataclasses import dataclass, field
 from typing import Sequence
 
-from sobiraka.models import NamingScheme
 from sobiraka.utils import RelativePath
+from ..namingscheme import NamingScheme
 
 
 @dataclass(kw_only=True, frozen=True)

@@ -6,7 +6,7 @@ from unittest import main
 from typing_extensions import override
 
 from abstracttests.projecttestcase import ProjectTestCase
-from helpers.fakeproject import FakeProject, FakeVolume
+from helpers.fakeproject import FakeDocument, FakeProject
 from sobiraka.models import Project, Status, TranslationStatus, Version
 from sobiraka.models.config import Config, Config_Paths
 from sobiraka.translating import check_translations
@@ -19,14 +19,14 @@ class TestVersioning(ProjectTestCase):
     @override
     def _init_project(self) -> Project:
         project = FakeProject({
-            'src-en': FakeVolume(
+            'src-en': FakeDocument(
                 Config(paths=Config_Paths(root=RelativePath('src-en'))),
                 {
                     '0-index.md': '---\nversion: 1.0\n---',
                     'aaa.md': '---\nversion: 3.4\n---',
                     'bbb.md': '---\nversion: 6.2\n---',
                 }),
-            'src-ru': FakeVolume(
+            'src-ru': FakeDocument(
                 Config(paths=Config_Paths(root=RelativePath('src-ru'))),
                 {
                     '0-index.md': '---\nversion: 1.0\n---',
@@ -35,11 +35,11 @@ class TestVersioning(ProjectTestCase):
                 })
         })
 
-        project.volumes[0].lang = 'en'
-        project.volumes[0].codename = None
+        project.documents[0].lang = 'en'
+        project.documents[0].codename = None
 
-        project.volumes[1].lang = 'ru'
-        project.volumes[1].codename = None
+        project.documents[1].lang = 'ru'
+        project.documents[1].codename = None
 
         project.primary_language = 'en'
         return project
@@ -47,8 +47,8 @@ class TestVersioning(ProjectTestCase):
     @override
     async def _process(self):
         await super()._process()
-        self.index_en, self.aaa_en, self.bbb_en = self.project.volumes[0].root.all_pages()
-        self.index_ru, self.aaa_ru, self.bbb_ru = self.project.volumes[1].root.all_pages()
+        self.index_en, self.aaa_en, self.bbb_en = self.project.documents[0].root.all_pages()
+        self.index_ru, self.aaa_ru, self.bbb_ru = self.project.documents[1].root.all_pages()
 
     def test_get_translation(self):
         data = {
@@ -118,7 +118,7 @@ class TestVersioning(ProjectTestCase):
     def test_check_translations(self):
         expected = dedent('''
         en:
-          This is the primary volume
+          This is the primary document
           Pages: 3
         ru:
           Up-to-date pages: 1

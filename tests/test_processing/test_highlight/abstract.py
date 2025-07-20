@@ -40,9 +40,9 @@ class AbstractHighlightTest(SinglePageProjectTest[WebBuilder], metaclass=ABCMeta
         return WebBuilder(self.project, AbsolutePath(output))
 
     def test_head(self):
-        self.assertEqual(self.EXPECTED_HEAD, self.builder.heads[self.project.volumes[0]])
+        self.assertEqual(self.EXPECTED_HEAD, self.builder.heads[self.project.documents[0]])
 
     async def test_render(self):
-        page, = self.project.get_volume().root.all_pages()
+        page, = self.project.get_document().root.all_pages()
         actual = (await self.builder.render_html(page)).decode().strip()
         self.assertEqual(self.EXPECTED_RENDER, actual)

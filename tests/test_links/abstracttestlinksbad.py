@@ -3,7 +3,7 @@ from dataclasses import replace
 from textwrap import dedent
 
 from abstracttests.projecttestcase import FailingProjectTestCase
-from helpers.fakeproject import FakeProject, FakeVolume
+from helpers.fakeproject import FakeDocument, FakeProject
 from sobiraka.models import Href, Page, PageHref, Project, UrlHref
 from sobiraka.models.issues import BadLink, Issue
 from sobiraka.processing.abstract.waiter import IssuesOccurred
@@ -18,7 +18,7 @@ class AbstractTestLinksBad(FailingProjectTestCase, metaclass=ABCMeta):
 
     def _init_project(self) -> Project:
         return FakeProject({
-            'src': FakeVolume({
+            'src': FakeDocument({
                 k: dedent(v).strip()
                 for k, v in self.SOURCES.items()
             }),
@@ -26,13 +26,13 @@ class AbstractTestLinksBad(FailingProjectTestCase, metaclass=ABCMeta):
 
     async def asyncSetUp(self):
         await super().asyncSetUp()
-        volume = self.project.get_volume()
+        document = self.project.get_document()
 
-        self.document0 = volume.get_page_by_location('/document0')
-        self.document1 = volume.get_page_by_location('/sub/document1')
-        self.document2 = volume.get_page_by_location('/sub/subsub/document2')
-        self.document3 = volume.get_page_by_location('/sub/subsub/document3')
-        self.document4 = volume.get_page_by_location('/sub/subsub/subsubsub/document4')
+        self.document0 = document.get_page_by_location('/document0')
+        self.document1 = document.get_page_by_location('/sub/document1')
+        self.document2 = document.get_page_by_location('/sub/subsub/document2')
+        self.document3 = document.get_page_by_location('/sub/subsub/document3')
+        self.document4 = document.get_page_by_location('/sub/subsub/subsubsub/document4')
 
     def test_issues(self):
         data: dict[Page, list[Issue]] = {
