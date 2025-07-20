@@ -11,45 +11,38 @@ ifdef CI
 endif
 
 prepull-all:
-	docker pull python:3.11
-	docker pull python:3.12
-	docker pull python:3.13
-
-	docker pull pandoc/latex:3.2-ubuntu
-	docker pull pandoc/latex:3.3-ubuntu
-	docker pull pandoc/latex:3.4-ubuntu
-	docker pull pandoc/latex:3.5-ubuntu
-	docker pull pandoc/latex:3.6-ubuntu
-	docker pull pandoc/latex:3.7-ubuntu
-
-	docker pull pandoc/core:3.2-ubuntu
-	docker pull pandoc/core:3.3-ubuntu
-	docker pull pandoc/core:3.4-ubuntu
-	docker pull pandoc/core:3.5-ubuntu
-	docker pull pandoc/core:3.6-ubuntu
-	docker pull pandoc/core:3.7-ubuntu
+	docker pull python:3.11-alpine3.21
+	docker pull python:3.12-alpine3.21
+	docker pull python:3.13-alpine3.21
+	docker pull kjarosh/latex:2025.1-small
+	docker pull node:20.18.1-alpine3.21
+	docker pull alpine:3.21
 
 prebuild-all:
-	$(MAKE) build-tester PYTHON=3.11 PANDOC=3.2
 	$(MAKE) build-tester PYTHON=3.11 PANDOC=3.3
 	$(MAKE) build-tester PYTHON=3.11 PANDOC=3.4
 	$(MAKE) build-tester PYTHON=3.11 PANDOC=3.5
 	$(MAKE) build-tester PYTHON=3.11 PANDOC=3.6
 	$(MAKE) build-tester PYTHON=3.11 PANDOC=3.7
 
-	$(MAKE) build-tester PYTHON=3.12 PANDOC=3.2
 	$(MAKE) build-tester PYTHON=3.12 PANDOC=3.3
 	$(MAKE) build-tester PYTHON=3.12 PANDOC=3.4
 	$(MAKE) build-tester PYTHON=3.12 PANDOC=3.5
 	$(MAKE) build-tester PYTHON=3.12 PANDOC=3.6
 	$(MAKE) build-tester PYTHON=3.12 PANDOC=3.7
 
-	$(MAKE) build-tester PYTHON=3.13 PANDOC=3.2
 	$(MAKE) build-tester PYTHON=3.13 PANDOC=3.3
 	$(MAKE) build-tester PYTHON=3.13 PANDOC=3.4
 	$(MAKE) build-tester PYTHON=3.13 PANDOC=3.5
 	$(MAKE) build-tester PYTHON=3.13 PANDOC=3.6
 	$(MAKE) build-tester PYTHON=3.13 PANDOC=3.7
+
+package:
+	$(eval IMAGE:=sobiraka:package)
+	@docker build . --target build-package --tag $(IMAGE)
+	@mkdir -p dist
+	@$(DOCKER_RUN) -v $(PWD)/dist:/DIST $(IMAGE) sh -c 'cp /PIP/* /DIST'
+	@docker image rm $(IMAGE) --force >/dev/null
 
 release:
 	$(eval IMAGE:=sobiraka:release)
@@ -100,7 +93,7 @@ test: build-tester test-nobuild
 test-nobuild:
 	$(eval IMAGE:=sobiraka:test-with-python$(PYTHON)-pandoc$(PANDOC))
 	@$(DOCKER_RUN) \
-		-v $(PWD)/setup.py:/W/setup.py:ro \
+		-v $(PWD)/pyproject.toml:/W/pyproject.toml:ro \
 		-v $(PWD)/src:/W/src:ro \
 		-v $(PWD)/tests:/W/tests:rw \
 		$(IMAGE)
@@ -108,7 +101,7 @@ test-nobuild:
 lint-production: build-linter
 	@$(DOCKER_RUN) \
 		-v $(PWD)/.pylintrc:/W/.pylintrc:ro \
-		-v $(PWD)/setup.py:/W/setup.py:ro \
+		-v $(PWD)/pyproject.toml:/W/pyproject.toml:ro \
 		-v $(PWD)/src/sobiraka:/W/src/sobiraka:ro \
 		sobiraka:linter \
 		python -m pylint sobiraka src/sobiraka/files/themes/*/extension.py

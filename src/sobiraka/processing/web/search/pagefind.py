@@ -1,5 +1,6 @@
+import json
 from asyncio.subprocess import Process, create_subprocess_exec
-from importlib.resources import files
+from os.path import dirname
 from subprocess import PIPE
 from textwrap import dedent
 from typing import Iterable
@@ -22,38 +23,24 @@ class PagefindIndexer(SearchIndexer, PlainTextDispatcher):
     - Pagefind JS API: https://pagefind.app/docs/node-api/
     """
 
-    # pylint: disable=abstract-method
-
     node_process: Process = None
 
     def default_index_path(self, volume: Volume) -> RelativePath:
         return RelativePath('_pagefind')
 
-    def execute_js(self, code: str):
-        self.node_process.stdin.write(code.encode('utf-8'))
-
     async def initialize(self):
-        self.node_process = await create_subprocess_exec('node', '--input-type', 'module', stdin=PIPE, stdout=PIPE,
-                                                         cwd=files('sobiraka'))
-        self.execute_js('''
-            import * as fs from 'fs';
-            import * as path from 'path';
-            import * as pagefind from 'pagefind';
-            
-            const { index } = await pagefind.createIndex();
-        ''')
+        self.node_process = await create_subprocess_exec('node',
+                                                         f'{dirname(__file__)}/run_pagefind.js',
+                                                         '--indexPath', str(self.index_path),
+                                                         stdin=PIPE)
 
     def _add_record(self, *, url: str, title: str, content: str):
-        self.execute_js(f'''
-            var {{ errors, file }} = await index.addCustomRecord({{
-                url: {url!r},
-                content: {content!r},
-                language: {self.volume.lang or 'en'!r},
-                meta: {{
-                    title: {repr(title) if title else "''"},
-                }},
-            }});
-        ''')
+        self.node_process.stdin.write(json.dumps(dict(
+            url=url,
+            content=content,
+            language=self.volume.lang or 'en',
+            meta=dict(title=title or ''),
+        )).encode('utf-8') + b'\n')
 
     async def add_page(self, page: Page):
         await super().process_doc(RT[page].doc, page)
@@ -76,16 +63,6 @@ class PagefindIndexer(SearchIndexer, PlainTextDispatcher):
                                          content=fragment.text)
 
     async def finalize(self):
-        (self.index_path / 'fragment').mkdir(parents=True, exist_ok=True)
-        (self.index_path / 'index').mkdir(parents=True, exist_ok=True)
-        self.execute_js(f'''
-            var {{ errors, files }} = await index.getFiles();
-            for (const file of files) {{
-                const filePath = path.join({str(self.index_path)!r}, file.path);
-                const fileData = Buffer.from(file.content);
-                fs.writeFileSync(filePath, fileData);
-            }}
-        ''')
         self.node_process.stdin.close()
         await self.node_process.wait()
         assert self.node_process.returncode == 0, 'Pagefind failure'

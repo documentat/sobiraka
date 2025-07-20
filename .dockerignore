@@ -1,5 +1,7 @@
 *
 !Makefile
-!setup.py
+!package.json
+!package-lock.json
+!pyproject.toml
 !src/sobiraka
 !tests

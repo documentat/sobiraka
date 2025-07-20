@@ -7,7 +7,7 @@ jobs:
       fail-fast: false
       matrix:
         python: [3.11, 3.12, 3.13]
-        pandoc: [3.2, 3.3, 3.4, 3.5, 3.6, 3.7]
+        pandoc: [3.3, 3.4, 3.5, 3.6, 3.7]
 
     name: Python ${{ matrix.python }}, Pandoc ${{ matrix.pandoc }}
     runs-on: self-hosted

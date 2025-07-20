@@ -14,23 +14,9 @@ jobs:
   build-pip:
     name: Build Python package
     runs-on: self-hosted
-
     steps:
       - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
-
-      - name: Build package
-        run: |
-          python setup.py sdist
-          echo ARTIFACT=dist/*.tar.gz >> $GITHUB_ENV
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: Python package
-          path: ${{ env.ARTIFACT }}
-          if-no-files-found: error
+      - run: make package IMAGE=sobiraka-package:${{ github.sha }}
 
   build-images:
     name: Build Docker images
