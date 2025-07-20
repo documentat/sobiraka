@@ -28,6 +28,7 @@ RUN --mount=type=cache,target=/root/.cache/pip hatch dep show requirements | xar
 FROM python:$PYTHON_FOR_BUILDING-alpine$ALPINE AS build-package
 RUN --mount=type=cache,target=/root/.cache/pip pip install build~=1.2 hatch~=1.4
 COPY pyproject.toml .
+COPY README.md .
 COPY src src
 RUN --mount=type=cache,target=/root/.cache/pip python -m build --verbose --outdir=/PIP
 

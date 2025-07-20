@@ -5,6 +5,7 @@ build-backend = 'hatchling.build'
 [project]
 name = 'sobiraka'
 description = 'HTML and PDF documentation builder'
+readme = 'README.md'
 dynamic = ['version']
 
 license = { text = 'MIT' }
