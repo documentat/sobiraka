@@ -1,5 +1,3 @@
-{% set PUBLIC_REPOSITORY_URL = os.environ.get('PUBLIC_REPOSITORY_URL', 'http://ссылка/на/репозиторий.git') %}
-
 {% set windows = (OS == 'Windows') %}
 {% set macos = (OS == 'macOS') %}
 {% set ubuntu = (OS == 'Ubuntu') %}
@@ -132,7 +130,7 @@ Pandoc — необходимый инструмент, без которого 
 1. Откройте окно командной строки и введите следующую команду, чтобы установить или обновить Собираку в виртуальном окружении. Не забудьте подставить в команду правильный путь к вашему виртуальному окружению.
 
    ```sh
-   {{ VENV_BIN }}pip install git+{{ PUBLIC_REPOSITORY_URL }}
+   {{ VENV_BIN }}pip install sobiraka
    ```
 
 1. Чтобы проверить установку, выполните следующую команду:
