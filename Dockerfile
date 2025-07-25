@@ -4,7 +4,6 @@ ARG PYTHON=3.13
 ARG ALPINE=3.21
 ARG LATEX=2025.1
 ARG NODE=20.18.1
-ARG PYTHON_FOR_BUILDING=3.13
 
 
 #region Install dependencies
@@ -12,20 +11,25 @@ ARG PYTHON_FOR_BUILDING=3.13
 FROM node:$NODE-alpine$ALPINE AS node
 
 FROM python:$PYTHON-alpine$ALPINE AS python
+ARG PYTHON
+RUN --mount=type=cache,target=/var/cache/apk \
+    if [[ $PYTHON =~ rc ]]; then \
+        apk add g++ libffi-dev libjpeg-turbo-dev zlib-dev; \
+    fi
 
 FROM kjarosh/latex:$LATEX-small AS latex
 
-FROM python:$PYTHON-alpine$ALPINE AS get-hatch
+FROM python AS get-hatch
 RUN python -m venv /HATCH
 ENV PATH=/HATCH/bin:$PATH
 RUN --mount=type=cache,target=/root/.cache/pip pip install build~=1.2
 
-FROM python:$PYTHON-alpine$ALPINE AS get-pip-dependencies
+FROM python AS get-pip-dependencies
 RUN --mount=type=cache,target=/root/.cache/pip pip install build~=1.2 hatch~=1.4
 COPY pyproject.toml .
 RUN --mount=type=cache,target=/root/.cache/pip hatch dep show requirements | xargs pip download --dest=/PIP
 
-FROM python:$PYTHON_FOR_BUILDING-alpine$ALPINE AS build-package
+FROM python AS build-package
 RUN --mount=type=cache,target=/root/.cache/pip pip install build~=1.2 hatch~=1.4
 COPY pyproject.toml .
 COPY README.md .
@@ -44,7 +48,7 @@ RUN unzip lato.zip **/*.ttf -d /tmp/fonts
 RUN wget https://download.jetbrains.com/fonts/JetBrainsMono-2.304.zip -O jbmono.zip
 RUN unzip jbmono.zip **/*.ttf -d /tmp/fonts
 
-FROM python:$PYTHON-alpine$ALPINE AS install-package
+FROM python AS install-package
 RUN --mount=type=cache,target=/root/.cache/pip pip install build~=1.2 hatch~=1.4
 RUN hatch --version
 COPY pyproject.toml .
@@ -55,8 +59,8 @@ COPY --from=build-package /PIP/sobiraka-*.tar.gz /PIP
 RUN /VENV/bin/python -m pip install /PIP/sobiraka-* --no-index --find-links=/PIP --prefix=/VENV
 RUN rm /VENV/bin/python
 
-FROM python:$PYTHON-alpine$ALPINE AS install-pip-dependencies-for-linter
-RUN pip install --prefix=/VENV pylint
+FROM python AS install-pip-dependencies-for-linter
+RUN --mount=type=cache,target=/root/.cache/pip pip install --prefix=/VENV pylint
 
 FROM alpine:$ALPINE AS install-npm-dependencies
 RUN --mount=type=cache,target=/var/cache/apk apk add nodejs npm
@@ -69,7 +73,7 @@ RUN --mount=type=cache,target=/root/.npm npm install --loglevel=verbose
 
 # region The base images for all final images
 
-FROM python:$PYTHON-alpine$ALPINE AS base
+FROM python AS base
 WORKDIR /W
 COPY --from=node / /
 RUN python -m venv /VENV
@@ -121,7 +125,6 @@ ENV PATH=/opt/texlive/bin/x86_64-linuxmusl:$PATH
 
 FROM release-latex AS tester
 RUN --mount=type=cache,target=/var/cache/apk apk add poppler-utils
-#RUN --mount=type=cache,target=/root/.cache/pip pip install build~=1.2 hatch~=1.14
 COPY --from=build-package /PIP /PIP
 RUN pip install /PIP/sobiraka*.whl
 ENV PYTHONDONTWRITEBYTECODE=1

@@ -6,7 +6,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python: [3.11, 3.12, 3.13]
+        python: [3.11, 3.12, 3.13, 3.14-rc]
         pandoc: [3.3, 3.4, 3.5, 3.6, 3.7]
 
     name: Python ${{ matrix.python }}, Pandoc ${{ matrix.pandoc }}

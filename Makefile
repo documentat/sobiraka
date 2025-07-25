@@ -14,6 +14,7 @@ prepull-all:
 	docker pull python:3.11-alpine3.21
 	docker pull python:3.12-alpine3.21
 	docker pull python:3.13-alpine3.21
+	docker pull python:3.14-rc-alpine3.21
 	docker pull kjarosh/latex:2025.1-small
 	docker pull node:20.18.1-alpine3.21
 	docker pull alpine:3.21
@@ -36,6 +37,12 @@ prebuild-all:
 	$(MAKE) build-tester PYTHON=3.13 PANDOC=3.5
 	$(MAKE) build-tester PYTHON=3.13 PANDOC=3.6
 	$(MAKE) build-tester PYTHON=3.13 PANDOC=3.7
+
+	$(MAKE) build-tester PYTHON=3.14-rc PANDOC=3.3
+	$(MAKE) build-tester PYTHON=3.14-rc PANDOC=3.4
+	$(MAKE) build-tester PYTHON=3.14-rc PANDOC=3.5
+	$(MAKE) build-tester PYTHON=3.14-rc PANDOC=3.6
+	$(MAKE) build-tester PYTHON=3.14-rc PANDOC=3.7
 
 package:
 	$(eval IMAGE:=sobiraka:package)

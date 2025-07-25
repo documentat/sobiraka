@@ -13,7 +13,7 @@ authors = [
     { name = 'Max Alibaev', email = 'max.alibaev@documentat.io' },
 ]
 
-requires-python = '>=3.11, <3.14'
+requires-python = '>=3.11'
 dependencies = [
     'aiofiles~=23.1.0',
     'beautifulsoup4~=4.12.2',
