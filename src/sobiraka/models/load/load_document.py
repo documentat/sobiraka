@@ -47,6 +47,7 @@ def load_document(lang: str | None, codename: str, document_data: dict, fs: File
         ),
         content=Config_Content(
             numeration=_('content.numeration', False),
+            emoji_replacements=frozendict({k: _expand(v) for k, v in _('content.emoji_replacements', {}).items()}),
         ),
         web=Config_Web(
             prefix=_expand(_('web.prefix', '$AUTOPREFIX')),

@@ -191,6 +191,22 @@ variables:
 
 ## Настройки содержимого {#content}
 
+### `content.emoji_replacements`
+
+Словарь для [замены эмодзи на иконки](../writing/text-processing.md#emoji-replacements).
+
+Каждый ключ должен представлять собой ровно один символ эмодзи, а значения должны быть путями к соответствующим им изображениям. Пути должны начинаться со слеша. Изображения будут загружаться из директории, указанной в [`paths.resources`](#paths.resources).
+
+Пример:
+
+```yaml
+content:
+  emoji_replacements:
+    ⚠️: /icons/warning.png
+    ⛔: /icons/error.png
+    ✖️: /icons/close.png
+```
+
 ### `content.numeration`
 
 Если `true`, то в начало каждого заголовка в документации будет добавлен его порядковый номер. См. [](../writing/numeration.md).

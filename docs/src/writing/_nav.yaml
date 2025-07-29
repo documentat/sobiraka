@@ -5,3 +5,4 @@ items:
   - jinja.md
   - directives.md
   - numeration.md
+  - text-processing.md

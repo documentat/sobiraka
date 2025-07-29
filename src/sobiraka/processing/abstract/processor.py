@@ -50,6 +50,9 @@ class Processor(Dispatcher, Generic[B], metaclass=ABCMeta):
 
     @override
     async def process_header(self, header: Header, page: Page) -> tuple[Element, ...]:
+        header, = await super().process_header(header, page)
+        assert isinstance(header, Header)
+
         if header.level == 1:
             # Use the top level header as the page title
             if not page.meta.title:
@@ -147,6 +150,30 @@ class Processor(Dispatcher, Generic[B], metaclass=ABCMeta):
             table.colspec[i] = align, 'ColWidthDefault'
 
         return table,
+
+    @override
+    async def process_str(self, elem: Str, page: Page) -> tuple[Element, ...]:
+        config: Config = page.document.config
+        if not config.content.emoji_replacements:
+            return elem,
+
+        all_emojis = ''.join(config.content.emoji_replacements.keys())
+        separator = re.compile(fr'(?= [{all_emojis}] ) | (?<= [{all_emojis}] )', re.VERBOSE)
+
+        parts: list[Element] = []
+        for text in re.split(separator, elem.text):
+            if text == '':
+                continue
+
+            if image_path := config.content.emoji_replacements.get(text):
+                image = Image(url=image_path)
+                image, = await self.process_image(image, page)
+                parts.append(image)
+
+            else:
+                parts.append(Str(text))
+
+        return tuple(parts)
 
     # region Process links
 

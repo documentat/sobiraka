@@ -62,6 +62,12 @@ $defs:
         additionalProperties: false
         properties:
           numeration: { type: boolean }
+          emoji_replacements:
+            additionalProperties: false
+            patternProperties:
+              .*:
+                type: string
+                pattern: ^/.+
 
       web:
         additionalProperties: false
