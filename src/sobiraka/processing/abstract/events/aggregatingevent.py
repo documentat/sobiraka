@@ -31,7 +31,9 @@ class AggregatingEvent(Event):
 
     def add_page_event(self, event: PreventableEvent):
         self._page_events.append(event)
-        create_task(event.wait()).add_done_callback(self._on_change)
+        task = create_task(event.wait())
+        task.add_done_callback(lambda t: t.exception())
+        task.add_done_callback(self._on_change)
 
     def _on_change(self, _=None):
         for task in self._dependencies:

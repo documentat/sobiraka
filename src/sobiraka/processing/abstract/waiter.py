@@ -5,7 +5,7 @@ from typing import Coroutine, Sequence, TYPE_CHECKING, overload
 
 from sobiraka.models import AggregationPolicy, Document, Issue, Page, Source, Status
 from sobiraka.report import Reporter
-from sobiraka.utils import KeyDefaultDict, MISSING, RelativePath, print_colorful_exc, sorted_dict
+from sobiraka.utils import KeyDefaultDict, MISSING, RelativePath, consume_task_silently, print_colorful_exc, sorted_dict
 from .events import AggregatingEvent, PreventableEvent, ProductiveEvent
 
 if TYPE_CHECKING:
@@ -120,6 +120,7 @@ class Waiter:
 
             # Create a task
             task = create_task(coro, name=f'{status.name} SOURCE {source.path_in_project}')
+            task.add_done_callback(consume_task_silently)
             self.tasks[source][status] = task
 
     def schedule_tasks_for_page(self, page: Page, target_status: Status):
@@ -143,14 +144,17 @@ class Waiter:
                 except KeyError:
                     task = create_task(self.do_process3_document(page.document),
                                        name=f'PROCESS3 DOCUMENT {page.document.codename}')
+                    task.add_done_callback(consume_task_silently)
                     self.tasks[page][Status.PROCESS3] = task
                     self.tasks_p3[page.document] = task
 
             else:
                 # All other tasks are page-specific,
                 # so we just create a task and store it in `tasks`
-                self.tasks[page][status] = create_task(self.do_process1_page(page, status),
-                                                       name=f'{status.name} PAGE {page.location}')
+                task = self.tasks[page][status] = create_task(self.do_process1_page(page, status),
+                                                              name=f'{status.name} PAGE {page.location}')
+                task.add_done_callback(consume_task_silently)
+                self.tasks[page][status] = task
 
     # endregion
 
