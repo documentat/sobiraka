@@ -1,3 +1,4 @@
+import re
 from abc import ABCMeta
 from asyncio import create_task
 
@@ -20,13 +21,8 @@ class Sobiraka2025_Processor(AbstractHtmlProcessor, metaclass=ABCMeta):
         assert isinstance(para, Para)
 
         if len(para.content) == 1 and isinstance(image := para.content[0], Image):
-            image_path = page.document.config.paths.resources / image.url
-
             if isinstance(self, WebProcessor):
-                with page.project.fs.open_bytes(image_path) as image_file:
-                    with PIL.Image.open(image_file) as pil:
-                        image.attributes['width'] = str(pil.width)
-                        image.attributes['height'] = str(pil.height)
+                self.autoscale_image(image, page)
                 result = Link(image, url=image.url)
                 RT[page].links_that_follow_images.append((image, result))
             else:
@@ -38,6 +34,29 @@ class Sobiraka2025_Processor(AbstractHtmlProcessor, metaclass=ABCMeta):
             return Div(Plain(result), classes=['big-image']),
 
         return para,
+
+    def autoscale_image(self, image: Image, page: Page):
+        if 'width' in image.attributes and 'height' in image.attributes:
+            return
+
+        image_path = page.document.config.paths.resources / image.url
+        with page.project.fs.open_bytes(image_path) as image_file:
+            with PIL.Image.open(image_file) as pil:
+                true_width = pil.width
+                true_height = pil.height
+                ratio = true_width / true_height
+
+        if width_spec := image.attributes.get('width'):
+            width, unit = re.fullmatch(r'([\d.]+)(.*)', width_spec).groups()
+            image.attributes['height'] = str(float(width) / ratio) + unit
+
+        elif height_spec := image.attributes.get('height'):
+            height, unit = re.fullmatch(r'([\d.]+)(.*)', height_spec).groups()
+            image.attributes['width'] = str(float(height) * ratio) + unit
+
+        else:
+            image.attributes['width'] = str(true_width) + 'px'
+            image.attributes['height'] = str(true_height) + 'px'
 
 
 class Sobiraka2025_WebProcessor(Sobiraka2025_Processor, WebProcessor):
