@@ -35,9 +35,11 @@
 <header>
     <a href='{{ ROOT }}' class='site-logo'>
         {% if 'LOGO' in config.variables %}
-            <img alt='' src='{{ config.variables.LOGO }}'/>
+            <img alt='{{ config.title }}' src='{{ RESOURCES }}/{{ config.variables.LOGO }}'/>
         {% endif %}
-        <div>{{ config.title }}</div>
+        {% if not config.variables.get('LOGO_ONLY') %}
+            <div>{{ config.title }}</div>
+        {% endif %}
     </a>
 
     <div class='fill-space'></div>
