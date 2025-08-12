@@ -27,7 +27,7 @@ class _DirectiveParser:
         self.unclosed_directive: BlockDirective | None = None
 
     def parse(self):
-        RT[self.page].doc = RT[self.page].doc.walk(self.parse_para)
+        RT[self.page].doc.walk(self.parse_para)
 
     def parse_para(self, para: Para, _: Doc):
         try:
@@ -53,7 +53,7 @@ class _DirectiveParser:
 
             return directive
 
-        except    (AssertionError, _DirectiveParserFailure):
+        except (AssertionError, _DirectiveParserFailure):
             return None
 
     def verify_syntax(self, para: Para):
