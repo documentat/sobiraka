@@ -16,9 +16,9 @@ from sobiraka.utils import AbsolutePath
 SOBIRAKA_DOCS_SRC = AbsolutePath(__file__).parent / 'src'
 SOBIRAKA_ROOT = AbsolutePath(__file__).parent.parent
 
-SOBIRAKA_REPOSITORY = environ.get('SOBIRAKA_REPOSITORY') \
-                      or ('CI' in environ and (environ['GITHUB_SERVER_URL'] + '/' + environ['GITHUB_REPOSITORY'])) \
-                      or None
+PUBLIC_REPOSITORY_URL = environ.get('PUBLIC_REPOSITORY_URL') \
+                        or ('CI' in environ and (environ['GITHUB_SERVER_URL'] + '/' + environ['GITHUB_REPOSITORY'])) \
+                        or None
 
 
 class CustomProcessor(Sobiraka2025_Processor, metaclass=ABCMeta):
@@ -51,11 +51,11 @@ class CustomProcessor(Sobiraka2025_Processor, metaclass=ABCMeta):
                 fragment = unquote(fragment_link.split('=', maxsplit=1)[1])
                 assert fragment in path.read_text()
 
-            if not SOBIRAKA_REPOSITORY:
+            if not PUBLIC_REPOSITORY_URL:
                 return *link.content,
 
             url = '/'.join((
-                SOBIRAKA_REPOSITORY,
+                PUBLIC_REPOSITORY_URL,
                 'tree' if path.is_dir() else 'blob',
                 environ.get('GITHUB_REF_NAME', 'master'),
                 str(path.relative_to(SOBIRAKA_ROOT)),
